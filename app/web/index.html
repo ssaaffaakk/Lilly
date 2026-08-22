@@ -1,0 +1,300 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Lilly</title>
+<style>
+  :root {
+    --ink: #f4f6f8;
+    --ink-dim: rgba(244, 246, 248, 0.55);
+    --glass: rgba(255, 255, 255, 0.08);
+    --glass-strong: rgba(255, 255, 255, 0.14);
+    --stroke: rgba(255, 255, 255, 0.16);
+    --accent: #7fd4c1;
+    --danger: #e8a0a0;
+    --radius: 20px;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
+    color: var(--ink);
+    /* Dusk over the Neretva — swap for a real Mostar photo by adding bg.jpg */
+    background:
+      radial-gradient(120% 90% at 80% 0%, #2c4a52 0%, transparent 60%),
+      radial-gradient(100% 80% at 10% 100%, #1f3d33 0%, transparent 55%),
+      linear-gradient(160deg, #101d24 0%, #16303a 45%, #0e2019 100%);
+    background-attachment: fixed;
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: max(20px, env(safe-area-inset-top)) 16px 40px;
+  }
+  .bg-photo {
+    position: fixed; inset: 0; z-index: -1;
+    background-size: cover; background-position: center;
+    opacity: 0.35; filter: saturate(0.8);
+  }
+  header { text-align: center; margin: 28px 0 22px; }
+  h1 { font-size: 34px; font-weight: 600; letter-spacing: 0.5px; }
+  header p { color: var(--ink-dim); font-size: 15px; margin-top: 6px; font-weight: 400; }
+
+  main { width: 100%; max-width: 560px; display: flex; flex-direction: column; gap: 14px; }
+
+  .card {
+    background: var(--glass);
+    border: 1px solid var(--stroke);
+    border-radius: var(--radius);
+    backdrop-filter: blur(22px) saturate(1.4);
+    -webkit-backdrop-filter: blur(22px) saturate(1.4);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+  }
+
+  .input-card { padding: 6px; }
+  textarea {
+    width: 100%; min-height: 96px; resize: none;
+    background: transparent; border: none; outline: none;
+    color: var(--ink); font: inherit; font-size: 17px; line-height: 1.5;
+    padding: 14px 16px 6px;
+  }
+  textarea::placeholder { color: var(--ink-dim); }
+
+  .toolbar { display: flex; gap: 8px; padding: 6px 8px 8px; align-items: center; }
+  .toolbar .spacer { flex: 1; }
+
+  button {
+    font: inherit; color: var(--ink); cursor: pointer;
+    border: 1px solid var(--stroke);
+    background: var(--glass-strong);
+    border-radius: 14px;
+    padding: 10px 16px; font-size: 15px;
+    transition: transform 0.15s ease, background 0.2s ease;
+    -webkit-tap-highlight-color: transparent;
+  }
+  button:active { transform: scale(0.96); }
+  button.primary { background: var(--accent); color: #10201b; border-color: transparent; font-weight: 600; }
+  button.icon { width: 44px; height: 44px; padding: 0; display: grid; place-items: center; }
+  button.recording { background: var(--danger); color: #2b1414; border-color: transparent; }
+  button:disabled { opacity: 0.4; cursor: default; }
+  svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+
+  .result { padding: 18px 20px; display: none; flex-direction: column; gap: 10px; }
+  .result.visible { display: flex; }
+  .result .label { font-size: 12px; text-transform: uppercase; letter-spacing: 1.2px; color: var(--ink-dim); }
+  .result .bosnian { font-size: 15px; color: var(--ink-dim); line-height: 1.5; }
+  .result .english { font-size: 20px; line-height: 1.45; font-weight: 500; }
+  .result-actions { display: flex; gap: 8px; margin-top: 4px; }
+  .result-actions button { font-size: 13px; padding: 8px 13px; border-radius: 11px; }
+
+  .status { text-align: center; color: var(--ink-dim); font-size: 14px; min-height: 20px; }
+
+  dialog {
+    margin: auto; width: min(92vw, 480px);
+    background: rgba(28, 42, 46, 0.92);
+    border: 1px solid var(--stroke); border-radius: var(--radius);
+    color: var(--ink); padding: 22px;
+    backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px);
+  }
+  dialog::backdrop { background: rgba(0, 0, 0, 0.45); }
+  dialog h2 { font-size: 18px; font-weight: 600; margin-bottom: 14px; }
+  dialog label { display: block; font-size: 13px; color: var(--ink-dim); margin: 12px 0 6px; }
+  dialog textarea {
+    min-height: 60px; border: 1px solid var(--stroke); border-radius: 12px;
+    background: var(--glass); padding: 10px 12px; font-size: 15px;
+  }
+  dialog .row { display: flex; gap: 8px; justify-content: flex-end; margin-top: 18px; }
+
+  footer { margin-top: auto; padding-top: 32px; color: rgba(244, 246, 248, 0.35); font-size: 12px; text-align: center; line-height: 1.6; }
+  footer a { color: inherit; }
+</style>
+</head>
+<body>
+  <div class="bg-photo" id="bgPhoto"></div>
+
+  <header>
+    <h1>Lilly</h1>
+    <p>Bosnian to English</p>
+  </header>
+
+  <main>
+    <div class="card input-card">
+      <textarea id="input" placeholder="Upišite bosanski tekst…" rows="3"></textarea>
+      <div class="toolbar">
+        <button class="icon" id="micBtn" title="Speak Bosnian" aria-label="Record speech">
+          <svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0"/><path d="M12 18v3"/></svg>
+        </button>
+        <button class="icon" id="photoBtn" title="Translate a photo" aria-label="Upload photo">
+          <svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="14" rx="3"/><circle cx="12" cy="13" r="4"/><path d="M9 6l1.5-2h3L15 6"/></svg>
+        </button>
+        <input type="file" id="photoInput" accept="image/*" capture="environment" hidden>
+        <span class="spacer"></span>
+        <button class="primary" id="translateBtn">Translate</button>
+      </div>
+    </div>
+
+    <div class="status" id="status"></div>
+
+    <div class="card result" id="result">
+      <div>
+        <div class="label">Bosnian</div>
+        <div class="bosnian" id="outBosnian"></div>
+      </div>
+      <div>
+        <div class="label">English</div>
+        <div class="english" id="outEnglish"></div>
+      </div>
+      <div class="result-actions">
+        <button id="playBtn">Play voice</button>
+        <button id="wrongBtn">This translation is wrong</button>
+      </div>
+    </div>
+  </main>
+
+  <dialog id="feedbackDialog">
+    <h2>Help Lilly improve</h2>
+    <label for="fbWhat">What is wrong with this translation?</label>
+    <textarea id="fbWhat"></textarea>
+    <label for="fbSuggest">What should it say? (optional)</label>
+    <textarea id="fbSuggest"></textarea>
+    <div class="row">
+      <button id="fbCancel">Cancel</button>
+      <button class="primary" id="fbSend">Send</button>
+    </div>
+  </dialog>
+
+  <footer>
+    Lilly
+  </footer>
+
+<script>
+  const $ = id => document.getElementById(id);
+  const state = { bosnian: "", english: "", audioUrl: null };
+
+  // Optional Mostar photo: drop bg.jpg next to this file and it appears.
+  fetch("bg.jpg", { method: "HEAD" }).then(r => {
+    if (r.ok) $("bgPhoto").style.backgroundImage = "url(bg.jpg)";
+  }).catch(() => {});
+
+  function setStatus(msg) { $("status").textContent = msg; }
+
+  function showResult(bosnian, english) {
+    state.bosnian = bosnian; state.english = english; state.audioUrl = null;
+    $("outBosnian").textContent = bosnian;
+    $("outEnglish").textContent = english;
+    $("result").classList.add("visible");
+    setStatus("");
+  }
+
+  async function apiJson(path, options) {
+    const res = await fetch(path, options);
+    if (!res.ok) throw new Error("Server error " + res.status);
+    return res.json();
+  }
+
+  // --- Text translation ---
+  $("translateBtn").addEventListener("click", async () => {
+    const text = $("input").value.trim();
+    if (!text) return;
+    setStatus("Translating…");
+    try {
+      const data = await apiJson("/api/translate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text })
+      });
+      showResult(data.bosnian, data.english);
+    } catch (e) { setStatus("Could not translate. Is the server running?"); }
+  });
+  $("input").addEventListener("keydown", e => {
+    if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); $("translateBtn").click(); }
+  });
+
+  // --- Microphone ---
+  let recorder = null, chunks = [];
+  $("micBtn").addEventListener("click", async () => {
+    if (recorder && recorder.state === "recording") { recorder.stop(); return; }
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      chunks = [];
+      recorder = new MediaRecorder(stream);
+      recorder.ondataavailable = e => chunks.push(e.data);
+      recorder.onstop = async () => {
+        stream.getTracks().forEach(t => t.stop());
+        $("micBtn").classList.remove("recording");
+        setStatus("Listening to what you said…");
+        const blob = new Blob(chunks, { type: recorder.mimeType });
+        const form = new FormData();
+        form.append("file", blob, "speech.webm");
+        try {
+          const data = await apiJson("/api/speech", { method: "POST", body: form });
+          if (!data.bosnian) { setStatus("Could not hear anything — try again."); return; }
+          $("input").value = data.bosnian;
+          showResult(data.bosnian, data.english);
+          playEnglish();               // speak the answer back automatically
+        } catch (e) { setStatus("Could not process the recording."); }
+      };
+      recorder.start();
+      $("micBtn").classList.add("recording");
+      setStatus("Recording — press again to stop");
+    } catch (e) { setStatus("Microphone permission needed."); }
+  });
+
+  // --- Photo ---
+  $("photoBtn").addEventListener("click", () => $("photoInput").click());
+  $("photoInput").addEventListener("change", async () => {
+    const file = $("photoInput").files[0];
+    if (!file) return;
+    setStatus("Reading the photo…");
+    const form = new FormData();
+    form.append("file", file, file.name);
+    try {
+      const data = await apiJson("/api/photo", { method: "POST", body: form });
+      if (!data.bosnian) { setStatus("No text found in the photo."); return; }
+      showResult(data.bosnian, data.english);
+    } catch (e) { setStatus("Could not read the photo."); }
+    $("photoInput").value = "";
+  });
+
+  // --- Voice output ---
+  async function playEnglish() {
+    if (!state.english) return;
+    $("playBtn").disabled = true;
+    try {
+      if (!state.audioUrl) {
+        const res = await fetch("/api/speak", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text: state.english })
+        });
+        state.audioUrl = URL.createObjectURL(await res.blob());
+      }
+      await new Audio(state.audioUrl).play();
+    } finally { $("playBtn").disabled = false; }
+  }
+  $("playBtn").addEventListener("click", playEnglish);
+
+  // --- Correction loop ---
+  $("wrongBtn").addEventListener("click", () => $("feedbackDialog").showModal());
+  $("fbCancel").addEventListener("click", () => $("feedbackDialog").close());
+  $("fbSend").addEventListener("click", async () => {
+    try {
+      await apiJson("/api/feedback", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          source_text: state.bosnian,
+          model_output: state.english,
+          user_complaint: $("fbWhat").value.trim(),
+          suggested_translation: $("fbSuggest").value.trim()
+        })
+      });
+      $("feedbackDialog").close();
+      $("fbWhat").value = ""; $("fbSuggest").value = "";
+      setStatus("Thank you — your correction was saved for review.");
+    } catch (e) { setStatus("Could not send the correction."); }
+  });
+</script>
+</body>
+</html>
