@@ -9,9 +9,10 @@ Usage:
     python3 train_translation.py --quick-test    # 200 pairs, 1 tiny epoch, just to verify the pipeline
 
 Expects data/clean/{train,valid}.tsv from data/scripts/clean_data.py.
-Writes the LoRA adapter to models/lilly-bs-en-lora/.
+Writes the LoRA adapter to models/lilly/adapter/, where the app picks it up.
 """
 import argparse
+import os
 import random
 from pathlib import Path
 
@@ -26,9 +27,11 @@ from transformers import (
     Seq2SeqTrainingArguments,
 )
 
-BASE_MODEL = "Helsinki-NLP/opus-mt-tc-big-zls-en"
 MAX_LEN = 128
 REPO_ROOT = Path(__file__).resolve().parents[1]
+# Weights normally sit in the project's own model folder. On a machine that has
+# no copy (a fresh Colab runtime, say) point LILLY_BASE at one.
+BASE_MODEL = os.environ.get("LILLY_BASE") or str(REPO_ROOT / "models" / "lilly" / "translate")
 
 
 def read_tsv(path: Path, limit=None):
@@ -64,7 +67,7 @@ def main() -> int:
     ap.add_argument("--grad-accum", type=int, default=4)
     ap.add_argument("--lr", type=float, default=2e-4)
     ap.add_argument("--lora-r", type=int, default=16)
-    ap.add_argument("--output", default=str(REPO_ROOT / "models" / "lilly-bs-en-lora"))
+    ap.add_argument("--output", default=str(REPO_ROOT / "models" / "lilly" / "adapter"))
     ap.add_argument("--quick-test", action="store_true")
     args = ap.parse_args()
 

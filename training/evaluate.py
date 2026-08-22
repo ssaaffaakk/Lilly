@@ -7,12 +7,13 @@ Metrics:
 
 Usage:
     python3 evaluate.py                          # base model only (baseline)
-    python3 evaluate.py --adapter models/lilly-bs-en-lora
+    python3 evaluate.py --adapter models/lilly/adapter
     python3 evaluate.py --limit 200              # quicker, subset of test set
 
 Writes training/RESULTS.md with the comparison table.
 """
 import argparse
+import os
 import time
 from pathlib import Path
 
@@ -20,8 +21,10 @@ import sacrebleu
 import torch
 from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
 
-BASE_MODEL = "Helsinki-NLP/opus-mt-tc-big-zls-en"
 REPO_ROOT = Path(__file__).resolve().parents[1]
+# Weights normally sit in the project's own model folder. On a machine that has
+# no copy (a fresh Colab runtime, say) point LILLY_BASE at one.
+BASE_MODEL = os.environ.get("LILLY_BASE") or str(REPO_ROOT / "models" / "lilly" / "translate")
 
 
 def load_test(limit=None):
