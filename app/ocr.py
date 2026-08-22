@@ -2,13 +2,15 @@
 """Photo scan: image of Bosnian text -> text.
 
 Bosnian ("bs") is supported directly and phone photos are handled well
-(neural text detector). First run downloads the recognition models (~100 MB).
+(neural text detector). Weights are read from models/lilly/read/.
 
 Usage:
     python3 app/ocr.py photo.jpg
 """
 import sys
 from pathlib import Path
+
+from app.lilly import READ_DIR
 
 _reader = None
 
@@ -17,7 +19,9 @@ def get_reader():
     global _reader
     if _reader is None:
         import easyocr
-        _reader = easyocr.Reader(["bs", "en"], gpu=False)
+        _reader = easyocr.Reader(["bs", "en"], gpu=False,
+                                 model_storage_directory=str(READ_DIR),
+                                 download_enabled=False)
     return _reader
 
 

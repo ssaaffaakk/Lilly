@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Voice output: English text -> spoken audio.
 
+Weights and the voice are read from models/lilly/speak/.
 Produces a 24 kHz WAV. Runs real-time on CPU.
 
 Usage:
@@ -8,18 +9,26 @@ Usage:
 """
 import sys
 
+from app.lilly import SPEAK_DIR
+
+VOICE = SPEAK_DIR / "voices" / "default.pt"
+
 _pipeline = None
 
 
 def get_pipeline():
     global _pipeline
     if _pipeline is None:
-        from kokoro import KPipeline
-        _pipeline = KPipeline(lang_code="a")  # American English
+        from kokoro import KModel, KPipeline
+        voice_model = KModel(repo_id="lilly",
+                             config=str(SPEAK_DIR / "config.json"),
+                             model=str(SPEAK_DIR / "model.pth")).eval()
+        _pipeline = KPipeline(lang_code="a", repo_id="lilly",  # American English
+                              model=voice_model)
     return _pipeline
 
 
-def speak_to_file(text: str, out_path: str, voice: str = "af_heart") -> str:
+def speak_to_file(text: str, out_path: str, voice: str = str(VOICE)) -> str:
     import numpy as np
     import soundfile as sf
     chunks = [audio for _, _, audio in get_pipeline()(text, voice=voice)]

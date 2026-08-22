@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """Lilly's translation engine — Bosnian -> English on this machine.
 
-If our fine-tuned LoRA adapter exists at models/lilly-bs-en-lora/ it is applied
-automatically, otherwise the untuned base is used (so everything works even
-before training finishes).
+Weights are read from models/lilly/translate/. If our fine-tuned adapter
+exists at models/lilly/adapter/ it is applied on top automatically, otherwise
+the untuned base is used — so everything works even before training finishes.
 
 Usage:
     python3 app/translate.py "Dobar dan, kako ste?"
@@ -11,13 +11,11 @@ Usage:
 """
 import re
 import sys
-from pathlib import Path
 
 import torch
 from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
 
-BASE_MODEL = "Helsinki-NLP/opus-mt-tc-big-zls-en"
-ADAPTER_DIR = Path(__file__).resolve().parents[1] / "models" / "lilly-bs-en-lora"
+from app.lilly import ADAPTER_DIR, TRANSLATE_DIR
 
 _engine = None
 
@@ -26,8 +24,8 @@ class Engine:
     def __init__(self):
         self.device = ("cuda" if torch.cuda.is_available()
                        else "mps" if torch.backends.mps.is_available() else "cpu")
-        self.tokenizer = AutoTokenizer.from_pretrained(BASE_MODEL)
-        model = AutoModelForSeq2SeqLM.from_pretrained(BASE_MODEL)
+        self.tokenizer = AutoTokenizer.from_pretrained(str(TRANSLATE_DIR))
+        model = AutoModelForSeq2SeqLM.from_pretrained(str(TRANSLATE_DIR))
         if (ADAPTER_DIR / "adapter_config.json").exists():
             from peft import PeftModel
             model = PeftModel.from_pretrained(model, str(ADAPTER_DIR)).merge_and_unload()

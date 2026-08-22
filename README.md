@@ -19,6 +19,19 @@ And one thing most translators don't have: a **"This translation is wrong" butto
 | Corrections | Verified user corrections become new training data |
 | App | Python API server + web frontend — works in the browser on any phone or computer |
 
+Every part Lilly needs sits in one folder, `models/lilly/` — `translate`, `listen`, `speak`, `read` — and one object in [app/lilly.py](app/lilly.py) puts all four behind a single door:
+
+```python
+from app.lilly import lilly
+
+lilly.translate("Dobar dan")          # Bosnian text   -> English text
+lilly.listen("clip.m4a")              # spoken Bosnian -> Bosnian text
+lilly.speak("Good day", "out.wav")    # English text   -> spoken English
+lilly.read("sign.jpg")                # photo          -> Bosnian text
+```
+
+Nothing is fetched over the network while Lilly runs: the weights are read straight off this disk, so it works with the wifi off. Each ability loads the first time it is used, so starting up costs nothing.
+
 Design direction for the app: glass, smooth, Apple-like. Calm, quick, easy to use. Bosnian imagery (Mostar) as atmosphere, not decoration. No emojis, no clutter.
 
 Training runs on free Google Colab GPUs; the Mac is used for building the app and running the finished model.
@@ -29,8 +42,10 @@ Training runs on free Google Colab GPUs; the Mac is used for building the app an
 Lilly/
 ├── data/        # scripts that download & clean Bosnian-English data (the data itself is not committed)
 ├── training/    # model training scripts (run on Colab GPU)
-├── models/      # trained model weights land here (not committed — too big)
-├── app/         # the web app: server + frontend
+├── models/
+│   └── lilly/   # every weight Lilly uses: translate, listen, speak, read, adapter
+│                # (not committed — 1.3 GB, too big for git)
+├── app/         # lilly.py (one object, four abilities) + server + web frontend
 └── docs/        # roadmap and notes
 ```
 
@@ -59,4 +74,8 @@ uv pip install --python .venv/bin/python -r requirements.txt
 .venv/bin/uvicorn app.server:app --port 8000
 ```
 
-Then open http://localhost:8000 — first use of each feature downloads its model.
+Then open http://localhost:8000.
+
+`models/lilly/` has to be in place first — it holds the weights and is too big for
+git, so it is copied onto the machine rather than cloned. `python3 app/lilly.py`
+prints what is there and what is missing.
