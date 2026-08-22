@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+
+# Data & models — too big for git, scripts recreate them
+data/raw/
+data/clean/
+data/feedback.db
+models/
+*.zip
+*.bin
+*.safetensors
+*.pt
+*.onnx
+
+# OS / editor
+.DS_Store
+.vscode/
+.idea/
+
+# Secrets
+.env
