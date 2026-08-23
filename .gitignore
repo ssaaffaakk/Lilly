@@ -8,6 +8,8 @@ venv/
 # Data & models — too big for git, scripts recreate them
 data/raw/
 data/clean/
+data/ocr/
+data/speech/
 data/feedback.db
 models/
 *.zip
