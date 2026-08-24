@@ -21,6 +21,9 @@ soundfile
 # Photo scan
 easyocr
 
+# Training data preparation
+pyarrow
+
 # Web app
 fastapi
 uvicorn
