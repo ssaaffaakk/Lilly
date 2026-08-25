@@ -74,8 +74,34 @@ uv pip install --python .venv/bin/python -r requirements.txt
 .venv/bin/uvicorn app.server:app --port 8000
 ```
 
-Then open http://localhost:8000.
+The weights are 1.3 GB, so they are not in git. Fetch them once:
 
-`models/lilly/` has to be in place first — it holds the weights and is too big for
-git, so it is copied onto the machine rather than cloned. `python3 app/lilly.py`
-prints what is there and what is missing.
+```
+.venv/bin/python scripts/fetch_models.py
+```
+
+Then open http://localhost:8000. `python3 app/lilly.py` prints what is in the model
+folder and what is missing.
+
+## Deploying it
+
+```
+docker build -t lilly .
+docker run -p 8000:8000 -v lilly-data:/data lilly
+```
+
+Three things decide whether a deployment works:
+
+**Memory.** Measured on CPU, which is what a server is: 2.5 GB after one request of
+each kind, and 3.2 GB peak while reading a photo. Give it **4 GB**, and one worker —
+a second worker loads its own full copy of the weights. This rules out the common
+free tiers; most give 512 MB.
+
+**HTTPS.** The microphone is one of the three ways to use Lilly, and browsers only
+hand it over on a secure origin. Served over plain http from anything other than
+localhost, the button fails and blames the user. Put TLS in front of it.
+
+**A volume for the corrections.** `data/feedback.db` is the only thing the app
+writes, and everything a person ever corrected is in it. Anywhere inside the
+deployment directory is wiped by the next deploy — mount a volume and point
+`LILLY_DB` at it, as the Dockerfile does.

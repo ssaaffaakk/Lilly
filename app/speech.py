@@ -10,25 +10,42 @@ Usage:
     python3 app/speech.py recording.wav          # any format ffmpeg-free: wav/mp3/m4a/ogg
 """
 import sys
+import threading
 from pathlib import Path
 
-from app.lilly import LISTEN_DIR
+from app.lilly import LISTEN_DIR, BadInput
+
+class UnreadableAudio(BadInput):
+    """Raised when the upload is not audio we can decode."""
+
 
 _model = None
+_model_lock = threading.Lock()
+_transcribe_lock = threading.Lock()
 
 
 def get_model():
     global _model
     if _model is None:
-        from faster_whisper import WhisperModel
-        _model = WhisperModel(str(LISTEN_DIR), device="cpu", compute_type="int8")
+        with _model_lock:
+            if _model is None:
+                from faster_whisper import WhisperModel
+                _model = WhisperModel(str(LISTEN_DIR), device="cpu",
+                                      compute_type="int8")
     return _model
 
 
 def transcribe(audio_path: str, language: str = "bs") -> str:
-    segments, info = get_model().transcribe(audio_path, language=language, beam_size=5)
-    text = " ".join(seg.text.strip() for seg in segments)
-    return text.strip()
+    with _transcribe_lock:
+        try:
+            segments, info = get_model().transcribe(audio_path, language=language,
+                                                    beam_size=5)
+            # segments is a generator: it has to be drained inside the lock
+            return " ".join(seg.text.strip() for seg in segments).strip()
+        except BadInput:
+            raise
+        except Exception as exc:
+            raise UnreadableAudio("that file is not audio we can read") from exc
 
 
 def main() -> int:

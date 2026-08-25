@@ -23,6 +23,15 @@ READ_DIR = MODELS / "read"             # photo -> text
 ADAPTER_DIR = MODELS / "adapter"       # our fine-tuned adapter, once trained
 
 
+class BadInput(ValueError):
+    """What the caller sent cannot be used — their side of the line, not ours.
+
+    Anything raised from this is answered with a plain sentence and a 4xx,
+    never a stack trace and never a 500: a wrong answer about whose fault it
+    is sends people looking in the wrong place.
+    """
+
+
 def missing() -> list:
     """Which parts of the model folder are not on this machine."""
     return [d.name for d in (TRANSLATE_DIR, LISTEN_DIR, SPEAK_DIR, READ_DIR)
@@ -32,9 +41,9 @@ def missing() -> list:
 class Lilly:
     """Everything Lilly can do, behind one object."""
 
-    def translate(self, bosnian: str) -> str:
+    def translate(self, bosnian: str, truncate: bool = False) -> str:
         from app.translate import get_engine
-        return get_engine().translate(bosnian)
+        return get_engine().translate(bosnian, truncate=truncate)
 
     def listen(self, audio_path: str, language: str = "bs") -> str:
         from app.speech import transcribe
@@ -49,13 +58,15 @@ class Lilly:
         return scan(image_path)
 
     # convenience: the two things the app actually does with the other parts
+    # truncate=True on both: the reader never typed this text, so a refusal
+    # over its length would be baffling. Better a translated beginning.
     def translate_audio(self, audio_path: str) -> tuple:
         bosnian = self.listen(audio_path)
-        return bosnian, (self.translate(bosnian) if bosnian else "")
+        return bosnian, (self.translate(bosnian, truncate=True) if bosnian else "")
 
     def translate_photo(self, image_path: str) -> tuple:
         bosnian = self.read(image_path)
-        return bosnian, (self.translate(bosnian) if bosnian else "")
+        return bosnian, (self.translate(bosnian, truncate=True) if bosnian else "")
 
     @property
     def status(self) -> str:

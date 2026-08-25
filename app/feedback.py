@@ -7,11 +7,17 @@ approved ones are exported as extra training data.
 Flow: user presses "wrong" -> row saved (status=pending) -> we review ->
 approved rows are exported by export_approved() and joined to the training set.
 """
+import os
+import re
 import sqlite3
 import time
 from pathlib import Path
 
-DB_PATH = Path(__file__).resolve().parents[1] / "data" / "feedback.db"
+# Deployed, this has to point at a mounted volume: anywhere inside the
+# deployment directory is wiped on the next restart, taking every correction
+# anyone ever submitted with it.
+DB_PATH = Path(os.environ.get("LILLY_DB")
+               or Path(__file__).resolve().parents[1] / "data" / "feedback.db")
 
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS corrections (
@@ -33,7 +39,22 @@ def _connect():
     return conn
 
 
+def _flatten(text):
+    """One line, no tabs.
+
+    Approved corrections are exported as tab-separated training pairs, and both
+    of these fields arrive from a stranger's POST body. A tab or a newline left
+    in them would split one row into several and shift every column after it,
+    quietly poisoning the training set.
+    """
+    return re.sub(r"\s+", " ", (text or "")).strip()
+
+
 def add_correction(source_text, model_output, user_complaint="", suggested_translation=""):
+    source_text = _flatten(source_text)
+    model_output = _flatten(model_output)
+    user_complaint = _flatten(user_complaint)
+    suggested_translation = _flatten(suggested_translation)
     with _connect() as conn:
         cur = conn.execute(
             "INSERT INTO corrections (created_at, source_text, model_output,"

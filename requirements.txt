@@ -2,6 +2,10 @@
 # Needs Python 3.10+ (we use 3.12 via uv).
 # Install:  uv venv .venv --python 3.12 && uv pip install --python .venv/bin/python -r requirements.txt
 
+# CPU-only wheels. Plain `torch` on Linux drags the entire CUDA stack with it —
+# well over a gigabyte of drivers for a GPU no deployment of this app will have.
+--extra-index-url https://download.pytorch.org/whl/cpu
+
 # Translation (LoRA fine-tuning)
 torch
 transformers==4.49.0
@@ -20,6 +24,10 @@ soundfile
 
 # Photo scan
 easyocr
+pillow
+
+# Fetching the models onto a fresh machine
+huggingface_hub
 
 # Training data preparation
 pyarrow
