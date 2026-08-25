@@ -1,0 +1,143 @@
+#!/usr/bin/env python3
+"""Run Phase 2 on Kaggle's GPU without opening a browser.
+
+Kaggle's own API does everything the web page does: upload the base weights as a
+dataset, push the notebook with a GPU and internet attached, run it, and fetch the
+result. This machine takes about fifteen hours for the same job; a Kaggle T4 takes
+two to three, and leaves the laptop alone.
+
+    python3 scripts/kaggle_train.py            # upload, start, and report back
+    python3 scripts/kaggle_train.py --status   # how is the run going
+    python3 scripts/kaggle_train.py --fetch    # bring the finished adapter home
+
+Needs an API token once: kaggle.com/settings -> API -> Create New Token, which
+downloads kaggle.json. Put it at ~/.kaggle/kaggle.json and chmod 600 it. Nothing
+else about the account is touched.
+"""
+import argparse
+import json
+import os
+import subprocess
+import sys
+import time
+from pathlib import Path
+
+REPO_ROOT = Path(__file__).resolve().parents[1]
+KAGGLE = str(REPO_ROOT / ".venv" / "bin" / "kaggle")
+WEIGHTS = REPO_ROOT / "models" / "lilly" / "translate"
+NOTEBOOK = REPO_ROOT / "training" / "Lilly_Translation_Kaggle.ipynb"
+STAGING = REPO_ROOT / "models" / "kaggle-staging"     # gitignored, under models/
+
+
+def username() -> str:
+    token = Path.home() / ".kaggle" / "kaggle.json"
+    if not token.exists():
+        raise SystemExit(
+            "No API token. kaggle.com/settings -> API -> Create New Token, then:\n"
+            "  mkdir -p ~/.kaggle && mv ~/Downloads/kaggle.json ~/.kaggle/\n"
+            "  chmod 600 ~/.kaggle/kaggle.json")
+    return json.loads(token.read_text())["username"]
+
+
+def run(*args, **kw):
+    print("$", " ".join(str(a) for a in args), flush=True)
+    return subprocess.run([str(a) for a in args], check=kw.pop("check", True),
+                          text=True, capture_output=kw.pop("quiet", False))
+
+
+def push_weights(user: str) -> str:
+    """The 457 MB base model, as a dataset the notebook can attach."""
+    slug = f"{user}/lilly-translate-base"
+    stage = STAGING / "dataset"
+    stage.mkdir(parents=True, exist_ok=True)
+    for f in WEIGHTS.iterdir():
+        if f.is_file():
+            target = stage / f.name
+            if not target.exists():
+                target.write_bytes(f.read_bytes())
+    (stage / "dataset-metadata.json").write_text(json.dumps({
+        "title": "Lilly translate base", "id": slug,
+        "licenses": [{"name": "other"}]}, indent=1))
+
+    existing = subprocess.run([KAGGLE, "datasets", "status", slug],
+                              text=True, capture_output=True)
+    if "ready" in existing.stdout.lower():
+        print(f"dataset already there: {slug}")
+        return slug
+    print(f"uploading {sum(f.stat().st_size for f in stage.iterdir()) / 1048576:.0f} MB "
+          f"to {slug} — this is the slow part, once")
+    run(KAGGLE, "datasets", "create", "-p", stage, "-r", "zip")
+    return slug
+
+
+def push_notebook(user: str, dataset: str) -> str:
+    """The notebook, with a GPU and the internet switched on from here."""
+    slug = f"{user}/lilly-translation"
+    stage = STAGING / "kernel"
+    stage.mkdir(parents=True, exist_ok=True)
+    (stage / NOTEBOOK.name).write_text(NOTEBOOK.read_text())
+    (stage / "kernel-metadata.json").write_text(json.dumps({
+        "id": slug,
+        "title": "Lilly translation",
+        "code_file": NOTEBOOK.name,
+        "language": "python",
+        "kernel_type": "notebook",
+        "is_private": True,
+        "enable_gpu": True,
+        "enable_internet": True,
+        "dataset_sources": [dataset],
+        "competition_sources": [],
+        "kernel_sources": [],
+    }, indent=1))
+    run(KAGGLE, "kernels", "push", "-p", stage)
+    return slug
+
+
+def status(slug: str) -> str:
+    out = subprocess.run([KAGGLE, "kernels", "status", slug],
+                         text=True, capture_output=True).stdout.strip()
+    print(out)
+    return out
+
+
+def main() -> int:
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--status", action="store_true")
+    ap.add_argument("--fetch", action="store_true")
+    ap.add_argument("--watch", action="store_true", help="poll until it finishes")
+    args = ap.parse_args()
+
+    user = username()
+    slug = f"{user}/lilly-translation"
+
+    if args.status:
+        return 0 if status(slug) else 1
+    if args.fetch:
+        out = REPO_ROOT / "models" / "kaggle-output"
+        out.mkdir(parents=True, exist_ok=True)
+        run(KAGGLE, "kernels", "output", slug, "-p", out)
+        print(f"\nfetched to {out}. Unzip the adapter to models/lilly/adapter/, then:")
+        print("  python3 scripts/build_translator.py")
+        return 0
+
+    if not WEIGHTS.exists():
+        print(f"no weights at {WEIGHTS} — run scripts/fetch_models.py first",
+              file=sys.stderr)
+        return 1
+
+    dataset = push_weights(user)
+    push_notebook(user, dataset)
+    print(f"\nrunning: https://www.kaggle.com/code/{slug}")
+    print("check on it with:  python3 scripts/kaggle_train.py --status")
+
+    if args.watch:
+        while True:
+            time.sleep(120)
+            state = status(slug).lower()
+            if "complete" in state or "error" in state or "cancel" in state:
+                break
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

@@ -29,6 +29,9 @@ pillow
 # Fetching the models onto a fresh machine
 huggingface_hub
 
+# Driving a training run on Kaggle GPUs without a browser
+kaggle
+
 # Training data preparation
 pyarrow
 
