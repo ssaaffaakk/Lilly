@@ -33,7 +33,7 @@ TSV_NAME = {"train": "train", "validation": "valid", "test": "test"}
 
 
 def list_files(lang: str) -> list:
-    with urllib.request.urlopen(LISTING + lang) as resp:
+    with urllib.request.urlopen(LISTING + lang, timeout=60) as resp:
         data = json.load(resp)
     if not data.get("parquet_files"):
         raise SystemExit(f"no files listed for {lang} — check the language code")
@@ -43,7 +43,8 @@ def list_files(lang: str) -> list:
 def fetch(url: str, note: str) -> bytes:
     print(f"    downloading {note}", flush=True)
     req = urllib.request.Request(url, headers={"User-Agent": "lilly-translator"})
-    with urllib.request.urlopen(req) as resp:
+    # without a timeout one stalled socket hangs an unattended run for hours
+    with urllib.request.urlopen(req, timeout=120) as resp:
         blob = resp.read()
     print(f"    got {len(blob) / 1048576:.0f} MB, unpacking…", flush=True)
     return blob
@@ -55,7 +56,11 @@ def unpack(blob: bytes, split: str, out_dir: Path) -> int:
     table = pq.read_table(io.BytesIO(blob))
     names = table.column_names
     audio_col = "audio" if "audio" in names else names[0]
-    text_col = next((c for c in ("transcription", "raw_transcription", "text")
+    # raw_transcription keeps capitals and punctuation; transcription is stripped
+    # of both. Train on the raw one — the app hands this text to the translator
+    # and shows it to the reader, and a listener taught to drop punctuation makes
+    # both worse. The scoring script normalises either side anyway.
+    text_col = next((c for c in ("raw_transcription", "transcription", "text")
                      if c in names), None)
     if text_col is None:
         raise SystemExit(f"no transcript column in {names}")

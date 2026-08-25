@@ -49,7 +49,8 @@ def download(name: str, url: str, pairs: int, note: str) -> None:
     print(f"  {name}: ~{pairs:,} pairs — {note}")
     print(f"    downloading {url}")
     req = urllib.request.Request(url, headers={"User-Agent": "lilly-translator"})
-    with urllib.request.urlopen(req) as resp:
+    # without a timeout one stalled socket hangs an unattended run for hours
+    with urllib.request.urlopen(req, timeout=120) as resp:
         blob = resp.read()
     print(f"    got {len(blob) / 1048576:.1f} MB, extracting…")
     with zipfile.ZipFile(io.BytesIO(blob)) as zf:

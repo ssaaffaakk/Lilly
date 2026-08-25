@@ -74,6 +74,9 @@ def main() -> int:
     if args.quick_test:
         # small enough to fit an 8 GB laptop — the full run needs a 16 GB GPU
         args.batch_size, args.grad_accum = 2, 1
+        # never into the real adapter: a 200-pair toy sitting at that path would
+        # be picked up by the app, and evaluated and shipped as the finished model
+        args.output = str(REPO_ROOT / "models" / "quicktest-adapter")
 
     train_pairs = read_tsv(REPO_ROOT / "data" / "clean" / "train.tsv",
                            limit=200 if args.quick_test else None)

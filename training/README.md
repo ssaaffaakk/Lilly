@@ -29,7 +29,11 @@ runs the notebook without you, so a 2-3 hour job survives closing the tab.
 
 1. <https://www.kaggle.com/code> → **New Notebook** → **File → Import Notebook** →
    upload `training/Lilly_Translation_Kaggle.ipynb`
-2. Right-hand panel: **Accelerator → GPU T4 x2**, and **Internet → On**
+2. Right-hand panel: **Accelerator → GPU** (P100 or T4) and **Internet → On**. The
+   notebook pins itself to a single GPU on purpose: with two visible, the trainer splits
+   each batch across both, which doubles the effective batch and halves the optimizer
+   steps while the learning rate stays put — a different recipe than these numbers were
+   set for
 3. Upload `models/lilly/translate` once as a Kaggle Dataset (Datasets → New Dataset),
    then attach it here with **Input → Add Input → Datasets**. The weights are too big
    for git, so this is how they reach the machine — cell 4 finds them wherever they mount
@@ -40,8 +44,10 @@ runs the notebook without you, so a 2-3 hour job survives closing the tab.
 `Lilly_Training_Colab.ipynb` does the same job on Colab, reading the weights from Google
 Drive instead. It works, but the tab has to stay open.
 
-`--quick-test` on the train script does a 3-minute miniature run to verify the pipeline
-before committing hours to the real one.
+`--quick-test` does a 3-minute miniature run to verify the pipeline before committing
+hours to the real one. It writes to `models/quicktest-adapter`, never to the real
+adapter — a 200-pair toy sitting at the real path would be picked up by the app and
+scored as the finished model.
 
 **Done when** Lilly beats the untuned base on BLEU and chrF2 over the 1,500-sentence
 held-out test set. Results land in `RESULTS.md`.
@@ -69,8 +75,16 @@ python3 training/evaluate_speech.py --data data/speech/test.tsv
 python3 training/evaluate_speech.py --data data/speech/test.tsv --model models/lilly/listen-previous
 ```
 
-`--convert-only DIR` skips training and just converts a checkpoint, which is how you get
-an untrained baseline to measure against.
+Training watches `data/speech/valid.tsv` as it goes and keeps the epoch that scores best
+on it rather than whichever one happened to be last — point `--valid` elsewhere to change
+that. `--convert-only DIR` skips training and just converts a checkpoint, which is how
+you get an untrained baseline to measure against, and how the Kaggle notebook separates
+converting from training so a conversion failure cannot throw away the GPU hours.
+
+The transcripts come with their capitals and punctuation intact. The dataset also ships a
+stripped-down version of the same text, and training on that would teach the listener to
+drop both — which then reaches the translator and the reader. Scoring normalises either
+side, so the comparison stays fair regardless.
 
 Data is a TSV of an audio path and what is actually said in it:
 

@@ -91,13 +91,21 @@ class Collator:
     """Audio is already fixed-length; only the transcripts need padding."""
     processor: object
 
+    def __post_init__(self):
+        # The model prepends this token itself when it builds the decoder input,
+        # so a copy left at the front of the labels trains it one position off
+        # from how it is used. Note this is NOT the tokenizer's bos_token, which
+        # for this model is <|endoftext|> and never appears here — comparing
+        # against that silently does nothing.
+        self.start_token = self.processor.tokenizer.convert_tokens_to_ids(
+            "<|startoftranscript|>")
+
     def __call__(self, batch):
         features = torch.tensor(np.array([b["input_features"] for b in batch]))
         labels = self.processor.tokenizer.pad(
             [{"input_ids": b["labels"]} for b in batch], return_tensors="pt")
         ids = labels["input_ids"].masked_fill(labels.attention_mask.ne(1), -100)
-        # the decoder prepends the start token itself, so drop a leading copy
-        if (ids[:, 0] == self.processor.tokenizer.bos_token_id).all():
+        if (ids[:, 0] == self.start_token).all():
             ids = ids[:, 1:]
         return {"input_features": features, "labels": ids}
 
@@ -156,6 +164,10 @@ def convert_for_app(trained_dir: Path, out_dir: Path) -> None:
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--data", type=Path, help="TSV of audio path + transcript")
+    ap.add_argument("--valid", type=Path,
+                    default=REPO_ROOT / "data" / "speech" / "valid.tsv",
+                    help="held-out clips watched during training; the run keeps the "
+                         "epoch that scores best on these, not the last one")
     ap.add_argument("--base", default=BASE_MODEL)
     ap.add_argument("--language", default="bs")
     ap.add_argument("--epochs", type=float, default=3.0)
@@ -197,23 +209,37 @@ def main() -> int:
     model.generation_config.task = "transcribe"
     model.generation_config.forced_decoder_ids = None
 
+    # Without this the run keeps whatever the last epoch produced, even if it
+    # was already overfitting — and nothing warns you until you measure at the end.
+    valid_rows = read_tsv(args.valid) if args.valid and args.valid.exists() else []
+    if valid_rows and args.quick_test:
+        valid_rows = valid_rows[:4]
+    print(f"held-out clips watched during training: {len(valid_rows):,}"
+          if valid_rows else "no validation clips found — training blind")
+
     train_args = Seq2SeqTrainingArguments(
         output_dir=str(REPO_ROOT / "models" / "checkpoints-speech"),
         num_train_epochs=args.epochs,
         per_device_train_batch_size=args.batch_size,
+        per_device_eval_batch_size=args.batch_size,
         learning_rate=args.lr,
         warmup_ratio=0.05,
         fp16=torch.cuda.is_available(),
         logging_steps=25,
         save_strategy="epoch",
+        eval_strategy="epoch" if valid_rows else "no",
+        load_best_model_at_end=bool(valid_rows),
+        metric_for_best_model="eval_loss",
         save_total_limit=2,
         report_to="none",
         seed=41,
         max_steps=2 if args.quick_test else -1,
     )
-    Seq2SeqTrainer(model=model, args=train_args,
-                   train_dataset=ClipDataset(rows, processor, args.language),
-                   data_collator=Collator(processor)).train()
+    Seq2SeqTrainer(
+        model=model, args=train_args,
+        train_dataset=ClipDataset(rows, processor, args.language),
+        eval_dataset=ClipDataset(valid_rows, processor, args.language) if valid_rows else None,
+        data_collator=Collator(processor)).train()
 
     args.output.mkdir(parents=True, exist_ok=True)
     model.save_pretrained(str(args.output))
