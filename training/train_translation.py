@@ -110,6 +110,10 @@ def main() -> int:
         learning_rate=args.lr,
         warmup_ratio=0.03,
         fp16=use_cuda,
+        # Roughly half the compute was going into padding: batches were filled in
+        # file order, so one long sentence padded fifteen short ones out to match.
+        # Grouping by length before batching cuts the run without touching quality.
+        group_by_length=True,
         logging_steps=50,
         eval_strategy="steps",
         eval_steps=500,

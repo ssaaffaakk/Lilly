@@ -49,8 +49,19 @@ hours to the real one. It writes to `models/quicktest-adapter`, never to the rea
 adapter — a 200-pair toy sitting at the real path would be picked up by the app and
 scored as the finished model.
 
-**Done when** Lilly beats the untuned base on BLEU and chrF2 over the 1,500-sentence
-held-out test set. Results land in `RESULTS.md`.
+**Done when** Lilly beats the untuned base on **FLORES-200**, not on our own split.
+
+That distinction is the whole game. Our test split was held out from *our* training,
+but it was drawn from the same OPUS releases the base model was trained on — so the
+base has already seen almost all of it, and on the news half it reproduces reference
+sentences word for word. Measured: the base scores 52.97 BLEU on the SETIMES rows of
+our split and 37.47 on FLORES-200, which it has never seen. A gain on the first
+number proves nothing.
+
+Fetch the clean benchmark once with `data/scripts/download_flores.py`; `evaluate.py`
+then scores both sets, breaks the in-house set out per source corpus, and runs a
+paired bootstrap so a difference smaller than the noise cannot be read as a win.
+Results land in `RESULTS.md`.
 
 ---
 

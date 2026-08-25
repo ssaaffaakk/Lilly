@@ -23,12 +23,14 @@ normalize punctuation, deduplicate, split into train/validation/test.
 - A South-Slavic-to-English sequence-to-sequence base we can deploy freely; we make it
   *exact* for Bosnian
 - Method: LoRA fine-tuning on our Phase 1 data (fits free Colab T4 GPU)
-- Measure quality with BLEU + chrF on held-out test set, compare against the base model
-  so we can prove our version is better at Bosnian
+- Measure with BLEU + chrF2 on FLORES-200, which the base model has never seen. Our own
+  split came from the same corpora the base was trained on, so a gain there would only
+  show we fit the corpus, not that we improved the Bosnian
 - Export the trained weights + a small quantized version that runs on the Mac
 
-**Done when:** our fine-tuned model beats the untuned base on the Bosnian test set,
-training notebook + eval numbers pushed.
+**Done when:** our fine-tuned model beats the untuned base on FLORES-200 by more than
+the noise floor, training notebook + eval numbers pushed. If it does not, that is also
+a result, and it gets reported as one.
 
 ## Phase 3 — Speech input (listen)
 - Speech recognition already understands Bosnian → we wire it in first (works day one)
