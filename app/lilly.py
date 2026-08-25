@@ -16,7 +16,8 @@ import sys
 from pathlib import Path
 
 MODELS = Path(__file__).resolve().parents[1] / "models" / "lilly"
-TRANSLATE_DIR = MODELS / "translate"   # Bosnian -> English
+TRANSLATOR_DIR = MODELS / "translator"  # Bosnian -> English, quantised, what we serve
+TRANSLATE_DIR = MODELS / "translate"   # the trainable copy, only training reads it
 LISTEN_DIR = MODELS / "listen"         # speech -> text
 SPEAK_DIR = MODELS / "speak"           # text -> speech
 READ_DIR = MODELS / "read"             # photo -> text
@@ -34,7 +35,7 @@ class BadInput(ValueError):
 
 def missing() -> list:
     """Which parts of the model folder are not on this machine."""
-    return [d.name for d in (TRANSLATE_DIR, LISTEN_DIR, SPEAK_DIR, READ_DIR)
+    return [d.name for d in (TRANSLATOR_DIR, LISTEN_DIR, SPEAK_DIR, READ_DIR)
             if not d.is_dir()]
 
 
@@ -83,7 +84,7 @@ def main() -> int:
         print(f"missing from {MODELS}: {', '.join(gaps)}", file=sys.stderr)
         return 1
     print(f"model folder: {MODELS}")
-    for part in ("translate", "listen", "speak", "read"):
+    for part in ("translator", "listen", "speak", "read"):
         size = sum(f.stat().st_size for f in (MODELS / part).rglob("*") if f.is_file())
         print(f"  {part:<10} {size / 1048576:>6.0f} MB")
     if len(sys.argv) > 1:

@@ -22,6 +22,11 @@ COPY scripts/ scripts/
 ARG LILLY_MODELS_REPO=Safak11/lilly
 RUN LILLY_MODELS_REPO=${LILLY_MODELS_REPO} python3 scripts/fetch_models.py
 
+# Quantise the translator: 1.8 GB of float32 becomes 670 MB and runs about twice
+# as fast, for a chrF2 that matches to two decimals. Folds in the fine-tuning if
+# there is any. The float32 copy is only needed for training, so it goes.
+RUN python3 scripts/build_translator.py && rm -rf models/lilly/translate
+
 COPY app/ app/
 
 # Corrections belong on a mounted volume: anywhere inside the image is wiped by

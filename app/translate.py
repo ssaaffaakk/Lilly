@@ -1,39 +1,38 @@
 #!/usr/bin/env python3
 """Lilly's translation engine — Bosnian -> English on this machine.
 
-Weights are read from models/lilly/translate/. If our fine-tuned adapter
-exists at models/lilly/adapter/ it is applied on top automatically, otherwise
-the untuned base is used — so everything works even before training finishes.
+Serves the quantised model in models/lilly/translator/, built by
+scripts/build_translator.py. That build is where our fine-tuning gets folded in,
+so what runs here is Lilly rather than the untuned base once the adapter exists.
+
+Quantised on purpose: the same weights served as float32 PyTorch cost about
+1.8 GB resident and run roughly half as fast, for a chrF2 that matches to two
+decimal places.
 
 Usage:
     python3 app/translate.py "Dobar dan, kako ste?"
     python3 app/translate.py            # interactive: type a line, get the translation
 """
+import json
 import re
 import sys
 import threading
 
-import torch
-from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
-
-from app.lilly import ADAPTER_DIR, TRANSLATE_DIR, BadInput
+from app.lilly import BadInput, TRANSLATOR_DIR
 
 # Cost is driven by sentences x longest sentence, not by how many characters
-# arrived, so the limits are in tokens. Beam search widens each batch four
-# times over, and every sentence in a batch is padded to the longest one, so a
-# single wide batch is what turns a modest paste into gigabytes.
-# Measured on this repo, CPU-only, translating 200 sentences: a budget of 1024
-# adds 1,364 MB over the resting model, 512 adds 718 MB, and 256 adds 178 MB for
-# about 20% more time. Predictable memory is worth more than the seconds.
+# arrived, so the limits are in tokens. Every sentence in a batch is padded to
+# the longest one, so a single wide batch is what turns a modest paste into
+# gigabytes.
 MAX_INPUT_TOKENS = 2048      # one request may not ask for more work than this
-BATCH_TOKEN_BUDGET = 256     # sentences x padded length per generate() call
+BATCH_TOKEN_BUDGET = 256     # sentences x padded length per batch
 MAX_SENTENCE_TOKENS = 256
 
 _engine = None
 _engine_lock = threading.Lock()
 # Translation is CPU-bound and the server hands requests to a wide threadpool.
 # Without this, ten callers each get their own copy of the peak allocation.
-_generate_lock = threading.Lock()
+_translate_lock = threading.Lock()
 
 
 class TextTooLong(BadInput):
@@ -42,71 +41,72 @@ class TextTooLong(BadInput):
 
 class Engine:
     def __init__(self):
-        self.device = ("cuda" if torch.cuda.is_available()
-                       else "mps" if torch.backends.mps.is_available() else "cpu")
-        self.tokenizer = AutoTokenizer.from_pretrained(str(TRANSLATE_DIR))
-        model = AutoModelForSeq2SeqLM.from_pretrained(str(TRANSLATE_DIR))
-        if (ADAPTER_DIR / "adapter_config.json").exists():
-            from peft import PeftModel
-            model = PeftModel.from_pretrained(model, str(ADAPTER_DIR)).merge_and_unload()
-            self.name = "Lilly (fine-tuned)"
-        else:
-            self.name = "base model (adapter not trained yet)"
-        self.model = model.to(self.device).eval()
+        import ctranslate2
+        from transformers import AutoTokenizer
+
+        if not (TRANSLATOR_DIR / "model.bin").exists():
+            raise FileNotFoundError(
+                f"no translator at {TRANSLATOR_DIR} — run scripts/build_translator.py")
+        self.tokenizer = AutoTokenizer.from_pretrained(str(TRANSLATOR_DIR))
+        self.device = "cuda" if ctranslate2.get_cuda_device_count() else "cpu"
+        self.translator = ctranslate2.Translator(
+            str(TRANSLATOR_DIR), device=self.device, compute_type="int8")
+        built = TRANSLATOR_DIR / "built.json"
+        tuned = json.loads(built.read_text())["fine_tuned"] if built.exists() else False
+        self.name = "Lilly (fine-tuned)" if tuned else "base model (not fine-tuned yet)"
 
     def translate(self, text: str, truncate: bool = False) -> str:
         """Bosnian in, English out.
 
-        The model silently drops sentences when fed several at once, so the
-        text is split and translated sentence by sentence. Those sentences go
-        out in small groups rather than one wide batch: peak memory is set by
-        the widest batch, and an unbounded one is how a paste becomes an
-        out-of-memory kill.
+        The model silently drops sentences when fed several at once, so the text
+        is split and translated sentence by sentence. Those sentences go out in
+        small groups rather than one wide batch: peak memory is set by the widest
+        batch, and an unbounded one is how a paste becomes an out-of-memory kill.
 
-        truncate=True quietly drops the overflow instead of refusing. That is
-        for text the caller never typed — a photo of a dense page, a long
-        recording — where a refusal would be baffling.
+        truncate=True quietly drops the overflow instead of refusing. That is for
+        text the caller never typed — a photo of a dense page, a long recording —
+        where a refusal would be baffling.
         """
         sentences = [s for s in re.split(r"(?<=[.!?])\s+", text.strip()) if s] or [text]
-        lengths = [len(self.tokenizer(s, truncation=True,
-                                      max_length=MAX_SENTENCE_TOKENS).input_ids)
-                   for s in sentences]
+        tokenised = [self.tokenizer.convert_ids_to_tokens(
+                        self.tokenizer.encode(s, truncation=True,
+                                              max_length=MAX_SENTENCE_TOKENS))
+                     for s in sentences]
 
         total = 0
-        for i, length in enumerate(lengths):
-            if total + length > MAX_INPUT_TOKENS:
+        for i, tokens in enumerate(tokenised):
+            if total + len(tokens) > MAX_INPUT_TOKENS:
                 if not truncate:
                     raise TextTooLong(
-                        f"that is about {sum(lengths)} tokens of text; "
-                        f"this translates up to {MAX_INPUT_TOKENS} at a time")
-                sentences, lengths = sentences[:i], lengths[:i]
+                        f"that is about {sum(len(t) for t in tokenised)} tokens of "
+                        f"text; this translates up to {MAX_INPUT_TOKENS} at a time")
+                tokenised = tokenised[:i]
                 break
-            total += length
-        if not sentences:
+            total += len(tokens)
+        if not tokenised:
             return ""
 
         out = []
-        for group in self._grouped(sentences, lengths):
-            enc = self.tokenizer(group, return_tensors="pt", padding=True,
-                                 truncation=True,
-                                 max_length=MAX_SENTENCE_TOKENS).to(self.device)
-            with _generate_lock, torch.no_grad():
-                gen = self.model.generate(**enc, max_length=MAX_SENTENCE_TOKENS,
-                                          num_beams=4)
-            out.extend(self.tokenizer.batch_decode(gen, skip_special_tokens=True))
+        for group in self._grouped(tokenised):
+            with _translate_lock:
+                results = self.translator.translate_batch(
+                    group, beam_size=4, max_decoding_length=MAX_SENTENCE_TOKENS)
+            for result in results:
+                ids = self.tokenizer.convert_tokens_to_ids(result.hypotheses[0])
+                out.append(self.tokenizer.decode(ids, skip_special_tokens=True))
         return " ".join(out)
 
     @staticmethod
-    def _grouped(sentences: list, lengths: list):
+    def _grouped(tokenised: list):
         """Batches whose cost — count x padded width — stays under the budget."""
         group, widest = [], 0
-        for sentence, length in zip(sentences, lengths):
-            candidate = max(widest, length)
+        for tokens in tokenised:
+            candidate = max(widest, len(tokens))
             if group and (len(group) + 1) * candidate > BATCH_TOKEN_BUDGET:
                 yield group
-                group, widest = [sentence], length
+                group, widest = [tokens], len(tokens)
             else:
-                group.append(sentence)
+                group.append(tokens)
                 widest = candidate
         if group:
             yield group
@@ -115,9 +115,8 @@ class Engine:
 def get_engine() -> Engine:
     """Shared lazy singleton so the web server loads the model once.
 
-    Locked, because the server answers requests from a threadpool: without it
-    a first burst of traffic starts several loads at once and each one wants
-    its own gigabyte.
+    Locked, because the server answers requests from a threadpool: without it a
+    first burst of traffic starts several loads at once.
     """
     global _engine
     if _engine is None:

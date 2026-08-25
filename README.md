@@ -74,10 +74,13 @@ uv pip install --python .venv/bin/python -r requirements.txt
 .venv/bin/uvicorn app.server:app --port 8000
 ```
 
-The weights are 1.3 GB, so they are not in git. Fetch them once:
+The weights are 1.3 GB, so they are not in git. Fetch them, then build the
+translator the app serves from — that step quantises it and folds in the
+fine-tuning, and has to be re-run after every training run:
 
 ```
 .venv/bin/python scripts/fetch_models.py
+.venv/bin/python scripts/build_translator.py
 ```
 
 Then open http://localhost:8000. `python3 app/lilly.py` prints what is in the model
@@ -92,10 +95,11 @@ docker run -p 8000:8000 -v lilly-data:/data lilly
 
 Three things decide whether a deployment works:
 
-**Memory.** Measured on CPU, which is what a server is: 2.5 GB after one request of
-each kind, and 3.2 GB peak while reading a photo. Give it **4 GB**, and one worker —
-a second worker loads its own full copy of the weights. This rules out the common
-free tiers; most give 512 MB.
+**Memory.** Measured on CPU, which is what a server is. Translation rests at 670 MB
+and peaks at 975 MB on the largest input it accepts; reading a photo is the expensive
+one and takes the process to about 3 GB. Give it **4 GB**, and one worker — a second
+worker loads its own full copy of the weights. This rules out the common free tiers;
+most give 512 MB.
 
 **HTTPS.** The microphone is one of the three ways to use Lilly, and browsers only
 hand it over on a secure origin. Served over plain http from anything other than
