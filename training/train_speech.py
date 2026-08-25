@@ -122,19 +122,24 @@ def convert_for_app(trained_dir: Path, out_dir: Path) -> None:
     """Turn the fine-tuned checkpoint into the format the app loads."""
     from ctranslate2.converters import TransformersConverter
 
-    # The converter asks for the weight type by the newer name; the pinned
-    # transformers still calls it torch_dtype and hands anything else straight
-    # to the model constructor, which then raises. Translate it on the way past.
+    # The converter names the weight type differently from older transformers,
+    # which hands anything it does not recognise to the model constructor and
+    # raises. Rather than guess which pair is installed, try it their way and
+    # translate only if that fails — so this works on any machine.
     original_load = TransformersConverter.load_model
 
     def load_model(self, model_class, model_name_or_path, **kwargs):
-        if "dtype" in kwargs:
+        try:
+            return original_load(self, model_class, model_name_or_path, **kwargs)
+        except TypeError as exc:
+            if "dtype" not in kwargs or "dtype" not in str(exc):
+                raise
             kwargs["torch_dtype"] = kwargs.pop("dtype")
-        return original_load(self, model_class, model_name_or_path, **kwargs)
+            return original_load(self, model_class, model_name_or_path, **kwargs)
 
     TransformersConverter.load_model = load_model
     try:
-        if out_dir.exists():
+        if out_dir.exists() and out_dir.is_dir():
             backup = out_dir.with_name(out_dir.name + "-previous")
             if backup.exists():
                 shutil.rmtree(backup)
@@ -161,7 +166,15 @@ def main() -> int:
     ap.add_argument("--quick-test", action="store_true")
     ap.add_argument("--no-convert", action="store_true",
                     help="stop after training, leave models/lilly/listen alone")
+    ap.add_argument("--convert-only", type=Path, metavar="DIR",
+                    help="skip training: just convert --base into DIR, which is how "
+                         "you get a baseline to measure the fine-tune against")
     args = ap.parse_args()
+
+    if args.convert_only:
+        convert_for_app(Path(args.base), args.convert_only)
+        print(f"converted, untrained: {args.convert_only}")
+        return 0
 
     if args.quick_test:
         args.data = make_test_clips(REPO_ROOT / "data" / "speech-quicktest")

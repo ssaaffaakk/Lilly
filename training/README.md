@@ -22,18 +22,23 @@ The heart of the project: our 337k cleaned Bosnian–English pairs, fine-tuned w
 LoRA so the Bosnian side becomes exact. LoRA trains a small ~10-20 MB adapter on
 top of the frozen base — cheap to train, easy to share, small enough to keep.
 
-### Run it free, in the browser
+### Run it free, on Kaggle
 
-1. Go to <https://colab.research.google.com> and sign in with a Google account
-2. **File → Open notebook → GitHub tab** → paste `ssaaffaakk/Lilly` → open
-   `training/Lilly_Training_Colab.ipynb`
-3. **Runtime → Change runtime type → T4 GPU → Save**
-   Colab has no copy of `models/lilly/translate` (git can't carry it), so upload that
-   folder to Google Drive once as `MyDrive/lilly/translate` — cell 4 mounts Drive and
-   points `LILLY_BASE` at it
-4. Run the cells top to bottom. The real training cell takes ~2–3 hours — keep the tab open
-5. The last cell downloads `lilly-adapter.zip`. Unzip it to `models/lilly/adapter/` and
-   the app picks it up on the next start
+Kaggle is the better of the two free options: **Save Version → Save & Run All (Commit)**
+runs the notebook without you, so a 2-3 hour job survives closing the tab.
+
+1. <https://www.kaggle.com/code> → **New Notebook** → **File → Import Notebook** →
+   upload `training/Lilly_Translation_Kaggle.ipynb`
+2. Right-hand panel: **Accelerator → GPU T4 x2**, and **Internet → On**
+3. Upload `models/lilly/translate` once as a Kaggle Dataset (Datasets → New Dataset),
+   then attach it here with **Input → Add Input → Datasets**. The weights are too big
+   for git, so this is how they reach the machine — cell 4 finds them wherever they mount
+4. **Save Version → Save & Run All (Commit)**, then close the tab
+5. When it finishes, download `lilly-adapter.zip` from that version's **Output** tab and
+   unzip it to `models/lilly/adapter/`
+
+`Lilly_Training_Colab.ipynb` does the same job on Colab, reading the weights from Google
+Drive instead. It works, but the tab has to stay open.
 
 `--quick-test` on the train script does a 3-minute miniature run to verify the pipeline
 before committing hours to the real one.
@@ -50,11 +55,22 @@ The app runs its listener in a fast inference format that cannot be trained, so
 convert the result back, drop it into `models/lilly/listen/`. The listener it
 replaces is kept next door as `listen-previous`, so you can measure against it.
 
+Fine-tuning wants a GPU, so the same Kaggle route applies — import
+`training/Lilly_Speech_Kaggle.ipynb`, GPU on, internet on, **Save & Run All**. That
+notebook needs no dataset upload: it fetches its own speech, measures the untrained
+listener, trains, and measures again on the same held-out clips.
+
+Locally, or once you have the data:
+
 ```
+python3 data/scripts/download_speech_data.py
 python3 training/train_speech.py --data data/speech/train.tsv
 python3 training/evaluate_speech.py --data data/speech/test.tsv
 python3 training/evaluate_speech.py --data data/speech/test.tsv --model models/lilly/listen-previous
 ```
+
+`--convert-only DIR` skips training and just converts a checkpoint, which is how you get
+an untrained baseline to measure against.
 
 Data is a TSV of an audio path and what is actually said in it:
 
@@ -63,9 +79,15 @@ recordings/001.wav	Dobar dan, kako ste?
 recordings/002.wav	Gdje je autobuska stanica?
 ```
 
-**The hard part is the data, not the training.** There is no large public corpus of
-transcribed Bosnian speech. Realistic options: record and transcribe your own, or
-train on Croatian/Serbian speech as a proxy — close enough acoustically to help.
+**The data is small, and that is the real limit.** `download_speech_data.py` pulls a
+read-speech set with human transcripts — 3,091 clips to train on, 925 held back to judge
+with. That is tiny by speech standards. Croatian and Serbian are selectable as proxies
+(`--lang hr_hr`, `--lang sr_rs`), and recording your own Bosnian is what would help most.
+
+Measured baseline, so you know what you are aiming at: the listener the app ships with
+scores **42% word error rate** on 50 of those held-out clips. The mistakes are not
+acoustic — it hears the sound and guesses a word that does not exist, `pjevači` coming
+back as `pivač`. That is the kind of error more Bosnian data fixes.
 
 **Done when** word error rate on held-out clips is lower than the listener you
 replaced. If the number does not move, the fine-tune did not work, however cleanly
