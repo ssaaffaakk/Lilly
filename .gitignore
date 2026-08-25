@@ -27,3 +27,4 @@ models/
 # Secrets
 .env
 training.log
+remaining.log
