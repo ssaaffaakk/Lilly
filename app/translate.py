@@ -28,6 +28,15 @@ MAX_INPUT_TOKENS = 2048      # one request may not ask for more work than this
 BATCH_TOKEN_BUDGET = 256     # sentences x padded length per batch
 MAX_SENTENCE_TOKENS = 256
 
+# Split on line breaks as well as on sentence-ending punctuation. Text off a
+# photograph rarely has punctuation — a sign reads "ZABRANJEN ULAZ / Radovi na
+# mostu / Hvala na razumijevanju", three separate notices on three lines — and
+# joined into one run-on the model translates it as a single sentence and drops
+# the opening clause entirely. Measured on exactly that sign: the prohibition
+# vanished from the translation, so the reader never saw that entry was
+# forbidden. The lines are the sentence boundaries the punctuation is missing.
+SENTENCE_BREAK = re.compile(r"(?<=[.!?])\s+|\s*\n+\s*")
+
 _engine = None
 _engine_lock = threading.Lock()
 # Translation is CPU-bound and the server hands requests to a wide threadpool.
@@ -67,7 +76,7 @@ class Engine:
         text the caller never typed — a photo of a dense page, a long recording —
         where a refusal would be baffling.
         """
-        sentences = [s for s in re.split(r"(?<=[.!?])\s+", text.strip()) if s] or [text]
+        sentences = [s for s in SENTENCE_BREAK.split(text.strip()) if s.strip()] or [text]
         tokenised = [self.tokenizer.convert_ids_to_tokens(
                         self.tokenizer.encode(s, truncation=True,
                                               max_length=MAX_SENTENCE_TOKENS))
