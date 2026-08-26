@@ -49,18 +49,29 @@ class TextTooLong(BadInput):
 
 
 class Engine:
-    def __init__(self):
+    def __init__(self, directory=None):
+        """directory lets a measurement load a different build of the same model.
+
+        Scoring has to go through this class, not around it: the sentence
+        splitting below is part of what Lilly does, and a measurement that skips
+        it scores a failure mode the app does not have. Measured on FLORES,
+        feeding rows in whole: single-sentence rows lost 0.33 chrF2 to the
+        fine-tuning, multi-sentence rows lost 3.36 — the model drops a clause
+        when it is handed several at once, which is the very thing the splitter
+        exists to prevent.
+        """
         import ctranslate2
         from transformers import AutoTokenizer
 
-        if not (TRANSLATOR_DIR / "model.bin").exists():
+        directory = directory or TRANSLATOR_DIR
+        if not (directory / "model.bin").exists():
             raise FileNotFoundError(
-                f"no translator at {TRANSLATOR_DIR} — run scripts/build_translator.py")
-        self.tokenizer = AutoTokenizer.from_pretrained(str(TRANSLATOR_DIR))
+                f"no translator at {directory} — run scripts/build_translator.py")
+        self.tokenizer = AutoTokenizer.from_pretrained(str(directory))
         self.device = "cuda" if ctranslate2.get_cuda_device_count() else "cpu"
         self.translator = ctranslate2.Translator(
-            str(TRANSLATOR_DIR), device=self.device, compute_type="int8")
-        built = TRANSLATOR_DIR / "built.json"
+            str(directory), device=self.device, compute_type="int8")
+        built = directory / "built.json"
         tuned = json.loads(built.read_text())["fine_tuned"] if built.exists() else False
         self.name = "Lilly (fine-tuned)" if tuned else "base model (not fine-tuned yet)"
 

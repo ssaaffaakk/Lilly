@@ -78,6 +78,11 @@ def main() -> int:
                     help="int8 (default), int8_float32, float16 or float32")
     ap.add_argument("--source", type=Path, default=SOURCE)
     ap.add_argument("--dest", type=Path, default=DEST)
+    # Comparing the fine-tuned model against the base is only honest if both are
+    # built the same way. Serving one as int8 CTranslate2 and scoring the other
+    # as float32 PyTorch measures the quantisation as much as the training.
+    ap.add_argument("--no-adapter", action="store_true",
+                    help="build the untuned base, for comparing against")
     args = ap.parse_args()
 
     if not (args.source / "config.json").exists():
@@ -87,7 +92,9 @@ def main() -> int:
 
     source = args.source
     merged_dir = MODELS / "translate-merged"
-    if merge_adapter(merged_dir):
+    if args.no_adapter:
+        print("building the untuned base on purpose")
+    elif merge_adapter(merged_dir):
         source = merged_dir
         print("serving the fine-tuned weights")
     else:
