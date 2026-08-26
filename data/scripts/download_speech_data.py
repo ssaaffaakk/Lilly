@@ -17,9 +17,9 @@ Croatian (hr_hr) and Serbian (sr_rs) work as proxies — the three are close
 enough acoustically that training on them helps Bosnian.
 """
 import argparse
-import io
 import json
 import sys
+import time
 import urllib.request
 from pathlib import Path
 
@@ -40,21 +40,60 @@ def list_files(lang: str) -> list:
     return data["parquet_files"]
 
 
-def fetch(url: str, note: str) -> bytes:
-    print(f"    downloading {note}", flush=True)
-    req = urllib.request.Request(url, headers={"User-Agent": "lilly-translator"})
-    # without a timeout one stalled socket hangs an unattended run for hours
-    with urllib.request.urlopen(req, timeout=120) as resp:
-        blob = resp.read()
-    print(f"    got {len(blob) / 1048576:.0f} MB, unpacking…", flush=True)
-    return blob
+def fetch_to_file(url: str, target: Path, note: str) -> Path:
+    """Stream a file to disk, picking up where a failed attempt left off.
+
+    The training split is 2.1 GB. Reading that into memory in one call needs
+    2 GB of RAM on a machine that has 8, and one stalled socket anywhere in the
+    twenty minutes it takes throws the whole thing away. So: write straight to
+    disk in chunks, and if the connection drops, ask the server to continue from
+    the byte we reached rather than starting over.
+    """
+    target.parent.mkdir(parents=True, exist_ok=True)
+    part = target.with_suffix(target.suffix + ".part")
+
+    for attempt in range(1, 6):
+        have = part.stat().st_size if part.exists() else 0
+        headers = {"User-Agent": "lilly-translator"}
+        if have:
+            headers["Range"] = f"bytes={have}-"
+            print(f"    resuming {note} at {have / 1048576:.0f} MB", flush=True)
+        else:
+            print(f"    downloading {note}", flush=True)
+        try:
+            req = urllib.request.Request(url, headers=headers)
+            with urllib.request.urlopen(req, timeout=60) as resp:
+                # a server that ignores Range restarts the file, so start over too
+                mode = "ab" if resp.status == 206 else "wb"
+                if mode == "wb":
+                    have = 0
+                total = int(resp.headers.get("Content-Length", 0)) + have
+                with open(part, mode) as f:
+                    while chunk := resp.read(1 << 20):
+                        f.write(chunk)
+                        have += len(chunk)
+                        if have % (100 << 20) < (1 << 20):
+                            pct = f" ({100 * have / total:.0f}%)" if total else ""
+                            print(f"      {have / 1048576:.0f} MB{pct}", flush=True)
+            part.rename(target)
+            print(f"    got {target.stat().st_size / 1048576:.0f} MB", flush=True)
+            return target
+        except Exception as exc:
+            print(f"    attempt {attempt} stopped: {type(exc).__name__}: {exc}",
+                  flush=True)
+            if attempt == 5:
+                raise
+            time.sleep(5 * attempt)
+    raise RuntimeError("unreachable")
 
 
-def unpack(blob: bytes, split: str, out_dir: Path) -> int:
+def unpack(path: Path, split: str, out_dir: Path) -> int:
     import pyarrow.parquet as pq
 
-    table = pq.read_table(io.BytesIO(blob))
-    names = table.column_names
+    # Read it a row group at a time. Loading a 2.1 GB parquet whole is the same
+    # memory problem the download had, one step later.
+    reader = pq.ParquetFile(path)
+    names = reader.schema_arrow.names
     audio_col = "audio" if "audio" in names else names[0]
     # raw_transcription keeps capitals and punctuation; transcription is stripped
     # of both. Train on the raw one — the app hands this text to the translator
@@ -68,20 +107,23 @@ def unpack(blob: bytes, split: str, out_dir: Path) -> int:
     clips_dir = out_dir / split
     clips_dir.mkdir(parents=True, exist_ok=True)
     tsv = out_dir / f"{TSV_NAME[split]}.tsv"
-    audio = table.column(audio_col).to_pylist()
-    text = table.column(text_col).to_pylist()
 
-    kept = 0
+    kept = i = 0
     with open(tsv, "w", encoding="utf-8") as f:
-        for i, (clip, said) in enumerate(zip(audio, text)):
-            said = (said or "").strip()
-            raw = clip.get("bytes") if isinstance(clip, dict) else None
-            if not raw or not said:
-                continue
-            name = f"{i:05d}.wav"
-            (clips_dir / name).write_bytes(raw)
-            f.write(f"{split}/{name}\t{said}\n")
-            kept += 1
+        for batch in reader.iter_batches(batch_size=64,
+                                         columns=[audio_col, text_col]):
+            audio = batch.column(audio_col).to_pylist()
+            text = batch.column(text_col).to_pylist()
+            for clip, said in zip(audio, text):
+                i += 1
+                said = (said or "").strip()
+                raw = clip.get("bytes") if isinstance(clip, dict) else None
+                if not raw or not said:
+                    continue
+                name = f"{i:05d}.wav"
+                (clips_dir / name).write_bytes(raw)
+                f.write(f"{split}/{name}\t{said}\n")
+                kept += 1
     print(f"    {kept:,} clips -> {clips_dir}\n    transcripts -> {tsv}")
     return kept
 
@@ -106,9 +148,14 @@ def main() -> int:
         if (SPEECH_DIR / f"{TSV_NAME[split]}.tsv").exists():
             print("    already here, skipping")
             continue
+        # The parquet lands in scratch space, not under data/speech: keeping a
+        # 2 GB copy beside the wav files it was unpacked into is pure waste.
+        scratch = SPEECH_DIR / ".download" / f"{split}.parquet"
         try:
-            grand += unpack(fetch(entry["url"], f"{entry['size'] / 1048576:.0f} MB"),
-                            split, SPEECH_DIR)
+            path = fetch_to_file(entry["url"], scratch,
+                                 f"{entry['size'] / 1048576:.0f} MB")
+            grand += unpack(path, split, SPEECH_DIR)
+            path.unlink(missing_ok=True)
         except Exception as exc:  # noqa: BLE001 - report and carry on with the rest
             print(f"    FAILED: {exc}", file=sys.stderr)
     print(f"\n{grand:,} clips ready. Train with:\n"
