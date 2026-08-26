@@ -72,20 +72,14 @@ def save_weights(model, path: Path) -> None:
 
 
 def prepare(image_path: Path) -> torch.Tensor:
-    """Exactly what the app does to a crop before reading it — grayscale, 64 tall,
-    scaled to [-1, 1], right-padded by repeating the last column."""
+    """What the app does to a crop before reading it — grayscale, 64 tall, scaled
+    to [-1, 1]. Padding happens per batch, not here."""
     from torchvision import transforms
     img = Image.open(image_path).convert("L")
     ratio = img.width / max(img.height, 1)
     width = min(max(int(IMG_HEIGHT * ratio), 8), MAX_WIDTH)
     img = img.resize((width, IMG_HEIGHT), Image.BICUBIC)
-    tensor = transforms.ToTensor()(img).sub_(0.5).div_(0.5)
-    padded = torch.zeros(1, IMG_HEIGHT, MAX_WIDTH)
-    padded[:, :, :width] = tensor
-    if width < MAX_WIDTH:
-        padded[:, :, width:] = tensor[:, :, width - 1:width].expand(
-            1, IMG_HEIGHT, MAX_WIDTH - width)
-    return padded
+    return transforms.ToTensor()(img).sub_(0.5).div_(0.5)
 
 
 class Crops(Dataset):
@@ -112,7 +106,21 @@ class Crops(Dataset):
 
 
 def collate(batch):
-    images = torch.stack([b[0] for b in batch])
+    """Pad to the widest image in this batch, not to a fixed width.
+
+    A word image is about 168 pixels wide at this height and the widest is under
+    400, so padding everything to the 600-pixel ceiling spends 70% of the
+    computation on blank space. Padding repeats the last column, which is what
+    the app does, so the model sees the same thing either way.
+    """
+    widest = max(b[0].size(2) for b in batch)
+    images = torch.zeros(len(batch), 1, IMG_HEIGHT, widest)
+    for i, (tensor, _) in enumerate(batch):
+        width = tensor.size(2)
+        images[i, :, :, :width] = tensor
+        if width < widest:
+            images[i, :, :, width:] = tensor[:, :, width - 1:width].expand(
+                1, IMG_HEIGHT, widest - width)
     return images, [b[1] for b in batch]
 
 
