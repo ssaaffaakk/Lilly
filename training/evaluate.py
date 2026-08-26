@@ -25,12 +25,14 @@ Usage:
 Writes training/RESULTS.md with the comparison table.
 """
 import argparse
+import json
 import os
 import time
 from collections import defaultdict
 from pathlib import Path
 
 import sacrebleu
+import sacrebleu.significance   # not pulled in by the top-level import
 import torch
 from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
 
@@ -106,15 +108,22 @@ def by_corpus(rows, hyps):
 
 
 def significance(base_hyps, tuned_hyps, refs):
-    """Is the difference bigger than the noise? Paired bootstrap says how likely
-    it is that a gap this size came from the sample rather than the model."""
+    """Is the difference bigger than the noise? Paired bootstrap resamples the
+    test set a thousand times and asks how often a gap this size shows up by
+    chance. Small p means the difference is the model, not the sample."""
     try:
-        result = sacrebleu.significance.PairedTest(
-            {"base": base_hyps, "lilly": tuned_hyps}, {"bleu": sacrebleu.metrics.BLEU()},
-            references=[refs], test_type="bs", n_samples=1000)()
-        return str(result[1]["bleu"][1].p_value)
-    except Exception as exc:      # sacrebleu's API moves; a missing p-value is not fatal
-        return f"could not compute ({type(exc).__name__})"
+        # named_systems is a list of (name, outputs) pairs, not a dict
+        _, scores = sacrebleu.significance.PairedTest(
+            [("base", list(base_hyps)), ("lilly", list(tuned_hyps))],
+            {"bleu": sacrebleu.metrics.BLEU()},
+            references=[list(refs)], test_type="bs", n_samples=1000)()
+        # results come back keyed by the metric's display name, not the key we
+        # passed in, and there is a "System" column alongside it
+        key = next(k for k in scores if k != "System")
+        p = scores[key][1].p_value
+        return f"{p:.4f}" if p is not None else "not reported"
+    except Exception as exc:      # a missing p-value is not worth losing the table for
+        return f"could not compute ({type(exc).__name__}: {exc})"
 
 
 def run(model, tokenizer, rows, device, label):
@@ -163,6 +172,15 @@ def main() -> int:
         if flores:
             hyps["tuned_fl"], results[("Lilly (fine-tuned)", "FLORES-200")] = run(
                 tuned, tokenizer, flores, device, "Lilly / FLORES-200")
+
+    # Keep the outputs. Re-running the significance test on saved text costs
+    # seconds; regenerating it costs an hour of translation.
+    out = REPO_ROOT / "training" / "hypotheses.json"
+    out.write_text(json.dumps({
+        "in_house_refs": [r for _, _, r in in_house],
+        "flores_refs": [r for _, _, r in flores],
+        **{k: v for k, v in hyps.items()}}, ensure_ascii=False))
+    print(f"kept the translations in {out.name}")
 
     write_results(in_house, flores, results, hyps, bool(args.adapter))
     print("wrote training/RESULTS.md")

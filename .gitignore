@@ -28,3 +28,4 @@ models/
 .env
 training.log
 remaining.log
+significance.log
