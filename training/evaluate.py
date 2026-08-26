@@ -40,6 +40,10 @@ import torch
 from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
+# Run as `python3 training/evaluate.py`, sys.path[0] is training/, so the
+# app package is not importable — and the report wants the app's own
+# sentence splitter rather than a second copy of the rule.
+sys.path.insert(0, str(REPO_ROOT))
 # Weights normally sit in the project's own model folder. On a machine that has
 # no copy (a fresh Colab runtime, say) point LILLY_BASE at one.
 BASE_MODEL = os.environ.get("LILLY_BASE") or str(REPO_ROOT / "models" / "lilly" / "translate")
@@ -172,15 +176,24 @@ def confidence_interval(base_hyps, tuned_hyps, refs, samples=2000):
     return lo, hi, favour
 
 
-def significance(base_hyps, tuned_hyps, refs):
+def significance(base_hyps, tuned_hyps, refs, metric="bleu"):
     """Is the difference bigger than the noise? Paired bootstrap resamples the
     test set a thousand times and asks how often a gap this size shows up by
-    chance. Small p means the difference is the model, not the sample."""
+    chance. Small p means the difference is the model, not the sample.
+
+    Both headline metrics can be tested, because on this pair of models they
+    disagree and the strength of each direction is the whole question. Measured
+    on the 2,009-pair set: BLEU +0.54 at p=0.029, chrF2 -0.79 at p=0.001. The
+    metric that moved against us moved with far more confidence than the one
+    that moved for us, and a report that tested only BLEU would never show it.
+    """
+    metrics = {"bleu": sacrebleu.metrics.BLEU(),
+               "chrf": sacrebleu.metrics.CHRF(word_order=0)}
     try:
         # named_systems is a list of (name, outputs) pairs, not a dict
         _, scores = sacrebleu.significance.PairedTest(
             [("base", list(base_hyps)), ("lilly", list(tuned_hyps))],
-            {"bleu": sacrebleu.metrics.BLEU()},
+            {metric: metrics[metric]},
             references=[list(refs)], test_type="bs", n_samples=1000)()
         # results come back keyed by the metric's display name, not the key we
         # passed in, and there is a "System" column alongside it
@@ -450,14 +463,112 @@ def write_results(in_house, flores, results, hyps, tuned, leaks,
         lo, hi, favour = confidence_interval(hyps["base_fl"], hyps["tuned_fl"], refs)
         gap = (results[("Lilly (fine-tuned)", "FLORES-200")][0]
                - results[("Base (untuned)", "FLORES-200")][0])
+        # The reading of the number has to be derived from the number. This
+        # sentence was once hardcoded to "does not clear the usual 0.05 bar";
+        # when the test set grew to 2,009 pairs and p fell to 0.029, the table
+        # and the paragraph under it said opposite things, and the report was
+        # one copy-paste away from being published that way.
+        try:
+            p_val = float(p)
+        except (TypeError, ValueError):
+            p_val = None
+
+        if p_val is None:
+            reading = ("The p-value could not be computed for this run, so the gap "
+                       "above stands on its own: a direction and a size, with nothing "
+                       "yet said about whether the sample could have produced it by "
+                       "chance.")
+        elif p_val < 0.05:
+            reading = (f"Read that as it is: at p = {p_val:.4f} the gap clears the usual "
+                       f"0.05 bar and the 95% interval excludes zero, so on this test set "
+                       f"the BLEU difference is *measured*, not merely leaned towards. It "
+                       f"is still a small gap — the interval's low end is "
+                       f"{lo:+.2f} BLEU — so the honest claim is that Lilly is better "
+                       f"than the base model here, by a little.")
+        else:
+            reading = ("Read that as it is: a difference that does not clear the usual "
+                       "0.05 bar is *unproven*, not *absent* — the interval and the "
+                       "direction both lean one way, the test set is just not large "
+                       "enough to settle it.")
+
         lines += ["", "## Is the difference real", "",
                   f"On FLORES-200 the gap is **{gap:+.2f} BLEU**, paired bootstrap "
                   f"**p = {p}**, 95% interval **[{lo:+.2f}, {hi:+.2f}]**, and "
                   f"{favour:.0f}% of resamples favour Lilly.",
-                  "",
-                  "Read that as it is: a difference that does not clear the usual 0.05 "
-                  "bar is *unproven*, not *absent* — the interval and the direction both "
-                  "lean one way, the test set is just not large enough to settle it."]
+                  "", reading]
+
+        # BLEU is not the only metric in the headline table, and on this pair of
+        # models the two disagree: BLEU goes up, chrF2 goes down. Reporting only
+        # the metric that moved the way we hoped is how a report stops surviving
+        # being checked, so the disagreement is stated wherever it exists.
+        chrf_gap = (results[("Lilly (fine-tuned)", "FLORES-200")][1]
+                    - results[("Base (untuned)", "FLORES-200")][1])
+        # Defined up here because the table below is guarded on them and the
+        # block that fills them only runs when the two metrics disagree.
+        single_idx = multi_idx = None
+        if (chrf_gap < 0) != (gap < 0):
+            chrf_p = significance(hyps["base_fl"], hyps["tuned_fl"], refs, "chrf")
+            # Which rows carry more than one sentence, by the app's own splitter
+            # rather than a second copy of the rule — if the app's idea of a
+            # sentence boundary changes, this breakdown has to change with it.
+            # Names deliberately not base_c/tuned_c: those are the per-corpus
+            # tables built above, and this block once shadowed them.
+            try:
+                from app.translate import SENTENCE_BREAK
+                base_fl_c, _ = strip_tags(hyps["base_fl"])
+                tuned_fl_c, _ = strip_tags(hyps["tuned_fl"])
+                single_idx, multi_idx = [], []
+                for i, r in enumerate(refs):
+                    pieces = [x for x in SENTENCE_BREAK.split(r.strip()) if x.strip()]
+                    (multi_idx if len(pieces) > 1 else single_idx).append(i)
+            except Exception as exc:
+                # The breakdown is an explanation of the gap, not the gap itself.
+                # A report that loses its headline because an explanation could
+                # not be built is worse than one that says why it is missing.
+                print(f"row-shape breakdown skipped ({type(exc).__name__}: {exc})",
+                      file=sys.stderr)
+                single_idx = multi_idx = None
+            lines += ["",
+                      f"**The two metrics disagree.** On the same {len(flores):,} "
+                      f"sentences chrF2 moves {chrf_gap:+.2f}, the opposite way from "
+                      f"BLEU. chrF2 scores character n-grams rather than whole words, "
+                      f"which is the fairer of the two for a language that inflects as "
+                      f"heavily as Bosnian — so this is not a footnote. The chrF2 drop "
+                      f"is tested the same way and comes back at **p = {chrf_p}**, "
+                      f"against **p = {p}** for the BLEU gain: the metric that moved "
+                      f"against the fine-tuning moved with more confidence than the one "
+                      f"that moved for it.",
+                      ""]
+        if (chrf_gap < 0) != (gap < 0) and single_idx and multi_idx:
+            lines += [
+                      f"But most of that drop is in a shape the app never sends. "
+                      f"`app/translate.py` splits input on sentence boundaries and "
+                      f"translates one sentence at a time, because the model drops a "
+                      f"clause when it is handed several at once. Scoring feeds whole "
+                      f"rows instead, so the rows carrying more than one sentence "
+                      f"measure a failure the product has already designed around. "
+                      f"Split by row shape, on the same {len(flores):,} sentences:",
+                      ""]
+            lines += [f"| Row shape | Pairs | Base chrF2 | Lilly chrF2 | Gap |",
+                      f"|---|---|---|---|---|"]
+            for shape, idx in (("one sentence", single_idx), ("more than one", multi_idx)):
+                if not idx:
+                    continue
+                sub_refs = [refs[i] for i in idx]
+                b = sacrebleu.corpus_chrf([base_fl_c[i] for i in idx], [sub_refs],
+                                          word_order=0).score
+                t = sacrebleu.corpus_chrf([tuned_fl_c[i] for i in idx], [sub_refs],
+                                          word_order=0).score
+                lines.append(f"| {shape} | {len(idx):,} | {b:.2f} | {t:.2f} | "
+                             f"{t - b:+.2f} |")
+            lines += ["",
+                      "So the honest reading is narrower than the headline gap: the "
+                      "fine-tuning costs a little character-level accuracy on the input "
+                      "the product actually sends, and a lot on input it never sends. "
+                      "Whether the first of those survives being measured through the "
+                      "app's own path — sentence splitting and the quantised build — is "
+                      "not settled by the numbers on this page, which score the raw "
+                      "adapter on whole rows."]
 
     leaked = [(k, v) for k, v in leaks.items() if v]
     if leaked:

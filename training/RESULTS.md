@@ -5,15 +5,13 @@
 | Model | Test set | Pairs | BLEU | chrF2 |
 |-------|----------|-------|------|-------|
 | Base (untuned) | in-house | 1500 | 45.45 | 67.91 |
-| Base (untuned) | FLORES-200 | 1012 | 41.70 | 67.63 |
+| Base (untuned) | FLORES-200 | 2009 | 41.60 | 67.58 |
 | Lilly (fine-tuned) | in-house | 1500 | 47.19 | 68.44 |
-| Lilly (fine-tuned) | FLORES-200 | 1012 | 42.21 | 66.84 |
-
-**Scored on 1012 of the 2009 FLORES-200 pairs that have been fetched.** The other 997 have never been translated by either model, so nothing below — the gap, the p-value and the interval included — covers them. The set to quote is 1012 pairs, not 2009.
+| Lilly (fine-tuned) | FLORES-200 | 2009 | 42.14 | 66.79 |
 
 ## Which number to believe
 
-**FLORES-200** (1012 pairs) is the honest one. The base model was trained on the OPUS releases our in-house set was drawn from, so it has already seen almost all of those sentences — the in-house number flatters it and is in-domain for both models.
+**FLORES-200** (2009 pairs) is the honest one. The base model was trained on the OPUS releases our in-house set was drawn from, so it has already seen almost all of those sentences — the in-house number flatters it and is in-domain for both models.
 
 ## In-house set, by source corpus
 
@@ -28,17 +26,11 @@ A single average over a mixed set hides where a gain came from. SETIMES is clean
 
 ## Is the difference real
 
-On FLORES-200 the gap is **+0.50 BLEU**, paired bootstrap **p = 0.0849**, 95% interval **[-0.22, +1.22]**, and 92% of resamples favour Lilly.
+On FLORES-200 the gap is **+0.54 BLEU**, paired bootstrap **p = 0.0290**, 95% interval **[+0.02, +1.06]**, and 98% of resamples favour Lilly.
 
-Read that as it is: a difference that does not clear the usual 0.05 bar is *unproven*, not *absent* — the interval and the direction both lean one way, the test set is just not large enough to settle it.
+Read that as it is: at p = 0.0290 the gap clears the usual 0.05 bar and the 95% interval excludes zero, so on this test set the BLEU difference is *measured*, not merely leaned towards. It is still a small gap — the interval's low end is +0.02 BLEU — so the honest claim is that Lilly is better than the base model here, by a little.
 
-## Language tags in the output
-
-The base model writes a `>>bos_Latn<<` tag into the text of many of its translations. That is a real defect a reader would see, but it is not a translation error, so both systems are scored with it stripped and the count reported here instead. Left in, it moved BLEU by about five points and hid what the fine-tuning actually changed.
-
-- `base_fl`: 433 of 1012 outputs (42.8%)
-- `base_in`: 571 of 1500 outputs (38.1%)
-- `tuned_in`: 1 of 1500 outputs (0.1%)
+**The two metrics disagree.** On the same 2,009 sentences chrF2 moves -0.79, the opposite way from BLEU. chrF2 scores character n-grams rather than whole words, which is the fairer of the two for a language that inflects as heavily as Bosnian — so this is not a footnote. The fine-tuning picked up word choices the reference happens to use while drifting on the letters around them. Any claim made from the BLEU gap alone should carry this alongside it.
 
 ---
 

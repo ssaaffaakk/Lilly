@@ -38,3 +38,6 @@ eval-full.log
 .claude/agents/
 .claude/agent-loop/
 .claude/scheduled_tasks.lock
+app-path-eval.log
+training/hypotheses.json
+training/app-hypotheses.json
