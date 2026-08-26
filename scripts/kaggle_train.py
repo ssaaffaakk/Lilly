@@ -6,9 +6,10 @@ dataset, push the notebook with a GPU and internet attached, run it, and fetch t
 result. This machine takes about fifteen hours for the same job; a Kaggle T4 takes
 two to three, and leaves the laptop alone.
 
-    python3 scripts/kaggle_train.py            # upload, start, and report back
-    python3 scripts/kaggle_train.py --status   # how is the run going
-    python3 scripts/kaggle_train.py --fetch    # bring the finished adapter home
+    python3 scripts/kaggle_train.py translation   # the translation fine-tune
+    python3 scripts/kaggle_train.py speech        # the listening fine-tune
+    python3 scripts/kaggle_train.py speech --status
+    python3 scripts/kaggle_train.py speech --fetch
 
 Needs an API token once: kaggle.com/settings -> API -> Create New Token, which
 downloads kaggle.json. Put it at ~/.kaggle/kaggle.json and chmod 600 it. Nothing
@@ -25,7 +26,16 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[1]
 KAGGLE = str(REPO_ROOT / ".venv" / "bin" / "kaggle")
 WEIGHTS = REPO_ROOT / "models" / "lilly" / "translate"
-NOTEBOOK = REPO_ROOT / "training" / "Lilly_Translation_Kaggle.ipynb"
+# Two jobs can go to Kaggle. Translation needs the base weights uploaded as a
+# dataset; speech fetches its own audio, so it needs nothing but a GPU.
+JOBS = {
+    "translation": {"notebook": "Lilly_Translation_Kaggle.ipynb",
+                    "slug": "lilly-translation", "title": "Lilly translation",
+                    "needs_weights": True},
+    "speech":      {"notebook": "Lilly_Speech_Kaggle.ipynb",
+                    "slug": "lilly-speech", "title": "Lilly speech",
+                    "needs_weights": False},
+}
 STAGING = REPO_ROOT / "models" / "kaggle-staging"     # gitignored, under models/
 
 
@@ -70,22 +80,29 @@ def push_weights(user: str) -> str:
     return slug
 
 
-def push_notebook(user: str, dataset: str) -> str:
+def push_notebook(user: str, job: dict, dataset: str) -> str:
     """The notebook, with a GPU and the internet switched on from here."""
-    slug = f"{user}/lilly-translation"
-    stage = STAGING / "kernel"
+    slug = f"{user}/{job['slug']}"
+    notebook = REPO_ROOT / "training" / job["notebook"]
+    stage = STAGING / job["slug"]
     stage.mkdir(parents=True, exist_ok=True)
-    (stage / NOTEBOOK.name).write_text(NOTEBOOK.read_text())
+    (stage / notebook.name).write_text(notebook.read_text())
+    # Kaggle derives the notebook's address from its TITLE, not from the id in
+    # this file. A title that does not match sends the push to whatever kernel
+    # the title resolves to — which once put the speech notebook into the
+    # translation kernel and ran it there under the wrong name.
+    assert job["title"].lower().replace(" ", "-") == job["slug"], \
+        f"title {job['title']!r} does not resolve to {job['slug']!r}"
     (stage / "kernel-metadata.json").write_text(json.dumps({
         "id": slug,
-        "title": "Lilly translation",
-        "code_file": NOTEBOOK.name,
+        "title": job["title"],
+        "code_file": notebook.name,
         "language": "python",
         "kernel_type": "notebook",
         "is_private": True,
         "enable_gpu": True,
         "enable_internet": True,
-        "dataset_sources": [dataset],
+        "dataset_sources": [dataset] if dataset else [],
         "competition_sources": [],
         "kernel_sources": [],
     }, indent=1))
@@ -102,13 +119,16 @@ def status(slug: str) -> str:
 
 def main() -> int:
     ap = argparse.ArgumentParser()
+    ap.add_argument("job", nargs="?", default="translation", choices=sorted(JOBS),
+                    help="which run to send up")
     ap.add_argument("--status", action="store_true")
     ap.add_argument("--fetch", action="store_true")
     ap.add_argument("--watch", action="store_true", help="poll until it finishes")
     args = ap.parse_args()
 
     user = username()
-    slug = f"{user}/lilly-translation"
+    job = JOBS[args.job]
+    slug = f"{user}/{job['slug']}"
 
     if args.status:
         return 0 if status(slug) else 1
@@ -120,13 +140,15 @@ def main() -> int:
         print("  python3 scripts/build_translator.py")
         return 0
 
-    if not WEIGHTS.exists():
-        print(f"no weights at {WEIGHTS} — run scripts/fetch_models.py first",
-              file=sys.stderr)
-        return 1
+    dataset = None
+    if job["needs_weights"]:
+        if not WEIGHTS.exists():
+            print(f"no weights at {WEIGHTS} — run scripts/fetch_models.py first",
+                  file=sys.stderr)
+            return 1
+        dataset = push_weights(user)
 
-    dataset = push_weights(user)
-    push_notebook(user, dataset)
+    push_notebook(user, job, dataset)
     print(f"\nrunning: https://www.kaggle.com/code/{slug}")
     print("check on it with:  python3 scripts/kaggle_train.py --status")
 
