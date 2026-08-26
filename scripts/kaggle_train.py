@@ -86,7 +86,37 @@ def push_weights(user: str) -> str:
     print(f"uploading {sum(f.stat().st_size for f in stage.iterdir()) / 1048576:.0f} MB "
           f"to {slug} — this is the slow part, once")
     run(KAGGLE, "datasets", "create", "-p", stage, "-r", "zip")
+    wait_until_ready(slug)
     return slug
+
+
+def wait_until_ready(slug: str, patience: int = 900) -> None:
+    """Block until Kaggle has finished processing the dataset.
+
+    `datasets create` returns as soon as the bytes are sent; Kaggle then
+    processes them, and until that finishes the dataset cannot be attached to a
+    notebook. Pushing straight afterwards printed
+
+        The following are not valid dataset sources and could not be added
+
+    and pushed the kernel anyway — so the run started with no base weights and
+    would have died several cells in, having burned a GPU slot. The message is
+    not an error the CLI exits on, which is why it went past unnoticed.
+    """
+    started = time.time()
+    while time.time() - started < patience:
+        state = subprocess.run([KAGGLE, "datasets", "status", slug],
+                               text=True, capture_output=True).stdout.lower()
+        if "ready" in state:
+            print(f"  dataset ready after {time.time() - started:.0f}s")
+            return
+        if "error" in state:
+            raise SystemExit(f"Kaggle could not process {slug}: {state.strip()}")
+        time.sleep(15)
+    raise SystemExit(
+        f"{slug} was still not ready after {patience}s. Pushing now would attach "
+        f"nothing and the run would die several cells in — check the dataset by "
+        f"hand at kaggle.com/datasets/{slug}")
 
 
 def push_notebook(user: str, job: dict, dataset: str) -> str:
