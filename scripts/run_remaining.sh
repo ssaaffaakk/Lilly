@@ -13,8 +13,13 @@ cd "$(dirname "$0")/.."
 PY=.venv/bin/python
 
 echo "=== $(date '+%H:%M:%S')  waiting for the translation run ==="
-while pgrep -f train_translation > /dev/null; do sleep 60; done
-echo "=== $(date '+%H:%M:%S')  translation finished ==="
+# Wait for the whole run_training.sh, not just the training process: it goes on to
+# merge and quantise the model and then score it, and starting a second training
+# on top of that is what turns a two-hour job into an eight-hour one.
+while pgrep -f "run_training.sh" > /dev/null || pgrep -f train_translation > /dev/null; do
+  sleep 60
+done
+echo "=== $(date '+%H:%M:%S')  translation pipeline finished ==="
 [ -f training/RESULTS.md ] && cat training/RESULTS.md
 
 # ---------------------------------------------------------------- listening
