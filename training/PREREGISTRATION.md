@@ -68,3 +68,34 @@ distinguished by anything measured here, and no result of this run distinguishes
 them. That needs a measure aimed at the claim itself, which does not exist yet.
 Whatever this run returns, that sentence stays true and belongs in the model
 card.
+
+## Amendment, 02:15 — two arms, written before either runs
+
+Running one experiment that changes both the data and the hyperparameters would
+leave the result uninterpretable: a gain could come from either, and we would be
+free to tell whichever story fit. So there are two arms, and this is written
+before either has started.
+
+**Arm A — data only.** The corpus changes (21,178 misaligned WikiMatrix pairs
+removed, 38,277 unseen pairs added). Every hyperparameter stays exactly as the
+current model's: the recipe in `training/train_translation.py` as committed.
+
+**Arm B — data plus recipe.** The same corpus, plus the hyperparameters chosen
+by the jury run recorded alongside this file.
+
+Both are judged by the thresholds already stated above — BLEU ≥ 42.04 **and**
+chrF2 ≥ 67.34, measured by `training/evaluate_app.py` with the language tag
+stripped. Nothing about the thresholds changes because there are two arms.
+
+**If both clear the bar**, the one with the higher chrF2 wins, because chrF2 is
+the measure this project has repeatedly said is the fairer one for Bosnian and
+it is the one the current model loses on. Not the higher BLEU. Stated now so
+the choice is not made after seeing the numbers.
+
+**If only one clears**, that one. **If neither clears**, the current model ships
+and both arms are reported as failures — including Arm A, which would mean the
+extra data did not help, a result worth publishing precisely because it is
+disappointing.
+
+Arm A also answers a question no single run could: how much of any gain is the
+data. If A clears the bar and B does not, the recipe hurt.
