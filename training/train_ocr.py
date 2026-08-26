@@ -45,6 +45,7 @@ OCR_DATA = REPO_ROOT / "data" / "ocr"
 IMG_HEIGHT = 64          # what the shipped reader was trained at
 MAX_WIDTH = 600
 DIACRITICS = "čćđšžČĆĐŠŽ"
+MIN_STEPS = 200          # below this a run has not trained, it has only run
 
 
 def load_charset() -> str:
@@ -230,8 +231,16 @@ def main() -> int:
         print("\nquick test — the shipped reader is left alone")
         return 0
 
-    if after[1] < before[1]:
-        print("\nthe Bosnian letters got worse — not replacing the shipped reader")
+    # A run this short cannot have learned anything, whatever the numbers say —
+    # on a handful of steps the two measurements are noise against each other and
+    # the comparison below will happily wave through a model trained for seconds.
+    if steps < MIN_STEPS:
+        print(f"\nonly {steps} steps — too short to mean anything, "
+              f"leaving the shipped reader alone")
+        return 0
+
+    if after[1] <= before[1]:
+        print("\nthe Bosnian letters did not improve — not replacing the shipped reader")
         return 1
 
     keep = READ_DIR / "latin_g2-previous.pth"

@@ -1,54 +1,92 @@
 #!/bin/bash
 # Everything after the translation run, in order, unattended.
 #
-# Waits for the translation training to finish, then trains the listening, then
-# the photo reading. Each one measures before and after, and refuses to replace
-# a shipped model that it made worse.
-#
 #     nohup bash scripts/run_remaining.sh > remaining.log 2>&1 &
 #
 # Watch:  tail -f remaining.log
 # Stop:   pkill -f run_remaining
+#
+# Every stage checks what it produced rather than trusting an exit code, and the
+# run ends with a plain list of what worked and what did not. The previous
+# version printed "everything done" after skipping the speech training entirely
+# and crashing the photo training — which is worse than failing.
 cd "$(dirname "$0")/.."
 PY=.venv/bin/python
+FAILED=()
+DONE=()
 
-echo "=== $(date '+%H:%M:%S')  waiting for the translation run ==="
-# Wait for the whole run_training.sh, not just the training process: it goes on to
-# merge and quantise the model and then score it, and starting a second training
-# on top of that is what turns a two-hour job into an eight-hour one.
-while pgrep -f "run_training.sh" > /dev/null || pgrep -f train_translation > /dev/null; do
+note_ok()   { DONE+=("$1");   echo "  OK: $1"; }
+note_fail() { FAILED+=("$1"); echo "  FAILED: $1"; }
+
+echo "=== $(date '+%H:%M:%S')  waiting for anything still running ==="
+while pgrep -f "run_training.sh" > /dev/null || pgrep -f train_translation > /dev/null \
+   || pgrep -f run_significance > /dev/null; do
   sleep 60
 done
-echo "=== $(date '+%H:%M:%S')  translation pipeline finished ==="
-[ -f training/RESULTS.md ] && cat training/RESULTS.md
 
 # ---------------------------------------------------------------- listening
 echo
-echo "=== $(date '+%H:%M:%S')  speech 1/3  fetching the clips ==="
-# The clips are 3 GB; only fetch what is missing.
-$PY data/scripts/download_speech_data.py || echo "  speech data failed — skipping speech"
+echo "=== $(date '+%H:%M:%S')  speech 1/4  fetching the clips ==="
+# Retry: this is 3 GB over the network and the first attempt lost the train split.
+for attempt in 1 2 3; do
+  $PY data/scripts/download_speech_data.py && break
+  echo "  attempt $attempt failed, retrying"
+  sleep 30
+done
 
-if [ -f data/speech/train.tsv ] && [ -f data/speech/test.tsv ]; then
-  echo "=== $(date '+%H:%M:%S')  speech 2/3  before ==="
-  $PY training/evaluate_speech.py --data data/speech/test.tsv --limit 200 --show 3 || true
+missing=""
+for split in train valid test; do
+  if [ ! -s "data/speech/$split.tsv" ]; then missing="$missing $split"; fi
+done
 
-  echo "=== $(date '+%H:%M:%S')  speech 3/3  training ==="
-  $PY training/train_speech.py --data data/speech/train.tsv --no-convert \
-    && $PY training/train_speech.py --base models/lilly/listen-trained \
-                                    --convert-only models/lilly/listen \
-    && $PY training/evaluate_speech.py --data data/speech/test.tsv --limit 200 --show 3
+if [ -n "$missing" ]; then
+  note_fail "speech data ($missing never arrived)"
 else
-  echo "  no speech data on disk — skipped"
+  note_ok "speech data: $(wc -l < data/speech/train.tsv) train, $(wc -l < data/speech/test.tsv) test"
+
+  echo "=== $(date '+%H:%M:%S')  speech 2/4  before ==="
+  $PY training/evaluate_speech.py --data data/speech/test.tsv --limit 200 --show 3
+
+  echo "=== $(date '+%H:%M:%S')  speech 3/4  training ==="
+  if $PY training/train_speech.py --data data/speech/train.tsv --no-convert \
+     && [ -f models/lilly/listen-trained/model.safetensors ]; then
+    echo "=== $(date '+%H:%M:%S')  speech 4/4  converting and scoring ==="
+    if $PY training/train_speech.py --base models/lilly/listen-trained \
+                                    --convert-only models/lilly/listen \
+       && [ -f models/lilly/listen/model.bin ]; then
+      $PY training/evaluate_speech.py --data data/speech/test.tsv --limit 200 --show 3
+      note_ok "speech trained and installed"
+    else
+      note_fail "speech conversion (the trained checkpoint is still in models/lilly/listen-trained)"
+    fi
+  else
+    note_fail "speech training"
+  fi
 fi
 
 # ------------------------------------------------------------- photo reading
 echo
 echo "=== $(date '+%H:%M:%S')  photo 1/2  generating Bosnian text images ==="
-$PY data/scripts/generate_ocr_data.py --count 20000
+if $PY data/scripts/generate_ocr_data.py --count 20000 && [ -s data/ocr/train/gt.txt ]; then
+  note_ok "photo data: $(wc -l < data/ocr/train/gt.txt) images"
+  echo "=== $(date '+%H:%M:%S')  photo 2/2  training the reader ==="
+  if $PY training/train_ocr.py; then
+    note_ok "photo reader trained"
+  else
+    note_fail "photo reader training"
+  fi
+else
+  note_fail "photo data generation"
+fi
 
-echo "=== $(date '+%H:%M:%S')  photo 2/2  training the reader ==="
-$PY training/train_ocr.py
-
+# --------------------------------------------------------------------- report
 echo
-echo "=== $(date '+%H:%M:%S')  everything done ==="
-echo "translation:"; cat training/RESULTS.md 2>/dev/null | head -12
+echo "=== $(date '+%H:%M:%S')  summary ==="
+for d in "${DONE[@]}";   do echo "  worked:  $d"; done
+for f in "${FAILED[@]}"; do echo "  FAILED:  $f"; done
+if [ ${#FAILED[@]} -gt 0 ]; then
+  echo
+  echo "RUN INCOMPLETE — ${#FAILED[@]} stage(s) failed"
+  exit 1
+fi
+echo "all stages completed"

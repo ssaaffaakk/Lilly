@@ -68,6 +68,17 @@ def find_fonts(limit: int = 24) -> list:
     return usable
 
 
+def readable_characters() -> set:
+    """Exactly what the reader has an output class for — 351 characters."""
+    try:
+        import easyocr.config as config
+        return set(config.recognition_models["gen2"]["latin_g2"]["characters"])
+    except Exception:
+        # enough to keep going if easyocr is not installed here
+        return set("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+                   "0123456789čćđšžČĆĐŠŽ-'.,")
+
+
 def load_words() -> tuple:
     """Words from our own corpus if it exists, split into two buckets."""
     words = []
@@ -77,6 +88,11 @@ def load_words() -> tuple:
             if len(parts) == 3:
                 words += [w.strip(".,!?;:()\"'„“") for w in parts[1].split()]
         words = [w for w in words if 2 <= len(w) <= 22]
+        # The reader can only be trained on characters it has an output for. Our
+        # corpus is web-scraped and carries plenty it does not — a single ċ in one
+        # word killed a whole training run partway through, with a KeyError from
+        # deep inside the label encoder.
+        words = [w for w in words if set(w) <= readable_characters()]
     if len(words) < 500:
         words = FALLBACK_WORDS * 40
     with_letters = [w for w in words if any(c in BOSNIAN_LETTERS for c in w)]
