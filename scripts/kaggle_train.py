@@ -20,15 +20,21 @@ import json
 import os
 import subprocess
 import sys
+import tempfile
 import time
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 KAGGLE = str(REPO_ROOT / ".venv" / "bin" / "kaggle")
 WEIGHTS = REPO_ROOT / "models" / "lilly" / "translate"
-# Which card to ask Kaggle for. Named once so the request and the check that it
-# was honoured cannot drift apart.
-ACCELERATOR = "gpuT4x2"
+# Which card to ask Kaggle for. The value has to come from Kaggle's own enum --
+# NvidiaTeslaP100, NvidiaTeslaT4, NvidiaTeslaT4Highmem, NvidiaTeslaA100, NvidiaL4,
+# NvidiaH100, TpuV38 and so on. The client forwards whatever string it is given
+# without checking, and the server silently discards one it does not recognise
+# and falls back to its default card. We spent four runs on a P100 that the
+# image's PyTorch cannot use because "gpuT4x2" was an invented string: no error,
+# no warning, just the wrong hardware.
+ACCELERATOR = "NvidiaTeslaT4"
 # Two jobs can go to Kaggle. Translation needs the base weights uploaded as a
 # dataset; speech fetches its own audio, so it needs nothing but a GPU.
 JOBS = {
@@ -120,20 +126,16 @@ def push_notebook(user: str, job: dict, dataset: str) -> str:
 
 
 def confirm_accelerator(slug: str, stage: Path) -> None:
-    """Say what the API can and cannot tell us about the card.
+    """Check that Kaggle kept the card we asked for.
 
-    Not much, it turns out. machine_shape reads back as a bare "Gpu" whatever we
-    send — "gpuT4x2", "nvidiaTeslaT4" and "gpuT4x2x1" all land there, and so does
-    a kernel the API never touched. The field does not distinguish a T4 from the
-    P100 whose sm_60 the image's PyTorch cannot use.
-
-    This first compared the reply against what we asked for and announced a
-    mismatch every single time, which is worse than saying nothing: a warning
-    that always fires is one nobody reads. The only honest authority on the card
-    is the notebook's own first line, so point at it.
+    Reading it back is the whole point. An unrecognised machine_shape is not
+    rejected — it is discarded, and the run lands on Kaggle's default card with
+    no error anywhere. That is how four runs went to a P100 the image's PyTorch
+    cannot use: the string we sent was invented, so the server threw it away and
+    the reply said a bare "Gpu". A value from Kaggle's own enum comes back
+    verbatim, which is exactly what makes this check worth making.
     """
-    check = stage / "confirm"
-    check.mkdir(exist_ok=True)
+    check = Path(tempfile.mkdtemp(prefix="kaggle-confirm-"))
     subprocess.run([KAGGLE, "kernels", "pull", slug, "-p", str(check), "-m"],
                    capture_output=True, text=True, timeout=180)
     meta = check / "kernel-metadata.json"
@@ -141,10 +143,12 @@ def confirm_accelerator(slug: str, stage: Path) -> None:
         print("  could not read the run's settings back")
         return
     got = json.loads(meta.read_text(encoding="utf-8")).get("machine_shape") or "(none)"
-    print(f"  accelerator: the API reports {got!r}, which is all it ever reports — "
-          f"it does not name the card")
-    print("  the run's first log line does: python3 scripts/kaggle_train.py "
-          "speech --status, then read 'GPU(s) visible, using: ...'")
+    if got == ACCELERATOR:
+        print(f"  accelerator: {got} — Kaggle kept it")
+        return
+    print(f"  accelerator: asked for {ACCELERATOR!r}, Kaggle stored {got!r}. A reply "
+          f"of 'Gpu' means the name was not recognised and was thrown away, so the "
+          f"run is on whatever card Kaggle defaults to.")
 
 
 def status(slug: str) -> str:
