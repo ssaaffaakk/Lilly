@@ -8,6 +8,7 @@ venv/
 # Data & models — too big for git, scripts recreate them
 data/raw/
 data/clean/
+data/extra/
 data/flores/
 data/ocr/
 data/speech/
@@ -30,6 +31,7 @@ training.log
 remaining.log
 significance.log
 speech-retry.log
+eval-full.log
 .agents/
 
 # Local Claude Code scaffolding, not part of the project
