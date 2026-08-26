@@ -35,6 +35,7 @@ OCR_DIR = REPO_ROOT / "data" / "ocr"
 IMAGE_TYPES = {".jpg", ".jpeg", ".png", ".webp", ".bmp", ".tif", ".tiff"}
 VALID_SHARE = 0.1
 SEED = 41
+OURS = "syn"      # what this script names its files; anything else belongs to someone else
 # the letters that separate Bosnian from plain Latin — worth watching coverage of
 BOSNIAN_LETTERS = "čćđšžČĆĐŠŽ"
 
@@ -93,13 +94,30 @@ def build_splits(labels_path: Path) -> int:
     cut = max(1, int(len(rows) * VALID_SHARE))
     for split, chunk in (("valid", rows[:cut]), ("train", rows[cut:])):
         out = OCR_DIR / split
-        shutil.rmtree(out, ignore_errors=True)
+        # Clear only what this script put there. Someone else may be adding
+        # crops to the same folder — photographs, hand-labelled examples — and
+        # wiping the directory deletes their work between two runs of this one,
+        # silently, with the folder looking freshly built either way.
         out.mkdir(parents=True, exist_ok=True)
-        with open(out / "gt.txt", "w", encoding="utf-8") as f:
+        kept = []
+        gt = out / "gt.txt"
+        if gt.exists():
+            for line in gt.read_text(encoding="utf-8").splitlines():
+                parts = line.split("\t")
+                if len(parts) == 2 and not parts[0].startswith(OURS) \
+                        and (out / parts[0]).exists():
+                    kept.append((parts[0], parts[1]))
+        for ours in out.glob(f"{OURS}*"):
+            ours.unlink()
+
+        with open(gt, "w", encoding="utf-8") as f:
             for source, text in chunk:
                 shutil.copy(source, out / source.name)
                 f.write(f"{source.name}\t{text}\n")
-        print(f"{split}: {len(chunk):,} crops -> {out}")
+            for name, text in kept:
+                f.write(f"{name}\t{text}\n")
+        note = f", kept {len(kept):,} from elsewhere" if kept else ""
+        print(f"{split}: {len(chunk):,} crops -> {out}{note}")
 
     letters = Counter(c for _, text in rows for c in text)
     print("\nBosnian letter coverage — a letter the training set barely contains "
