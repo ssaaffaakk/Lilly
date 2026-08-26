@@ -38,9 +38,9 @@ def running(pattern: str) -> bool:
     return bool(shell("pgrep", "-f", pattern).strip())
 
 
-def eval_progress() -> tuple:
-    """How far the translation scoring has got, from its own log."""
-    log = REPO_ROOT / "eval-full.log"
+def eval_progress(name: str = "eval-full.log") -> tuple:
+    """How far a scoring run has got, from its own log."""
+    log = REPO_ROOT / name
     if not log.exists():
         return None, None
     text = log.read_text(encoding="utf-8", errors="replace").replace("\r", "\n")
@@ -83,6 +83,24 @@ def build_runs() -> list:
         "name": "Çeviri ölçümü", "where": "yerel",
         "state": "live" if alive else ("off" if done and done >= (total or 1) else "wait"),
         "what": "2.009 görülmemiş cümle, taban ve ince ayarlı model",
+        "pct": pct, "label": label,
+    })
+
+    # The scoring that actually decides what gets published: both builds run
+    # through app/translate.py, sentence splitting included. The older run above
+    # feeds rows to the model whole, which is not what the app does — and the
+    # difference is not small, so the room has to show which one is speaking.
+    done, total = eval_progress("app-path-eval.log")
+    alive = running("app_path_eval.py")
+    if done and total:
+        pct = round(100 * done / total)
+        label = [f"{done} / {total} cümle", f"%{pct}"]
+    else:
+        pct, label = None, ["—", "hazırlanıyor" if alive else "beklemede"]
+    runs.append({
+        "name": "Ürün yolundan ölçüm", "where": "yerel",
+        "state": "live" if alive else "wait",
+        "what": "Taban ve Lilly, ikisi de int8 — uygulamanın gerçek yolundan",
         "pct": pct, "label": label,
     })
 
