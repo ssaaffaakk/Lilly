@@ -93,11 +93,24 @@ def load_within_limits(image_path: str):
         return np.asarray(img)
 
 
+def read_regions(image, **kwargs):
+    """Every text region the reader finds — the only place readtext is called.
+
+    The allowlist is not optional and not the caller's business. Leaving it to
+    each call site is how the label-making path in training/prepare_ocr_data.py
+    spent its life producing first-draft labels that could not contain c, c or d
+    with their diacritics: it built its reader from this module and then called
+    readtext itself, so it inherited the check on the weights and none of the
+    fix. One door, and forgetting stops being possible.
+    """
+    get_reader()                        # builds the reader and the allowlist
+    with _read_lock:
+        return _reader.readtext(image, allowlist=_allowlist, **kwargs)
+
+
 def scan(image_path: str) -> str:
     image = load_within_limits(image_path)
-    with _read_lock:
-        results = get_reader().readtext(image, detail=0, paragraph=True,
-                                       allowlist=_allowlist)
+    results = read_regions(image, detail=0, paragraph=True)
     return "\n".join(results).strip()
 
 

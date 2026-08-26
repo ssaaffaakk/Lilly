@@ -42,19 +42,18 @@ BOSNIAN_LETTERS = "čćđšžČĆĐŠŽ"
 def cut_out_text(photo_dir: Path, out_dir: Path) -> int:
     """Crop every text region Lilly finds, with its reading as a first draft."""
     from PIL import Image
-    from app.ocr import get_reader
+    from app.ocr import read_regions
 
     photos = sorted(p for p in photo_dir.rglob("*") if p.suffix.lower() in IMAGE_TYPES)
     if not photos:
         print(f"no images in {photo_dir}", file=sys.stderr)
         return 0
     out_dir.mkdir(parents=True, exist_ok=True)
-    reader = get_reader()
 
     rows = []
     for photo in photos:
         image = Image.open(photo).convert("RGB")
-        for i, (box, text, confidence) in enumerate(reader.readtext(str(photo))):
+        for i, (box, text, confidence) in enumerate(read_regions(str(photo))):
             xs = [int(p[0]) for p in box]
             ys = [int(p[1]) for p in box]
             crop = image.crop((max(min(xs), 0), max(min(ys), 0), max(xs), max(ys)))
