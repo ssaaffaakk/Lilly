@@ -8,9 +8,9 @@ none of it appears in the base model's training manifest.
 
     python3 data/scripts/download_flores.py
 
-Writes data/flores/devtest.bs and devtest.en — 1,012 sentence pairs, one per
-line, line N of one matching line N of the other. training/evaluate.py picks
-them up automatically.
+Writes data/flores/{devtest,dev}.{bs,en} — 2,009 sentence pairs in total, one
+per line, line N of one matching line N of the other. training/evaluate.py picks
+them up automatically and scores both halves together.
 """
 import io
 import sys
@@ -20,8 +20,15 @@ from pathlib import Path
 
 URL = "https://dl.fbaipublicfiles.com/nllb/flores200_dataset.tar.gz"
 OUT = Path(__file__).resolve().parents[1] / "flores"
+# Both halves, not just devtest. FLORES ships a dev split of 997 sentences
+# alongside the 1,012 of devtest, built the same way and equally unseen. Scoring
+# on both nearly doubles the sample, which narrows the confidence interval by
+# about a third — the difference between a result that is unproven and one that
+# is settled either way.
 WANTED = {"devtest/bos_Latn.devtest": "devtest.bs",
-          "devtest/eng_Latn.devtest": "devtest.en"}
+          "devtest/eng_Latn.devtest": "devtest.en",
+          "dev/bos_Latn.dev": "dev.bs",
+          "dev/eng_Latn.dev": "dev.en"}
 
 
 def main() -> int:

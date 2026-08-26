@@ -27,6 +27,9 @@ Writes training/RESULTS.md with the comparison table.
 import argparse
 import json
 import os
+import random
+import sys
+import re
 import time
 from collections import defaultdict
 from pathlib import Path
@@ -57,12 +60,19 @@ def load_test(limit=None):
 
 
 def load_flores(limit=None):
-    """FLORES-200 devtest, if it has been fetched. Unseen by the base model."""
-    bs, en = FLORES_DIR / "devtest.bs", FLORES_DIR / "devtest.en"
-    if not (bs.exists() and en.exists()):
-        return []
-    rows = list(zip(bs.read_text(encoding="utf-8").splitlines(),
-                    en.read_text(encoding="utf-8").splitlines()))
+    """FLORES-200, if it has been fetched. Unseen by the base model.
+
+    Both halves — devtest (1,012) and dev (997). They were built the same way and
+    the base has seen neither; using both nearly doubles the sample, and on a
+    difference this small the width of the interval is what decides whether the
+    result says anything at all.
+    """
+    rows = []
+    for half in ("devtest", "dev"):
+        bs, en = FLORES_DIR / f"{half}.bs", FLORES_DIR / f"{half}.en"
+        if bs.exists() and en.exists():
+            rows += list(zip(bs.read_text(encoding="utf-8").splitlines(),
+                             en.read_text(encoding="utf-8").splitlines()))
     return [("FLORES", s, r) for s, r in rows[:limit]]
 
 
@@ -93,9 +103,26 @@ def translate_all(model, tokenizer, sentences, device, batch_size=16):
     return out
 
 
+# The base model writes a language tag into the text of many of its outputs —
+# 433 of 1,012 FLORES sentences, measured. That is a real defect and a user would
+# see it, but it is not a translation error, and left in it swamps the metric:
+# scoring with the tags gave a 5.23 BLEU gap where the translation difference is
+# 0.5. Both models are scored with it stripped, and the leak is reported instead.
+LANGUAGE_TAG = re.compile(r"^\s*(>>[a-zA-Z_]+<<\s*)+")
+
+
+def strip_tags(hyps: list) -> tuple:
+    """Return the outputs without their language tags, and how many had one."""
+    cleaned = [LANGUAGE_TAG.sub("", h) for h in hyps]
+    leaked = sum(1 for a, b in zip(hyps, cleaned) if a != b)
+    return cleaned, leaked
+
+
 def score(hyps, refs):
+    # word_order=0 is chrF2. word_order=2 is chrF++, which is a different metric
+    # and was being reported under the chrF2 label.
     return (sacrebleu.corpus_bleu(hyps, [refs]).score,
-            sacrebleu.corpus_chrf(hyps, [refs], word_order=2).score)
+            sacrebleu.corpus_chrf(hyps, [refs], word_order=0).score)
 
 
 def by_corpus(rows, hyps):
@@ -105,6 +132,31 @@ def by_corpus(rows, hyps):
         grouped[corpus][0].append(hyp)
         grouped[corpus][1].append(ref)
     return {name: (len(h), *score(h, r)) for name, (h, r) in sorted(grouped.items())}
+
+
+def confidence_interval(base_hyps, tuned_hyps, refs, samples=2000):
+    """The 95% range the BLEU difference actually sits in, on this test set.
+
+    Resample the sentences with replacement, score both systems on the same
+    resample each time, and keep the difference. The spread of those differences
+    is what "how much of this is the sample" means — measured on the data rather
+    than asserted as a round number.
+    """
+    rng = random.Random(41)
+    n = len(refs)
+    deltas = []
+    for _ in range(samples):
+        idx = [rng.randrange(n) for _ in range(n)]
+        b = [base_hyps[i] for i in idx]
+        t_ = [tuned_hyps[i] for i in idx]
+        r = [[refs[i] for i in idx]]
+        deltas.append(sacrebleu.corpus_bleu(t_, r).score
+                      - sacrebleu.corpus_bleu(b, r).score)
+    deltas.sort()
+    lo = deltas[int(0.025 * samples)]
+    hi = deltas[int(0.975 * samples) - 1]
+    favour = 100 * sum(1 for d in deltas if d > 0) / samples
+    return lo, hi, favour
 
 
 def significance(base_hyps, tuned_hyps, refs):
@@ -129,10 +181,13 @@ def significance(base_hyps, tuned_hyps, refs):
 def run(model, tokenizer, rows, device, label):
     print(f"scoring {label} on {len(rows)} pairs…", flush=True)
     t0 = time.time()
-    hyps = translate_all(model, tokenizer, [s for _, s, _ in rows], device)
+    raw = translate_all(model, tokenizer, [s for _, s, _ in rows], device)
+    hyps, leaked = strip_tags(raw)
     overall = score(hyps, [r for _, _, r in rows])
-    print(f"  BLEU={overall[0]:.2f}  chrF2={overall[1]:.2f}  ({time.time() - t0:.0f}s)")
-    return hyps, overall
+    leak_note = f"  |  language tag in {leaked}/{len(rows)} outputs" if leaked else ""
+    print(f"  BLEU={overall[0]:.2f}  chrF2={overall[1]:.2f}  "
+          f"({time.time() - t0:.0f}s){leak_note}")
+    return hyps, overall, leaked
 
 
 def main() -> int:
@@ -140,7 +195,15 @@ def main() -> int:
     ap.add_argument("--adapter", default=None,
                     help="path to LoRA adapter; omit to score the base model only")
     ap.add_argument("--limit", type=int, default=None)
+    ap.add_argument("--rescore", action="store_true",
+                    help="rebuild RESULTS.md from the translations already saved in "
+                         "hypotheses.json — no model is loaded and nothing is "
+                         "re-translated, which is how a scoring fix gets applied to a "
+                         "run that already cost hours")
     args = ap.parse_args()
+
+    if args.rescore:
+        return rescore()
 
     device = ("cuda" if torch.cuda.is_available()
               else "mps" if torch.backends.mps.is_available() else "cpu")
@@ -157,20 +220,21 @@ def main() -> int:
 
     results = {}
     hyps = {}
-    hyps["base_in"], results[("Base (untuned)", "in-house")] = run(
+    leaks = {}
+    hyps["base_in"], results[("Base (untuned)", "in-house")], leaks["base_in"] = run(
         base, tokenizer, in_house, device, "base / in-house")
     if flores:
-        hyps["base_fl"], results[("Base (untuned)", "FLORES-200")] = run(
+        hyps["base_fl"], results[("Base (untuned)", "FLORES-200")], leaks["base_fl"] = run(
             base, tokenizer, flores, device, "base / FLORES-200")
 
     tuned = None
     if args.adapter:
         from peft import PeftModel
         tuned = PeftModel.from_pretrained(base, args.adapter)
-        hyps["tuned_in"], results[("Lilly (fine-tuned)", "in-house")] = run(
+        hyps["tuned_in"], results[("Lilly (fine-tuned)", "in-house")], leaks["tuned_in"] = run(
             tuned, tokenizer, in_house, device, "Lilly / in-house")
         if flores:
-            hyps["tuned_fl"], results[("Lilly (fine-tuned)", "FLORES-200")] = run(
+            hyps["tuned_fl"], results[("Lilly (fine-tuned)", "FLORES-200")], leaks["tuned_fl"] = run(
                 tuned, tokenizer, flores, device, "Lilly / FLORES-200")
 
     # Keep the outputs. Re-running the significance test on saved text costs
@@ -182,12 +246,43 @@ def main() -> int:
         **{k: v for k, v in hyps.items()}}, ensure_ascii=False))
     print(f"kept the translations in {out.name}")
 
-    write_results(in_house, flores, results, hyps, bool(args.adapter))
+    write_results(in_house, flores, results, hyps, bool(args.adapter), leaks)
     print("wrote training/RESULTS.md")
     return 0
 
 
-def write_results(in_house, flores, results, hyps, tuned) -> None:
+def rescore() -> int:
+    """Re-derive every number from the saved translations."""
+    saved = REPO_ROOT / "training" / "hypotheses.json"
+    if not saved.exists():
+        print(f"no saved translations at {saved} — run a full evaluation first",
+              file=sys.stderr)
+        return 1
+    data = json.loads(saved.read_text())
+    in_house = load_test(len(data["in_house_refs"]))
+    flores = load_flores(len(data["flores_refs"])) if data.get("flores_refs") else []
+
+    results, hyps, leaks = {}, {}, {}
+    pairs = [("base_in", "Base (untuned)", "in-house", in_house),
+             ("base_fl", "Base (untuned)", "FLORES-200", flores),
+             ("tuned_in", "Lilly (fine-tuned)", "in-house", in_house),
+             ("tuned_fl", "Lilly (fine-tuned)", "FLORES-200", flores)]
+    for key, model, which, rows in pairs:
+        if key not in data or not rows:
+            continue
+        cleaned, leaked = strip_tags(data[key])
+        hyps[key], leaks[key] = cleaned, leaked
+        results[(model, which)] = score(cleaned, [r for _, _, r in rows])
+        print(f"{model} / {which}: BLEU={results[(model, which)][0]:.2f} "
+              f"chrF2={results[(model, which)][1]:.2f}"
+              + (f"  ({leaked} tagged)" if leaked else ""))
+
+    write_results(in_house, flores, results, hyps, "tuned_fl" in hyps, leaks)
+    print("wrote training/RESULTS.md")
+    return 0
+
+
+def write_results(in_house, flores, results, hyps, tuned, leaks) -> None:
     lines = ["# Translation quality — Phase 2", "",
              "## Headline", "",
              "| Model | Test set | BLEU | chrF2 |",
@@ -228,11 +323,31 @@ def write_results(in_house, flores, results, hyps, tuned) -> None:
         lines.append(row)
 
     if tuned and flores:
-        p = significance(hyps["base_fl"], hyps["tuned_fl"], [r for _, _, r in flores])
+        refs = [r for _, _, r in flores]
+        p = significance(hyps["base_fl"], hyps["tuned_fl"], refs)
+        lo, hi, favour = confidence_interval(hyps["base_fl"], hyps["tuned_fl"], refs)
+        gap = (results[("Lilly (fine-tuned)", "FLORES-200")][0]
+               - results[("Base (untuned)", "FLORES-200")][0])
         lines += ["", "## Is the difference real", "",
-                  f"Paired bootstrap on FLORES-200, p = {p}. A gap of about 0.6 BLEU "
-                  "between two systems of genuinely equal quality is normal on a set this "
-                  "size, so a smaller difference than that is noise."]
+                  f"On FLORES-200 the gap is **{gap:+.2f} BLEU**, paired bootstrap "
+                  f"**p = {p}**, 95% interval **[{lo:+.2f}, {hi:+.2f}]**, and "
+                  f"{favour:.0f}% of resamples favour Lilly.",
+                  "",
+                  "Read that as it is: a difference that does not clear the usual 0.05 "
+                  "bar is *unproven*, not *absent* — the interval and the direction both "
+                  "lean one way, the test set is just not large enough to settle it."]
+
+    leaked = [(k, v) for k, v in leaks.items() if v]
+    if leaked:
+        lines += ["", "## Language tags in the output", "",
+                  "The base model writes a `>>bos_Latn<<` tag into the text of many of "
+                  "its translations. That is a real defect a reader would see, but it is "
+                  "not a translation error, so both systems are scored with it stripped "
+                  "and the count reported here instead. Left in, it moved BLEU by about "
+                  "five points and hid what the fine-tuning actually changed.", ""]
+        for name, n in sorted(leaked):
+            total = len(flores) if name.endswith("_fl") else len(in_house)
+            lines.append(f"- `{name}`: {n} of {total} outputs ({100 * n / total:.1f}%)")
 
     lines += ["", "---", "",
               "Generated by `training/evaluate.py`. Sentences are batched by length: "
