@@ -19,10 +19,15 @@ note_ok()   { DONE+=("$1");   echo "  OK: $1"; }
 note_fail() { FAILED+=("$1"); echo "  FAILED: $1"; }
 
 echo "=== $(date '+%H:%M:%S')  waiting for anything still running ==="
-while pgrep -f "run_training.sh" > /dev/null || pgrep -f train_translation > /dev/null \
-   || pgrep -f run_significance > /dev/null; do
-  sleep 60
-done
+# Match the python invocations, not the shell script names. A watcher process
+# with "run_significance" in its own command line matches a loose pattern and
+# the wait never ends — which cost an hour of doing nothing once already.
+busy() {
+  pgrep -f "training/train_translation.py" > /dev/null && return 0
+  pgrep -f "training/evaluate.py" > /dev/null && return 0
+  return 1
+}
+while busy; do sleep 60; done
 
 # ---------------------------------------------------------------- listening
 echo

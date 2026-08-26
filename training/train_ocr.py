@@ -159,6 +159,26 @@ def decode(logits, converter):
     return converter.decode_greedy(indices.view(-1).cpu().numpy(), sizes)
 
 
+def surviving_diacritics(truth: str, pred: str) -> tuple:
+    """How many of the Bosnian letters in `truth` are still there in `pred`.
+
+    Counted, not aligned. Walking the two strings in step — `zip(truth, pred)` —
+    only holds while they are the same length: one dropped or inserted character
+    shifts every position after it, and each shifted position then reads as a
+    Bosnian letter that came out wrong. On data/ocr/valid with the shipped
+    reader that scoring reported 106 diacritic errors, of which only 5 were a
+    diacritic the model had actually lost; the rest were the shift. Comparing
+    counts of each letter cannot be moved by an error elsewhere in the word.
+    """
+    right = total = 0
+    for ch in DIACRITICS:
+        want = truth.count(ch)
+        if want:
+            total += want
+            right += min(want, pred.count(ch))
+    return right, total
+
+
 def accuracy(model, loader, converter, device):
     """Two numbers: whole words right, and how often a Bosnian letter survives."""
     model.eval()
@@ -170,10 +190,9 @@ def accuracy(model, loader, converter, device):
             for pred, truth in zip(preds, texts):
                 total += 1
                 exact += pred.strip() == truth.strip()
-                for a, b in zip(truth, pred.ljust(len(truth))):
-                    if a in DIACRITICS:
-                        dia_total += 1
-                        dia_right += a == b
+                right, want = surviving_diacritics(truth, pred)
+                dia_right += right
+                dia_total += want
     model.train()
     return (100 * exact / max(total, 1),
             100 * dia_right / max(dia_total, 1), dia_total)

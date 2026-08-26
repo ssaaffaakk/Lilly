@@ -30,3 +30,9 @@ training.log
 remaining.log
 significance.log
 speech-retry.log
+.agents/
+
+# Local Claude Code scaffolding, not part of the project
+.claude/agents/
+.claude/agent-loop/
+.claude/scheduled_tasks.lock

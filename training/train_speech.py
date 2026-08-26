@@ -37,6 +37,7 @@ from torch.utils.data import Dataset
 from transformers import (
     Seq2SeqTrainer,
     Seq2SeqTrainingArguments,
+    TrainerCallback,
     WhisperForConditionalGeneration,
     WhisperProcessor,
 )
@@ -108,6 +109,72 @@ class Collator:
         if (ids[:, 0] == self.start_token).all():
             ids = ids[:, 1:]
         return {"input_features": features, "labels": ids}
+
+
+def require_grads_through_checkpointing(model) -> None:
+    """Let gradients reach the adapter on BOTH sides while checkpointing is on.
+
+    Gradient checkpointing throws the forward activations away and recomputes
+    them in the backward pass, and the reentrant implementation only rebuilds a
+    graph for blocks whose *input tensor* carries requires_grad. Frozen weights
+    plus a frozen input means no graph, so an adapter inside that block never
+    sees a gradient — silently, with only a UserWarning to show for it.
+
+    `model.enable_input_require_grads()` fixes exactly one entry point: the
+    token embedding returned by `get_input_embeddings()`, which on Whisper is
+    the *decoder's*. The encoder never passes through it — audio arrives as
+    `input_features` and goes straight into two convolutions — so the encoder
+    half of the adapter stayed dead. Measured on whisper-small, one forward and
+    backward with checkpointing on: 0 of 144 encoder LoRA tensors received a
+    gradient. The encoder is the half that has to learn Bosnian sound, so that
+    was the whole point of the run.
+
+    So hook the encoder's real entry point, its first convolution, as well.
+    Its output is a leaf tensor whenever the convolution's weights are frozen,
+    which is what makes flipping the flag legal here.
+    """
+    model.enable_input_require_grads()          # the decoder's way in
+
+    def carry_gradient(_module, _inputs, output):
+        if not output.requires_grad:
+            output.requires_grad_(True)
+        return output
+
+    model.get_encoder().conv1.register_forward_hook(carry_gradient)
+
+
+def encoder_lora_gradient_report(model) -> str:
+    """How many encoder adapter tensors actually took a gradient this step.
+
+    The failure this guards against produces a model that trains, saves and
+    converts without complaint while half of it never moved, so the run says so
+    out loud rather than leaving it to be discovered later by measurement.
+    """
+    tensors = [p for n, p in model.named_parameters()
+               if "lora_" in n and ".encoder." in n and p.requires_grad]
+    if not tensors:
+        return ""
+    got = sum(1 for p in tensors if p.grad is not None)
+    return f"encoder adapter tensors receiving a gradient: {got}/{len(tensors)}"
+
+
+class EncoderGradientCheck(TrainerCallback):
+    """Count the encoder's gradients once, on the first step that has any."""
+
+    def __init__(self):
+        self.reported = False
+
+    def on_pre_optimizer_step(self, args, state, control, model=None, **kwargs):
+        if self.reported or model is None:
+            return
+        line = encoder_lora_gradient_report(model)
+        if line:
+            self.reported = True
+            print(line, flush=True)
+            if line.startswith("encoder adapter tensors receiving a gradient: 0/"):
+                print("  the encoder is not learning — the run is only training the "
+                      "decoder, see require_grads_through_checkpointing()",
+                      file=sys.stderr, flush=True)
 
 
 def make_test_clips(out_dir: Path) -> Path:
@@ -220,8 +287,8 @@ def main() -> int:
     # that is already swapping, that difference is the difference between a run
     # that finishes and one that crawls.
     # Checkpointing drops the graph the adapter needs unless the inputs are told
-    # to carry gradients themselves.
-    model.enable_input_require_grads()
+    # to carry gradients themselves — on both halves of the model, see below.
+    require_grads_through_checkpointing(model)
 
     if not args.full_finetune:
         from peft import LoraConfig, get_peft_model
@@ -274,7 +341,8 @@ def main() -> int:
         model=model, args=train_args,
         train_dataset=ClipDataset(rows, processor, args.language),
         eval_dataset=ClipDataset(valid_rows, processor, args.language) if valid_rows else None,
-        data_collator=Collator(processor)).train()
+        data_collator=Collator(processor),
+        callbacks=[EncoderGradientCheck()]).train()
 
     # The converter reads a plain model, and a quantised one cannot take an
     # adapter afterwards, so fold the training in before saving.

@@ -76,6 +76,19 @@ def load_flores(limit=None):
     return [("FLORES", s, r) for s, r in rows[:limit]]
 
 
+def flores_on_disk() -> int:
+    """How many FLORES pairs have actually been fetched.
+
+    Separate from how many a given run scores, because those two numbers drifted
+    apart once already: a rescore asked for as many pairs as it had saved
+    translations for, silently threw away the half that had been downloaded
+    since, and the report that came out of it said 1,012 while the commit that
+    published it said 2,009. A run that scores fewer pairs than are sitting on
+    disk is dropping evidence, and has to say so out loud.
+    """
+    return len(load_flores())
+
+
 def translate_all(model, tokenizer, sentences, device, batch_size=16):
     """Translate everything, batching sentences of similar length together.
 
@@ -211,9 +224,14 @@ def main() -> int:
 
     in_house = load_test(args.limit)
     flores = load_flores(args.limit)
+    available = flores_on_disk()
     print(f"in-house: {len(in_house)} pairs"
           + (f"  |  FLORES-200: {len(flores)} pairs" if flores
              else "  |  FLORES-200: not fetched (data/scripts/download_flores.py)"))
+    if flores and len(flores) < available:
+        print(f"scoring {len(flores)} of the {available} FLORES pairs on disk "
+              f"— --limit is holding back {available - len(flores)} of them",
+              file=sys.stderr)
 
     tokenizer = AutoTokenizer.from_pretrained(BASE_MODEL)
     base = AutoModelForSeq2SeqLM.from_pretrained(BASE_MODEL).to(device)
@@ -246,7 +264,8 @@ def main() -> int:
         **{k: v for k, v in hyps.items()}}, ensure_ascii=False))
     print(f"kept the translations in {out.name}")
 
-    write_results(in_house, flores, results, hyps, bool(args.adapter), leaks)
+    write_results(in_house, flores, results, hyps, bool(args.adapter), leaks,
+                  available)
     print("wrote training/RESULTS.md")
     return 0
 
@@ -260,7 +279,25 @@ def rescore() -> int:
         return 1
     data = json.loads(saved.read_text())
     in_house = load_test(len(data["in_house_refs"]))
-    flores = load_flores(len(data["flores_refs"])) if data.get("flores_refs") else []
+
+    # Only the sentences that were actually translated can be rescored, so the
+    # test set is cut down to the saved half — but never quietly. Everything
+    # below, the p-value and the interval included, then describes that smaller
+    # set, and the report has to say which one it means.
+    available = flores_on_disk()
+    saved_pairs = len(data.get("flores_refs") or [])
+    flores = load_flores(saved_pairs) if saved_pairs else []
+    if flores and saved_pairs < available:
+        print(f"only {saved_pairs} of the {available} fetched FLORES pairs have "
+              f"translations saved — {available - saved_pairs} were never translated. "
+              f"Rescoring covers the {saved_pairs} saved ones; to score all "
+              f"{available}, re-run without --rescore.", file=sys.stderr)
+    if flores and [r for _, _, r in flores] != data["flores_refs"]:
+        print("the saved FLORES references are not the first "
+              f"{saved_pairs} of the set on disk — the files changed under the "
+              "saved translations, so rescoring them would compare against the "
+              "wrong sentences. Re-run without --rescore.", file=sys.stderr)
+        return 1
 
     results, hyps, leaks = {}, {}, {}
     pairs = [("base_in", "Base (untuned)", "in-house", in_house),
@@ -277,18 +314,33 @@ def rescore() -> int:
               f"chrF2={results[(model, which)][1]:.2f}"
               + (f"  ({leaked} tagged)" if leaked else ""))
 
-    write_results(in_house, flores, results, hyps, "tuned_fl" in hyps, leaks)
+    write_results(in_house, flores, results, hyps, "tuned_fl" in hyps, leaks,
+                  available)
     print("wrote training/RESULTS.md")
     return 0
 
 
-def write_results(in_house, flores, results, hyps, tuned, leaks) -> None:
+def write_results(in_house, flores, results, hyps, tuned, leaks,
+                  flores_available=None) -> None:
     lines = ["# Translation quality — Phase 2", "",
              "## Headline", "",
-             "| Model | Test set | BLEU | chrF2 |",
-             "|-------|----------|------|-------|"]
+             "| Model | Test set | Pairs | BLEU | chrF2 |",
+             "|-------|----------|-------|------|-------|"]
     for (model, which), (bleu, chrf) in results.items():
-        lines.append(f"| {model} | {which} | {bleu:.2f} | {chrf:.2f} |")
+        pairs = len(flores) if which == "FLORES-200" else len(in_house)
+        lines.append(f"| {model} | {which} | {pairs} | {bleu:.2f} | {chrf:.2f} |")
+
+    # How many pairs a number rests on is part of the number. A run that scored
+    # fewer than are on disk says so here, in the table, rather than leaving the
+    # reader to assume the whole set was used.
+    missing = (flores_available or len(flores)) - len(flores)
+    if flores and missing > 0:
+        lines += ["",
+                  f"**Scored on {len(flores)} of the {flores_available} FLORES-200 "
+                  f"pairs that have been fetched.** The other {missing} have never "
+                  "been translated by either model, so nothing below — the gap, the "
+                  "p-value and the interval included — covers them. The set to quote "
+                  f"is {len(flores)} pairs, not {flores_available}."]
 
     lines += ["", "## Which number to believe", "",
               f"**FLORES-200** ({len(flores)} pairs) is the honest one. The base model was "
