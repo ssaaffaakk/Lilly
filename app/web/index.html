@@ -426,6 +426,15 @@
   }
   .sheet textarea:focus { border-color: rgba(122, 211, 189, 0.55); background: rgba(255, 255, 255, 0.07); }
   .sheet .row { display: flex; gap: 8px; justify-content: flex-end; margin-top: 20px; }
+  /* The sheet is a modal, and a modal paints over everything — including the
+     toast, which sits at the bottom of the page under the backdrop. A failure
+     here has to be answered inside the sheet or the reader never sees it. */
+  .sheet-note {
+    margin-top: 16px;
+    font-size: 13.5px;
+    line-height: 1.45;
+    color: var(--rec);
+  }
 
   /* --- Drop target ---------------------------------------------------- */
   .dropveil {
@@ -630,6 +639,7 @@
     <textarea id="fbWhat"></textarea>
     <label for="fbSuggest">What should it say? (optional)</label>
     <textarea id="fbSuggest"></textarea>
+    <p class="sheet-note" id="fbNote" role="status" aria-live="polite" hidden></p>
     <div class="row">
       <button type="button" class="btn ghost" id="fbCancel"><span class="lbl">Cancel</span></button>
       <button type="button" class="btn primary" id="fbSend"><span class="lbl">Send</span></button>
@@ -644,19 +654,92 @@
 
   /* ---- messages ---------------------------------------------------- */
   let toastTimer = 0;
-  function setStatus(msg, sticky) {
+  function setStatus(msg, sticky, ms) {
     const el = $("toast");
     clearTimeout(toastTimer);
     if (!msg) { el.classList.remove("on"); return; }
     el.textContent = msg;
     el.classList.add("on");
-    if (!sticky) toastTimer = setTimeout(() => el.classList.remove("on"), 3200);
+    if (!sticky) toastTimer = setTimeout(() => el.classList.remove("on"), ms || 3200);
   }
 
-  /* A failed fetch and a refused request are different problems; say which. */
-  function describe(err, fallback) {
-    if (err instanceof TypeError) return "Lilly is not answering. Is the server running?";
-    return (err && err.message) || fallback;
+  /* A failure asks the reader to do something, so it stays up more than twice
+     as long as a confirmation: three seconds is not enough to read a sentence
+     and act on it. */
+  function fail(msg) { setStatus(msg, false, 7500); }
+
+  /* ---- what went wrong, and what to do about it -----------------------
+     Every sentence below answers both halves. The server states the first
+     half plainly and with the real limit inside it — "that file is over
+     12 MB", "that image is 8000x7000" — so its words are kept and the
+     instruction is added here, where the page knows which button was
+     pressed. Provoked against a running server, this is everything it
+     sends back:
+       413  too big — an oversized upload, an empty one, an image with more
+            pixels than we decode, or more text than one translation may do
+       400  a file we cannot open: not an image, not audio
+       422  the request never reached the model — a field past its limit, or
+            a body the server could not read. These carry no "error" field,
+            so the page has to speak for itself
+       500  our side. The reason goes to the server's log, not to the reply
+       and a failed fetch, which is no answer at all.                      */
+
+  const NEXT = {                       // what pressing on again means, per place
+    translate: "press Translate again",
+    photo:     "try the photo again",
+    speech:    "record again",
+    speak:     "press Play voice again",
+    feedback:  "send it again"
+  };
+  const TOO_MUCH_TEXT = "That is more text than Lilly translates in one go. "
+                      + "Send it a few paragraphs at a time.";
+  const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
+
+  /* The server's own sentence, made into a sentence: capital, no full stop. */
+  function said(err) {
+    const t = String((err && err.serverText) || "").trim().replace(/[.\s]+$/, "");
+    return t ? cap(t) : "";
+  }
+
+  function describe(err, where) {
+    const next = NEXT[where] || "try again";
+    const text = said(err);
+
+    // Nothing answered: fetch rejects with a TypeError before there is a status.
+    if (err instanceof TypeError)
+      return "Lilly is not answering — the server stopped or the connection "
+           + "dropped. Check it is running, then " + next + ".";
+
+    switch (err && err.status) {
+      case 413:
+        if (where === "translate") return TOO_MUCH_TEXT;
+        if (!text) return "That is too big for Lilly to take. Try again with something smaller.";
+        if (/empty/.test(text)) return text + " — nothing came through. " + cap(next) + ".";
+        if (where === "speech") return text + ". Record a shorter clip.";
+        return text + ". Pick a smaller photo, or take the picture again at a lower resolution.";
+
+      case 400:
+        if (!text) return "Lilly could not use what was sent. " + cap(next) + ".";
+        if (where === "speech")
+          return text + ". Record again — press the microphone to start, and again to stop.";
+        if (where === "photo") return text + ". It may be damaged — try another photo.";
+        return text + ". " + cap(next) + ".";
+
+      case 422:
+        if (err.tooLong && where === "speak")
+          return "That translation is too long to read aloud. Translate it in "
+               + "smaller pieces to hear them.";
+        if (err.tooLong && where === "feedback")
+          return "That note is longer than the box takes. Shorten it, then send it again.";
+        if (err.tooLong) return TOO_MUCH_TEXT;
+        return "Lilly could not read that request. Reload the page, then " + next + ".";
+    }
+
+    if (err && err.status >= 500)
+      return (text || "Something went wrong on our side") + ". " + cap(next)
+           + " — if it keeps happening, the server's log says what broke.";
+
+    return "Lilly could not do that just now. Reload the page, then " + next + ".";
   }
 
   function busy(btn, on) { btn.classList.toggle("busy", on); }
@@ -687,11 +770,24 @@
     setStatus("");
   }
 
-  /* The server explains itself in JSON; pass its sentence through. */
+  /* The server explains itself in JSON: {"error": "..."} for the failures it
+     knows about, and a {"detail": [...]} list when a request never got as far
+     as the model. Carry the status and the sentence out together — the status
+     alone cannot say which file, and the sentence alone cannot say what to do. */
+  function httpError(res, data) {
+    const err = new Error("HTTP " + res.status);
+    err.status = res.status;
+    err.serverText = (data && typeof data.error === "string") ? data.error : "";
+    const detail = (data && data.detail) || [];
+    err.tooLong = Array.isArray(detail)
+      && detail.some(d => d && typeof d.type === "string" && d.type.indexOf("too_long") >= 0);
+    return err;
+  }
+
   async function apiJson(path, options) {
     const res = await fetch(path, options);
     const data = await res.json().catch(() => null);
-    if (!res.ok) throw new Error((data && data.error) || ("Server error " + res.status));
+    if (!res.ok) throw httpError(res, data);
     return data;
   }
 
@@ -709,7 +805,7 @@
       });
       showResult(data.bosnian, data.english);
     } catch (e) {
-      setStatus(describe(e, "Could not translate."));
+      fail(describe(e, "translate"));
     } finally {
       busy($("translateBtn"), false);
     }
@@ -765,6 +861,22 @@
 
   $("micBtn").addEventListener("click", async () => {
     if (recorder && recorder.state === "recording") { recorder.stop(); return; }
+    // Browsers hand out getUserMedia only on a secure origin, and localhost
+    // counts as one. Reached over plain http from a phone on the same wifi —
+    // which is how the README says to try Lilly on a phone — the whole
+    // mediaDevices object is missing, so the call throws before any permission
+    // prompt exists. Left to the catch below it reads as "allow it in the
+    // browser": an instruction with no button behind it, since there is nothing
+    // to allow and pressing again cannot help.
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      fail(window.isSecureContext
+        ? "This browser will not give Lilly a microphone. Type the Bosnian "
+          + "instead, or open Lilly in a different browser."
+        : "Browsers only allow recording over https, and Lilly is open over "
+          + "http. Type the Bosnian instead, or open Lilly at "
+          + "http://localhost:8000 on the machine running it.");
+      return;
+    }
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       chunks = [];
@@ -781,13 +893,16 @@
         form.append("file", blob, "speech.webm");
         try {
           const data = await apiJson("/api/speech", { method: "POST", body: form });
-          if (!data.bosnian) { setStatus("Could not hear anything — try again."); return; }
+          if (!data.bosnian) {
+            fail("Lilly did not catch any words. Record again, closer to the microphone.");
+            return;
+          }
           $("input").value = data.bosnian;
           document.body.classList.add("has-text");
           showResult(data.bosnian, data.english);
           playEnglish();               // speak the answer back automatically
         } catch (e) {
-          setStatus(describe(e, "Could not process the recording."));
+          fail(describe(e, "speech"));
         } finally {
           busy($("micBtn"), false);
         }
@@ -797,7 +912,19 @@
       startLevel(stream);
       setStatus("Recording — press again to stop", true);
     } catch (e) {
-      setStatus("Lilly needs permission to use the microphone.");
+      fail(e && e.name === "NotFoundError"
+        ? "No microphone found. Connect one, then press the microphone again."
+        : e && e.name === "NotReadableError"
+        ? "Another program is using the microphone. Close it, then press the "
+          + "microphone again."
+        : e && e.name === "NotAllowedError"
+        ? "Lilly needs permission to use the microphone. Allow it in the browser, "
+          + "then press the microphone again."
+        // Anything else is not a permission problem, and sending someone to grant
+        // permission they were never refused sends them hunting for a setting
+        // that is not there.
+        : "Lilly could not start recording. Type the Bosnian instead, or press "
+          + "the microphone again in a moment.");
     }
   });
 
@@ -810,12 +937,15 @@
     form.append("file", file, file.name || "photo.jpg");
     try {
       const data = await apiJson("/api/photo", { method: "POST", body: form });
-      if (!data.bosnian) { setStatus("No text found in that photo."); return; }
+      if (!data.bosnian) {
+        fail("No text found in that photo. Take it again straight on, with the words filling the frame.");
+        return;
+      }
       $("input").value = data.bosnian;
       document.body.classList.add("has-text");
       showResult(data.bosnian, data.english, file);
     } catch (e) {
-      setStatus(describe(e, "Could not read the photo."));
+      fail(describe(e, "photo"));
     } finally {
       busy($("photoBtn"), false);
     }
@@ -846,7 +976,8 @@
     e.preventDefault();
     dragDepth = 0; document.body.classList.remove("dropping");
     const file = Array.from(e.dataTransfer.files).find(f => f.type.startsWith("image/"));
-    if (file) readPhoto(file); else setStatus("That is not an image.");
+    if (file) readPhoto(file);
+    else fail("That is not an image. Drop a photo file instead — a JPEG or a PNG.");
   });
   window.addEventListener("paste", e => {
     const file = Array.from((e.clipboardData && e.clipboardData.files) || [])
@@ -867,15 +998,17 @@
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ text: state.english })
         });
-        if (!res.ok) {
-          const data = await res.json().catch(() => null);
-          throw new Error((data && data.error) || ("Server error " + res.status));
-        }
+        if (!res.ok) throw httpError(res, await res.json().catch(() => null));
         state.audioUrl = URL.createObjectURL(await res.blob());
       }
       await new Audio(state.audioUrl).play();
     } catch (e) {
-      setStatus(describe(e, "Could not speak that."));
+      // The voice plays by itself straight after a recording, and a browser may
+      // refuse to start audio nobody asked for. Nothing is broken, so say the
+      // one thing that fixes it rather than blaming the server.
+      fail(e && e.name === "NotAllowedError"
+        ? "The browser blocked the sound. Press Play voice to hear it."
+        : describe(e, "speak"));
     } finally {
       busy(btn, false);
       btn.disabled = false;
@@ -912,12 +1045,17 @@
 
   /* ---- correction loop ------------------------------------------------ */
   const dlg = $("feedbackDialog");
+  function noteFeedback(msg) {
+    $("fbNote").textContent = msg || "";
+    $("fbNote").hidden = !msg;
+  }
   function closeFeedback() {
     if (!dlg.open) return;
     dlg.classList.add("closing");
     setTimeout(() => { dlg.classList.remove("closing"); dlg.close(); }, calm ? 0 : 200);
   }
   $("wrongBtn").addEventListener("click", () => {
+    noteFeedback("");
     $("fbQuoteBs").textContent = state.bosnian;
     $("fbQuoteEn").textContent = state.english;
     dlg.showModal();
@@ -942,9 +1080,12 @@
       });
       closeFeedback();
       $("fbWhat").value = ""; $("fbSuggest").value = "";
+      noteFeedback("");
       setStatus("Thank you — your correction was saved for review.");
     } catch (e) {
-      setStatus(describe(e, "Could not send the correction."));
+      // Not the toast: it would be behind the open sheet. Answer where the
+      // reader is looking, and leave what they wrote where they left it.
+      noteFeedback(describe(e, "feedback"));
     } finally {
       busy($("fbSend"), false);
     }
