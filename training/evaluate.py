@@ -191,10 +191,50 @@ def significance(base_hyps, tuned_hyps, refs):
         return f"could not compute ({type(exc).__name__}: {exc})"
 
 
-def run(model, tokenizer, rows, device, label):
-    print(f"scoring {label} on {len(rows)} pairs…", flush=True)
+def fingerprint(adapter) -> str:
+    """What produced a set of saved translations, so they are never reused for
+    a different model. Saved translations are worth hours; reusing the wrong
+    ones is worth less than nothing."""
+    parts = [BASE_MODEL, str(adapter or "")]
+    for path in (Path(BASE_MODEL), Path(adapter) if adapter else None):
+        if path and path.exists():
+            newest = max((f.stat().st_mtime for f in path.rglob("*") if f.is_file()),
+                         default=0)
+            parts.append(f"{path.name}:{int(newest)}")
+    return "|".join(parts)
+
+
+def sources_digest(rows) -> str:
+    """A fingerprint of the sentences themselves, not just the model.
+
+    Reusing a saved translation is only safe if it was made from the same
+    sentence. Matching the model is not enough — re-fetching a test set can
+    change what sits at each line, and the old translations would then pair with
+    the wrong sources silently, producing a score that means nothing.
+    """
+    import hashlib
+    joined = "\n".join(s for _, s, _ in rows)
+    return hashlib.sha256(joined.encode("utf-8")).hexdigest()[:16]
+
+
+def run(model, tokenizer, rows, device, label, saved=None):
+    """Translate the rows, reusing any saved translations that cover the start.
+
+    The test set grows — FLORES arrived in two halves — and re-translating what
+    was already done costs hours for nothing. Saved translations cover a prefix
+    of the set because the rows are read in file order, so anything beyond what
+    was saved is the only new work.
+    """
+    reuse = list(saved or [])[:len(rows)]
+    todo = rows[len(reuse):]
+    if reuse:
+        print(f"scoring {label}: reusing {len(reuse)} saved, "
+              f"translating {len(todo)}…", flush=True)
+    else:
+        print(f"scoring {label} on {len(rows)} pairs…", flush=True)
     t0 = time.time()
-    raw = translate_all(model, tokenizer, [s for _, s, _ in rows], device)
+    raw = reuse + (translate_all(model, tokenizer, [s for _, s, _ in todo], device)
+                   if todo else [])
     hyps, leaked = strip_tags(raw)
     overall = score(hyps, [r for _, _, r in rows])
     leak_note = f"  |  language tag in {leaked}/{len(rows)} outputs" if leaked else ""
@@ -208,6 +248,9 @@ def main() -> int:
     ap.add_argument("--adapter", default=None,
                     help="path to LoRA adapter; omit to score the base model only")
     ap.add_argument("--limit", type=int, default=None)
+    ap.add_argument("--fresh", action="store_true",
+                    help="translate everything again instead of reusing what is "
+                         "already saved in hypotheses.json")
     ap.add_argument("--rescore", action="store_true",
                     help="rebuild RESULTS.md from the translations already saved in "
                          "hypotheses.json — no model is loaded and nothing is "
@@ -233,6 +276,30 @@ def main() -> int:
               f"— --limit is holding back {available - len(flores)} of them",
               file=sys.stderr)
 
+    saved = {}
+    saved_path = REPO_ROOT / "training" / "hypotheses.json"
+    if saved_path.exists() and not args.fresh:
+        data = json.loads(saved_path.read_text())
+        same_weights = data.get("fingerprint") in (None, fingerprint(args.adapter))
+        # The saved translations cover a prefix, so check the digest of that
+        # same prefix rather than of the whole set — the set is allowed to grow.
+        def prefix_matches(key, rows):
+            n = len(data.get(key.replace("_digest", "_refs"), []) or [])
+            stored = data.get(key)
+            return not stored or not n or stored == sources_digest(rows[:n])
+
+        same_text = (prefix_matches("in_house_digest", in_house)
+                     and prefix_matches("flores_digest", flores))
+        if same_weights and same_text:
+            saved = data
+            have = {k: len(v) for k, v in data.items() if isinstance(v, list)}
+            print(f"reusing saved translations: {have}")
+        elif not same_weights:
+            print("saved translations came from different weights — starting fresh")
+        else:
+            print("the test sentences changed since those translations were saved "
+                  "— starting fresh")
+
     tokenizer = AutoTokenizer.from_pretrained(BASE_MODEL)
     base = AutoModelForSeq2SeqLM.from_pretrained(BASE_MODEL).to(device)
 
@@ -240,25 +307,28 @@ def main() -> int:
     hyps = {}
     leaks = {}
     hyps["base_in"], results[("Base (untuned)", "in-house")], leaks["base_in"] = run(
-        base, tokenizer, in_house, device, "base / in-house")
+        base, tokenizer, in_house, device, "base / in-house", saved.get("base_in"))
     if flores:
         hyps["base_fl"], results[("Base (untuned)", "FLORES-200")], leaks["base_fl"] = run(
-            base, tokenizer, flores, device, "base / FLORES-200")
+            base, tokenizer, flores, device, "base / FLORES-200", saved.get("base_fl"))
 
     tuned = None
     if args.adapter:
         from peft import PeftModel
         tuned = PeftModel.from_pretrained(base, args.adapter)
         hyps["tuned_in"], results[("Lilly (fine-tuned)", "in-house")], leaks["tuned_in"] = run(
-            tuned, tokenizer, in_house, device, "Lilly / in-house")
+            tuned, tokenizer, in_house, device, "Lilly / in-house", saved.get("tuned_in"))
         if flores:
             hyps["tuned_fl"], results[("Lilly (fine-tuned)", "FLORES-200")], leaks["tuned_fl"] = run(
-                tuned, tokenizer, flores, device, "Lilly / FLORES-200")
+                tuned, tokenizer, flores, device, "Lilly / FLORES-200", saved.get("tuned_fl"))
 
     # Keep the outputs. Re-running the significance test on saved text costs
     # seconds; regenerating it costs an hour of translation.
     out = REPO_ROOT / "training" / "hypotheses.json"
     out.write_text(json.dumps({
+        "fingerprint": fingerprint(args.adapter),
+        "in_house_digest": sources_digest(in_house),
+        "flores_digest": sources_digest(flores) if flores else "",
         "in_house_refs": [r for _, _, r in in_house],
         "flores_refs": [r for _, _, r in flores],
         **{k: v for k, v in hyps.items()}}, ensure_ascii=False))
