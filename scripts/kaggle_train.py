@@ -101,6 +101,11 @@ def push_notebook(user: str, job: dict, dataset: str) -> str:
         "kernel_type": "notebook",
         "is_private": True,
         "enable_gpu": True,
+        # enable_gpu alone is not enough: the request also carries a machine_shape,
+        # and when that is empty the run lands on a CPU box however the flag reads.
+        # The notebook's own assert then stops it in ten seconds — which is how this
+        # was caught rather than discovered after an hour of CPU training.
+        "machine_shape": "gpuT4x2",
         "enable_internet": True,
         "dataset_sources": [dataset] if dataset else [],
         "competition_sources": [],

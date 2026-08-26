@@ -41,6 +41,12 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO_ROOT))
 
 READ_DIR = REPO_ROOT / "models" / "lilly" / "read"
+# The weights easyocr publishes, by their own checksum. Training must start from
+# these and nothing else: a run that starts from a previous run's output measures
+# itself against that output, and its "before" number is meaningless. One
+# four-step test run left a toy model in place and the next real run compared
+# against it without noticing.
+PRISTINE_MD5 = "469869130aad1a34e8f9086f4262bc59"
 OCR_DATA = REPO_ROOT / "data" / "ocr"
 IMG_HEIGHT = 64          # what the shipped reader was trained at
 MAX_WIDTH = 600
@@ -58,6 +64,26 @@ def build_model(num_class: int):
     from easyocr.model.vgg_model import Model
     return Model(input_channel=1, output_channel=256, hidden_size=256,
                  num_class=num_class)
+
+
+def checksum(path: Path) -> str:
+    import hashlib
+    return hashlib.md5(path.read_bytes()).hexdigest()
+
+
+def ensure_pristine(weights: Path) -> None:
+    """Start from the published weights, restoring them if something replaced them."""
+    if checksum(weights) == PRISTINE_MD5:
+        return
+    backup = weights.with_name(weights.stem + "-previous.pth")
+    if backup.exists() and checksum(backup) == PRISTINE_MD5:
+        shutil.copy(backup, weights)
+        print(f"{weights.name} was not the published model — restored from {backup.name}")
+        return
+    raise SystemExit(
+        f"{weights} is not the published reader and no clean copy is beside it. "
+        f"Re-fetch it (python3 scripts/fetch_models.py) before training, or the "
+        f"before/after comparison measures nothing.")
 
 
 def load_weights(model, path: Path) -> None:
@@ -179,6 +205,7 @@ def main() -> int:
               else "cuda" if torch.cuda.is_available() else "cpu")
     model = build_model(len(converter.character))
     weights = READ_DIR / "latin_g2.pth"
+    ensure_pristine(weights)
     load_weights(model, weights)
     model = model.to(device).train()
     print(f"device: {device}  |  vocabulary: {len(converter.character)} classes")
