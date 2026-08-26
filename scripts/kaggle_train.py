@@ -120,13 +120,17 @@ def push_notebook(user: str, job: dict, dataset: str) -> str:
 
 
 def confirm_accelerator(slug: str, stage: Path) -> None:
-    """Report the card Kaggle agreed to, not the one we asked for.
+    """Say what the API can and cannot tell us about the card.
 
-    The push accepts any machine_shape and quietly normalises what it does not
-    recognise. We asked for a T4 pair; the server stored a bare "Gpu" and the run
-    landed on a P100, whose sm_60 the image's PyTorch cannot use — so the
-    notebook saw a GPU that was available and could not compute. Asking is not
-    getting, and the difference was invisible until the log was read by hand.
+    Not much, it turns out. machine_shape reads back as a bare "Gpu" whatever we
+    send — "gpuT4x2", "nvidiaTeslaT4" and "gpuT4x2x1" all land there, and so does
+    a kernel the API never touched. The field does not distinguish a T4 from the
+    P100 whose sm_60 the image's PyTorch cannot use.
+
+    This first compared the reply against what we asked for and announced a
+    mismatch every single time, which is worse than saying nothing: a warning
+    that always fires is one nobody reads. The only honest authority on the card
+    is the notebook's own first line, so point at it.
     """
     check = stage / "confirm"
     check.mkdir(exist_ok=True)
@@ -134,14 +138,13 @@ def confirm_accelerator(slug: str, stage: Path) -> None:
                    capture_output=True, text=True, timeout=180)
     meta = check / "kernel-metadata.json"
     if not meta.exists():
-        print("  could not read the run's settings back — check the card by hand")
+        print("  could not read the run's settings back")
         return
     got = json.loads(meta.read_text(encoding="utf-8")).get("machine_shape") or "(none)"
-    print(f"  accelerator: asked for {ACCELERATOR!r}, Kaggle stored {got!r}")
-    if got.lower() != ACCELERATOR.lower():
-        print("  Kaggle did not take that shape. The notebook's preflight cell "
-              "stops the run in seconds if the card it hands us cannot train, so "
-              "this costs a minute rather than an hour.")
+    print(f"  accelerator: the API reports {got!r}, which is all it ever reports — "
+          f"it does not name the card")
+    print("  the run's first log line does: python3 scripts/kaggle_train.py "
+          "speech --status, then read 'GPU(s) visible, using: ...'")
 
 
 def status(slug: str) -> str:
