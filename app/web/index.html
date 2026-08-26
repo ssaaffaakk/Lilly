@@ -3,201 +3,704 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#08141a">
+<meta name="description" content="Lilly translates Bosnian into English — typed, spoken, or photographed.">
 <title>Lilly</title>
 <style>
+  /* ---------------------------------------------------------------
+     Dusk over the Neretva. One accent, taken from the river itself;
+     everything else is light passing through glass.
+     --------------------------------------------------------------- */
   :root {
-    --ink: #f4f6f8;
-    --ink-dim: rgba(244, 246, 248, 0.55);
-    --glass: rgba(255, 255, 255, 0.08);
-    --glass-strong: rgba(255, 255, 255, 0.14);
-    --stroke: rgba(255, 255, 255, 0.16);
-    --accent: #7fd4c1;
-    --danger: #e8a0a0;
-    --radius: 20px;
+    --bg-0: #071219;
+    --ink: #eef4f6;
+    --ink-2: rgba(238, 244, 246, 0.68);
+    --ink-3: rgba(238, 244, 246, 0.5);
+    --ink-quiet: rgba(238, 244, 246, 0.6);
+
+    --glass-top: rgba(255, 255, 255, 0.085);
+    --glass-bot: rgba(255, 255, 255, 0.035);
+    --glass-lift: rgba(255, 255, 255, 0.12);
+    --hair: rgba(255, 255, 255, 0.13);
+    --sheen: rgba(255, 255, 255, 0.16);
+
+    --accent: #7ad3bd;
+    --accent-hi: #93e0cb;
+    --accent-ink: #05231c;
+    --rec: #f0968c;
+
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.28), 0 18px 40px -14px rgba(0, 0, 0, 0.55);
+
+    --r-lg: 24px;
+    --r-md: 16px;
+    --r-sm: 12px;
+
+    --ease: cubic-bezier(0.32, 0.72, 0, 1);
+    --t-fast: 0.16s;
+    --t-base: 0.3s;
+    --t-slow: 0.46s;
   }
+
   * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
   html, body { height: 100%; }
+
   body {
     font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
     color: var(--ink);
-    /* Dusk over the Neretva — swap for a real Mostar photo by adding bg.jpg */
     background:
-      radial-gradient(120% 90% at 80% 0%, #2c4a52 0%, transparent 60%),
-      radial-gradient(100% 80% at 10% 100%, #1f3d33 0%, transparent 55%),
-      linear-gradient(160deg, #101d24 0%, #16303a 45%, #0e2019 100%);
+      radial-gradient(130% 80% at 78% -10%, #1d3f49 0%, transparent 58%),
+      radial-gradient(110% 70% at 12% 105%, #123a30 0%, transparent 52%),
+      linear-gradient(172deg, #0a1a22 0%, #0d242c 42%, #071219 100%);
     background-attachment: fixed;
     min-height: 100dvh;
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: max(20px, env(safe-area-inset-top)) 16px 40px;
-  }
-  .bg-photo {
-    position: fixed; inset: 0; z-index: -1;
-    background-size: cover; background-position: center;
-    opacity: 0.35; filter: saturate(0.8);
-  }
-  header { text-align: center; margin: 28px 0 22px; }
-  h1 { font-size: 34px; font-weight: 600; letter-spacing: 0.5px; }
-  header p { color: var(--ink-dim); font-size: 15px; margin-top: 6px; font-weight: 400; }
-
-  main { width: 100%; max-width: 560px; display: flex; flex-direction: column; gap: 14px; }
-
-  .card {
-    background: var(--glass);
-    border: 1px solid var(--stroke);
-    border-radius: var(--radius);
-    backdrop-filter: blur(22px) saturate(1.4);
-    -webkit-backdrop-filter: blur(22px) saturate(1.4);
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+    padding: max(18px, env(safe-area-inset-top)) 18px calc(28px + env(safe-area-inset-bottom));
+    -webkit-font-smoothing: antialiased;
   }
 
-  .input-card { padding: 6px; }
-  textarea {
-    width: 100%; min-height: 96px; resize: none;
-    background: transparent; border: none; outline: none;
-    color: var(--ink); font: inherit; font-size: 17px; line-height: 1.5;
-    padding: 14px 16px 6px;
+  ::selection { background: rgba(122, 211, 189, 0.28); }
+
+  /* --- Mostar: the valley the app lives in, not a picture of it -------- */
+  .scene {
+    position: fixed;
+    left: 0; right: 0; bottom: 0;
+    height: clamp(200px, max(36vh, 22vw), 480px);
+    z-index: -1;
+    pointer-events: none;
+    opacity: 0.9;
+    -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 26%, #000 100%);
+    mask-image: linear-gradient(to bottom, transparent 0%, #000 26%, #000 100%);
   }
-  textarea::placeholder { color: var(--ink-dim); }
+  .scene svg { width: 100%; height: 100%; display: block; }
 
-  .toolbar { display: flex; gap: 8px; padding: 6px 8px 8px; align-items: center; }
-  .toolbar .spacer { flex: 1; }
+  /* --- Masthead ------------------------------------------------------- */
+  header {
+    text-align: center;
+    margin: clamp(22px, 7vh, 54px) 0 clamp(20px, 4vh, 34px);
+  }
+  h1 {
+    font-size: clamp(34px, 9vw, 42px);
+    font-weight: 600;
+    letter-spacing: -0.015em;
+    text-wrap: balance;
+  }
+  .tagline {
+    margin-top: 9px;
+    font-size: 11.5px;
+    font-weight: 500;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+  }
 
-  button {
-    font: inherit; color: var(--ink); cursor: pointer;
-    border: 1px solid var(--stroke);
-    background: var(--glass-strong);
+  main {
+    width: 100%;
+    max-width: 580px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  /* --- The glass ------------------------------------------------------ */
+  .glass {
+    position: relative;
+    background: linear-gradient(180deg, var(--glass-top), var(--glass-bot));
+    backdrop-filter: blur(30px) saturate(180%);
+    -webkit-backdrop-filter: blur(30px) saturate(180%);
+    border: 1px solid var(--hair);
+    border-radius: var(--r-lg);
+    box-shadow: var(--shadow), inset 0 1px 0 var(--sheen);
+  }
+  /* The crown of the arch, echoed as the light on the top edge. */
+  .glass::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    background: radial-gradient(120% 62% at 50% -14%, rgba(255, 255, 255, 0.13), transparent 62%);
+  }
+
+  .composer { padding: 4px 4px 4px; }
+
+  textarea#input {
+    width: 100%;
+    min-height: 108px;
+    max-height: 42vh;
+    resize: none;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: var(--ink);
+    font: inherit;
+    font-size: 17.5px;
+    line-height: 1.52;
+    padding: 16px 18px 8px;
+    caret-color: var(--accent);
+  }
+  textarea#input::placeholder { color: var(--ink-3); }
+
+  .composer-foot {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    padding: 4px 8px 8px;
+  }
+  .composer-foot .spacer { flex: 1; }
+
+  /* --- Controls ------------------------------------------------------- */
+  .btn {
+    position: relative;
+    font: inherit;
+    font-size: 15px;
+    color: var(--ink);
+    cursor: pointer;
+    border: 1px solid var(--hair);
+    background: var(--glass-lift);
     border-radius: 14px;
-    padding: 10px 16px; font-size: 15px;
-    transition: transform 0.15s ease, background 0.2s ease;
+    min-height: 44px;
+    padding: 0 17px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
     -webkit-tap-highlight-color: transparent;
+    transition:
+      transform var(--t-fast) var(--ease),
+      background var(--t-base) var(--ease),
+      border-color var(--t-base) var(--ease),
+      opacity var(--t-base) var(--ease);
   }
-  button:active { transform: scale(0.96); }
-  button.primary { background: var(--accent); color: #10201b; border-color: transparent; font-weight: 600; }
-  button.icon { width: 44px; height: 44px; padding: 0; display: grid; place-items: center; }
-  button.recording { background: var(--danger); color: #2b1414; border-color: transparent; }
-  button:disabled { opacity: 0.4; cursor: default; }
-  svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+  .btn:hover { background: rgba(255, 255, 255, 0.17); }
+  .btn:active { transform: scale(0.965); }
+  .btn:disabled { opacity: 0.38; cursor: default; transform: none; }
 
-  .result { padding: 18px 20px; display: none; flex-direction: column; gap: 10px; }
-  .result.visible { display: flex; }
-  .result .label { font-size: 12px; text-transform: uppercase; letter-spacing: 1.2px; color: var(--ink-dim); }
-  .result .bosnian { font-size: 15px; color: var(--ink-dim); line-height: 1.5; }
-  .result .english { font-size: 20px; line-height: 1.45; font-weight: 500; }
-  .result-actions { display: flex; gap: 8px; margin-top: 4px; }
-  .result-actions button { font-size: 13px; padding: 8px 13px; border-radius: 11px; }
+  .btn.primary {
+    background: var(--accent);
+    color: var(--accent-ink);
+    border-color: transparent;
+    font-weight: 600;
+    padding: 0 22px;
+    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.28) inset, 0 8px 22px -10px rgba(122, 211, 189, 0.7);
+  }
+  .btn.primary:hover { background: var(--accent-hi); }
 
-  .status { text-align: center; color: var(--ink-dim); font-size: 14px; min-height: 20px; }
+  .btn.icon { width: 44px; padding: 0; }
 
+  .btn.ghost {
+    background: transparent;
+    border-color: transparent;
+    color: var(--ink-quiet);
+  }
+  .btn.ghost:hover { background: rgba(255, 255, 255, 0.07); color: var(--ink-2); }
+
+  .btn svg {
+    width: 20px; height: 20px;
+    fill: none; stroke: currentColor;
+    stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round;
+    transition: opacity var(--t-fast) var(--ease);
+  }
+  .btn .lbl { transition: opacity var(--t-fast) var(--ease); }
+
+  .btn.busy { pointer-events: none; }
+  .btn.busy .lbl, .btn.busy svg { opacity: 0; }
+  .btn.busy::after {
+    content: "";
+    position: absolute;
+    left: 50%; top: 50%;
+    width: 17px; height: 17px;
+    margin: -8.5px 0 0 -8.5px;
+    border-radius: 50%;
+    border: 2px solid currentColor;
+    border-right-color: transparent;
+    opacity: 0.8;
+    animation: spin 0.68s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  :focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+  }
+
+  /* The microphone hears you: a halo that breathes with your voice. */
+  #micBtn .halo {
+    position: absolute;
+    inset: -5px;
+    border-radius: 18px;
+    border: 1px solid var(--rec);
+    opacity: 0;
+    transform: scale(0.92);
+    pointer-events: none;
+    transition: opacity 90ms linear, transform 90ms linear;
+  }
+  #micBtn.recording {
+    background: rgba(240, 150, 140, 0.2);
+    border-color: rgba(240, 150, 140, 0.5);
+    color: #ffd6d0;
+  }
+  #micBtn.recording .halo {
+    opacity: calc(0.22 + var(--level, 0) * 0.6);
+    transform: scale(calc(1 + var(--level, 0) * 0.13));
+  }
+
+  #clearBtn {
+    opacity: 0;
+    transform: scale(0.9);
+    pointer-events: none;
+    transition: opacity var(--t-base) var(--ease), transform var(--t-base) var(--ease);
+  }
+  body.has-text #clearBtn { opacity: 1; transform: none; pointer-events: auto; }
+
+  /* --- Hint ----------------------------------------------------------- */
+  .hint {
+    text-align: center;
+    font-size: 13.5px;
+    color: var(--ink-3);
+    padding: 6px 4px 2px;
+    transition: opacity var(--t-base) var(--ease);
+  }
+  body.has-result .hint { opacity: 0; height: 0; padding: 0; overflow: hidden; }
+
+  /* --- Result --------------------------------------------------------- */
+  .result {
+    display: none;
+    flex-direction: column;
+    gap: 16px;
+    padding: 20px 22px 16px;
+  }
+  .result.visible { display: flex; animation: rise var(--t-slow) var(--ease) both; }
+  @keyframes rise {
+    from { opacity: 0; transform: translateY(10px) scale(0.985); }
+    to   { opacity: 1; transform: none; }
+  }
+  @keyframes swap {
+    from { opacity: 0; transform: translateY(4px); }
+    to   { opacity: 1; transform: none; }
+  }
+  .result.swap .block { animation: swap var(--t-base) var(--ease) both; }
+  .result.swap .block:nth-child(2) { animation-delay: 0.04s; }
+
+  .label {
+    font-size: 10.5px;
+    font-weight: 600;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    margin-bottom: 7px;
+  }
+  .source-row { display: flex; gap: 12px; align-items: flex-start; }
+  #srcThumb {
+    width: 54px; height: 54px;
+    border-radius: 10px;
+    object-fit: cover;
+    border: 1px solid var(--hair);
+    flex: none;
+  }
+  .bosnian {
+    font-size: 15px;
+    color: var(--ink-2);
+    line-height: 1.55;
+    overflow-wrap: anywhere;
+  }
+  .english {
+    font-size: 21px;
+    line-height: 1.42;
+    font-weight: 500;
+    letter-spacing: -0.005em;
+    text-wrap: pretty;
+    overflow-wrap: anywhere;
+  }
+
+  .result-actions {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    flex-wrap: wrap;
+    padding-top: 2px;
+    border-top: 1px solid rgba(255, 255, 255, 0.07);
+    margin-top: 2px;
+  }
+  .result-actions .btn { font-size: 13.5px; padding: 0 13px; min-height: 44px; }
+  .result-actions .spacer { flex: 1; }
+
+  /* --- Toast ---------------------------------------------------------- */
+  .toast {
+    position: fixed;
+    left: 50%;
+    bottom: calc(20px + env(safe-area-inset-bottom));
+    z-index: 20;
+    max-width: min(88vw, 460px);
+    padding: 11px 18px;
+    border-radius: 999px;
+    font-size: 14px;
+    line-height: 1.35;
+    text-align: center;
+    color: var(--ink);
+    background: rgba(18, 34, 41, 0.72);
+    backdrop-filter: blur(24px) saturate(180%);
+    -webkit-backdrop-filter: blur(24px) saturate(180%);
+    border: 1px solid var(--hair);
+    box-shadow: var(--shadow), inset 0 1px 0 var(--sheen);
+    opacity: 0;
+    transform: translate(-50%, 14px) scale(0.97);
+    pointer-events: none;
+    transition:
+      opacity var(--t-base) var(--ease),
+      transform var(--t-base) var(--ease);
+  }
+  .toast.on { opacity: 1; transform: translate(-50%, 0) scale(1); }
+
+  /* --- Correction sheet ----------------------------------------------- */
   dialog {
-    margin: auto; width: min(92vw, 480px);
-    background: rgba(28, 42, 46, 0.92);
-    border: 1px solid var(--stroke); border-radius: var(--radius);
-    color: var(--ink); padding: 22px;
-    backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px);
+    margin: auto;
+    width: min(92vw, 480px);
+    padding: 0;
+    border: none;
+    background: transparent;
+    overflow: visible;
+    color: var(--ink);
   }
-  dialog::backdrop { background: rgba(0, 0, 0, 0.45); }
-  dialog h2 { font-size: 18px; font-weight: 600; margin-bottom: 14px; }
-  dialog label { display: block; font-size: 13px; color: var(--ink-dim); margin: 12px 0 6px; }
-  dialog textarea {
-    min-height: 60px; border: 1px solid var(--stroke); border-radius: 12px;
-    background: var(--glass); padding: 10px 12px; font-size: 15px;
+  dialog::backdrop {
+    background: rgba(3, 10, 14, 0.5);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
   }
-  dialog .row { display: flex; gap: 8px; justify-content: flex-end; margin-top: 18px; }
+  .sheet {
+    padding: 24px;
+    border-radius: var(--r-lg);
+    background: linear-gradient(180deg, rgba(24, 44, 52, 0.9), rgba(15, 30, 37, 0.9));
+    backdrop-filter: blur(34px) saturate(180%);
+    -webkit-backdrop-filter: blur(34px) saturate(180%);
+    border: 1px solid var(--hair);
+    box-shadow: 0 32px 70px -20px rgba(0, 0, 0, 0.7), inset 0 1px 0 var(--sheen);
+  }
+  dialog[open] { animation: sheetIn 0.34s var(--ease) both; }
+  dialog[open]::backdrop { animation: fadeIn 0.34s var(--ease) both; }
+  dialog.closing { animation: sheetOut 0.2s var(--ease) both; }
+  dialog.closing::backdrop { animation: fadeOut 0.2s var(--ease) both; }
+  @keyframes sheetIn  { from { opacity: 0; transform: translateY(12px) scale(0.97); } to { opacity: 1; transform: none; } }
+  @keyframes sheetOut { to { opacity: 0; transform: translateY(8px) scale(0.98); } }
+  @keyframes fadeIn   { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes fadeOut  { to { opacity: 0; } }
 
-  footer { margin-top: auto; padding-top: 32px; color: rgba(244, 246, 248, 0.35); font-size: 12px; text-align: center; line-height: 1.6; }
-  footer a { color: inherit; }
+  .sheet h2 { font-size: 19px; font-weight: 600; letter-spacing: -0.01em; }
+  .sheet .sub { margin-top: 6px; font-size: 13.5px; color: var(--ink-3); line-height: 1.5; }
+  .quote {
+    margin: 16px 0 4px;
+    padding: 12px 14px;
+    border-radius: var(--r-sm);
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    font-size: 13.5px;
+    line-height: 1.5;
+    max-height: 132px;
+    overflow: auto;
+  }
+  .quote .q-bs { color: var(--ink-3); }
+  .quote .q-en { color: var(--ink-2); margin-top: 5px; }
+  .sheet label {
+    display: block;
+    font-size: 12.5px;
+    color: var(--ink-3);
+    margin: 15px 0 7px;
+  }
+  .sheet textarea {
+    width: 100%;
+    min-height: 62px;
+    resize: vertical;
+    border: 1px solid var(--hair);
+    border-radius: var(--r-sm);
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--ink);
+    font: inherit;
+    font-size: 15px;
+    line-height: 1.5;
+    padding: 11px 13px;
+    outline: none;
+    transition: border-color var(--t-base) var(--ease), background var(--t-base) var(--ease);
+  }
+  .sheet textarea:focus { border-color: rgba(122, 211, 189, 0.55); background: rgba(255, 255, 255, 0.07); }
+  .sheet .row { display: flex; gap: 8px; justify-content: flex-end; margin-top: 20px; }
+
+  /* --- Drop target ---------------------------------------------------- */
+  .dropveil {
+    position: fixed;
+    inset: 0;
+    z-index: 30;
+    display: grid;
+    place-items: center;
+    background: rgba(7, 18, 25, 0.55);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity var(--t-base) var(--ease);
+  }
+  body.dropping .dropveil { opacity: 1; }
+  .dropveil span {
+    padding: 14px 22px;
+    border-radius: 999px;
+    border: 1px dashed rgba(122, 211, 189, 0.6);
+    color: var(--ink-2);
+    font-size: 15px;
+  }
+
+  footer {
+    margin-top: auto;
+    padding-top: 40px;
+    font-size: 11.5px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: rgba(238, 244, 246, 0.3);
+  }
+
+  @media (max-width: 420px) {
+    .result { padding: 18px 18px 14px; }
+    .english { font-size: 19.5px; }
+    .result-actions .btn { flex: 1 1 auto; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.001ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.001ms !important;
+    }
+    .btn.busy::after { animation: none; opacity: 0.5; }
+  }
 </style>
 </head>
 <body>
-  <div class="bg-photo" id="bgPhoto"></div>
 
-  <header>
-    <h1>Lilly</h1>
-    <p>Bosnian to English</p>
-  </header>
+<!-- Mostar at dusk: the Old Bridge, the minarets, the Neretva. It sits behind
+     the glass so the interface has somewhere to be, and it never asks to be
+     looked at. -->
+<div class="scene" aria-hidden="true">
+  <svg viewBox="0 0 1600 560" preserveAspectRatio="xMidYMax slice" role="presentation">
+    <defs>
+      <radialGradient id="townGlow" cx="50%" cy="50%" r="50%">
+        <stop offset="0" stop-color="#ffb877" stop-opacity="0.22"/>
+        <stop offset="1" stop-color="#ffb877" stop-opacity="0"/>
+      </radialGradient>
+      <linearGradient id="water" gradientUnits="userSpaceOnUse" x1="0" y1="472" x2="0" y2="560">
+        <stop offset="0" stop-color="#0d2a34" stop-opacity="0.55"/>
+        <stop offset="1" stop-color="#06141b" stop-opacity="0.88"/>
+      </linearGradient>
+      <linearGradient id="refl" gradientUnits="userSpaceOnUse" x1="0" y1="472" x2="0" y2="318">
+        <stop offset="0" stop-color="#cfe6ee" stop-opacity="0.15"/>
+        <stop offset="1" stop-color="#cfe6ee" stop-opacity="0"/>
+      </linearGradient>
+    </defs>
 
-  <main>
-    <div class="card input-card">
-      <textarea id="input" placeholder="Upišite bosanski tekst…" rows="3"></textarea>
-      <div class="toolbar">
-        <button class="icon" id="micBtn" title="Speak Bosnian" aria-label="Record speech">
-          <svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0"/><path d="M12 18v3"/></svg>
-        </button>
-        <button class="icon" id="photoBtn" title="Translate a photo" aria-label="Upload photo">
-          <svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="14" rx="3"/><circle cx="12" cy="13" r="4"/><path d="M9 6l1.5-2h3L15 6"/></svg>
-        </button>
-        <input type="file" id="photoInput" accept="image/*" hidden>
-        <span class="spacer"></span>
-        <button class="primary" id="translateBtn">Translate</button>
+    <ellipse cx="800" cy="462" rx="470" ry="128" fill="url(#townGlow)"/>
+    <ellipse cx="800" cy="486" rx="300" ry="52" fill="url(#townGlow)"/>
+
+    <!-- the ridge, with the last light along its edge -->
+    <path fill="#0c2029" fill-opacity="0.62"
+          d="M0,268 C120,240 220,262 330,244 C450,224 520,258 640,238 C760,218 830,250 950,232 C1080,212 1160,246 1290,230 C1400,216 1500,244 1600,232 L1600,472 L0,472 Z"/>
+    <path fill="none" stroke="#a8d2de" stroke-opacity="0.17" stroke-width="1.6"
+          d="M0,268 C120,240 220,262 330,244 C450,224 520,258 640,238 C760,218 830,250 950,232 C1080,212 1160,246 1290,230 C1400,216 1500,244 1600,232"/>
+
+    <!-- nearer slopes -->
+    <path fill="#08171e" fill-opacity="0.72" d="M0,352 C90,330 170,344 250,326 C330,308 400,330 470,318 L470,472 L0,472 Z"/>
+    <path fill="#08171e" fill-opacity="0.72" d="M1600,340 C1520,322 1440,338 1360,320 C1290,304 1220,326 1150,314 L1150,472 L1600,472 Z"/>
+
+    <g fill="#050f14" fill-opacity="0.88">
+      <!-- the old town, both banks -->
+      <path d="M0,472 L0,438 L26,438 L26,424 L58,424 L58,442 L92,442 L92,430 L124,430 L124,446 L160,446 L160,432 L196,432 L196,448 L236,448 L236,436 L272,436 L272,452 L316,452 L316,440 L352,440 L352,454 L398,454 L398,442 L440,442 L440,456 L470,456 L470,472 Z"/>
+      <path d="M1600,472 L1600,440 L1566,440 L1566,426 L1530,426 L1530,444 L1494,444 L1494,432 L1456,432 L1456,448 L1414,448 L1414,434 L1372,434 L1372,450 L1326,450 L1326,438 L1282,438 L1282,454 L1232,454 L1232,442 L1186,442 L1186,456 L1160,456 L1160,472 Z"/>
+
+      <!-- minaret, east bank, beside the bridge -->
+      <rect x="1139" y="210" width="2" height="10"/>
+      <path d="M1133,256 L1140,218 L1147,256 Z"/>
+      <rect x="1136.5" y="256" width="7" height="30"/>
+      <rect x="1129" y="286" width="22" height="11" rx="2"/>
+      <rect x="1135" y="297" width="10" height="175"/>
+
+      <!-- a farther minaret, west bank -->
+      <rect x="439.2" y="265" width="1.6" height="8"/>
+      <path d="M434,304 L440,272 L446,304 Z"/>
+      <rect x="437" y="304" width="6" height="24"/>
+      <rect x="431" y="328" width="18" height="9" rx="2"/>
+      <rect x="436" y="337" width="8" height="135"/>
+
+      <!-- Stari Most: two towers and one stone arch -->
+      <path d="M482,330 L521,308 L560,330 Z"/>
+      <path d="M486,472 L486,336 L494,328 L548,328 L556,336 L556,472 Z"/>
+      <path d="M1040,324 L1079,302 L1118,324 Z"/>
+      <path d="M1044,472 L1044,330 L1052,322 L1106,322 L1114,330 L1114,472 Z"/>
+      <path d="M560,458 Q800,230 1040,458 L1005,452 Q800,308 595,452 Z"/>
+    </g>
+
+    <!-- the parapet takes the last of the sky -->
+    <path fill="none" stroke="#dbeef4" stroke-opacity="0.2" stroke-width="7" stroke-linecap="round"
+          d="M548,464 Q800,220 1052,464"/>
+
+    <!-- the Neretva -->
+    <rect x="0" y="472" width="1600" height="88" fill="url(#water)"/>
+    <rect x="0" y="471.4" width="1600" height="1.2" fill="#cfe6ee" opacity="0.09"/>
+    <g transform="translate(0,731.6) scale(1,-0.55)" fill="url(#refl)">
+      <path d="M560,458 Q800,230 1040,458 L1005,452 Q800,308 595,452 Z"/>
+    </g>
+    <g>
+      <rect x="640" y="486" width="320" height="2" rx="1" fill="#ffd9ad" opacity="0.16"/>
+      <rect x="700" y="498" width="200" height="2" rx="1" fill="#ffd9ad" opacity="0.12"/>
+      <rect x="560" y="512" width="420" height="2" rx="1" fill="#bfe4e0" opacity="0.1"/>
+      <rect x="742" y="526" width="150" height="2" rx="1" fill="#ffd9ad" opacity="0.09"/>
+      <rect x="480" y="540" width="560" height="2" rx="1" fill="#bfe4e0" opacity="0.07"/>
+    </g>
+  </svg>
+</div>
+
+<header>
+  <h1>Lilly</h1>
+  <p class="tagline">Bosnian &#8594; English</p>
+</header>
+
+<main>
+  <section class="glass composer">
+    <textarea id="input" lang="bs" rows="3" spellcheck="false" autocorrect="off"
+              placeholder="Upi&#353;ite bosanski tekst&#8230;" aria-label="Bosnian text"></textarea>
+    <div class="composer-foot">
+      <button type="button" class="btn icon" id="micBtn" title="Speak Bosnian" aria-label="Record speech">
+        <span class="halo" aria-hidden="true"></span>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0"/><path d="M12 18v3"/></svg>
+      </button>
+      <button type="button" class="btn icon" id="photoBtn" title="Translate a photo" aria-label="Choose a photo">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="6" width="18" height="14" rx="3"/><circle cx="12" cy="13" r="4"/><path d="M9 6l1.5-2h3L15 6"/></svg>
+      </button>
+      <input type="file" id="photoInput" accept="image/*" hidden>
+      <span class="spacer"></span>
+      <button type="button" class="btn icon ghost" id="clearBtn" title="Clear" aria-label="Clear the text">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
+      <button type="button" class="btn primary" id="translateBtn"><span class="lbl">Translate</span></button>
+    </div>
+  </section>
+
+  <p class="hint" id="hint">Type it, say it, or photograph a sign.</p>
+
+  <section class="glass result" id="result" aria-live="polite">
+    <div class="block">
+      <div class="label">Bosnian</div>
+      <div class="source-row">
+        <img id="srcThumb" alt="" hidden>
+        <div class="bosnian" id="outBosnian" lang="bs"></div>
       </div>
     </div>
-
-    <div class="status" id="status"></div>
-
-    <div class="card result" id="result">
-      <div>
-        <div class="label">Bosnian</div>
-        <div class="bosnian" id="outBosnian"></div>
-      </div>
-      <div>
-        <div class="label">English</div>
-        <div class="english" id="outEnglish"></div>
-      </div>
-      <div class="result-actions">
-        <button id="playBtn">Play voice</button>
-        <button id="wrongBtn">This translation is wrong</button>
-      </div>
+    <div class="block">
+      <div class="label">English</div>
+      <div class="english" id="outEnglish"></div>
     </div>
-  </main>
+    <div class="result-actions">
+      <button type="button" class="btn" id="playBtn">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4z"/><path d="M17 9.5a4 4 0 0 1 0 5"/><path d="M19.5 7a7.5 7.5 0 0 1 0 10"/></svg>
+        <span class="lbl">Play voice</span>
+      </button>
+      <button type="button" class="btn" id="copyBtn">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2.5"/><path d="M15 6.5V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h.5"/></svg>
+        <span class="lbl">Copy</span>
+      </button>
+      <span class="spacer"></span>
+      <button type="button" class="btn ghost" id="wrongBtn"><span class="lbl">This translation is wrong</span></button>
+    </div>
+  </section>
+</main>
 
-  <dialog id="feedbackDialog">
-    <h2>Help Lilly improve</h2>
+<footer>Lilly</footer>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<div class="dropveil" aria-hidden="true"><span>Drop the photo to read it</span></div>
+
+<dialog id="feedbackDialog" aria-labelledby="fbTitle">
+  <div class="sheet">
+    <h2 id="fbTitle">Help Lilly improve</h2>
+    <p class="sub">Corrections are kept for review. Approved ones become training material.</p>
+    <div class="quote">
+      <div class="q-bs" id="fbQuoteBs" lang="bs"></div>
+      <div class="q-en" id="fbQuoteEn"></div>
+    </div>
     <label for="fbWhat">What is wrong with this translation?</label>
     <textarea id="fbWhat"></textarea>
     <label for="fbSuggest">What should it say? (optional)</label>
     <textarea id="fbSuggest"></textarea>
     <div class="row">
-      <button id="fbCancel">Cancel</button>
-      <button class="primary" id="fbSend">Send</button>
+      <button type="button" class="btn ghost" id="fbCancel"><span class="lbl">Cancel</span></button>
+      <button type="button" class="btn primary" id="fbSend"><span class="lbl">Send</span></button>
     </div>
-  </dialog>
-
-  <footer>
-    Lilly
-  </footer>
+  </div>
+</dialog>
 
 <script>
   const $ = id => document.getElementById(id);
   const state = { bosnian: "", english: "", audioUrl: null };
+  const calm = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-  // Optional Mostar photo: drop bg.jpg next to this file and it appears.
-  fetch("bg.jpg", { method: "HEAD" }).then(r => {
-    if (r.ok) $("bgPhoto").style.backgroundImage = "url(bg.jpg)";
-  }).catch(() => {});
+  /* ---- messages ---------------------------------------------------- */
+  let toastTimer = 0;
+  function setStatus(msg, sticky) {
+    const el = $("toast");
+    clearTimeout(toastTimer);
+    if (!msg) { el.classList.remove("on"); return; }
+    el.textContent = msg;
+    el.classList.add("on");
+    if (!sticky) toastTimer = setTimeout(() => el.classList.remove("on"), 3200);
+  }
 
-  function setStatus(msg) { $("status").textContent = msg; }
+  /* A failed fetch and a refused request are different problems; say which. */
+  function describe(err, fallback) {
+    if (err instanceof TypeError) return "Lilly is not answering. Is the server running?";
+    return (err && err.message) || fallback;
+  }
 
-  function showResult(bosnian, english) {
+  function busy(btn, on) { btn.classList.toggle("busy", on); }
+
+  /* ---- result ------------------------------------------------------- */
+  let thumbUrl = null;
+  function setThumb(file) {
+    if (thumbUrl) { URL.revokeObjectURL(thumbUrl); thumbUrl = null; }
+    const el = $("srcThumb");
+    if (file) { thumbUrl = URL.createObjectURL(file); el.src = thumbUrl; el.hidden = false; }
+    else { el.removeAttribute("src"); el.hidden = true; }
+  }
+
+  function showResult(bosnian, english, file) {
     state.bosnian = bosnian; state.english = english; state.audioUrl = null;
     $("outBosnian").textContent = bosnian;
     $("outEnglish").textContent = english;
-    $("result").classList.add("visible");
+    setThumb(file || null);
+    const card = $("result");
+    const already = card.classList.contains("visible");
+    card.classList.add("visible");
+    document.body.classList.add("has-result");
+    if (already && !calm) {                     // replacing an answer: cross-fade the words
+      card.classList.remove("swap");
+      void card.offsetWidth;
+      card.classList.add("swap");
+    }
     setStatus("");
   }
 
+  /* The server explains itself in JSON; pass its sentence through. */
   async function apiJson(path, options) {
     const res = await fetch(path, options);
-    if (!res.ok) throw new Error("Server error " + res.status);
-    return res.json();
+    const data = await res.json().catch(() => null);
+    if (!res.ok) throw new Error((data && data.error) || ("Server error " + res.status));
+    return data;
   }
 
-  // --- Text translation ---
+  /* ---- text --------------------------------------------------------- */
   $("translateBtn").addEventListener("click", async () => {
     const text = $("input").value.trim();
-    if (!text) return;
-    setStatus("Translating…");
+    if (!text) { $("input").focus(); return; }
+    busy($("translateBtn"), true);
+    setStatus("Translating…", true);
     try {
       const data = await apiJson("/api/translate", {
         method: "POST",
@@ -205,14 +708,61 @@
         body: JSON.stringify({ text })
       });
       showResult(data.bosnian, data.english);
-    } catch (e) { setStatus("Could not translate. Is the server running?"); }
+    } catch (e) {
+      setStatus(describe(e, "Could not translate."));
+    } finally {
+      busy($("translateBtn"), false);
+    }
   });
+
   $("input").addEventListener("keydown", e => {
     if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); $("translateBtn").click(); }
   });
+  $("input").addEventListener("input", () => {
+    document.body.classList.toggle("has-text", $("input").value.trim().length > 0);
+  });
+  $("clearBtn").addEventListener("click", () => {
+    $("input").value = "";
+    document.body.classList.remove("has-text");
+    $("input").focus();
+  });
 
-  // --- Microphone ---
+  /* ---- microphone ---------------------------------------------------- */
   let recorder = null, chunks = [];
+  let audioCtx = null, srcNode = null, levelRaf = 0;
+
+  function startLevel(stream) {
+    if (calm) return;
+    try {
+      const Ctx = window.AudioContext || window.webkitAudioContext;
+      if (!Ctx) return;
+      audioCtx = new Ctx();
+      srcNode = audioCtx.createMediaStreamSource(stream);
+      const analyser = audioCtx.createAnalyser();
+      analyser.fftSize = 512;
+      analyser.smoothingTimeConstant = 0.82;
+      srcNode.connect(analyser);
+      const buf = new Uint8Array(analyser.fftSize);
+      const tick = () => {
+        analyser.getByteTimeDomainData(buf);
+        let sum = 0;
+        for (let i = 0; i < buf.length; i++) { const v = (buf[i] - 128) / 128; sum += v * v; }
+        const level = Math.min(1, Math.sqrt(sum / buf.length) * 4.5);
+        $("micBtn").style.setProperty("--level", level.toFixed(3));
+        levelRaf = requestAnimationFrame(tick);
+      };
+      tick();
+    } catch (e) { /* the meter is a courtesy; recording does not depend on it */ }
+  }
+
+  function stopLevel() {
+    if (levelRaf) { cancelAnimationFrame(levelRaf); levelRaf = 0; }
+    try { if (srcNode) srcNode.disconnect(); } catch (e) {}
+    try { if (audioCtx) audioCtx.close(); } catch (e) {}
+    srcNode = null; audioCtx = null;
+    $("micBtn").style.setProperty("--level", "0");
+  }
+
   $("micBtn").addEventListener("click", async () => {
     if (recorder && recorder.state === "recording") { recorder.stop(); return; }
     try {
@@ -221,9 +771,11 @@
       recorder = new MediaRecorder(stream);
       recorder.ondataavailable = e => chunks.push(e.data);
       recorder.onstop = async () => {
+        stopLevel();
         stream.getTracks().forEach(t => t.stop());
         $("micBtn").classList.remove("recording");
-        setStatus("Listening to what you said…");
+        busy($("micBtn"), true);
+        setStatus("Listening to what you said…", true);
         const blob = new Blob(chunks, { type: recorder.mimeType });
         const form = new FormData();
         form.append("file", blob, "speech.webm");
@@ -231,36 +783,83 @@
           const data = await apiJson("/api/speech", { method: "POST", body: form });
           if (!data.bosnian) { setStatus("Could not hear anything — try again."); return; }
           $("input").value = data.bosnian;
+          document.body.classList.add("has-text");
           showResult(data.bosnian, data.english);
           playEnglish();               // speak the answer back automatically
-        } catch (e) { setStatus("Could not process the recording."); }
+        } catch (e) {
+          setStatus(describe(e, "Could not process the recording."));
+        } finally {
+          busy($("micBtn"), false);
+        }
       };
       recorder.start();
       $("micBtn").classList.add("recording");
-      setStatus("Recording — press again to stop");
-    } catch (e) { setStatus("Microphone permission needed."); }
+      startLevel(stream);
+      setStatus("Recording — press again to stop", true);
+    } catch (e) {
+      setStatus("Lilly needs permission to use the microphone.");
+    }
   });
 
-  // --- Photo ---
+  /* ---- photo --------------------------------------------------------- */
+  async function readPhoto(file) {
+    if (!file) return;
+    busy($("photoBtn"), true);
+    setStatus("Reading the photo…", true);
+    const form = new FormData();
+    form.append("file", file, file.name || "photo.jpg");
+    try {
+      const data = await apiJson("/api/photo", { method: "POST", body: form });
+      if (!data.bosnian) { setStatus("No text found in that photo."); return; }
+      $("input").value = data.bosnian;
+      document.body.classList.add("has-text");
+      showResult(data.bosnian, data.english, file);
+    } catch (e) {
+      setStatus(describe(e, "Could not read the photo."));
+    } finally {
+      busy($("photoBtn"), false);
+    }
+  }
+
   $("photoBtn").addEventListener("click", () => $("photoInput").click());
   $("photoInput").addEventListener("change", async () => {
     const file = $("photoInput").files[0];
-    if (!file) return;
-    setStatus("Reading the photo…");
-    const form = new FormData();
-    form.append("file", file, file.name);
-    try {
-      const data = await apiJson("/api/photo", { method: "POST", body: form });
-      if (!data.bosnian) { setStatus("No text found in the photo."); return; }
-      showResult(data.bosnian, data.english);
-    } catch (e) { setStatus("Could not read the photo."); }
     $("photoInput").value = "";
+    await readPhoto(file);
   });
 
-  // --- Voice output ---
+  /* A photo dropped on the window, or pasted, is the same request. */
+  let dragDepth = 0;
+  const hasImage = dt => dt && Array.from(dt.types || []).includes("Files");
+  window.addEventListener("dragenter", e => {
+    if (!hasImage(e.dataTransfer)) return;
+    e.preventDefault(); dragDepth++; document.body.classList.add("dropping");
+  });
+  window.addEventListener("dragover", e => { if (hasImage(e.dataTransfer)) e.preventDefault(); });
+  window.addEventListener("dragleave", e => {
+    if (!hasImage(e.dataTransfer)) return;
+    dragDepth = Math.max(0, dragDepth - 1);
+    if (!dragDepth) document.body.classList.remove("dropping");
+  });
+  window.addEventListener("drop", e => {
+    if (!hasImage(e.dataTransfer)) return;
+    e.preventDefault();
+    dragDepth = 0; document.body.classList.remove("dropping");
+    const file = Array.from(e.dataTransfer.files).find(f => f.type.startsWith("image/"));
+    if (file) readPhoto(file); else setStatus("That is not an image.");
+  });
+  window.addEventListener("paste", e => {
+    const file = Array.from((e.clipboardData && e.clipboardData.files) || [])
+                      .find(f => f.type.startsWith("image/"));
+    if (file) { e.preventDefault(); readPhoto(file); }
+  });
+
+  /* ---- voice out ----------------------------------------------------- */
   async function playEnglish() {
     if (!state.english) return;
-    $("playBtn").disabled = true;
+    const btn = $("playBtn");
+    btn.disabled = true;
+    busy(btn, true);
     try {
       if (!state.audioUrl) {
         const res = await fetch("/api/speak", {
@@ -268,17 +867,68 @@
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ text: state.english })
         });
+        if (!res.ok) {
+          const data = await res.json().catch(() => null);
+          throw new Error((data && data.error) || ("Server error " + res.status));
+        }
         state.audioUrl = URL.createObjectURL(await res.blob());
       }
       await new Audio(state.audioUrl).play();
-    } finally { $("playBtn").disabled = false; }
+    } catch (e) {
+      setStatus(describe(e, "Could not speak that."));
+    } finally {
+      busy(btn, false);
+      btn.disabled = false;
+    }
   }
   $("playBtn").addEventListener("click", playEnglish);
 
-  // --- Correction loop ---
-  $("wrongBtn").addEventListener("click", () => $("feedbackDialog").showModal());
-  $("fbCancel").addEventListener("click", () => $("feedbackDialog").close());
+  /* Copying has to survive three worlds: a secure origin where the async
+     clipboard API works, a plain-http origin (a phone on the local network)
+     where `navigator.clipboard` does not exist at all, and an embedded browser
+     that reports success while writing nothing. So the fallback selects the
+     English on the page rather than a hidden field: if the write silently does
+     not take, the words are sitting there highlighted and the reader's own
+     shortcut finishes the job. */
+  function selectEnglish() {
+    const sel = window.getSelection();
+    const range = document.createRange();
+    range.selectNodeContents($("outEnglish"));
+    sel.removeAllRanges();
+    sel.addRange(range);
+    try { return document.execCommand("copy"); } catch (e) { return false; }
+  }
+
+  const COPY_KEY = /Mac|iPhone|iPad/.test(navigator.platform || "") ? "\u2318C" : "Ctrl+C";
+
+  $("copyBtn").addEventListener("click", async () => {
+    if (!state.english) return;
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      try { await navigator.clipboard.writeText(state.english); setStatus("Copied"); return; }
+      catch (e) { /* denied — the selection below still gets them there */ }
+    }
+    setStatus(selectEnglish() ? "Copied" : "Press " + COPY_KEY + " — the translation is selected.");
+  });
+
+  /* ---- correction loop ------------------------------------------------ */
+  const dlg = $("feedbackDialog");
+  function closeFeedback() {
+    if (!dlg.open) return;
+    dlg.classList.add("closing");
+    setTimeout(() => { dlg.classList.remove("closing"); dlg.close(); }, calm ? 0 : 200);
+  }
+  $("wrongBtn").addEventListener("click", () => {
+    $("fbQuoteBs").textContent = state.bosnian;
+    $("fbQuoteEn").textContent = state.english;
+    dlg.showModal();
+    $("fbWhat").focus();
+  });
+  $("fbCancel").addEventListener("click", closeFeedback);
+  dlg.addEventListener("cancel", e => { e.preventDefault(); closeFeedback(); });
+  dlg.addEventListener("click", e => { if (e.target === dlg) closeFeedback(); });
+
   $("fbSend").addEventListener("click", async () => {
+    busy($("fbSend"), true);
     try {
       await apiJson("/api/feedback", {
         method: "POST",
@@ -290,10 +940,14 @@
           suggested_translation: $("fbSuggest").value.trim()
         })
       });
-      $("feedbackDialog").close();
+      closeFeedback();
       $("fbWhat").value = ""; $("fbSuggest").value = "";
       setStatus("Thank you — your correction was saved for review.");
-    } catch (e) { setStatus("Could not send the correction."); }
+    } catch (e) {
+      setStatus(describe(e, "Could not send the correction."));
+    } finally {
+      busy($("fbSend"), false);
+    }
   });
 </script>
 </body>
