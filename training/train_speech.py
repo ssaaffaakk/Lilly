@@ -171,7 +171,8 @@ def main() -> int:
     ap.add_argument("--base", default=BASE_MODEL)
     ap.add_argument("--language", default="bs")
     ap.add_argument("--epochs", type=float, default=3.0)
-    ap.add_argument("--batch-size", type=int, default=8)
+    ap.add_argument("--batch-size", type=int, default=2)
+    ap.add_argument("--grad-accum", type=int, default=8)
     ap.add_argument("--lr", type=float, default=1e-5)
     ap.add_argument("--output", type=Path,
                     default=REPO_ROOT / "models" / "lilly" / "listen-trained")
@@ -218,6 +219,10 @@ def main() -> int:
     # optimizer's two running averages; the adapter wants 0.95 GB. On a machine
     # that is already swapping, that difference is the difference between a run
     # that finishes and one that crawls.
+    # Checkpointing drops the graph the adapter needs unless the inputs are told
+    # to carry gradients themselves.
+    model.enable_input_require_grads()
+
     if not args.full_finetune:
         from peft import LoraConfig, get_peft_model
         # No task_type on purpose: the sequence-to-sequence wrapper assumes text
@@ -240,6 +245,14 @@ def main() -> int:
         num_train_epochs=args.epochs,
         per_device_train_batch_size=args.batch_size,
         per_device_eval_batch_size=args.batch_size,
+        gradient_accumulation_steps=args.grad_accum,
+        # This model pads every clip to thirty seconds, so the encoder always runs
+        # 1,500 positions and the activations kept for the backward pass dominate
+        # memory — not the weights, and not the optimizer. An adapter does nothing
+        # about that; recomputing the activations instead of storing them does.
+        # It costs roughly a third more time and is what makes this fit at all:
+        # without it a batch of 8 asked for 9 GB and was killed.
+        gradient_checkpointing=True,
         learning_rate=args.lr,
         warmup_ratio=0.05,
         fp16=torch.cuda.is_available(),
