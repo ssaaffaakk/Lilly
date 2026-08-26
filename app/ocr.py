@@ -22,7 +22,21 @@ MAX_WORKING_PIXELS = 2_000_000     # above this, shrink first
 # 18 s, at 2 MP 9 s — and all three misread the same diacritic, so the detail
 # was not buying accuracy. Half the wait is worth more than pixels nobody reads.
 
+# easyocr's Bosnian character list is missing six of the language's own letters:
+# c, c and d with their diacritics, plus the capitals, are absent from lang_char
+# while s and z are present. That is not a cosmetic gap. easyocr turns the
+# language list into an ignore set and subtracts it from the logits before
+# decoding, so those six letters cannot come out at all -- not off a cleaner
+# photo, not off a better-trained reader. Measured on a plain white image
+# reading "ccdsz CCDSZ": the six came back as different letters every time.
+# It means "Carsija" could never have read as "Čaršija" however good the photo,
+# which is exactly the failure we were about to blame on the reader's training.
+# The allowlist puts them back while keeping the rest of the language
+# restriction, which is what stops Cyrillic and Vietnamese lookalikes.
+BOSNIAN_LETTERS = "čćđšžČĆĐŠŽ"
+
 _reader = None
+_allowlist = None
 _reader_lock = threading.Lock()
 _read_lock = threading.Lock()
 
@@ -36,14 +50,25 @@ class UnreadableImage(BadInput):
 
 
 def get_reader():
-    global _reader
+    global _reader, _allowlist
     if _reader is None:
         with _reader_lock:
             if _reader is None:
                 import easyocr
-                _reader = easyocr.Reader(["bs", "en"], gpu=False,
-                                         model_storage_directory=str(READ_DIR),
-                                         download_enabled=False)
+                reader = easyocr.Reader(["bs", "en"], gpu=False,
+                                        model_storage_directory=str(READ_DIR),
+                                        download_enabled=False)
+                # Stop loudly rather than read Bosnian without its own letters.
+                # If the weights are ever swapped for a set that cannot produce
+                # these, silence would look like a reader that reads badly.
+                cannot = [c for c in BOSNIAN_LETTERS if c not in reader.character]
+                if cannot:
+                    raise RuntimeError(
+                        f"the recogniser cannot produce {''.join(cannot)} — these "
+                        f"weights are not the Latin set Lilly reads Bosnian with")
+                _allowlist = "".join(sorted(set(reader.lang_char)
+                                            | set(BOSNIAN_LETTERS)))
+                _reader = reader
     return _reader
 
 
@@ -71,7 +96,8 @@ def load_within_limits(image_path: str):
 def scan(image_path: str) -> str:
     image = load_within_limits(image_path)
     with _read_lock:
-        results = get_reader().readtext(image, detail=0, paragraph=True)
+        results = get_reader().readtext(image, detail=0, paragraph=True,
+                                       allowlist=_allowlist)
     return "\n".join(results).strip()
 
 
