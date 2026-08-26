@@ -23,7 +23,6 @@ recogniser needs before the app can load it.
 Aim for a few thousand crops. A few dozen will not move anything.
 """
 import argparse
-import random
 import sys
 from collections import Counter
 from pathlib import Path
@@ -31,10 +30,10 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO_ROOT))
 
+from training.ocr_split import VALID_SHARE, is_valid_text, split_key  # noqa: E402
+
 OCR_DIR = REPO_ROOT / "data" / "ocr"
 IMAGE_TYPES = {".jpg", ".jpeg", ".png", ".webp", ".bmp", ".tif", ".tiff"}
-VALID_SHARE = 0.1
-SEED = 41
 OURS = "syn"      # what this script names its files; anything else belongs to someone else
 # the letters that separate Bosnian from plain Latin — worth watching coverage of
 BOSNIAN_LETTERS = "čćđšžČĆĐŠŽ"
@@ -90,9 +89,19 @@ def build_splits(labels_path: Path) -> int:
         print(f"no labelled crops in {labels_path}", file=sys.stderr)
         return 1
 
-    random.Random(SEED).shuffle(rows)
-    cut = max(1, int(len(rows) * VALID_SHARE))
-    for split, chunk in (("valid", rows[:cut]), ("train", rows[cut:])):
+    # Split on the label text, not on the row. One string becomes many images
+    # — several variants here, separately photographed ones from
+    # data/scripts/generate_ocr_photos.py — so cutting a shuffled row list
+    # scatters pictures of the same word across both sides, and validation
+    # starts scoring recall of the training set. Measured before this change:
+    # 1,350 of 2,402 valid rows carried text the model had trained on.
+    # is_valid_text() asks the string, so every rendering of it lands together,
+    # whichever script drew it and whenever.
+    chunks = {"valid": [], "train": []}
+    for source, text in rows:
+        chunks["valid" if is_valid_text(text) else "train"].append((source, text))
+
+    for split, chunk in (("valid", chunks["valid"]), ("train", chunks["train"])):
         out = OCR_DIR / split
         # Clear only what this script put there. Someone else may be adding
         # crops to the same folder — photographs, hand-labelled examples — and
@@ -125,7 +134,59 @@ def build_splits(labels_path: Path) -> int:
     for letter in BOSNIAN_LETTERS:
         count = letters.get(letter, 0)
         print(f"  {letter}: {count:>5}{'   <- thin' if count < 20 else ''}")
-    return 0
+
+    # A hash lands near the share, not on it, and the fewer distinct labels
+    # there are the further it drifts — so print what was actually realised
+    # rather than letting VALID_SHARE be assumed.
+    print(f"\nvalid took {100 * len(chunks['valid']) / len(rows):.1f}% of the "
+          f"crops (VALID_SHARE is {100 * VALID_SHARE:.0f}%)")
+    if not chunks["valid"]:
+        # Deciding per text has no equivalent of the old max(1, ...): with a
+        # handful of distinct labels every one of them can hash to train, and an
+        # empty valid folder fails much later, deep inside the trainer.
+        print("nothing landed in valid — too few distinct labels for a split to "
+              "hold any share; label more crops before training", file=sys.stderr)
+        return 1
+    return check_no_shared_text()
+
+
+def check_no_shared_text() -> int:
+    """Re-read both gt.txt files and refuse to sign off a leaking split.
+
+    Reads what is on disk, not what this run just wrote: these folders also hold
+    rows other generators appended straight into them, and a string shared
+    between theirs and ours is exactly the leak the text-based split exists to
+    prevent. Checking here means a leak announces itself in the run that caused
+    it, instead of quietly inflating a validation score for months.
+    """
+    seen = {}
+    for split in ("train", "valid"):
+        gt = OCR_DIR / split / "gt.txt"
+        texts = []
+        if gt.exists():
+            for line in gt.read_text(encoding="utf-8").splitlines():
+                parts = line.split("\t")
+                if len(parts) == 2:
+                    # split_key, not the raw text: compare labels the same way
+                    # the split assigned them, or this check disagrees with the
+                    # rule it is checking.
+                    texts.append(split_key(parts[1]))
+        seen[split] = texts
+
+    shared = set(seen["train"]) & set(seen["valid"])
+    if not shared:
+        print(f"no label text is on both sides: {len(set(seen['train'])):,} "
+              f"distinct texts in train, {len(set(seen['valid'])):,} in valid")
+        return 0
+
+    rows = sum(1 for text in seen["valid"] if text in shared)
+    print(f"\nLEAK: {len(shared):,} label texts are in train and valid both, "
+          f"covering {rows:,} of {len(seen['valid']):,} valid rows — that much of "
+          f"the validation score is the model reciting what it trained on.\n"
+          f"Something wrote those rows without asking training/ocr_split.py's "
+          f"is_valid_text(); e.g. "
+          f"{', '.join(repr(t) for t in sorted(shared)[:3])}", file=sys.stderr)
+    return 1
 
 
 def main() -> int:
