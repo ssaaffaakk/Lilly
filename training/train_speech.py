@@ -23,6 +23,7 @@ sources are recordings you collect yourself, or Croatian/Serbian speech as a
 proxy — the three are close enough acoustically that it helps.
 """
 import argparse
+import json
 import os
 import shutil
 import sys
@@ -193,9 +194,42 @@ def make_test_clips(out_dir: Path) -> Path:
     return tsv
 
 
-def convert_for_app(trained_dir: Path, out_dir: Path) -> None:
-    """Turn the fine-tuned checkpoint into the format the app loads."""
+def describe_checkpoint(path: Path) -> dict:
+    """Which model a checkpoint holds, from its own config."""
+    config = path / "config.json"
+    if not config.exists():
+        return {}
+    data = json.loads(config.read_text(encoding="utf-8"))
+    return {"base": data.get("_name_or_path", ""),
+            "d_model": data.get("d_model"),
+            "encoder_layers": data.get("encoder_layers")}
+
+
+def convert_for_app(trained_dir: Path, out_dir: Path, force: bool = False) -> None:
+    """Turn the fine-tuned checkpoint into the format the app loads.
+
+    Refuses to replace a listener with a smaller one. This is not hypothetical:
+    a whisper-tiny checkpoint left over from an out-of-memory experiment sat in
+    models/lilly/listen-trained/ while scripts/run_remaining.sh stood ready to
+    convert it straight over the whisper-small listener trained on Kaggle.
+    Nothing in that path would have complained — same filenames, same format, a
+    third of the model. It happened once here, to me, testing this very guard
+    before it was in place.
+    """
     from ctranslate2.converters import TransformersConverter
+
+    source = describe_checkpoint(trained_dir)
+    record = out_dir / "built.json"
+    if record.exists() and not force:
+        previous = json.loads(record.read_text(encoding="utf-8"))
+        old_size, new_size = previous.get("d_model"), source.get("d_model")
+        if old_size and new_size and new_size < old_size:
+            raise SystemExit(
+                f"{trained_dir} holds {source.get('base') or 'a smaller model'} "
+                f"(d_model {new_size}); {out_dir} was built from "
+                f"{previous.get('base') or 'something larger'} (d_model "
+                f"{old_size}). Converting would replace the listener with a "
+                f"smaller one. Pass --force if that is really what you want.")
 
     # The converter names the weight type differently from older transformers,
     # which hands anything it does not recognise to the model constructor and
@@ -224,6 +258,10 @@ def convert_for_app(trained_dir: Path, out_dir: Path) -> None:
             str(trained_dir),
             copy_files=["tokenizer.json", "preprocessor_config.json"],
         ).convert(str(out_dir), quantization="int8")
+        # CTranslate2's own config.json records nothing about the model's size,
+        # so the guard above would have nothing to read next time. Write it down.
+        (out_dir / "built.json").write_text(
+            json.dumps({**source, "quantization": "int8"}), encoding="utf-8")
     finally:
         TransformersConverter.load_model = original_load
 
@@ -250,13 +288,15 @@ def main() -> int:
                          "with room for it")
     ap.add_argument("--no-convert", action="store_true",
                     help="stop after training, leave models/lilly/listen alone")
+    ap.add_argument("--force", action="store_true",
+                    help="convert even if it would shrink the installed listener")
     ap.add_argument("--convert-only", type=Path, metavar="DIR",
                     help="skip training: just convert --base into DIR, which is how "
                          "you get a baseline to measure the fine-tune against")
     args = ap.parse_args()
 
     if args.convert_only:
-        convert_for_app(Path(args.base), args.convert_only)
+        convert_for_app(Path(args.base), args.convert_only, args.force)
         print(f"converted, untrained: {args.convert_only}")
         return 0
 
