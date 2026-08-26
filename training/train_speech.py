@@ -176,6 +176,10 @@ def main() -> int:
     ap.add_argument("--output", type=Path,
                     default=REPO_ROOT / "models" / "lilly" / "listen-trained")
     ap.add_argument("--quick-test", action="store_true")
+    ap.add_argument("--full-finetune", action="store_true",
+                    help="train every parameter instead of a LoRA adapter. Needs "
+                         "about 3.6 GB against LoRA's 0.95 GB, so only on a machine "
+                         "with room for it")
     ap.add_argument("--no-convert", action="store_true",
                     help="stop after training, leave models/lilly/listen alone")
     ap.add_argument("--convert-only", type=Path, metavar="DIR",
@@ -209,6 +213,20 @@ def main() -> int:
     model.generation_config.task = "transcribe"
     model.generation_config.forced_decoder_ids = None
 
+    # Train a small adapter rather than all 244M parameters. Full fine-tuning
+    # this model in float32 wants roughly 3.6 GB for weights, gradients and the
+    # optimizer's two running averages; the adapter wants 0.95 GB. On a machine
+    # that is already swapping, that difference is the difference between a run
+    # that finishes and one that crawls.
+    if not args.full_finetune:
+        from peft import LoraConfig, get_peft_model
+        # No task_type on purpose: the sequence-to-sequence wrapper assumes text
+        # input and hands the model input_ids, while this one takes audio features.
+        model = get_peft_model(model, LoraConfig(
+            r=16, lora_alpha=32, lora_dropout=0.05, bias="none",
+            target_modules=["q_proj", "k_proj", "v_proj", "out_proj", "fc1", "fc2"]))
+        model.print_trainable_parameters()
+
     # Without this the run keeps whatever the last epoch produced, even if it
     # was already overfitting — and nothing warns you until you measure at the end.
     valid_rows = read_tsv(args.valid) if args.valid and args.valid.exists() else []
@@ -234,6 +252,10 @@ def main() -> int:
         report_to="none",
         seed=41,
         max_steps=2 if args.quick_test else -1,
+        # The adapter hides the model's real arguments, so the trainer cannot work
+        # out by itself which input is the label — and then evaluation quietly
+        # produces no loss at all, which is what "keep the best epoch" runs on.
+        label_names=["labels"],
     )
     Seq2SeqTrainer(
         model=model, args=train_args,
@@ -241,6 +263,10 @@ def main() -> int:
         eval_dataset=ClipDataset(valid_rows, processor, args.language) if valid_rows else None,
         data_collator=Collator(processor)).train()
 
+    # The converter reads a plain model, and a quantised one cannot take an
+    # adapter afterwards, so fold the training in before saving.
+    if not args.full_finetune:
+        model = model.merge_and_unload()
     args.output.mkdir(parents=True, exist_ok=True)
     model.save_pretrained(str(args.output))
     processor.save_pretrained(str(args.output))
