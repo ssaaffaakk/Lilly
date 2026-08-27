@@ -15,7 +15,16 @@ untouched so every pretrained weight loads.
 
     python3 data/scripts/generate_ocr_data.py --count 20000   # make the images
     python3 training/train_ocr.py                             # then this
-    python3 training/evaluate_ocr.py                          # did it help
+
+There is no separate evaluation step, and this docstring named one -- an
+evaluate_ocr.py that has never existed. A target of "67.1% words, 69.4%
+diacritics" was carried in the night notes for four hours as though that script
+had produced it; nothing had. The run scores itself instead: it measures the
+published weights on the held-out crops before training and the trained ones
+after, in one process, with one scorer, and refuses to install the result
+unless the diacritics improved. Those two numbers are the comparison. A number
+that did not come out of this run's own before/after pair is not a measurement
+of it.
 
 Writes models/lilly/read/latin_g2.pth, keeping the previous one beside it as
 latin_g2-previous.pth so there is a way back and something to measure against.
