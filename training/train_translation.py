@@ -69,6 +69,15 @@ def main() -> int:
     ap.add_argument("--lora-r", type=int, default=16)
     ap.add_argument("--output", default=str(REPO_ROOT / "models" / "lilly" / "adapter"))
     ap.add_argument("--quick-test", action="store_true")
+    # Named rather than hardcoded so an experiment can change the corpus without
+    # editing the file that trains on it — and so the run's own command line
+    # records which corpus produced which adapter.
+    ap.add_argument("--data", type=Path,
+                    default=REPO_ROOT / "data" / "clean" / "train.tsv")
+    ap.add_argument("--valid", type=Path,
+                    default=REPO_ROOT / "data" / "clean" / "valid.tsv")
+    ap.add_argument("--valid-limit", type=int, default=500,
+                    help="0 for all of it")
     args = ap.parse_args()
 
     if args.quick_test:
@@ -78,10 +87,12 @@ def main() -> int:
         # be picked up by the app, and evaluated and shipped as the finished model
         args.output = str(REPO_ROOT / "models" / "quicktest-adapter")
 
-    train_pairs = read_tsv(REPO_ROOT / "data" / "clean" / "train.tsv",
-                           limit=200 if args.quick_test else None)
-    valid_pairs = read_tsv(REPO_ROOT / "data" / "clean" / "valid.tsv",
-                           limit=20 if args.quick_test else 500)
+    train_pairs = read_tsv(args.data, limit=200 if args.quick_test else None)
+    valid_pairs = read_tsv(args.valid,
+                           limit=20 if args.quick_test
+                           else (args.valid_limit or None))
+    print(f"training on {args.data.name}: {len(train_pairs):,} pairs | "
+          f"validating on {args.valid.name}: {len(valid_pairs):,}")
     random.Random(41).shuffle(train_pairs)
     print(f"train={len(train_pairs):,}  valid={len(valid_pairs):,}")
 
