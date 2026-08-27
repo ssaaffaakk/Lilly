@@ -74,6 +74,14 @@ def recall(truth: list, found: list, key=lambda w: w) -> tuple:
     return hit, sum(want.values())
 
 
+def short(path: Path) -> str:
+    """Repository-relative when it can be, absolute when it cannot."""
+    try:
+        return str(path.resolve().relative_to(REPO_ROOT))
+    except ValueError:
+        return str(path)
+
+
 def load_truth(path: Path) -> dict:
     """The agreed answer key: filename -> list of text lines."""
     data = json.loads(path.read_text(encoding="utf-8"))
@@ -169,8 +177,7 @@ def main() -> int:
         names = args.sample.read_text(encoding="utf-8").split("\n")
         names = [n for n in names if n.strip()][:args.limit or None]
         cached_reads(names, args.photos, args.cache, args.full_res)
-        print(f"\ncached {len(names)} readings in "
-              f"{args.cache.relative_to(REPO_ROOT)}")
+        print(f"\ncached {len(names)} readings in {short(args.cache)}")
         return 0
 
     if not args.truth.exists():
@@ -278,7 +285,7 @@ def main() -> int:
     print(f"per photograph   {macro:.1f}%")
     print(f"diacritic words  {pct(totals['dia']):.1f}%")
     print(f"  folded         {pct(totals['blind']):.1f}%")
-    print(f"\nwrote {args.out.relative_to(REPO_ROOT)}")
+    print(f"\nwrote {short(args.out)}")
     return 0
 
 
