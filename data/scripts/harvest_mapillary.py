@@ -37,6 +37,7 @@ import os
 import re
 import sys
 import time
+import urllib.error
 import urllib.parse
 import urllib.request
 from pathlib import Path
@@ -185,14 +186,40 @@ def sweep_tiles(bbox, token: str, per_tile: int) -> list:
     return found
 
 
+_reported = set()
+
+
 def images_near(lat: float, lon: float, token: str, per_point: int) -> list:
-    """Mapillary's radius search — up to fifty metres, its own maximum."""
-    url = (f"{GRAPH}/images?fields=id,thumb_1024_url,captured_at,is_pano,creator"
+    """Mapillary's radius search — up to fifty metres, its own maximum.
+
+    Failures are reported once each rather than swallowed. An earlier version
+    caught everything and returned an empty list, so a run that found nothing
+    looked exactly like a run over an area with no coverage: the folder appeared,
+    the credits file got its header, and not one image arrived with no way to
+    tell whether the token, the fields or the coverage was the problem.
+    """
+    url = (f"{GRAPH}/images?fields=id,thumb_1024_url,is_pano"
            f"&lat={lat}&lng={lon}&radius=50&limit={per_point}")
     try:
-        return fetch(url, token).get("data", [])
-    except Exception:
+        answer = fetch(url, token)
+    except urllib.error.HTTPError as exc:
+        body = exc.read().decode("utf-8", "replace")[:300]
+        key = f"http{exc.code}"
+        if key not in _reported:
+            _reported.add(key)
+            print(f"  Mapillary returned {exc.code}: {body}", flush=True)
         return []
+    except Exception as exc:
+        if "other" not in _reported:
+            _reported.add("other")
+            print(f"  Mapillary request failed: {exc}", flush=True)
+        return []
+    if "error" in answer:
+        if "api" not in _reported:
+            _reported.add("api")
+            print(f"  Mapillary said: {answer['error'].get('message')}", flush=True)
+        return []
+    return answer.get("data", [])
 
 
 def has_readable_text(path: Path) -> tuple:
@@ -222,6 +249,11 @@ def main() -> int:
                         help="how many photographs to keep")
     parser.add_argument("--per-point", type=int, default=2,
                         help="images requested near each signage point")
+    parser.add_argument("--measure", action="store_true",
+                        help="download a few and report what the detector sees, "
+                             "filtering nothing")
+    parser.add_argument("--probe", action="store_true",
+                        help="test the API against one known point and stop")
     args = parser.parse_args()
 
     token = os.environ.get("MAPILLARY_TOKEN", "").strip()
@@ -230,6 +262,99 @@ def main() -> int:
               "https://www.mapillary.com/dashboard/developers, then:\n"
               "    export MAPILLARY_TOKEN='MLY|...'", file=sys.stderr)
         return 1
+
+    if args.measure:
+        # Download a handful and report what the detector actually sees, without
+        # filtering anything out. The first harvest kept nothing, and the reason
+        # was invisible: the images arrived and every one was deleted by a
+        # threshold set from intuition rather than from this distribution.
+        from app.ocr import read_regions, BOSNIAN_LETTERS
+
+        sample = OUT / "measure"
+        sample.mkdir(parents=True, exist_ok=True)
+        points = signage_points(args.city, CITIES[args.city], 400)[:args.limit]
+        print(f"looking at {len(points)} points near signage", flush=True)
+        seen, texts = [], []
+        for lat, lon, near in points:
+            for image in images_near(lat, lon, token, 1):
+                url = image.get("thumb_1024_url")
+                if not url:
+                    continue
+                path = sample / f"mly_{image['id']}.jpg"
+                try:
+                    path.write_bytes(fetch(url, binary=True))
+                    regions = read_regions(str(path))
+                except Exception as exc:
+                    print(f"  {image['id']}: {exc}")
+                    continue
+                words = [(t, c) for _, t, c in regions if len(t.strip()) >= 3]
+                strong = [t for t, c in words if c > 0.3]
+                bosnian = any(ch in "".join(strong) for ch in BOSNIAN_LETTERS)
+                seen.append((len(regions), len(words), len(strong), bosnian))
+                texts.append((image["id"], " | ".join(strong)[:120]))
+                print(f"  {image['id']}: {len(regions)} regions, "
+                      f"{len(words)} of 3+ chars, {len(strong)} above 0.3"
+                      f"{'  [Bosnian letters]' if bosnian else ''}"
+                      f"   {' | '.join(strong[:3])[:60]}", flush=True)
+                time.sleep(0.3)
+        # Written to a file as well as printed, because whoever reads this is
+        # often not the person who ran it — pasting a terminal back through a
+        # terminal mangles it, and a report on disk can just be read.
+        report = OUT / "measure-report.tsv"
+        with open(report, "w", encoding="utf-8") as f:
+            f.write("image\tregions\tthree_plus\tconfident\tbosnian\ttext\n")
+            for row, (image_id, text) in zip(seen, texts):
+                f.write(f"{image_id}\t{row[0]}\t{row[1]}\t{row[2]}\t"
+                        f"{int(row[3])}\t{text}\n")
+        print(f"\nwritten to {report}")
+        if seen:
+            print(f"{len(seen)} images looked at, kept in {sample}")
+            for name, index in (("any region", 0), ("3+ chars", 1), ("above 0.3", 2)):
+                counts = sorted(row[index] for row in seen)
+                mid = counts[len(counts) // 2]
+                print(f"  {name:<12} median {mid}, "
+                      f"{sum(1 for c in counts if c >= 2)} of {len(counts)} have 2 or more")
+            print(f"  carrying Bosnian letters: {sum(1 for r in seen if r[3])}")
+        return 0
+
+    if args.probe:
+        # One request, one point, everything printed. A harvest that returns
+        # nothing has three possible causes — a rejected token, no coverage, or
+        # a field the API will not accept — and they are indistinguishable from
+        # the outside. This makes them distinguishable in one run instead of
+        # three.
+        lat, lon = 43.8563, 18.4131          # Skenderija, central Sarajevo
+        print(f"probing {lat},{lon} with a token of {len(token)} characters "
+              f"starting {token[:4]}")
+        for fields in ("id,thumb_1024_url,is_pano",
+                       "id,thumb_1024_url,captured_at,is_pano,creator",
+                       "id"):
+            url = (f"{GRAPH}/images?fields={fields}"
+                   f"&lat={lat}&lng={lon}&radius=50&limit=3")
+            try:
+                answer = fetch(url, token)
+                rows = answer.get("data", [])
+                if "error" in answer:
+                    print(f"  fields={fields}\n    API error: {answer['error']}")
+                else:
+                    print(f"  fields={fields}\n    {len(rows)} images")
+                    for row in rows[:2]:
+                        print(f"      {row.get('id')} "
+                              f"{(row.get('thumb_1024_url') or '')[:55]}")
+            except urllib.error.HTTPError as exc:
+                print(f"  fields={fields}\n    HTTP {exc.code}: "
+                      f"{exc.read().decode('utf-8', 'replace')[:250]}")
+            except Exception as exc:
+                print(f"  fields={fields}\n    failed: {exc}")
+        # And a bounding box, in case the radius search is the part that is off.
+        url = (f"{GRAPH}/images?fields=id&bbox={lon - 0.004},{lat - 0.004},"
+               f"{lon + 0.004},{lat + 0.004}&limit=3")
+        try:
+            rows = fetch(url, token).get("data", [])
+            print(f"  bbox search\n    {len(rows)} images")
+        except Exception as exc:
+            print(f"  bbox search\n    failed: {exc}")
+        return 0
 
     cities = list(CITIES) if args.city == "all" else [args.city]
     for name in cities:
@@ -284,7 +409,7 @@ def main() -> int:
             kept += 1
             with_bosnian += bosnian
             credits.write(f"{name}\t{image_id}\t{city}\t{near}\t"
-                          f"CC-BY-SA 4.0\t{(image.get('creator') or {}).get('username', '')}"
+                          f"CC-BY-SA 4.0\t{image.get('creator', '')}"
                           f"\t{int(bosnian)}\n")
             credits.flush()
             if kept % 25 == 0:
@@ -293,6 +418,11 @@ def main() -> int:
             time.sleep(0.3)          # a shared server, used politely
 
     credits.close()
+    if kept == 0:
+        print("\nnothing was kept. In order of likelihood: the token was rejected "
+              "(any Mapillary error above says so), the points had no imagery "
+              "within fifty metres, or every frame was dropped for showing no "
+              "readable text — the counts below tell which.", file=sys.stderr)
     print(f"\nkept {kept} photographs in {OUT}")
     print(f"dropped {skipped_no_text} that showed no readable text")
     print(f"{with_bosnian} of the kept ones carry c, c, d, s or z with diacritics")

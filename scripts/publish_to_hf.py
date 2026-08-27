@@ -338,6 +338,44 @@ def check_card_metadata(card: Path) -> None:
     print(f"card metadata: license {meta['license']}, "
           f"{len(meta.get('base_model', []))} base models declared")
 
+
+def refuse_secrets(bundle: Path) -> None:
+    """Refuse to publish anything that looks like a credential.
+
+    Weights are binary and a model card is prose, so neither should contain a
+    token — but this repository has handled three of them (Hugging Face,
+    Mapillary, Kaggle), and a card is edited by hand. Publishing is the one step
+    where a mistake leaves the machine and cannot be recalled: a private repo can
+    be made private again, a leaked token cannot be un-copied.
+
+    Only the text files are scanned. The pattern is each provider's own prefix
+    followed by enough characters to be a real value, so the placeholders that
+    appear in usage instructions do not trip it.
+    """
+    import re
+
+    patterns = {
+        "Hugging Face": re.compile(r"hf_[A-Za-z0-9]{30,}"),
+        "Mapillary": re.compile(r"MLY\|[A-Za-z0-9_-]{20,}"),
+        "Kaggle": re.compile(r"KGAT_[a-f0-9]{30,}"),
+        "private key": re.compile(r"BEGIN [A-Z ]*PRIVATE KEY"),
+    }
+    readable = {".md", ".txt", ".json", ".yaml", ".yml", ".tsv", ".csv", ".py"}
+    for path in sorted(bundle.rglob("*")):
+        if not path.is_file() or path.suffix.lower() not in readable:
+            continue
+        try:
+            text = path.read_text(encoding="utf-8", errors="strict")
+        except (UnicodeDecodeError, OSError):
+            continue
+        for name, pattern in patterns.items():
+            if pattern.search(text):
+                raise SystemExit(
+                    f"{path.relative_to(bundle)} contains what looks like a "
+                    f"{name} credential. Nothing was uploaded. Remove it, and "
+                    f"revoke that credential — assume it is already compromised.")
+    print("no credentials found in the text files being published")
+
 def main() -> int:
     ap = argparse.ArgumentParser(
         description="Publish models/lilly/ to Hugging Face. Lists and stops by "
@@ -359,6 +397,7 @@ def main() -> int:
     # Before anything else: are these the weights the published scores describe?
     refuse_unmeasured_weights(BUNDLE)
     check_card_metadata(BUNDLE / "README.md")
+    refuse_secrets(BUNDLE)
 
     problems, publish = preflight()
     if problems:
