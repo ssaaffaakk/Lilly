@@ -10,7 +10,18 @@ data/raw/
 data/clean/
 data/extra/
 data/flores/
-data/ocr/
+# data/ocr/ holds gigabytes of photographs and crops that the scripts recreate.
+# Two things inside it are the exception, because nothing recreates them: the
+# transcriptions. Those were read off the pictures one at a time and a lost
+# machine loses them for good -- the same shape as the harvester that spent a
+# week untracked while every photograph behind the reader's score depended on
+# it. Git cannot re-include a file whose parent directory is excluded, so the
+# directories are opened one level at a time down to the two files that matter.
+data/ocr/*
+!data/ocr/crops/
+data/ocr/crops/*
+!data/ocr/crops/labels-human.tsv
+!data/ocr/label-answers/
 data/speech/
 data/feedback.db
 models/
