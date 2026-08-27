@@ -53,3 +53,9 @@ models/lilly/read/.train_ocr.lock
 ocr-train.log.*
 bench/.outputs.json
 bench/run-full.log
+app-server.log
+kaggle-armB.log
+kaggle-fetch.log
+build-armA.log
+eval-armA.log
+ocr-full-eval.log
