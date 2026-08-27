@@ -218,3 +218,37 @@ base 91.5%, Arm A's predecessor 92.0%, p = 0.354. The fine-tuning does not
 measurably improve understanding of Bosnian-specific terms, because the base is
 already at 91.5%. Arm A moves BLEU and leaves that untouched, and the model card
 has to say so.
+
+## Outcome — Arm B wins, by the tie-break written before the numbers
+
+Both arms cleared both bars. Product path, tags stripped, 2,009 FLORES pairs:
+
+| | BLEU (bar 42.04) | chrF2 (bar 67.34) |
+|---|---|---|
+| Arm A — data only | **42.21** | 67.35 |
+| Arm B — data plus recipe | 42.18 | **67.47** |
+
+The rule above says: *if both clear the bar, the one with the higher chrF2 wins
+— not the higher BLEU.* Arm A's BLEU is 0.03 higher and that does not matter,
+because the rule was written to stop exactly this choice being made after the
+fact. **Arm B ships.**
+
+One thing the rule could not settle, and it is worth stating rather than
+burying: judging two arms on the set we also report is selection on the test
+set. Split by FLORES's own halves, from the same saved translations:
+
+| | devtest (1,012) | dev (997) |
+|---|---|---|
+| base | 41.10 / 67.51 | 40.50 / 67.15 |
+| Arm A | 42.59 / 67.58 | 41.81 / 67.10 |
+| Arm B | 42.49 / **67.69** | 41.86 / **67.25** |
+
+Arm B holds the higher chrF2 on both halves, so the choice is not an artifact of
+where it was made. Had the two disagreed across the halves, the honest answer
+would have been that neither arm is distinguishable and the tie-break was noise.
+
+**What Arm B cannot tell us.** It changed the corpus *and* the epoch count, so a
+win cannot be attributed to either. Arm A isolates the data: 42.21 / 67.35 with
+one epoch and the corpus alone. The difference between them — +0.12 chrF2 for
+−0.03 BLEU — is what the length-band rebuild and the second epoch bought
+together, and nothing here separates them.
