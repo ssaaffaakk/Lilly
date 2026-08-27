@@ -34,8 +34,19 @@ v1 never arrives.
   detector is stock, and nothing here measures finding text on a real photograph.
 - Real photographs. Everything is synthesised.
 - Further arms, hyperparameter search, decoding-parameter sweeps.
-- Hosting. It needs about 4 GB of RAM and Render's free tier gives 512 MB, so
-  this is a decision about money, not a task.
+- Hosting **was** in this list as "a decision about money, not a task", on the
+  grounds that Lilly needs about 4 GB of RAM and Render's free tier gives 512 MB.
+  That was a conclusion reached without checking the alternatives. Hugging Face
+  Spaces' CPU Basic tier is 2 vCPU and **16 GB of RAM at no cost** — read off
+  huggingface.co/pricing, not assumed — which is five times the 3.2 GB peak
+  measured on a photo request, and it sits on the same platform the weights were
+  just published to, so the app loads them without going over the network.
+
+  So it is a task, not a bill, and it belongs in whatever ships next rather than
+  in a someday list. Recorded here rather than quietly corrected because the
+  mistake is worth keeping: a line written from memory rather than measurement,
+  in a file whose whole purpose is to stop exactly that. Caught by the Egitim
+  session, which also insisted the correction be verified rather than believed.
 
 ## What v1 does not claim
 
