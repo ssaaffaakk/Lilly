@@ -7,6 +7,7 @@ Bosnian ("bs") is supported directly and phone photos are handled well
 Usage:
     python3 app/ocr.py photo.jpg
 """
+import os
 import sys
 import threading
 from pathlib import Path
@@ -76,11 +77,22 @@ def get_reader():
                 # reader was installed: the photo endpoint returned 500 for
                 # every image, and the training that had just improved word
                 # accuracy from 67.1% to 86.8% had made the feature unusable.
+                # LILLY_READER=stock loads easyocr's own Latin weights
+                # instead, which is the reader this one was trained from. The
+                # project keeps a "before" build of the translator and of the
+                # listener and compares against them; the reader had no such
+                # thing, so there was no way to ask whether its training helped
+                # on anything but the synthetic set it was trained on. This is
+                # that build. It is a measurement path, and it is here rather
+                # than in the evaluation script because a comparison is only
+                # worth anything if both sides go through the same code.
                 trained = READ_DIR / "lilly.pth"
                 network = READ_DIR / "user_network"
-                extra = {"recog_network": "lilly",
-                         "user_network_directory": str(network)} \
-                    if trained.exists() and (network / "lilly.yaml").exists() else {}
+                stock = os.environ.get("LILLY_READER", "").lower() == "stock"
+                extra = {} if stock else (
+                    {"recog_network": "lilly",
+                     "user_network_directory": str(network)}
+                    if trained.exists() and (network / "lilly.yaml").exists() else {})
                 reader = easyocr.Reader(["bs", "en"], gpu=False,
                                         model_storage_directory=str(READ_DIR),
                                         download_enabled=False, **extra)
