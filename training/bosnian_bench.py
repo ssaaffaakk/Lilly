@@ -62,15 +62,15 @@ Three run every time, because a metric nobody measured is not evidence:
 
 A hit needs the reference's own English word. The model that writes "entire"
 where the professional wrote "whole", or "plane" for "aircraft", is marked wrong
-having understood the term perfectly. Of the fine-tune's 35 missed targets, 14
-(40%) contain a plain inflection of the wanted word — visit/visiting,
+having understood the term perfectly. Of the fine-tune's 36 missed targets, 13
+(36%) contain a plain inflection of the wanted word — visit/visiting,
 solution/solutions — and reading the rest, most of the remainder are synonyms.
 So the residual few points are mostly lexical-choice noise, not comprehension,
 and the recall figure understates both models by an unknown but similar amount.
 
 The swap is also weaker than it looks here: the base is opus-mt-tc-big-zls-en,
 trained on the whole South Slavic family, so it reads ijekavica and ekavica
-equally well and the gap has little room to open. Only 3.0% of swapped targets
+equally well and the gap has little room to open. Only 2.6% of swapped targets
 scored differently from their Bosnian twin. The gap column is near zero because
 the swap does not land, which is not the same as evidence of parity.
 
