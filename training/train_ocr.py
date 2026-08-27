@@ -187,8 +187,17 @@ class Crops(Dataset):
                 parts = line.split("\t")
                 if len(parts) == 2 and parts[1].strip() and (folder / parts[0]).exists():
                     self.rows.append((parts[0], parts[1].strip()))
-        if limit:
-            self.rows = self.rows[:limit]
+        if limit and limit < len(self.rows):
+            # Take an even stride through the file, not the first N. gt.txt is
+            # written in whatever order the generators and any repair produced,
+            # and after the split was rebuilt by label text the synthetic rows
+            # landed first: the first 500 rows of data/ocr/valid were 500
+            # synthetic crops and not one of its 408 photographs. A reader
+            # scored on that subset is scored on the easy half of its job, and
+            # the number that comes out is not the reader's accuracy. Striding
+            # keeps whatever mix the file has, and keeps it the same every run.
+            step = len(self.rows) / limit
+            self.rows = [self.rows[int(i * step)] for i in range(limit)]
 
     def __len__(self):
         return len(self.rows)
