@@ -1,3 +1,33 @@
 2,009 pairs, both models through app.translate.Engine
   base translations reused from app-hypotheses.json
   translator-armA 200/2009  (317s)
+  translator-armA 400/2009  (612s)
+  translator-armA 600/2009  (948s)
+  translator-armA 800/2009  (1258s)
+  translator-armA 1000/2009  (1471s)
+  translator-armA 1200/2009  (1611s)
+  translator-armA 1400/2009  (1705s)
+  translator-armA 1600/2009  (1813s)
+  translator-armA 1800/2009  (1918s)
+  translator-armA 2000/2009  (2030s)
+  translator-armA done in 2036s
+
+language tag printed into the translation: base 572/2009 (28.5%), Lilly 0/2009 (0.0%)
+
+as the user sees it
+            BLEU   chrF2   length
+  base     37.60   67.00    1.048
+  Lilly    42.21   67.35    0.997
+  gap      +4.61   +0.35
+    BLEU p = 0.0010
+    chrF2 p = 0.0020
+
+with the language tag stripped
+            BLEU   chrF2   length
+  base     40.81   67.34    1.019
+  Lilly    42.21   67.35    0.997
+  gap      +1.40   +0.01
+    BLEU p = 0.0010
+    chrF2 p = 0.3646   (does not clear 0.05)
+
+written to training/RESULTS-product.md

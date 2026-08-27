@@ -11,22 +11,22 @@ The base model prints its language tag into the translation itself — `>>eng<<`
 | Model | BLEU | chrF2 | Length vs reference |
 |---|---|---|---|
 | Base (untuned) | 37.60 | 67.00 | 1.048 |
-| Lilly (fine-tuned) | 42.04 | 67.11 | 0.992 |
-| **Gap** | **+4.44** | **+0.12** | |
+| Lilly (fine-tuned) | 42.21 | 67.35 | 0.997 |
+| **Gap** | **+4.61** | **+0.35** | |
 
-BLEU moves +4.44 at p = 0.001, which clears the usual 0.05 bar: measured, not leaned towards.
-chrF2 moves +0.12 at p = 0.132 — that does not clear the usual 0.05 bar, so it is unproven rather than absent.
+BLEU moves +4.61 at p = 0.001, which clears the usual 0.05 bar: measured, not leaned towards.
+chrF2 moves +0.35 at p = 0.002, which clears the usual 0.05 bar: measured, not leaned towards.
 
 ## With the language tag stripped
 
 | Model | BLEU | chrF2 | Length vs reference |
 |---|---|---|---|
 | Base (untuned) | 40.81 | 67.34 | 1.019 |
-| Lilly (fine-tuned) | 42.04 | 67.11 | 0.992 |
-| **Gap** | **+1.23** | **-0.22** | |
+| Lilly (fine-tuned) | 42.21 | 67.35 | 0.997 |
+| **Gap** | **+1.40** | **+0.01** | |
 
-BLEU moves +1.23 at p = 0.001, which clears the usual 0.05 bar: measured, not leaned towards.
-chrF2 moves -0.22 at p = 0.028, which clears the usual 0.05 bar: measured, not leaned towards.
+BLEU moves +1.40 at p = 0.001, which clears the usual 0.05 bar: measured, not leaned towards.
+chrF2 moves +0.01 at p = 0.365 — that does not clear the usual 0.05 bar, so it is unproven rather than absent.
 
 ---
 

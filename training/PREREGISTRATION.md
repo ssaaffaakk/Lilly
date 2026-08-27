@@ -182,3 +182,39 @@ and 73.0% → 87.5%. The trained reader clears every bar either version of this
 file ever set, so nothing here was decided by which number was in force.
 
 Photographs gained most: words 38.0% → 74.3%, diacritics 59.7% → 80.0%.
+
+## Outcome — Arm A, decided against the thresholds above
+
+Measured by `training/evaluate_app.py`, 2,009 FLORES-200 pairs, both builds int8
+CTranslate2 through `app.translate.Engine`, language tag stripped:
+
+| | base | previous fine-tune | **Arm A** | threshold |
+|---|---|---|---|---|
+| BLEU | 40.81 | 42.04 | **42.21** | ≥ 42.04 ✓ |
+| chrF2 | 67.34 | 67.11 | **67.35** | ≥ 67.34 ✓ |
+| length vs reference | 1.019 | 0.992 | 0.997 | — |
+
+Both bars cleared, so Arm A is installed. BLEU gains 1.40 over the base at
+p = 0.001.
+
+The chrF2 number needs saying carefully, because it clears by 0.01. The right
+reading is not that chrF2 improved: at p = 0.365 the difference from the base is
+indistinguishable from nothing. The reading is that **the regression is gone.**
+The previous fine-tune lost 0.22 chrF2 at p = 0.028 — a small loss, but a
+measured one. Arm A does not lose it. That was the point of setting the bar at
+the base's own score rather than at the previous model's.
+
+Nothing but the data changed. Same LoRA rank, same learning rate, same epochs.
+21,178 misaligned WikiMatrix pairs out, 38,280 unseen pairs in.
+
+As the user sees it — tags left in, which is what arrives on screen — the gap is
++4.61 BLEU and +0.35 chrF2, both at p ≤ 0.002. Most of that is the base model
+printing `>>bos_Latn<<` into 28.5% of its own translations, which Arm A never
+does. That is a real improvement to what a reader gets and not a translation-
+quality gain, and both numbers are published for that reason.
+
+**What this did not change.** BosnianBench, built the same night: term recall
+base 91.5%, Arm A's predecessor 92.0%, p = 0.354. The fine-tuning does not
+measurably improve understanding of Bosnian-specific terms, because the base is
+already at 91.5%. Arm A moves BLEU and leaves that untouched, and the model card
+has to say so.
