@@ -62,6 +62,14 @@ PUBLISH_FILES = ("README.md", "NOTICE.md")
 # models/lilly/. Anything not matched here and not in the publish list is
 # reported as unrecognised rather than quietly swept up either way.
 EXCLUDE_RULES = (
+    # Candidates and rollbacks from a retraining experiment. The published
+    # translator is whichever candidate won; the losers and the build it
+    # replaced stay here so a bad result costs nothing to undo, and none of
+    # them belongs in a release.
+    ("adapter-armA", "candidate LoRA adapter from a retraining arm; the winner is merged into translator/"),
+    ("adapter-previous", "the adapter translator/ replaced, kept locally as the rollback"),
+    ("translator-armA", "candidate build from a retraining arm; translator/ was built from it"),
+    ("translator-previous", "the build translator/ replaced, kept locally as the rollback"),
     ("keep-*", "dated backup of a working model, kept locally as the rollback"),
     ("*.before-training", "the pre-training weights, kept locally to score against"),
     ("listen-trained", "training-format speech checkpoint; listen/ is the built version"),
