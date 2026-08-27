@@ -33,10 +33,38 @@ def main() -> int:
     ap.add_argument("--out", type=Path, default=OUT)
     args = ap.parse_args()
 
+    # The default pool is the harvester's staging area, and that area is
+    # scratch: a photograph judged `drop` is unlinked immediately and the whole
+    # directory is emptied when a run ends. Sampling from it mid-run or
+    # post-cleanup does not fail -- it quietly draws from whatever survived,
+    # and writes a new scored-sample.txt over the committed one. The ruler
+    # would change without anyone deciding to change it.
+    #
+    # So: refuse when the pool is gone, and say plainly what re-running costs
+    # when a sample and an answer key already exist for it.
+    if not args.photos.is_dir():
+        raise SystemExit(
+            f"no such directory: {args.photos}\n"
+            f"The harvester empties its staging area at the end of a run. The "
+            f"photographs that were kept are in\n"
+            f"  data/ocr/real-photos/harvested/\n"
+            f"and the forty already being scored are in\n"
+            f"  data/ocr/real-photos/scored/\n"
+            f"Pass --photos explicitly to say which pool this sample is drawn from.")
+
     photos = sorted(p for p in args.photos.iterdir()
                     if p.suffix.lower() in {".jpg", ".jpeg", ".png"})
     if not photos:
         raise SystemExit(f"no photographs in {args.photos}")
+
+    truth = REPO_ROOT / "data/ocr/real-photos/truth.json"
+    if args.out.exists() and truth.exists():
+        print(f"NOTE: {args.out.name} already exists and {truth.name} is the answer "
+              f"key transcribed for it.\n      Overwriting the sample makes that key "
+              f"partly useless -- any newly drawn photograph has no\n      "
+              f"transcription, and the reader's score stops being comparable to the "
+              f"one before it.\n      Re-run this only when you mean to build a new "
+              f"ruler.\n")
 
     chosen = sorted(photos, key=lambda p: rank(p.name))[:args.count]
     args.out.parent.mkdir(parents=True, exist_ok=True)
