@@ -16,6 +16,7 @@ downloads kaggle.json. Put it at ~/.kaggle/kaggle.json and chmod 600 it. Nothing
 else about the account is touched.
 """
 import argparse
+import hashlib
 import json
 import os
 import subprocess
@@ -27,6 +28,16 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[1]
 KAGGLE = str(REPO_ROOT / ".venv" / "bin" / "kaggle")
 WEIGHTS = REPO_ROOT / "models" / "lilly" / "translate"
+# The extra corpus travels with the run instead of being re-harvested on Kaggle.
+# data/extra/ is gitignored, so the notebook used to rebuild it up there with
+# download_extra_data.py -- and a live web corpus does not come back
+# byte-identical: the harvest that produced this file returned 38,279 pairs, two
+# were removed afterwards leaving 38,277, and the Kaggle re-harvest returned
+# 38,280. build_training_mix.py asserts roughly twenty per-step counts exactly,
+# all of them measured on the 38,277-row file, so a three-row drift kills the run
+# on its first assertion. Uploading the file removes the divergence; loosening
+# those assertions would only hide it.
+CORPUS = REPO_ROOT / "data" / "extra" / "extra-train.tsv"
 # Which card to ask Kaggle for. The value has to come from Kaggle's own enum --
 # NvidiaTeslaP100, NvidiaTeslaT4, NvidiaTeslaT4Highmem, NvidiaTeslaA100, NvidiaL4,
 # NvidiaH100, TpuV38 and so on. The client forwards whatever string it is given
@@ -40,10 +51,10 @@ ACCELERATOR = "NvidiaTeslaT4"
 JOBS = {
     "translation": {"notebook": "Lilly_Translation_Kaggle.ipynb",
                     "slug": "lilly-translation", "title": "Lilly translation",
-                    "needs_weights": True},
+                    "needs_weights": True, "needs_corpus": True},
     "speech":      {"notebook": "Lilly_Speech_Kaggle.ipynb",
                     "slug": "lilly-speech", "title": "Lilly speech",
-                    "needs_weights": False},
+                    "needs_weights": False, "needs_corpus": False},
 }
 STAGING = REPO_ROOT / "models" / "kaggle-staging"     # gitignored, under models/
 
@@ -119,7 +130,57 @@ def wait_until_ready(slug: str, patience: int = 900) -> None:
         f"hand at kaggle.com/datasets/{slug}")
 
 
-def push_notebook(user: str, job: dict, dataset: str) -> str:
+def push_corpus(user: str) -> str:
+    """The 38,277 extra pairs, pinned so the mix recipe's counts still mean something.
+
+    Why this is an upload and not a download: build_training_mix.py's twenty-odd
+    per-step assertions were all measured on this exact file, and the run that
+    re-harvested it on Kaggle died on the first one -- 390,172 rows measured
+    against 351,889 expected. Half of that gap was a double-count in the notebook
+    and is fixed there; the rest was the harvest itself returning 38,280 pairs
+    where this file has 38,277. Three rows out of thirty-eight thousand is
+    nothing to the model and fatal to an exact assertion, and the honest way to
+    settle it is to send the measured corpus rather than to widen the guards that
+    caught the drift.
+
+    Re-uploads only when the local file's md5 differs from the one last sent, so
+    the usual case costs a status call.
+    """
+    slug = f"{user}/lilly-extra-corpus"
+    if not CORPUS.exists():
+        raise SystemExit(
+            f"no extra corpus at {CORPUS}.\n"
+            f"Rebuild it with:  python3 data/scripts/download_extra_data.py\n"
+            f"but note it will not come back byte-identical, and every count in "
+            f"data/scripts/build_training_mix.py has to be re-measured with "
+            f"--dry-run before a run can use it.")
+    digest = hashlib.md5(CORPUS.read_bytes()).hexdigest()
+    stage = STAGING / "corpus"
+    stage.mkdir(parents=True, exist_ok=True)
+    (stage / CORPUS.name).write_bytes(CORPUS.read_bytes())
+    (stage / "dataset-metadata.json").write_text(json.dumps({
+        "title": "Lilly extra corpus", "id": slug,
+        "licenses": [{"name": "other"}]}, indent=1))
+    marker = STAGING / "corpus.md5"          # outside stage/, so it is not uploaded
+
+    state = subprocess.run([KAGGLE, "datasets", "status", slug],
+                           text=True, capture_output=True).stdout.lower()
+    if "ready" in state:
+        if marker.exists() and marker.read_text().strip() == digest:
+            print(f"corpus already there: {slug} (md5 {digest[:8]}, {CORPUS.stat().st_size:,} bytes)")
+            return slug
+        print(f"corpus changed or never confirmed — pushing a new version of {slug}")
+        run(KAGGLE, "datasets", "version", "-p", stage, "-r", "zip",
+            "-m", f"extra-train.tsv md5 {digest}")
+    else:
+        print(f"uploading {CORPUS.stat().st_size / 1048576:.0f} MB to {slug}")
+        run(KAGGLE, "datasets", "create", "-p", stage, "-r", "zip")
+    wait_until_ready(slug)
+    marker.write_text(digest)
+    return slug
+
+
+def push_notebook(user: str, job: dict, datasets: list) -> str:
     """The notebook, with a GPU and the internet switched on from here."""
     slug = f"{user}/{job['slug']}"
     notebook = REPO_ROOT / "training" / job["notebook"]
@@ -146,7 +207,7 @@ def push_notebook(user: str, job: dict, dataset: str) -> str:
         # was caught rather than discovered after an hour of CPU training.
         "machine_shape": ACCELERATOR,
         "enable_internet": True,
-        "dataset_sources": [dataset] if dataset else [],
+        "dataset_sources": list(datasets),
         "competition_sources": [],
         "kernel_sources": [],
     }, indent=1))
@@ -211,15 +272,17 @@ def main() -> int:
         print("  python3 scripts/build_translator.py")
         return 0
 
-    dataset = None
+    datasets = []
     if job["needs_weights"]:
         if not WEIGHTS.exists():
             print(f"no weights at {WEIGHTS} — run scripts/fetch_models.py first",
                   file=sys.stderr)
             return 1
-        dataset = push_weights(user)
+        datasets.append(push_weights(user))
+    if job["needs_corpus"]:
+        datasets.append(push_corpus(user))
 
-    push_notebook(user, job, dataset)
+    push_notebook(user, job, datasets)
     print(f"\nrunning: https://www.kaggle.com/code/{slug}")
     print("check on it with:  python3 scripts/kaggle_train.py --status")
 

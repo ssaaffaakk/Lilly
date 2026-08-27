@@ -8,6 +8,25 @@ data/extra/extra-train.tsv. Every FLORES figure quoted below is a constant
 copied from the measurement that produced this recipe, not something this script
 reads.
 
+THE INPUTS ARE PINNED, NOT REGENERATED. data/extra/ is gitignored, so the extra
+corpus does not travel with the repo — and re-running download_extra_data.py does
+not reproduce it. That harvest wrote 38,279 rows; two were then removed by an
+edit that is in no script and no commit (a citation blob, and the pair
+"Pjesme"/"Songs"), leaving the 38,277 rows every count below was measured on. A
+fresh harvest on Kaggle returned 38,280. Three rows are nothing to the model and
+fatal to an exact assertion, so scripts/kaggle_train.py uploads this file as a
+dataset rather than letting the machine rebuild it. Two rows removed by an
+untracked edit is not a provenance to be proud of; recording it beats a guard
+that quietly means something different on every machine.
+
+LEAKAGE, MEASURED. Against data/clean/valid.tsv + test.tsv: whole-pair overlap is
+0 for both inputs. Against data/flores/, the set the pre-registered decision is
+made on: 0 for both. One-side overlap — a row sharing one of its two sides with a
+held-out row, all of it citation boilerplate — is 8 in train.tsv and 1 in
+extra-train.tsv, 0.0026% of the corpus, and eight of the nine are already in the
+corpus the shipped model trained on. The Kaggle notebook pins those two counts so
+a real jump fails the run.
+
 WHY THIS EXISTS. Fine-tuning raises BLEU and drops chrF2. The whole of the chrF2
 loss is the model shortening its output: on FLORES the 1,694 lines Lilly does not
 shorten gain +0.08 chrF2, the 315 lines it shortens by more than 8% lose -2.00,
@@ -329,7 +348,25 @@ def build(verbose=True):
         if not path.exists():
             raise SystemExit(f"missing input: {path}")
 
-    rows = read_rows(TRAIN) + read_rows(EXTRA)
+    # TRAIN and EXTRA are two separate inputs and have to stay that way. The
+    # Kaggle notebook used to append EXTRA onto TRAIN before this script ran, so
+    # every extra pair was counted twice and the total came out at 390,172. A
+    # single combined total cannot say which of the two moved, so each is checked
+    # on its own first and the sum only afterwards.
+    train_rows = read_rows(TRAIN)
+    extra_rows = read_rows(EXTRA)
+    check("input rows [data/clean/train.tsv]", len(train_rows), 313_612,
+          "The filter's output, and nothing else — this file is never appended to. "
+          "If it moved, download_data.py, clean_data.py or filter_train_data.py did. "
+          "If it is ~351,889 the extra corpus has been concatenated onto it and the "
+          "extras are about to be counted twice.")
+    check("input rows [data/extra/extra-train.tsv]", len(extra_rows), 38_277,
+          "The pinned extra corpus, uploaded by scripts/kaggle_train.py rather than "
+          "re-harvested. download_extra_data.py does not return this file: the harvest "
+          "that produced it yielded 38,279 rows, two were removed by hand afterwards, "
+          "and a later re-harvest returned 38,280. Re-measure every count below with "
+          "--dry-run before using a corpus this script has not seen.")
+    rows = train_rows + extra_rows
     check("input rows", len(rows), 351_889,
           "data/clean/train.tsv (313,612) + data/extra/extra-train.tsv (38,277).")
     log(f"in: {len(rows):,} rows")
