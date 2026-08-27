@@ -49,15 +49,41 @@ class UnreadableImage(BadInput):
     """Raised when the upload is not an image we can open at all."""
 
 
+def language_characters(languages) -> set:
+    """The letters easyocr says these languages are written with."""
+    from easyocr.config import BASE_PATH
+
+    found = set()
+    for language in languages:
+        path = Path(BASE_PATH) / "character" / f"{language}_char.txt"
+        if path.exists():
+            found |= set(path.read_text(encoding="utf-8-sig").split())
+    return found
+
+
 def get_reader():
     global _reader, _allowlist
     if _reader is None:
         with _reader_lock:
             if _reader is None:
                 import easyocr
+
+                # Our fine-tuned reader ships as a network of its own rather
+                # than as a replacement for latin_g2.pth. easyocr checks that
+                # file's MD5 against the weights it published, so writing our
+                # own there makes it refuse to load and report a corrupt
+                # download — which is what happened the first time the trained
+                # reader was installed: the photo endpoint returned 500 for
+                # every image, and the training that had just improved word
+                # accuracy from 67.1% to 86.8% had made the feature unusable.
+                trained = READ_DIR / "lilly.pth"
+                network = READ_DIR / "user_network"
+                extra = {"recog_network": "lilly",
+                         "user_network_directory": str(network)} \
+                    if trained.exists() and (network / "lilly.yaml").exists() else {}
                 reader = easyocr.Reader(["bs", "en"], gpu=False,
                                         model_storage_directory=str(READ_DIR),
-                                        download_enabled=False)
+                                        download_enabled=False, **extra)
                 # Stop loudly rather than read Bosnian without its own letters.
                 # If the weights are ever swapped for a set that cannot produce
                 # these, silence would look like a reader that reads badly.
@@ -66,8 +92,23 @@ def get_reader():
                     raise RuntimeError(
                         f"the recogniser cannot produce {''.join(cannot)} — these "
                         f"weights are not the Latin set Lilly reads Bosnian with")
-                _allowlist = "".join(sorted(set(reader.lang_char)
-                                            | set(BOSNIAN_LETTERS)))
+                # Built from the language files rather than from
+                # reader.lang_char, because the two are not the same thing once
+                # a custom network is registered: easyocr then sets lang_char to
+                # the network's whole character set, and the restriction that
+                # keeps Cyrillic and Vietnamese lookalikes out of the guesses
+                # quietly disappears. Reading the files keeps the restriction
+                # identical whichever reader is loaded.
+                # Letters are restricted to the two languages; everything that
+                # is not a letter is not. The language files hold only letters —
+                # easyocr keeps digits, punctuation and space in a separate
+                # symbol set — so a list built from them alone silently forbids
+                # every number on every sign. Measured: "Radovi 24. jula, 1995.
+                # godine!" came back as "RadoviZAjulaIIIDgodinel", with both
+                # dates destroyed.
+                symbols = {c for c in reader.character if not c.isalpha()}
+                _allowlist = "".join(sorted(language_characters(["bs", "en"])
+                                            | set(BOSNIAN_LETTERS) | symbols))
                 _reader = reader
     return _reader
 
