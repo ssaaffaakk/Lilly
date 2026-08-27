@@ -579,9 +579,13 @@ def harvest(key: str, hours: float, min_sec: float, max_sec: float,
                     texts.append(said)
                     secs += actual
                     del audio
-                if secs - last_report >= 1800:      # every half hour of audio
+                # Flush every batch. The previous version flushed every half
+                # hour of audio, and when the run was interrupted 36 wavs had
+                # been written whose transcripts were still sitting in the
+                # buffer -- clips on disk that no TSV line pointed at.
+                fh.flush()
+                if secs - last_report >= 1800:      # progress line every half hour
                     last_report = secs
-                    fh.flush()
                     mb = (transferred + handle.bytes_read) / 1048576
                     print(f"        {n:,} clips, {secs / 3600:.2f}/{hours:.1f} h, "
                           f"{mb:,.0f} MB pulled, "
@@ -606,6 +610,45 @@ def harvest(key: str, hours: float, min_sec: float, max_sec: float,
           f"(pulled {transferred / 1048576:,.0f} MB) -> {tsv}")
     print(f"  ijekavica: A {d['A']:.2f}%  B {d['B']:.1f}% "
           f"(on {d['marked']:,} dialect-marked lines)")
+    return meta
+
+
+def reconcile_partial(key: str) -> dict | None:
+    """Make a source left behind by an interrupted run usable, or clear it.
+
+    A run that dies mid-source leaves clips and a train.tsv but no SOURCE.json.
+    The TSV is the source of truth -- every line in it was flushed after its wav
+    was written -- so any wav beyond the last TSV line is an orphan with no
+    transcript, and goes. What remains is a smaller but entirely valid corpus,
+    which matters when the bytes cost an hour to fetch and re-downloading them
+    buys nothing.
+    """
+    out = OUT_DIR / key
+    tsv = out / "train.tsv"
+    if not tsv.exists() or (out / "SOURCE.json").exists():
+        return None
+
+    rows = [l for l in tsv.read_text(encoding="utf-8").splitlines()
+            if l.count("\t") == 1 and l.split("\t")[1].strip()]
+    keep = {r.split("\t")[0] for r in rows}
+    orphans = [p for p in (out / "train").glob("*.wav")
+               if f"train/{p.name}" not in keep]
+    for p in orphans:
+        p.unlink()
+    tsv.write_text("\n".join(rows) + "\n", encoding="utf-8")
+
+    secs = sum(sf.info(str(out / r.split("\t")[0])).duration for r in rows)
+    size_mb = sum(p.stat().st_size for p in (out / "train").glob("*.wav")) / 1048576
+    d = dialect_report([r.split("\t")[1] for r in rows])
+    meta = dict(source=key, repo=SOURCES[key]["repo"], config=SOURCES[key]["config"],
+                license=SOURCES[key]["license"], clips=len(rows),
+                hours=round(secs / 3600, 3), disk_mb=round(size_mb, 1),
+                transferred_mb=None, partial=True,
+                ijekavica_A=round(d["A"], 2), ijekavica_B=round(d["B"], 1),
+                dialect_marked_lines=d["marked"])
+    (out / "SOURCE.json").write_text(json.dumps(meta, indent=2) + "\n", encoding="utf-8")
+    print(f"  {key}: recovered an interrupted run -- {len(rows):,} clips / "
+          f"{secs / 3600:.2f} h kept, {len(orphans)} orphaned wav(s) removed")
     return meta
 
 
@@ -779,6 +822,8 @@ def main() -> int:
     gate = LeakGate(args.jaccard)
     metas = []
     for key in args.source:
+        if not args.force:
+            reconcile_partial(key)
         existing = OUT_DIR / key / "SOURCE.json"
         if existing.exists() and not args.force:
             print(f"\n{key}: already downloaded, keeping it (use --force to redo)")
