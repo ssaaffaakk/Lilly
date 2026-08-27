@@ -80,6 +80,26 @@ def load_truth(path: Path) -> dict:
     return {name: entry for name, entry in data["photos"].items()}
 
 
+def read_photo_full(path: Path) -> str:
+    """The same read with the shrink removed.
+
+    app.ocr.scan shrinks anything over two megapixels before reading, and the
+    people who wrote the answer key enlarged the photographs to read them. If
+    the reader is missing words the shrink threw away, that is a product
+    decision anyone can change; if it misses them at full resolution too, it is
+    the model. The two numbers separate those, and without them the headline
+    figure cannot say which repair it is asking for.
+    """
+    import numpy as np
+    from PIL import Image
+    from app.ocr import read_regions, MAX_DECLARED_PIXELS
+
+    Image.MAX_IMAGE_PIXELS = MAX_DECLARED_PIXELS
+    with Image.open(path) as img:
+        array = np.asarray(img.convert("RGB"))
+    return "\n".join(read_regions(array, detail=0, paragraph=True))
+
+
 def read_photo(path: Path) -> str:
     """What the app itself returns for this photograph.
 
@@ -94,7 +114,7 @@ def read_photo(path: Path) -> str:
     return scan(str(path))
 
 
-def cached_reads(names: list, photos: Path, cache: Path) -> dict:
+def cached_reads(names: list, photos: Path, cache: Path, full=False) -> dict:
     """Read every photograph once, keep the answers.
 
     Reading is about two minutes per photograph on this machine, so a re-score
@@ -110,7 +130,7 @@ def cached_reads(names: list, photos: Path, cache: Path) -> dict:
     for i, name in enumerate(todo, 1):
         start = time.time()
         try:
-            have[name] = read_photo(photos / name)
+            have[name] = (read_photo_full if full else read_photo)(photos / name)
         except Exception as exc:
             print(f"  {i}/{len(todo)} {name}: FAILED {exc}", file=sys.stderr)
             continue
@@ -131,6 +151,9 @@ def main() -> int:
     ap.add_argument("--limit", type=int)
     ap.add_argument("--cache", type=Path,
                     default=REPO_ROOT / "data/ocr/real-photos/reader-output.json")
+    ap.add_argument("--full-res", action="store_true",
+                    help="read at native resolution instead of the app's "
+                         "two-megapixel working size")
     ap.add_argument("--read-only", action="store_true",
                     help="read the sampled photographs into the cache and stop; "
                          "lets the slow half run while the answer key is written")
@@ -145,7 +168,7 @@ def main() -> int:
     if args.read_only:
         names = args.sample.read_text(encoding="utf-8").split("\n")
         names = [n for n in names if n.strip()][:args.limit or None]
-        cached_reads(names, args.photos, args.cache)
+        cached_reads(names, args.photos, args.cache, args.full_res)
         print(f"\ncached {len(names)} readings in "
               f"{args.cache.relative_to(REPO_ROOT)}")
         return 0
@@ -156,9 +179,11 @@ def main() -> int:
             "Transcribe the sampled photographs by eye first — scoring the reader "
             "against another reader's output measures agreement, not accuracy.")
 
+    full = json.loads(args.truth.read_text(encoding="utf-8"))
+    agreement = full.get("agreement", {}).get("rate", "?")
     truth = load_truth(args.truth)
     names = sorted(truth)[:args.limit] if args.limit else sorted(truth)
-    readings = cached_reads(names, args.photos, args.cache)
+    readings = cached_reads(names, args.photos, args.cache, args.full_res)
 
     totals = {"plain": [0, 0], "dia": [0, 0], "blind": [0, 0]}
     rows, spurious, empty_truth = [], 0, 0
@@ -192,6 +217,16 @@ def main() -> int:
         hit, need = pair
         return 100.0 * hit / need if need else float("nan")
 
+    # A rate over pooled words is the rate of whichever photograph happens to
+    # carry the most text. One memorial slab in this sample holds 144 of the
+    # 373 words in the answer key — 39% of it — and it is in Spanish, so a
+    # single picture that is not even the task would be setting the headline.
+    # The per-photograph mean weights every photograph the same, which is closer
+    # to what a person experiences: they point the camera once and either get
+    # the sign or they do not.
+    macro = sum(h / n for _n_, h, n, *_r in rows) / len(rows) * 100 if rows else 0
+    biggest = max(rows, key=lambda r: r[2]) if rows else None
+
     lines = [
         "# What the reader reads off a real photograph",
         "",
@@ -209,6 +244,20 @@ def main() -> int:
         f"| The same words, diacritics folded away | {totals['blind'][0]} | "
         f"{totals['blind'][1]} | **{pct(totals['blind']):.1f}%** |",
         "",
+        f"Weighting every photograph equally instead of every word, the reader "
+        f"finds **{macro:.1f}%** of the words on a photograph. The two differ "
+        f"because the text is not spread evenly: "
+        + (f"`{biggest[0]}` alone holds {biggest[2]} of the "
+           f"{totals['plain'][1]} words in the answer key. " if biggest else "")
+        + "The per-photograph figure is the one that describes pointing a camera "
+        "at a sign; the pooled figure describes reading a wall of text.",
+        "",
+        f"Two independent readers transcribed these photographs without seeing "
+        f"each other's work or the machine's, and agreed on {agreement}% of the "
+        f"words either of them saw. Only the words both saw are in the answer "
+        f"key, so that agreement is also the ceiling on how precise anything "
+        f"here can be.",
+        "",
         f"The reader also returned {spurious} words that are not on any sign in "
         "these photographs. That is the cost a user pays for text the detector "
         "invented out of brickwork and foliage, and it is not visible in a recall "
@@ -225,7 +274,8 @@ def main() -> int:
     lines += ["", "---", "", "Generated by `training/evaluate_ocr.py`."]
 
     args.out.write_text("\n".join(lines) + "\n", encoding="utf-8")
-    print(f"\nall words        {pct(totals['plain']):.1f}%")
+    print(f"\nall words        {pct(totals['plain']):.1f}%  (pooled)")
+    print(f"per photograph   {macro:.1f}%")
     print(f"diacritic words  {pct(totals['dia']):.1f}%")
     print(f"  folded         {pct(totals['blind']):.1f}%")
     print(f"\nwrote {args.out.relative_to(REPO_ROOT)}")
