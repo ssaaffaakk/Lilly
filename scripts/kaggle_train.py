@@ -25,6 +25,9 @@ import tempfile
 import time
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import state as repo_state
+
 REPO_ROOT = Path(__file__).resolve().parents[1]
 KAGGLE = str(REPO_ROOT / ".venv" / "bin" / "kaggle")
 WEIGHTS = REPO_ROOT / "models" / "lilly" / "translate"
@@ -180,6 +183,53 @@ def push_corpus(user: str) -> str:
     return slug
 
 
+def require_github_matches_notebook() -> None:
+    """Refuse to launch while GitHub and this machine disagree about the code.
+
+    The notebook is uploaded from the working tree; the scripts it calls are
+    `git clone`d from GitHub inside the run. Those are two different sources of
+    the same codebase, and nothing used to check that they agreed.
+
+    That gap is what killed the 27 August speech run. The notebook cell called
+    `download_extra_speech.py --source fleurs_hr --hours 12`, which is the
+    rewritten downloader's interface. The rewrite was still uncommitted, so the
+    clone brought back the previous version -- `--lang`, `--max-clips` -- and
+    argparse exited 2 about thirty-five minutes in, after the Bosnian audio had
+    already been fetched. The notebook was from the future and the scripts were
+    from the past, and the only symptom was an "unrecognized arguments" line.
+
+    So the launcher asks the question before spending the GPU slot: is the tree
+    clean, and does GitHub have this exact commit? Asked by SHA, because
+    raw.githubusercontent.com's `/main/` is CDN-cached and has served a
+    two-commit-stale file on this project already.
+
+    There is deliberately no --force. A run launched past this check is a run
+    whose result cannot be attributed to any particular version of the code,
+    and that is worse than not launching.
+    """
+    head = repo_state.git("rev-parse", "HEAD")
+    dirty = [l for l in repo_state.git("status", "--porcelain").splitlines()
+             if not l.startswith("??")]
+    unpushed = repo_state.git("log", "--oneline", "@{u}..HEAD").splitlines()
+
+    if dirty or unpushed:
+        raise SystemExit(
+            "Not launching: this machine has code GitHub does not.\n"
+            + (f"  {len(dirty)} file(s) changed and not committed\n" if dirty else "")
+            + (f"  {len(unpushed)} commit(s) not pushed\n" if unpushed else "")
+            + "\nThe notebook goes up from here, the scripts it calls come down "
+              "from GitHub.\nLaunching now runs a new notebook against old "
+              "scripts. Commit and push first,\nthen run scripts/state.py.")
+
+    if not repo_state.on_github(head):
+        raise SystemExit(
+            f"Not launching: GitHub does not have {head[:8]}.\n"
+            f"The push has not landed yet. Wait, re-check with scripts/state.py, "
+            f"then launch.")
+
+    print(f"code check: GitHub has {head[:8]}, tree is clean")
+
+
 def push_notebook(user: str, job: dict, datasets: list) -> str:
     """The notebook, with a GPU and the internet switched on from here."""
     slug = f"{user}/{job['slug']}"
@@ -271,6 +321,10 @@ def main() -> int:
         print(f"\nfetched to {out}. Unzip the adapter to models/lilly/adapter/, then:")
         print("  python3 scripts/build_translator.py")
         return 0
+
+    # Before anything is uploaded: the notebook and the cloned scripts have to
+    # be the same version of this project. See require_github_matches_notebook.
+    require_github_matches_notebook()
 
     datasets = []
     if job["needs_weights"]:
