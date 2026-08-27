@@ -1,0 +1,53 @@
+term_id	category	bosnian_forms	alt_forms	alt_variety	n_flores	n_ntrex	n_setimes	n_bosnian_sources	n_alt_in_bosnian_sources	n_alt_in_mixed_bcs	bosnian_share	accept_en
+suh	h	suh|suha|suho|suhi|suhe	suv|suva|suvo|suvi|suve	sr	3	0	8	11	6	23	0.6471	dry
+uho	h	uho|uha|uhu	uvo|uva|uvu	sr	0	0	5	5	0	1	1.0	ear
+sahat	h	sahat|sahata|sahati	sat|sata|sati|satu	sr/hr	0	0	2	2	461	652	0.0043	
+kahva	h	kahva|kahve|kahvu|kahvom|kahvana|kahvane	kafa|kafe|kafu|kafom|kava|kave|kavu|kafana|kafane	sr/hr	0	0	0	0	58	40	0.0	
+lahko	h	lahko|lahak|lahka|lahke	lako|lako|lagan|lagano	sr/hr	0	0	0	0	485	268	0.0	
+mehko	h	mehko|mehak|mehka	meko|mekan|mekano|mekana	sr/hr	0	0	0	0	2	7	0.0	
+hudovica	h	hudovica|hudovice	udovica|udovice|udovicu	sr/hr	0	0	0	0	23	46	0.0	
+utjecaj	lex	utjecaj|utjecaja|utjecaju|utjecali|utjecalo|utjecati	uticaj|uticaja|uticaju|uticali|uticalo|uticati	sr	11	0	834	845	49	514	0.9452	impact|influence|affect|influenced|negatively
+opći	lex	opći|opća|opće|općeg|općem|općih|općenito	opšti|opšta|opšte|opšteg|opštem|opštih|opšte	sr	8	0	433	441	21	83	0.9545	general|generally|elections
+fudbal	lex	fudbal|fudbala|fudbalu|fudbalski|fudbalskog|fudbaler|fudbalera|fudbaleri	nogomet|nogometa|nogometu|nogometni|nogometaš|nogometaša	hr	1	2	283	286	6	610	0.9795	football|player|players
+saobraćaj	lex	saobraćaj|saobraćaja|saobraćaju|saobraćajni|saobraćajne|saobraćajnih	prometni|prometne|prometnih|prometa	hr	14	3	233	250	7	43	0.9728	traffic|accidents
+mahala	turkism	mahala|mahale|mahali|mahalu	kvart|kvarta|naselje|naselja	sr/hr	0	1	13	14	50	546	0.2188	mitrovica|bosnian|waved
+komšija	turkism	komšija|komšije|komšiju|komšijama|komšiluk|komšiluku	susjed|susjeda|susjedi|susjedima|susjeda	sr/hr	3	0	5	8	357	130	0.0219	neighbours|rich
+čorba	turkism	čorba|čorbe|čorbu	supa|supe|juha|juhe	sr/hr	0	0	6	6	6	21	0.5	rock|riblja|corba
+čaršija	turkism	čaršija|čaršije|čaršiji|čaršiju|čaršijom	trg|trga|pijaca|pijace|tržnica|tržnice	sr/hr	0	0	5	5	68	80	0.0685	
+ćuprija	turkism	ćuprija|ćuprije|ćupriji	most|mosta|mostu	sr/hr	0	0	4	4	216	535	0.0182	drina|bridge
+sokak	turkism	sokak|sokaka|sokaku|sokake	ulica|ulice|ulici|ulicu	sr/hr	0	0	1	1	283	294	0.0035	
+avlija	turkism	avlija|avlije|avliji|avliju	dvorište|dvorišta|dvorištu	sr/hr	0	0	0	0	43	57	0.0	
+dućan	turkism	dućan|dućana|dućanu|dućani	prodavnica|prodavnice|prodavnici|radnja|radnje	sr/hr	0	0	0	0	232	269	0.0	
+insan	turkism	insan|insana|insani	čovjek|čovjeka|čovjeku	sr/hr	0	0	0	0	209	836	0.0	
+bašča	turkism	bašča|bašče|bašču	vrt|vrta|vrtu|bašta|bašte	sr/hr	0	0	0	0	40	151	0.0	
+svijeta	yat	svijeta	sveta	sr	16	16	626	658	22	44	0.9676	world
+vijeće	yat	vijeće	veće	sr	1	3	607	611	308	396	0.6649	council
+unaprjeđivanje	yat	unaprjeđivanje	unapređivanje	sr	0	0	209	209	5	1	0.9766	improving
+sjever	yat	sjever	sever	sr	3	1	139	143	7	7	0.9533	north
+unaprjeđivanju	yat	unaprjeđivanju	unapređivanju	sr	0	0	134	134	3	3	0.9781	improve
+pobjeda	yat	pobjeda	pobeda	sr	3	3	121	127	5	3	0.9621	victory
+zvijezda	yat	zvijezda	zvezda	sr	3	8	111	122	3	10	0.976	star
+djelo	yat	djelo	delo	sr	0	0	113	113	3	7	0.9741	crime
+porijekla	yat	porijekla	porekla	sr	1	1	83	85	15	7	0.85	origin
+vjere	yat	vjere	vere	sr	0	2	81	83	2	8	0.9765	religion
+rijeci	yat	rijeci	reci	sr	0	0	82	82	6	26	0.9318	river
+cijela	yat	cijela	cela	sr	0	0	82	82	2	3	0.9762	whole
+svijesti	yat	svijesti	svesti	sr	2	0	71	73	8	10	0.9012	awareness
+rijeka	yat	rijeka	reka	sr	11	0	61	72	5	5	0.9351	river
+prijelaz	yat	prijelaz	prelaz	sr	1	0	63	64	2	32	0.9697	crossing|border
+unaprjeđenje	yat	unaprjeđenje	unapređenje	sr	0	0	63	63	5	21	0.9265	improvement
+sprječavanja	yat	sprječavanja	sprečavanja	sr	0	0	59	59	2	7	0.9672	prevent
+zvijezde	yat	zvijezde	zvezde	sr	7	0	51	58	6	7	0.9062	stars
+poslije	yat	poslije	posle	sr	6	3	46	55	9	45	0.8594	
+vjeru	yat	vjeru	veru	sr	0	1	51	52	2	1	0.963	religion|faith
+prijeći	yat	prijeći	preći	sr	0	0	51	51	23	48	0.6892	threshold
+sprječavanje	yat	sprječavanje	sprečavanje	sr	0	0	48	48	3	32	0.9412	preventing|prevent
+vjera	yat	vjera	vera	sr	1	0	46	47	8	25	0.8545	religion
+prijevoznik	yat	prijevoznik	prevoznik	sr	0	0	42	42	1	2	0.9767	carrier|air
+najvjerovatnije	yat	najvjerovatnije	najverovatnije	sr	1	1	38	40	2	5	0.9524	likely
+bijela	yat	bijela	bela	sr	0	1	38	39	3	30	0.9286	white
+porijeklo	yat	porijeklo	poreklo	sr	2	0	35	37	4	6	0.9024	origin|ethnic
+sprječavanju	yat	sprječavanju	sprečavanju	sr	0	0	37	37	2	7	0.9487	prevent
+korijena	yat	korijena	korena	sr	1	0	35	36	1	2	0.973	rooted|islamist|roots|akp
+prijema	yat	prijema	prema	sr	0	0	34	34	3889	4047	0.0087	admission
+lijek	yat	lijek	lek	sr	1	0	32	33	7	3	0.825	medicine|drug

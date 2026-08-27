@@ -30,7 +30,16 @@ On FLORES-200 the gap is **+0.54 BLEU**, paired bootstrap **p = 0.0290**, 95% in
 
 Read that as it is: at p = 0.0290 the gap clears the usual 0.05 bar and the 95% interval excludes zero, so on this test set the BLEU difference is *measured*, not merely leaned towards. It is still a small gap — the interval's low end is +0.02 BLEU — so the honest claim is that Lilly is better than the base model here, by a little.
 
-**The two metrics disagree.** On the same 2,009 sentences chrF2 moves -0.79, the opposite way from BLEU. chrF2 scores character n-grams rather than whole words, which is the fairer of the two for a language that inflects as heavily as Bosnian — so this is not a footnote. The fine-tuning picked up word choices the reference happens to use while drifting on the letters around them. Any claim made from the BLEU gap alone should carry this alongside it.
+**The two metrics disagree.** On the same 2,009 sentences chrF2 moves -0.79, the opposite way from BLEU. chrF2 scores character n-grams rather than whole words, which is the fairer of the two for a language that inflects as heavily as Bosnian — so this is not a footnote. The chrF2 drop is tested the same way and comes back at **p = 0.0010**, against **p = 0.0290** for the BLEU gain: the metric that moved against the fine-tuning moved with more confidence than the one that moved for it.
+
+But most of that drop is in a shape the app never sends. `app/translate.py` splits input on sentence boundaries and translates one sentence at a time, because the model drops a clause when it is handed several at once. Scoring feeds whole rows instead, so the rows carrying more than one sentence measure a failure the product has already designed around. Split by row shape, on the same 2,009 sentences:
+
+| Row shape | Pairs | Base chrF2 | Lilly chrF2 | Gap |
+|---|---|---|---|---|
+| one sentence | 1,736 | 67.56 | 67.22 | -0.33 |
+| more than one | 273 | 67.68 | 64.33 | -3.36 |
+
+So the honest reading is narrower than the headline gap: the fine-tuning costs a little character-level accuracy on the input the product actually sends, and a lot on input it never sends. Whether the first of those survives being measured through the app's own path — sentence splitting and the quantised build — is not settled by the numbers on this page, which score the raw adapter on whole rows.
 
 ---
 

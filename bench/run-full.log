@@ -1,0 +1,11 @@
+398 cases, 436 target terms, 348 of them with a swapped variant
+  translator-base 100/398  (76s)
+  translator-base 200/398  (128s)
+  translator-base 300/398  (184s)
+  translator-base done in 245s
+  translator-base variant 100/348  (54s)
+  translator-base variant 200/348  (104s)
+  translator-base variant 300/348  (191s)
+  translator-base variant done in 273s
+  translator 100/398  (159s)
+  translator 200/398  (312s)
