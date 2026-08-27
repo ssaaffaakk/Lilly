@@ -49,19 +49,49 @@ LANGUAGE_TAG = re.compile(r"^\s*(>>[a-zA-Z_]+<<\s*)+")
 
 
 def pairs(limit=None):
-    """FLORES-200 devtest and dev — 2,009 pairs the base model has not seen."""
-    src, ref = [], []
+    """FLORES-200 devtest and dev — 2,009 pairs the base model has not seen.
+
+    devtest first, always, because `split_range` slices this list rather than
+    re-reading the files: the two halves are translated once together and then
+    scored separately, which is what makes a devtest-only score free instead of
+    another hour of decoding.
+    """
+    src, ref, bounds = [], [], {}
     for split in ("devtest", "dev"):
+        start = len(src)
         bs = (FLORES / f"{split}.bs").read_text(encoding="utf-8").splitlines()
         en = (FLORES / f"{split}.en").read_text(encoding="utf-8").splitlines()
         if len(bs) != len(en):
             raise SystemExit(f"{split}: {len(bs)} Bosnian against {len(en)} English")
         src += [s.strip() for s in bs]
         ref += [s.strip() for s in en]
+        bounds[split] = (start, len(src))
     keep = [i for i, s in enumerate(src) if s and ref[i]]
     if limit:
         keep = keep[:limit]
+    pairs.bounds = {name: (sum(1 for i in keep if i < lo),
+                           sum(1 for i in keep if i < hi))
+                    for name, (lo, hi) in bounds.items()}
     return [src[i] for i in keep], [ref[i] for i in keep]
+
+
+def split_range(name: str, total: int) -> slice:
+    """Which rows of the scored set belong to a FLORES split.
+
+    Published scores for this language pair are on devtest alone — 1,012
+    segments — so a number measured over devtest and dev together cannot be put
+    beside them, however carefully it was produced. Scoring both halves at once
+    gives a tighter interval for our own base-against-Lilly comparison and is
+    the right default for that; it is the wrong number to quote against anybody
+    else's system. Both are reported, and each says which it is.
+    """
+    if name == "all":
+        return slice(0, total)
+    bounds = getattr(pairs, "bounds", None)
+    if not bounds or name not in bounds:
+        raise SystemExit(f"unknown split {name!r} — call pairs() first")
+    lo, hi = bounds[name]
+    return slice(lo, hi)
 
 
 def translate_all(build: Path, src: list, label: str) -> list:
@@ -154,6 +184,10 @@ def table(refs, base, tuned, strip: bool):
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--limit", type=int, help="score only the first N pairs")
+    ap.add_argument("--out", type=Path, help="where to write the report")
+    ap.add_argument("--split", choices=("all", "devtest", "dev"), default="all",
+                    help="which FLORES half to score; devtest is the one "
+                         "published leaderboards use")
     ap.add_argument("--fresh", action="store_true", help="re-translate, ignore saved")
     # A candidate build can be scored where it stands, without being installed
     # first. Deciding whether to replace the served model should not require
@@ -199,6 +233,15 @@ def main() -> int:
     args.saved.write_text(json.dumps({"n": len(src), "base": base, "lilly": tuned},
                                      ensure_ascii=False), encoding="utf-8")
 
+    # Everything above translated the whole set, because the cache is keyed on
+    # its length and half a set would throw the other half away. Scoring is
+    # where the split applies.
+    if args.split != "all":
+        cut = split_range(args.split, len(src))
+        src, refs = src[cut], refs[cut]
+        base, tuned = base[cut], tuned[cut]
+        print(f"  scoring the {args.split} half alone: {len(src):,} pairs")
+
     leaked = sum(1 for x in base if LANGUAGE_TAG.match(x))
     leaked_t = sum(1 for x in tuned if LANGUAGE_TAG.match(x))
     print(f"\nlanguage tag printed into the translation: base {leaked}/{len(base)} "
@@ -224,8 +267,14 @@ def main() -> int:
 
     fingerprint = build_fingerprint(args.tuned)
     print(f"\nscored build: {fingerprint}")
-    write_report(len(src), leaked, leaked_t, tables, fingerprint)
-    print(f"\nwritten to {REPORT.relative_to(REPO_ROOT)}")
+    write_report(len(src), leaked, leaked_t, tables, fingerprint,
+                 split=args.split, out=args.out)
+    written = (args.out or REPORT).resolve()
+    try:
+        written = written.relative_to(REPO_ROOT)
+    except ValueError:
+        pass
+    print(f"\nwritten to {written}")
     return 0
 
 
@@ -240,11 +289,16 @@ def reading(gap: float, p: float, metric: str) -> str:
             f"bar: measured, not leaned towards.")
 
 
-def write_report(n, leaked_base, leaked_tuned, tables, fingerprint) -> None:
+def write_report(n, leaked_base, leaked_tuned, tables, fingerprint,
+                 split="all", out=None) -> None:
     lines = [
         "# Translation quality — what Lilly actually serves", "",
         f"Scored build: `{fingerprint}`", "",
-        f"{n:,} FLORES-200 pairs the base model was not trained on. Both models are "
+        (f"{n:,} FLORES-200 devtest pairs — the set published leaderboards for "
+         f"this language pair use, so these numbers can be put beside theirs. "
+         if split == "devtest" else
+         f"{n:,} FLORES-200 pairs the base model was not trained on. ")
+        + "Both models are "
         "int8 CTranslate2 builds and both go through `app.translate.Engine`, so the "
         "sentence splitting and the quantisation are the product's own. The only "
         "difference between the two columns is the fine-tuning.", "",
@@ -279,7 +333,7 @@ def write_report(n, leaked_base, leaked_tuned, tables, fingerprint) -> None:
               "Generated by `training/evaluate_app.py`. Build the base to compare "
               "against with `python3 scripts/build_translator.py --no-adapter "
               "--dest models/lilly/translator-base`."]
-    REPORT.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    (out or REPORT).write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
 if __name__ == "__main__":
