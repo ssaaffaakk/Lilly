@@ -43,7 +43,14 @@ ANSWER_DIR = REPO_ROOT / "data" / "ocr" / "label-answers"
 TRUTH = CROPS / "labels-human.tsv"
 
 PER_SHEET = 8
-TARGET_H = 60          # what each crop is scaled to for the annotator
+# What each crop is scaled to for the annotator. This started at 60px, which is
+# legible but not comfortably so: the annotators who worked from it cropped
+# almost every strip back out of the sheet and re-upscaled it themselves, one
+# PIL call at a time, and spent most of their budget doing it. 110px is the
+# same picture rendered once, properly, so that reading the sheet is usually
+# enough. PER_SHEET is deliberately unchanged -- the sheet-and-index numbering
+# is derived from crop order, so answers already collected stay valid.
+TARGET_H = 110
 MAX_W = 1100
 GUTTER = 78            # room for the index number
 PAD = 14
