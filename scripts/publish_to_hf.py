@@ -304,6 +304,40 @@ def refuse_unmeasured_weights(bundle: Path) -> None:
             f"could tell. Score this build, or publish the one that was scored.")
     print(f"translator matches the scored build: {expected}")
 
+
+def check_card_metadata(card: Path) -> None:
+    """Fail on a bad model card before sending 900 MB, not after.
+
+    Hugging Face validates the card's YAML header at upload time, and a header
+    it rejects aborts the transfer partway. That happened here over one field:
+    license_link pointed at NOTICE.md, a relative filename, where an https URI
+    is required. A run that dies mid-upload is worse than one that never starts,
+    because the repository is left holding some of the files.
+    """
+    import re
+    import urllib.parse
+
+    if not card.exists():
+        raise SystemExit(f"no model card at {card}")
+    header = re.match(r"^---\n(.*?)\n---\n", card.read_text(encoding="utf-8"), re.S)
+    if not header:
+        raise SystemExit(f"{card.name} has no YAML header; Hugging Face needs one")
+    try:
+        import yaml
+        meta = yaml.safe_load(header.group(1))
+    except Exception as exc:
+        raise SystemExit(f"{card.name}'s YAML header does not parse: {exc}")
+
+    link = meta.get("license_link")
+    if link and urllib.parse.urlparse(str(link)).scheme != "https":
+        raise SystemExit(
+            f"license_link is {link!r}. Hugging Face requires an https URI here, "
+            f"not a filename — the upload is rejected after it has begun.")
+    if not meta.get("license"):
+        raise SystemExit("the card names no license; Hugging Face requires one")
+    print(f"card metadata: license {meta['license']}, "
+          f"{len(meta.get('base_model', []))} base models declared")
+
 def main() -> int:
     ap = argparse.ArgumentParser(
         description="Publish models/lilly/ to Hugging Face. Lists and stops by "
@@ -324,6 +358,7 @@ def main() -> int:
 
     # Before anything else: are these the weights the published scores describe?
     refuse_unmeasured_weights(BUNDLE)
+    check_card_metadata(BUNDLE / "README.md")
 
     problems, publish = preflight()
     if problems:

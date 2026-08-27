@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Put Lilly's models on this machine.
 
-The weights are 1.3 GB, so they are not in git. They live in the project's
+The weights are about 900 MB, so they are not in git. They live in the project's
 model repository instead, and this pulls them down into models/lilly/ where the
 app looks for them. A fresh clone needs this once before anything will run.
 
@@ -16,7 +16,11 @@ from pathlib import Path
 
 REPO = os.environ.get("LILLY_MODELS_REPO", "Safak11/lilly")
 DEST = Path(__file__).resolve().parents[1] / "models" / "lilly"
-PARTS = ("translate", "listen", "speak", "read")
+# What the published bundle actually contains, and what the app needs to run.
+# Not "translate": that is the untuned float32 base, which only training reads,
+# and it is deliberately left out of the release. Expecting it here made a fresh
+# clone download the whole bundle and then fail with "still missing: translate".
+PARTS = ("translator", "listen", "speak", "read")
 
 
 def main() -> int:
@@ -31,7 +35,7 @@ def main() -> int:
         print("pip install huggingface_hub first", file=sys.stderr)
         return 1
 
-    print(f"fetching {REPO} -> {DEST} (about 1.3 GB, once)")
+    print(f"fetching {REPO} -> {DEST} (about 900 MB, once)")
     DEST.mkdir(parents=True, exist_ok=True)
     snapshot_download(repo_id=REPO, repo_type="model", local_dir=str(DEST),
                       token=os.environ.get("HF_TOKEN") or None)
