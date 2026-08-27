@@ -42,11 +42,25 @@ v1 never arrives.
   measured on a photo request, and it sits on the same platform the weights were
   just published to, so the app loads them without going over the network.
 
-  So it is a task, not a bill, and it belongs in whatever ships next rather than
-  in a someday list. Recorded here rather than quietly corrected because the
-  mistake is worth keeping: a line written from memory rather than measurement,
-  in a file whose whole purpose is to stop exactly that. Caught by the Egitim
-  session, which also insisted the correction be verified rather than believed.
+  **That correction was itself wrong, and the way it was wrong is the point.**
+  The pricing page does say CPU Basic is free — but it prices *hardware*, and
+  says nothing about which kind of Space may run on it. Creating the Space
+  returned: *"Static Spaces are free for everyone, but hosting Gradio and Docker
+  Spaces on free cpu-basic requires a PRO subscription."* Lilly needs a server,
+  so a static Space cannot host it.
+
+  The Egitim session had warned in the same breath that the original line was an
+  assumption written without measuring, and asked that the correction be
+  verified rather than believed. It was checked — against the wrong table — and
+  the same mistake was made in the opposite direction. Both versions are left
+  here because the file's purpose is to stop conclusions being reached from
+  something adjacent to the evidence, and it has now failed at that twice.
+
+  **What is actually known:** HF PRO is $9/month and makes this work on the
+  hardware already confirmed as sufficient. Other hosts may have free tiers that
+  fit 3.2 GB — that has *not* been checked, and will not be asserted here until
+  it is. Whether to pay is the owner's call, and it is a small one; what is not
+  acceptable is a third guess written into this file.
 
 ## What v1 does not claim
 
