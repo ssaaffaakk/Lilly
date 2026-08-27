@@ -61,18 +61,41 @@ Three run every time, because a metric nobody measured is not evidence:
 ## What it cannot see — measured on the 2026-08-27 run, not guessed at
 
 A hit needs the reference's own English word. The model that writes "entire"
-where the professional wrote "whole", or "plane" for "aircraft", is marked wrong
-having understood the term perfectly. Of the fine-tune's 36 missed targets, 13
-(36%) contain a plain inflection of the wanted word — visit/visiting,
-solution/solutions — and reading the rest, most of the remainder are synonyms.
-So the residual few points are mostly lexical-choice noise, not comprehension,
-and the recall figure understates both models by an unknown but similar amount.
+where the professional wrote "whole", or "aircraft" for "plane", is marked wrong
+having understood the term perfectly. Of the fine-tune's 30 missed targets, 7
+are a plain suffix inflection of the wanted word — time/times, visit/visits,
+song/songs — and reading the rest, most are either the same lemma in another
+shape (change/changing, intent/intention, believes/believed), a spelling
+variant (neighbouring/neighboring), or a synonym (whole/entire, children/kids,
+victory/win). So the residual few points are mostly lexical choice, not
+comprehension, and the recall figure understates both models by an unknown but
+similar amount.
 
 The swap is also weaker than it looks here: the base is opus-mt-tc-big-zls-en,
 trained on the whole South Slavic family, so it reads ijekavica and ekavica
-equally well and the gap has little room to open. Only 2.6% of swapped targets
+equally well and the gap has little room to open. Only 3.6% of swapped targets
 scored differently from their Bosnian twin. The gap column is near zero because
 the swap does not land, which is not the same as evidence of parity.
+
+**There are no Turkisms in here, and that is now a measured fact rather than a
+missing corpus.** kahva, čaršija, avlija, sokak and mahala are the words that
+most obviously mark Bosnian, and every one of them is rejected. The first
+explanation was that news and Wikipedia simply do not contain them, which was
+true — all five read zero. So OpenSubtitles v2024 bs-en, 18.5M lines of the
+spoken register, was counted: they are there, kahva 162 times, mahala 175,
+komšija 3,380. They still do not pass, and cutting the corpus to the part that
+is Bosnian by its own orthography does not rescue them either — komšija tops
+out at a 0.78 share, kahva at 0.035.
+
+The reason is the admission rule, not the data. A term is admitted when Bosnian
+writers pick it and not its Serbian or Croatian counterpart, at least 98% of the
+time. Yat pairs meet that because they are in complementary distribution: a
+Bosnian text writes svijet and never svet. Turkisms are not in complementary
+distribution — kafa, ulica, most, prozor, susjed and vrt are all ordinary
+Bosnian too, so both words live in the same Bosnian sentence and no share test
+can separate them. Measuring Turkisms needs a different instrument, and this is
+not it. What this scores remains ijekavian forms and lexical doublets. The
+counts are in bench/terms-rejected.tsv; bench/build.py prints the working.
 
     python3 training/bosnian_bench.py
     python3 training/bosnian_bench.py --limit 40      # a quick look
