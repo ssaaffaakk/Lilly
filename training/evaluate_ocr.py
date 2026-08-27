@@ -153,8 +153,19 @@ def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--truth", type=Path,
                     default=REPO_ROOT / "data/ocr/real-photos/truth.json")
+    # The scored photographs used to be read straight out of the harvester's
+    # staging area. That area is scratch and the harvester treats it as scratch:
+    # a photograph judged `drop` has its rendering unlinked the moment the
+    # verdict is written, and the whole directory is emptied at the end of a
+    # run. Twenty-five of the forty were already gone when this was noticed, and
+    # the run still going would have taken the rest -- leaving the reader's 36%
+    # as a number with nothing left to re-measure it against.
+    #
+    # data/ocr/real-photos/scored/ is not on any harvester's path. What is in it
+    # are the same 1280px renderings that were read, restored from the recorded
+    # screen_url by data/scripts/restore_scored_photos.py when one goes missing.
     ap.add_argument("--photos", type=Path,
-                    default=REPO_ROOT / "data/ocr/real-photos/harvested/.state/staging")
+                    default=REPO_ROOT / "data/ocr/real-photos/scored")
     ap.add_argument("--out", type=Path, default=REPO_ROOT / "training/RESULTS-ocr.md")
     ap.add_argument("--limit", type=int)
     ap.add_argument("--cache", type=Path,

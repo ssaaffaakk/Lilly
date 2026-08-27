@@ -22,6 +22,11 @@ data/ocr/*
 data/ocr/crops/*
 !data/ocr/crops/labels-human.tsv
 !data/ocr/label-answers/
+!data/ocr/real-photos/
+data/ocr/real-photos/*
+!data/ocr/real-photos/truth.json
+!data/ocr/real-photos/scored-sample.txt
+!data/ocr/real-photos/scored-sources.tsv
 data/speech/
 data/feedback.db
 models/
