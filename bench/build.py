@@ -30,6 +30,7 @@ Three or four minutes, most of it counting SETIMES; rewrites both TSVs and
 bench/terms-rejected.tsv from the corpora each time.
 """
 import collections
+import unicodedata
 import csv
 import re
 from pathlib import Path
@@ -436,6 +437,32 @@ def match_case(replacement, original):
     return replacement.capitalize() if original[:1].isupper() else replacement
 
 
+def trained_on() -> set:
+    """Every Bosnian sentence the shipped model was trained on.
+
+    A benchmark case that is in the training data measures memory, not
+    understanding. This is not hypothetical here: NTREX was added to the
+    training corpus and is also one of this benchmark's sources, and 61 of the
+    first 398 cases — 15.3% — turned out to be sentences the model had trained
+    on. Holding 462 NTREX rows out was not enough, because the benchmark drew
+    from all of NTREX rather than from the part that was held back.
+
+    So the check lives here, where cases are made, rather than in a sentence on
+    the model card claiming there is no overlap. A leaking case cannot enter the
+    set.
+    """
+    seen = set()
+    for name in ("train-mix.tsv", "train.tsv"):
+        path = REPO / "data" / "clean" / name
+        if not path.exists():
+            continue
+        for line in path.read_text(encoding="utf-8", errors="replace").splitlines():
+            parts = line.split("\t")
+            if len(parts) >= 2 and parts[1].strip():
+                seen.add(unicodedata.normalize("NFC", parts[1].strip()))
+    return seen
+
+
 def build_cases(terms):
     by_form = {}
     for row in terms:
@@ -445,10 +472,16 @@ def build_cases(terms):
             by_form.setdefault(form, (row, variant))
 
     used, cases = collections.Counter(), []
-    # flores and ntrex first: cleanest text, and neither is in the current
-    # fine-tune's training data.
+    trained = trained_on()
+    leaked = collections.Counter()
+    # flores first: cleanest text and provably outside the training data. ntrex
+    # is a benchmark source AND part of the training corpus, so every case is
+    # checked against what was trained on rather than trusted by provenance.
     for corpus in CASE_SOURCES:
         for i, (bs, en) in enumerate(CORP[corpus]):
+            if unicodedata.normalize("NFC", bs.strip()) in trained:
+                leaked[corpus] += 1
+                continue
             toks = WORD.findall(bs)
             if not (MIN_WORDS <= len(toks) <= MAX_WORDS):
                 continue
@@ -493,6 +526,8 @@ def build_cases(terms):
                 variant_bs=variant_bs if swapped else "",
                 variant_swaps="|".join(swapped),
             ))
+    if leaked:
+        print(f"  dropped as already trained on: {dict(leaked)}")
     return cases
 
 
