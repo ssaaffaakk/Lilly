@@ -1,0 +1,49 @@
+{
+  "_": "Hand-drawn text regions on real photographs. Boxes are [x0,y0,x1,y1] in the frame app/ocr.py:load_within_limits() hands to the detector — the photo after the 2 MP shrink — because that is the image the detector actually sees. Drawn by eye on a coordinate grid, never from a detector's output: a ground truth seeded by the model under test cannot measure that model's recall. scope: sign = signage, the text the product is pointed at; body = dense small print on an information board; incidental = text that happens to be in shot. text = null means a region a human can see is text but cannot transcribe, which counts for detection and is excluded from reading.",
+  "frame": "app",
+  "photos": [
+    {
+      "file": "data/ocr/real-photos/commons/Street_sign_in_Sarajevo.jpg",
+      "size": [1632, 1224],
+      "regions": [
+        {"box": [750, 485, 955, 565], "text": "TRG", "scope": "sign", "script": "latin", "note": "letter-spaced on the sign as T R G"},
+        {"box": [605, 598, 1095, 675], "text": "BOSNE I HERCEGOVINE", "scope": "sign", "script": "latin"},
+        {"box": [760, 785, 900, 845], "text": "500 m", "scope": "sign", "script": "latin"},
+        {"box": [345, 1098, 980, 1168], "text": "let ANS DRIVE your project.", "scope": "incidental", "script": "latin"}
+      ]
+    },
+    {
+      "file": "data/ocr/real-photos/commons/Mostar_signs.JPG",
+      "size": [1224, 1632],
+      "regions": [
+        {"box": [262, 412, 725, 535], "text": "Sarajevo", "scope": "sign", "script": "latin"},
+        {"box": [258, 552, 740, 665], "text": "Сарајево", "scope": "sign", "script": "cyrillic"},
+        {"box": [248, 742, 760, 858], "text": "Dubrovnik", "scope": "sign", "script": "latin"},
+        {"box": [248, 878, 825, 995], "text": "Дубровник", "scope": "sign", "script": "cyrillic"}
+      ]
+    },
+    {
+      "file": "data/ocr/real-photos/commons/Ulica_Kovači_Sarajevo.jpg",
+      "size": [1195, 1673],
+      "regions": [
+        {"box": [722, 88, 868, 192], "text": "35", "scope": "sign", "script": "latin"},
+        {"box": [715, 228, 885, 265], "text": "KOVAČI", "scope": "sign", "script": "latin"},
+        {"box": [500, 652, 705, 708], "text": "ULICA", "scope": "sign", "script": "latin"},
+        {"box": [478, 742, 735, 800], "text": "KOVAČI", "scope": "sign", "script": "latin"},
+        {"box": [348, 948, 800, 968], "text": "Ulica je nastala u ranom osmanskom razdoblju, a ime joj je", "scope": "body", "script": "latin"},
+        {"box": [348, 967, 822, 988], "text": "slavenskog porijekla i odnosi se na kovače – kamenoklesare", "scope": "body", "script": "latin"},
+        {"box": [348, 986, 818, 1007], "text": "koji su u srednjovjekovnom periodu klesali stećke i kamen za", "scope": "body", "script": "latin"},
+        {"box": [348, 1005, 815, 1026], "text": "gradnju, a u osmanskom nišane. Na ovom prostoru nalaze se", "scope": "body", "script": "latin"},
+        {"box": [348, 1024, 820, 1045], "text": "najstariji muslimanski nišani, a tu je nastalo i najstarije musli-", "scope": "body", "script": "latin"},
+        {"box": [348, 1043, 480, 1063], "text": "mansko groblje.", "scope": "body", "script": "latin"},
+        {"box": [345, 1075, 828, 1092], "text": "This street dates back to the early Ottoman period and its name", "scope": "body", "script": "latin"},
+        {"box": [345, 1093, 812, 1110], "text": "comes from the Slavic word, kovači, which refers to the stone", "scope": "body", "script": "latin"},
+        {"box": [345, 1111, 825, 1128], "text": "masons who handcarved stećci (medieval tombstones) during", "scope": "body", "script": "latin"},
+        {"box": [345, 1129, 730, 1146], "text": "the Middle Ages. In the Ottoman period they made", "scope": "body", "script": "latin"},
+        {"box": [345, 1147, 748, 1164], "text": "headstones for graves. The oldest Muslim graveyard", "scope": "body", "script": "latin"},
+        {"box": [345, 1165, 740, 1182], "text": "and some of the oldest Muslim tombstones can be", "scope": "body", "script": "latin"},
+        {"box": [345, 1183, 480, 1200], "text": "found in this area.", "scope": "body", "script": "latin"}
+      ]
+    }
+  ]
+}
