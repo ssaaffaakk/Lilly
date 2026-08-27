@@ -130,22 +130,49 @@ def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--limit", type=int, help="score only the first N pairs")
     ap.add_argument("--fresh", action="store_true", help="re-translate, ignore saved")
+    # A candidate build can be scored where it stands, without being installed
+    # first. Deciding whether to replace the served model should not require
+    # having already replaced it.
+    ap.add_argument("--tuned", type=Path, default=TUNED_BUILD,
+                    help="the build to score against the base")
+    ap.add_argument("--saved", type=Path, default=SAVED,
+                    help="where to cache the translations")
     args = ap.parse_args()
 
     src, refs = pairs(args.limit)
     print(f"{len(src):,} pairs, both models through app.translate.Engine")
 
-    saved = json.loads(SAVED.read_text(encoding="utf-8")) if SAVED.exists() else {}
-    reusable = (not args.fresh and saved.get("n") == len(src)
-                and len(saved.get("base", [])) == len(src))
-    if reusable:
-        print("  reusing saved translations — --fresh to redo them")
-        base, tuned = saved["base"], saved["lilly"]
-    else:
+    # The two sides are cached separately because only one of them changes. The
+    # base build is the same in every comparison, and re-translating it costs
+    # half an hour per candidate for an answer already on disk. Any cache with
+    # the right number of rows can supply it, so a new candidate borrows the
+    # base from whatever earlier run produced it.
+    def cached(path):
+        if args.fresh or not path.exists():
+            return {}
+        data = json.loads(path.read_text(encoding="utf-8"))
+        return data if data.get("n") == len(src) else {}
+
+    saved = cached(args.saved)
+    base = saved.get("base") or []
+    if len(base) != len(src):
+        for other in sorted(REPO_ROOT.glob("training/app-hypotheses*.json")):
+            spare = cached(other).get("base") or []
+            if len(spare) == len(src):
+                print(f"  base translations reused from {other.name}")
+                base = spare
+                break
+    if len(base) != len(src):
         base = translate_all(BASE_BUILD, src, "base")
-        tuned = translate_all(TUNED_BUILD, src, "Lilly")
-        SAVED.write_text(json.dumps({"n": len(src), "base": base, "lilly": tuned},
-                                    ensure_ascii=False), encoding="utf-8")
+
+    tuned = saved.get("lilly") or []
+    if len(tuned) != len(src):
+        tuned = translate_all(args.tuned, src, args.tuned.name)
+    else:
+        print("  candidate translations reused — --fresh to redo them")
+
+    args.saved.write_text(json.dumps({"n": len(src), "base": base, "lilly": tuned},
+                                     ensure_ascii=False), encoding="utf-8")
 
     leaked = sum(1 for x in base if LANGUAGE_TAG.match(x))
     leaked_t = sum(1 for x in tuned if LANGUAGE_TAG.match(x))

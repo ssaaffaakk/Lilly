@@ -32,15 +32,16 @@ TOKENIZER_FILES = ("source.spm", "target.spm", "vocab.json",
                    "tokenizer_config.json", "special_tokens_map.json")
 
 
-def merge_adapter(into: Path) -> bool:
+def merge_adapter(into: Path, adapter: Path = None) -> bool:
     """Fold the fine-tuning into the weights. Quantised models cannot take it later."""
-    if not (ADAPTER / "adapter_config.json").exists():
+    adapter = adapter or ADAPTER
+    if not (adapter / "adapter_config.json").exists():
         return False
     from peft import PeftModel
     from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
-    print(f"merging {ADAPTER}")
+    print(f"merging {adapter}")
     model = AutoModelForSeq2SeqLM.from_pretrained(str(SOURCE))
-    model = PeftModel.from_pretrained(model, str(ADAPTER)).merge_and_unload()
+    model = PeftModel.from_pretrained(model, str(adapter)).merge_and_unload()
     model.save_pretrained(str(into))
     AutoTokenizer.from_pretrained(str(SOURCE)).save_pretrained(str(into))
     return True
@@ -83,6 +84,10 @@ def main() -> int:
     # as float32 PyTorch measures the quantisation as much as the training.
     ap.add_argument("--no-adapter", action="store_true",
                     help="build the untuned base, for comparing against")
+    # Naming the adapter lets a candidate be built and scored without displacing
+    # the model being served. A retrain that turns out worse should cost nothing.
+    ap.add_argument("--adapter", type=Path, default=None,
+                    help="use this adapter instead of models/lilly/adapter")
     args = ap.parse_args()
 
     if not (args.source / "config.json").exists():
@@ -94,7 +99,7 @@ def main() -> int:
     merged_dir = MODELS / "translate-merged"
     if args.no_adapter:
         print("building the untuned base on purpose")
-    elif merge_adapter(merged_dir):
+    elif merge_adapter(merged_dir, args.adapter):
         source = merged_dir
         print("serving the fine-tuned weights")
     else:
