@@ -1,0 +1,14 @@
+# Derived data: ~4-5 GB of 16 kHz WAV clips plus the TSVs that index them.
+# Rebuild any time with:
+#     python3 data/scripts/download_extra_speech.py
+#
+# The repo root .gitignore already excludes data/speech/ for exactly this
+# reason, but it predates this directory and does not cover it. Rather than
+# reach outside this tree to edit it, the same job is done here -- Git honours
+# .gitignore files in subdirectories, so a stray `git add -A` cannot stage
+# gigabytes of audio.
+#
+# train.tsv is ignored too, and deliberately: the aggregate at the top of this
+# directory holds ABSOLUTE paths, which are meaningless on any other machine.
+*
+!.gitignore
