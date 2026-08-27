@@ -41,3 +41,13 @@ eval-full.log
 app-path-eval.log
 training/hypotheses.json
 training/app-hypotheses.json
+NIGHT-LOG.md
+RESUME.md
+night-watch.log
+kaggle-translation-launch.log
+wer-*.log
+ocr-train.log
+app-path-eval.log
+.night_watch.lock
+models/lilly/read/.train_ocr.lock
+ocr-train.log.*

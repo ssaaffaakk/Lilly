@@ -21,6 +21,7 @@ Writes models/lilly/read/latin_g2.pth, keeping the previous one beside it as
 latin_g2-previous.pth so there is a way back and something to measure against.
 """
 import argparse
+import atexit
 import os
 import shutil
 import sys
@@ -52,6 +53,62 @@ IMG_HEIGHT = 64          # what the shipped reader was trained at
 MAX_WIDTH = 600
 DIACRITICS = "čćđšžČĆĐŠŽ"
 MIN_STEPS = 200          # below this a run has not trained, it has only run
+LOCK = READ_DIR / ".train_ocr.lock"
+
+
+def pid_alive(pid: int) -> bool:
+    """Signal 0 asks the kernel about a pid without sending anything."""
+    try:
+        os.kill(pid, 0)
+    except ProcessLookupError:
+        return False
+    except PermissionError:
+        return True      # not ours to signal, but it exists
+    return True
+
+
+def hold_lock() -> None:
+    """Refuse to start if another run already has the reader.
+
+    Not hypothetical either. Three things watch this repo overnight — this
+    session's own timer, the app's scheduled task, and scripts/night_watch.sh —
+    and each starts a headless agent that reads the same disk state. On the
+    night of 27 August two of them looked within four minutes of each other,
+    both saw no training running and a free GPU, and both started this script.
+    They loaded the same pristine weights, trained separately, and were both
+    heading for the same latin_g2.pth: last writer wins, and the winner's
+    "before" number belongs to a model the loser had already replaced. They
+    also shared one log, and the second truncated the first's.
+
+    The callers cannot fix this between themselves — a check in one watcher
+    cannot see an agent another watcher is about to spawn. So the guard lives
+    here, next to the weights it protects, where every path in has to pass it.
+    """
+    if LOCK.exists():
+        try:
+            owner = int(LOCK.read_text(encoding="utf-8").split()[0])
+        except (ValueError, IndexError, OSError):
+            owner = None
+        if owner is not None and owner != os.getpid():
+            if pid_alive(owner):
+                raise SystemExit(
+                    f"pid {owner} is already training the reader (lock: {LOCK}). "
+                    f"Two runs would race to overwrite {READ_DIR/'latin_g2.pth'} "
+                    f"and each would report a before/after pair the other "
+                    f"invalidated. Wait for it, or kill it first.")
+            print(f"stale lock from pid {owner} — it is gone, taking over")
+    LOCK.write_text(f"{os.getpid()} {time.strftime('%Y-%m-%d %H:%M:%S')}\n",
+                    encoding="utf-8")
+    atexit.register(release_lock)
+
+
+def release_lock() -> None:
+    """Only ever drop a lock this process owns."""
+    try:
+        if LOCK.exists() and int(LOCK.read_text(encoding="utf-8").split()[0]) == os.getpid():
+            LOCK.unlink()
+    except (ValueError, IndexError, OSError):
+        pass
 
 
 def load_charset() -> str:
@@ -216,6 +273,8 @@ def main() -> int:
     if args.quick_test:
         args.epochs, args.batch_size, args.limit = 1.0, 2, 8
 
+    hold_lock()
+
     charset = load_charset()
     from easyocr.utils import CTCLabelConverter
     converter = CTCLabelConverter(charset, separator_list={}, dict_pathlist={})
@@ -285,8 +344,26 @@ def main() -> int:
               f"leaving the shipped reader alone")
         return 0
 
-    if after[1] <= before[1]:
-        print("\nthe Bosnian letters did not improve — not replacing the shipped reader")
+    # Both numbers have to rise, not just the one this run was aimed at. A model
+    # that saves diacritics by getting whole words wrong more often has made a
+    # trade, not an improvement, and the diacritic number alone waves it through:
+    # spelling `Čaršija` as `Čaršijaa` keeps every Bosnian letter and loses the
+    # word. This project has already been bitten once by a metric that moved the
+    # flattering way while its partner moved the other way, so the gate asks for
+    # both. Written before this run produced a number.
+    words_up = after[0] > before[0]
+    letters_up = after[1] > before[1]
+    if not (words_up and letters_up):
+        print(f"\nwords {before[0]:.1f}% -> {after[0]:.1f}%, "
+              f"Bosnian letters {before[1]:.1f}% -> {after[1]:.1f}%")
+        if letters_up and not words_up:
+            print("the Bosnian letters improved but whole words got worse — "
+                  "that is a trade, not a better reader. Not replacing it.")
+        elif words_up and not letters_up:
+            print("whole words improved but the Bosnian letters did not — "
+                  "this run was aimed at the letters. Not replacing it.")
+        else:
+            print("neither number improved — not replacing the shipped reader")
         return 1
 
     keep = READ_DIR / "latin_g2-previous.pth"

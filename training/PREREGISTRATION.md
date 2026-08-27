@@ -99,3 +99,58 @@ disappointing.
 
 Arm A also answers a question no single run could: how much of any gain is the
 data. If A clears the bar and B does not, the recipe hurt.
+
+## Amendment, 01:52 — the reader, written before its "after" number exists
+
+The reader run started at 01:48 and is training now. Its `before` number is on
+disk; its `after` number does not exist yet. This is written in that gap on
+purpose.
+
+**The target recorded in `RESUME.md` and `NIGHT-LOG.md` — "leak-free valid, word
+> 67.1%, diacritic > 69.4%" — is withdrawn, because it has no source.** Those two
+numbers appear nowhere else: no script writes them, no log records them, no
+commit introduces them. `training/evaluate_ocr.py`, the script the training
+script's own docstring names as the thing that produced them, does not exist.
+The only reader measurements that exist on disk are:
+
+| when | valid set | words exact | diacritics |
+|---|---|---|---|
+| 18:36, `remaining.log` | old synthetic, 327 letters | 93.8% | 91.1% |
+| 01:49, `ocr-train.log` | today's regenerated set, 289 letters | **75.2%** | **73.0%** |
+
+Neither is 67.1/69.4. And 67.11 is this file's own chrF2 figure for the current
+translator, three lines up — the likeliest explanation is that a translation
+score was copied into the reader's row and then inherited as a target.
+
+That mistake is not cosmetic. **The untouched reader already scores 75.2 / 73.0**,
+so a bar at 67.1 / 69.4 is one the shipped model clears by eight points without
+being trained at all. Any run judged against it would be certified as an
+improvement while having made the reader worse. This is the exact failure this
+file was written to prevent, and it was pointing the wrong way for four hours.
+
+**The bar, from here:** the run's own `before`, measured minutes ago from the
+published weights (md5 `469869130aad1a34e8f9086f4262bc59`, verified pristine at
+load) on the same 500 held-out crops, with the same scorer, in the same process:
+
+| | before | threshold to replace the shipped reader |
+|---|---|---|
+| words exact | 75.2% | > 75.2% |
+| diacritics | 73.0% | **> 73.0%** |
+
+Diacritics is the one that decides, because dropping them is the failure the
+retrain exists to fix; a run that lifts whole-word accuracy while losing Bosnian
+letters has traded away the point. `train_ocr.py` already enforces exactly this
+comparison in code — it refuses to overwrite the reader unless `after`
+diacritics beat `before` diacritics, and it keeps the published weights beside
+the new ones. The code was honest; only the prose target was wrong.
+
+The valid set was checked for leakage before the run: 2,348 valid rows against
+21,652 train rows, **zero shared strings**, so "leak-free" is now a measured
+claim rather than an inherited one.
+
+## Note on the clock
+
+Entries in `NIGHT-LOG.md` run about 74 minutes ahead of this machine: the log
+says commit `c2d80db` landed at 02:25, `git` says 01:11. Times in this amendment
+are the machine's. The morning report should not treat the log's timeline as
+wall-clock.
