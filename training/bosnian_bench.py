@@ -46,6 +46,10 @@ Three run every time, because a metric nobody measured is not evidence:
 
   reference control  the professional English through the scorer. Near 100% or
                      the matching code is broken (case folding, word boundaries).
+                     Note what it does *not* prove: the accepted answers were
+                     intersected with this sentence's reference when the case was
+                     built, so they are inside it by construction. This control
+                     tests the matcher, never the answer key.
   copy control       the untranslated Bosnian sentence through the scorer.
                      Near 0% or the metric is rewarding something other than
                      translation.
@@ -53,6 +57,22 @@ Three run every time, because a metric nobody measured is not evidence:
                      identically term by term, the swap is not landing on
                      anything the model notices, and the gap column is empty of
                      meaning rather than evidence of parity.
+
+## What it cannot see — measured on the 2026-08-27 run, not guessed at
+
+A hit needs the reference's own English word. The model that writes "entire"
+where the professional wrote "whole", or "plane" for "aircraft", is marked wrong
+having understood the term perfectly. Of the fine-tune's 35 missed targets, 14
+(40%) contain a plain inflection of the wanted word — visit/visiting,
+solution/solutions — and reading the rest, most of the remainder are synonyms.
+So the residual few points are mostly lexical-choice noise, not comprehension,
+and the recall figure understates both models by an unknown but similar amount.
+
+The swap is also weaker than it looks here: the base is opus-mt-tc-big-zls-en,
+trained on the whole South Slavic family, so it reads ijekavica and ekavica
+equally well and the gap has little room to open. Only 3.0% of swapped targets
+scored differently from their Bosnian twin. The gap column is near zero because
+the swap does not land, which is not the same as evidence of parity.
 
     python3 training/bosnian_bench.py
     python3 training/bosnian_bench.py --limit 40      # a quick look

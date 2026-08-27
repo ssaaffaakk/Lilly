@@ -51,3 +51,5 @@ app-path-eval.log
 .night_watch.lock
 models/lilly/read/.train_ocr.lock
 ocr-train.log.*
+bench/.outputs.json
+bench/run-full.log
