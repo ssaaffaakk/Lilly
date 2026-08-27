@@ -258,6 +258,41 @@ def report(cases, results):
               f"paired bootstrap p = {p:.4f}"
               + ("" if p < 0.05 else "  (does not clear 0.05)"))
 
+    # The swapped gap is the more direct look at this project's claim than term
+    # recall is — a model leaning on generic Serbo-Croatian should do relatively
+    # better when the Bosnian term is replaced by its Croatian or Serbian form,
+    # so a wider gap is the shape "it really is Bosnian" would take. It is
+    # reported second and tested, not promoted, because it was not the measure
+    # named in training/PREREGISTRATION.md and it was looked at after the
+    # headline was already known. A number noticed afterwards that happens to
+    # favour us is exactly what pre-registration exists to keep in its place.
+    if len(labels) == 2:
+        per_model = []
+        for label in labels:
+            r = results[label]
+            left, right = marks_paired(r["marks_bs"], r["marks_variant"])
+            swapped = {(c, t): ok for c, t, _, ok in right}
+            per_model.append({(c, t): ok - swapped[(c, t)]
+                              for c, t, _, ok in left if (c, t) in swapped})
+        shared = sorted(set(per_model[0]) & set(per_model[1]))
+        if shared:
+            diffs = [per_model[1][k] - per_model[0][k] for k in shared]
+            observed = 100 * sum(diffs) / len(diffs)
+            rng = random.Random(41)
+            centre = sum(diffs) / len(diffs)
+            extreme = 0
+            for _ in range(10000):
+                draw = sum(diffs[rng.randrange(len(diffs))] - centre
+                           for _ in range(len(diffs))) / len(diffs) * 100
+                extreme += abs(draw) >= abs(observed)
+            p_gap = extreme / 10000
+            print(f"\nswapped gap, {labels[1]} against {labels[0]}: "
+                  f"{observed:+.1f} points on {len(shared)} shared targets, "
+                  f"paired bootstrap p = {p_gap:.4f}"
+                  + ("" if p_gap < 0.05 else "  (does not clear 0.05)"))
+            print("  secondary and post-hoc: this measure was not the one "
+                  "pre-registered, and it was tested after the headline was known")
+
     print("\nchecks on the measurement")
     for name, marks in results[labels[0]]["controls"].items():
         print(f"  {name:<20}{100 * rate(marks):>11.1f}%   ({len(marks)} targets)")
