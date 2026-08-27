@@ -252,3 +252,60 @@ win cannot be attributed to either. Arm A isolates the data: 42.21 / 67.35 with
 one epoch and the corpus alone. The difference between them — +0.12 chrF2 for
 −0.03 BLEU — is what the length-band rebuild and the second epoch bought
 together, and nothing here separates them.
+
+---
+
+# Speech retraining — written before any of it runs
+
+Lilly hears 35.5% of words wrong. It was trained on 3,091 Bosnian clips, and
+there is far more Croatian and Serbian speech available. Adding it is the plan.
+
+## The trap this is written to catch
+
+Croatian and Serbian are close to Bosnian but not the same. A model fed mostly
+Croatian will get better at Croatian, and the overall word error rate can fall
+while **Bosnian gets worse**. That is not a hypothetical: it is the same shape
+as the mistake the translator made, where BLEU rose on the metric we were
+looking at and chrF2 fell on the one that mattered more.
+
+An average that improves while the thing we sell degrades is the failure this
+project keeps almost making, and a single WER figure cannot see it.
+
+## The measurement that decides
+
+`training/evaluate_speech.py` on the 200 held-out FLEURS Bosnian clips — the same
+clips as before, so the numbers are comparable — **and** a Bosnian-specific term
+measure, which is being built separately.
+
+| | now | threshold to replace it |
+|---|---|---|
+| word error, 200 Bosnian clips | 35.5% | **below 35.5%** |
+| Bosnian-specific term recall | to be measured | **not below its baseline** |
+
+Both, not either. A model that reads Bosnian words less well than the current one
+does not ship, whatever it does to the average.
+
+## What failure looks like
+
+- **Overall error falls, Bosnian terms fall too.** The neighbours drowned the
+  Bosnian. Keep the current model and raise the Bosnian share.
+- **Neither moves.** The extra data was not close enough to help. Keep the
+  current model, and record that the neighbour-language route did not work —
+  that is a result worth publishing because the obvious next thing to try is
+  more of it, and this says not to.
+- **Overall error rises.** Something is wrong with the data or the recipe rather
+  than with the idea. Diagnose before retrying; do not simply add more.
+
+`models/lilly/listen.before-training` holds the untrained weights and
+`models/lilly/listen` the current ones. If neither bar is cleared, `listen` stays
+as it is.
+
+## The mixing ratio is measured, not assumed
+
+`data/scripts/build_speech_mix.py --share` repeats the Bosnian clips until they
+hold a stated fraction of the examples. The right fraction is not knowable in
+advance, so it is a parameter, and the plan is to train at two settings and score
+each on Bosnian specifically rather than to pick a number and defend it
+afterwards. If only one run is affordable, 0.35 is the starting point — high
+enough that 3,091 clips cannot be drowned by ten times as many neighbours, low
+enough that the neighbours still teach something.
