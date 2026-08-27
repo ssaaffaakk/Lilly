@@ -36,11 +36,14 @@ how Lilly scores.
    score on the same 40 photographs. Note what the training data is today: all
    of it is synthetic — 18,060 `syn*` from one generator and 3,592 `photo*`
    from the other — so **the reader has never seen a real crop.**
-2. **The harvest will not reach 1,500 and never could.** Measured: 3,207
-   candidates in the pool, 1,400 staged (its own cap), keep rate 15.4% overall
-   and ~20.6% on live candidates. That is ~215–250 photographs out of this run
-   and ~500–660 even if every candidate in the pool were screened. The
-   `--target 1500` is not a goal that this pool can meet.
+2. **The harvest will not reach 1,500 and never could.** Measured at 1,499
+   screened: keep rate 17.4% overall, 20.2% on live candidates, 263 kept, ~388
+   still staged. That lands near ~340 photographs from this run. The ceiling is
+   the pool: 3,207 candidates at ~20% is ~650 even if every one were screened,
+   and `--max-screen` defaults to 1,400 per run on top of that. `--target 1500`
+   is not a goal this pool can meet.
+   (An earlier note here said ~215–250. That read the 1,400 staged as a cap on
+   the run; it is a staging window the harvester refills, so the figure was low.)
 
 ## Settled today
 
