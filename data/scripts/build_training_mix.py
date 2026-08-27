@@ -22,7 +22,7 @@ removes length-ratio noise or removes a reason the model would learn to be terse
 
 THE EIGHT STEPS, in this order, with what each one actually removes:
 
-  1. strip [1]-style wiki citation markers   9,557 rows  (pure ratio noise)
+  1. strip [1]-style wiki citation markers   9,560 rows  (pure ratio noise)
   2. split to one sentence per example       4,809 rows dropped, 359,309 pairs out
   3. asymmetric band on log(en/bs chars)    25,309 pairs  (the variance cut)
   4. drop micro-pairs under 3 characters        46 pairs
@@ -57,6 +57,7 @@ Usage:
 import argparse
 import collections
 import math
+import os
 import random
 import re
 import sys
@@ -71,7 +72,6 @@ OUT_HOLDOUT = CLEAN_DIR / "ntrex-holdout.tsv"
 
 # The tokenizer in step 6 has to be the one the model actually trains with,
 # otherwise the cap is a guess. Same resolution order as training/train_translation.py.
-import os
 BASE_MODEL = os.environ.get("LILLY_BASE") or str(DATA_DIR.parent / "models" / "lilly" / "translate")
 MAX_TOKENS = 128            # training/train_translation.py: MAX_LEN = 128
 
@@ -381,7 +381,7 @@ def build(verbose=True):
     # "U.S.", "pp.", "st." — and the exception list here is evidently wider than
     # the one the recipe was measured with. Suppressions actually fired, by rule:
     # all-digit token 67,363, single letter 8,627, next word lowercase 8,394,
-    # dotted initials 2,474, abbreviation 7,884, roman numeral 116. The digit rule
+    # dotted initials 2,474, abbreviation 8,190, roman numeral 116. The digit rule
     # alone is two thirds of it, which is the recipe's own claim about where the
     # false breaks are.
     split_pairs, split_drop = [], collections.Counter()
@@ -569,7 +569,7 @@ def token_lengths(pairs) -> list:
 # ===================================================================
 # review
 # ===================================================================
-def review(mix, final, prov4, stripped, n: int, seed: int) -> None:
+def review(final, prov4, stripped, n: int, seed: int) -> None:
     """Print pairs to read by hand — the only check that decides whether the
     splitter is right. Two things are being read for: did a split row's two
     sides stay aligned, and did an ordinal survive intact."""
@@ -646,7 +646,7 @@ def main() -> int:
                         f"train on it until this is understood.\n")
 
     if args.review:
-        review(mix, final, prov4, stripped, args.review, args.seed)
+        review(final, prov4, stripped, args.review, args.seed)
 
     if args.dry_run:
         print("\n--dry-run: nothing written")
