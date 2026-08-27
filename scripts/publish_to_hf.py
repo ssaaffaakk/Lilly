@@ -22,6 +22,8 @@ A dry run needs no token. Re-running an upload only sends files that changed,
 so fixing the model card later is quick.
 """
 import argparse
+import hashlib
+import re
 import fnmatch
 import json
 import os
@@ -66,10 +68,7 @@ EXCLUDE_RULES = (
     # translator is whichever candidate won; the losers and the build it
     # replaced stay here so a bad result costs nothing to undo, and none of
     # them belongs in a release.
-    ("adapter-armA", "candidate LoRA adapter from a retraining arm; the winner is merged into translator/"),
-    ("adapter-previous", "the adapter translator/ replaced, kept locally as the rollback"),
-    ("translator-armA", "candidate build from a retraining arm; translator/ was built from it"),
-    ("translator-previous", "the build translator/ replaced, kept locally as the rollback"),
+    ("adapter-arm-a", "the losing retraining arm's adapter, kept so its result can be reproduced"),
     ("keep-*", "dated backup of a working model, kept locally as the rollback"),
     ("*.before-training", "the pre-training weights, kept locally to score against"),
     ("listen-trained", "training-format speech checkpoint; listen/ is the built version"),
@@ -252,6 +251,59 @@ def upload(repo_id: str, publish: dict, public: bool, message: str) -> int:
     return 0
 
 
+
+def scored_build() -> str:
+    """The build the published scores were measured on, from the report itself."""
+    report = REPO_ROOT / "training" / "RESULTS-product.md"
+    if not report.exists():
+        return ""
+    found = re.search(r"Scored build: `([0-9a-f]{32})`",
+                      report.read_text(encoding="utf-8"))
+    return found.group(1) if found else ""
+
+
+def build_fingerprint(build: Path) -> str:
+    """Identical to training/evaluate_app.py's, so the two can be compared."""
+    digest = hashlib.blake2b(digest_size=16)
+    for name in sorted(f.name for f in build.iterdir() if f.is_file()):
+        if name == "built.json":
+            continue
+        digest.update(name.encode("utf-8"))
+        with open(build / name, "rb") as f:
+            for chunk in iter(lambda: f.read(1 << 20), b""):
+                digest.update(chunk)
+    return digest.hexdigest()
+
+
+def refuse_unmeasured_weights(bundle: Path) -> None:
+    """Stop if the weights about to be uploaded are not the ones that were scored.
+
+    models/lilly/ holds five directories whose names differ by a word —
+    translator, translator-armA, translator-armB, translator-base,
+    translator-previous. Publishing the wrong one does not fail: the model loads,
+    it translates, and every number on the model card is quietly about different
+    weights. There is no way to notice from outside.
+
+    So the report records which build produced its scores and this refuses to
+    upload any other. It is the same move as giving readtext one door — the
+    mistake stops being expressible rather than being something to be careful
+    about.
+    """
+    expected = scored_build()
+    if not expected:
+        raise SystemExit(
+            "training/RESULTS-product.md names no scored build, so there is "
+            "nothing to check these weights against. Run training/evaluate_app.py "
+            "against the build you mean to publish first.")
+    actual = build_fingerprint(bundle / "translator")
+    if actual != expected:
+        raise SystemExit(
+            f"the translator here is {actual}, but the published scores were "
+            f"measured on {expected}. Uploading this would put one model's "
+            f"weights behind another model's numbers, and nothing downstream "
+            f"could tell. Score this build, or publish the one that was scored.")
+    print(f"translator matches the scored build: {expected}")
+
 def main() -> int:
     ap = argparse.ArgumentParser(
         description="Publish models/lilly/ to Hugging Face. Lists and stops by "
@@ -269,6 +321,9 @@ def main() -> int:
     print(f"mode:    {'UPLOAD' if args.upload else 'dry run (default) — nothing is sent'}")
     print(f"HF_TOKEN: {'set' if os.environ.get('HF_TOKEN') else 'not set'}"
           f"{'' if args.upload else '  (a dry run does not need it)'}")
+
+    # Before anything else: are these the weights the published scores describe?
+    refuse_unmeasured_weights(BUNDLE)
 
     problems, publish = preflight()
     if problems:

@@ -23,6 +23,7 @@ Roughly forty minutes on a laptop for the full 2,009 pairs, most of it the base
 model: it writes longer output and so decodes for longer.
 """
 import argparse
+import hashlib
 import json
 import re
 import sys
@@ -79,6 +80,30 @@ def translate_all(build: Path, src: list, label: str) -> list:
                   flush=True)
     print(f"  {label} done in {time.time() - started:.0f}s", flush=True)
     return out
+
+
+def build_fingerprint(build: Path) -> str:
+    """What is in this build, as one number.
+
+    Five directories in models/lilly/ have names within a word of each other —
+    translator, translator-armA, translator-armB, translator-base,
+    translator-previous — and publishing the wrong one does not fail. The model
+    loads, it translates, and every figure on the model card is quietly about a
+    different set of weights. Nothing downstream could notice.
+
+    So the score and the weights are tied together by this: the report records
+    which build produced it, and the publisher refuses to upload weights whose
+    fingerprint is not the one in the report.
+    """
+    digest = hashlib.blake2b(digest_size=16)
+    for name in sorted(f.name for f in build.iterdir() if f.is_file()):
+        if name == "built.json":          # records the build, is not the build
+            continue
+        digest.update(name.encode("utf-8"))
+        with open(build / name, "rb") as f:
+            for chunk in iter(lambda: f.read(1 << 20), b""):
+                digest.update(chunk)
+    return digest.hexdigest()
 
 
 def score(hyps, refs):
@@ -197,7 +222,9 @@ def main() -> int:
                   + ("" if p < 0.05 else "   (does not clear 0.05)"))
         tables[title] = r
 
-    write_report(len(src), leaked, leaked_t, tables)
+    fingerprint = build_fingerprint(args.tuned)
+    print(f"\nscored build: {fingerprint}")
+    write_report(len(src), leaked, leaked_t, tables, fingerprint)
     print(f"\nwritten to {REPORT.relative_to(REPO_ROOT)}")
     return 0
 
@@ -213,9 +240,10 @@ def reading(gap: float, p: float, metric: str) -> str:
             f"bar: measured, not leaned towards.")
 
 
-def write_report(n, leaked_base, leaked_tuned, tables) -> None:
+def write_report(n, leaked_base, leaked_tuned, tables, fingerprint) -> None:
     lines = [
         "# Translation quality — what Lilly actually serves", "",
+        f"Scored build: `{fingerprint}`", "",
         f"{n:,} FLORES-200 pairs the base model was not trained on. Both models are "
         "int8 CTranslate2 builds and both go through `app.translate.Engine`, so the "
         "sentence splitting and the quantisation are the product's own. The only "

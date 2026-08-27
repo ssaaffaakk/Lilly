@@ -1,5 +1,7 @@
 # Translation quality — what Lilly actually serves
 
+Scored build: `1aedcc11231cdf50817ff12f99ff0d1e`
+
 2,009 FLORES-200 pairs the base model was not trained on. Both models are int8 CTranslate2 builds and both go through `app.translate.Engine`, so the sentence splitting and the quantisation are the product's own. The only difference between the two columns is the fine-tuning.
 
 This is the number to quote. `training/RESULTS.md` scores the raw adapter on whole rows, which is a useful diagnostic and not what anyone runs: on the same pairs that path reads +0.54 BLEU and −0.79 chrF2, because feeding several sentences at once makes the model drop a clause and the app never does that.
@@ -11,22 +13,22 @@ The base model prints its language tag into the translation itself — `>>eng<<`
 | Model | BLEU | chrF2 | Length vs reference |
 |---|---|---|---|
 | Base (untuned) | 37.60 | 67.00 | 1.048 |
-| Lilly (fine-tuned) | 42.21 | 67.35 | 0.997 |
-| **Gap** | **+4.61** | **+0.35** | |
+| Lilly (fine-tuned) | 42.18 | 67.47 | 1.001 |
+| **Gap** | **+4.58** | **+0.48** | |
 
-BLEU moves +4.61 at p = 0.001, which clears the usual 0.05 bar: measured, not leaned towards.
-chrF2 moves +0.35 at p = 0.002, which clears the usual 0.05 bar: measured, not leaned towards.
+BLEU moves +4.58 at p = 0.001, which clears the usual 0.05 bar: measured, not leaned towards.
+chrF2 moves +0.48 at p = 0.001, which clears the usual 0.05 bar: measured, not leaned towards.
 
 ## With the language tag stripped
 
 | Model | BLEU | chrF2 | Length vs reference |
 |---|---|---|---|
 | Base (untuned) | 40.81 | 67.34 | 1.019 |
-| Lilly (fine-tuned) | 42.21 | 67.35 | 0.997 |
-| **Gap** | **+1.40** | **+0.01** | |
+| Lilly (fine-tuned) | 42.18 | 67.47 | 1.001 |
+| **Gap** | **+1.37** | **+0.14** | |
 
-BLEU moves +1.40 at p = 0.001, which clears the usual 0.05 bar: measured, not leaned towards.
-chrF2 moves +0.01 at p = 0.365 — that does not clear the usual 0.05 bar, so it is unproven rather than absent.
+BLEU moves +1.37 at p = 0.001, which clears the usual 0.05 bar: measured, not leaned towards.
+chrF2 moves +0.14 at p = 0.104 — that does not clear the usual 0.05 bar, so it is unproven rather than absent.
 
 ---
 
