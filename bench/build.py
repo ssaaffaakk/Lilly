@@ -429,6 +429,12 @@ VARIANT_MAP = {
 # One budget per term_id. The yat family has 233 of them and the lexical family
 # 15, so an equal cap would bury the lexical evidence under inflected forms of
 # "mjesto"; the caps are set to bring the two families to a comparable size.
+# How many cases one term may contribute. Sources are then filled greedily in a
+# fixed order — flores, ntrex, setimes_test — so dropping cases from an earlier
+# source frees quota that a later one takes up: when the leak filter removed 58
+# ntrex cases, setimes_test grew from 34 to 40. That is arithmetic, not a
+# choice. Nothing in this file reads a model's score, so the set cannot be
+# tuned, knowingly or otherwise, to the numbers it is about to produce.
 MAX_PER_TERM = {"yat": 2, "lex": 14, "h": 14, "turkism": 14}
 MIN_WORDS, MAX_WORDS = 6, 40
 
