@@ -1,0 +1,41 @@
+# What the app imports, and nothing else.
+#
+# The repository's requirements.txt also carries the training and publishing
+# stack — peft, accelerate, sacrebleu, pyarrow, kaggle. None of it is imported
+# by anything under app/, and a public demo has no business shipping a Kaggle
+# client. Checked by reading every import in app/*.py rather than by trimming
+# what looked unnecessary.
+--extra-index-url https://download.pytorch.org/whl/cpu
+torch
+
+# translation: ctranslate2 runs the quantised model, transformers only for the
+# tokeniser it was converted with
+ctranslate2
+transformers==4.49.0
+sentencepiece
+sacremoses
+
+# Loaded at runtime by something in the transformers or whisper import path.
+# Which one, exactly, I could not pin down — and a package that demonstrably
+# gets imported is not one to drop on the argument that app/ has no `import
+# accelerate` line of its own.
+accelerate==1.3.0
+
+# speech in, speech out
+faster-whisper
+kokoro
+soundfile
+
+# photographs
+easyocr
+pillow
+numpy
+
+# fetching the weights at build time
+huggingface_hub
+
+# the server
+fastapi
+uvicorn
+python-multipart
+pydantic

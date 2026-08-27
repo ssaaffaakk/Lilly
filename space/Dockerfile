@@ -29,8 +29,15 @@ ENV HOME=/home/lilly \
     EASYOCR_MODULE_PATH=/home/lilly/.EasyOCR \
     LILLY_DB=/tmp/feedback.db \
     PORT=7860
+# /app has to exist AND belong to lilly before WORKDIR touches it. WORKDIR
+# creates a missing directory as root, and fetch_models.py then writes 900 MB of
+# weights into /app/models as user 1000 — which fails on permission, during the
+# build, after the dependencies have already installed.
+RUN mkdir -p /app && chown lilly:lilly /app
 WORKDIR /app
 
+# The Space's own list: only what app/ imports. requirements.txt in the
+# repository root also carries the training and publishing stack.
 COPY --chown=lilly requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
