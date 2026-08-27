@@ -154,3 +154,31 @@ Entries in `NIGHT-LOG.md` run about 74 minutes ahead of this machine: the log
 says commit `c2d80db` landed at 02:25, `git` says 01:11. Times in this amendment
 are the machine's. The morning report should not treat the log's timeline as
 wall-clock.
+
+## Correction to the 01:52 amendment — reader thresholds
+
+The 01:52 amendment raised the reader's bar to 75.2% words / 73.0% diacritics,
+on the grounds that the earlier 67.1 / 69.4 figure "came from nowhere". That
+reasoning was wrong, and the direction of the error matters.
+
+67.1 / 69.4 is the pristine reader on the **whole** held-out set — 2,348 crops,
+1,940 synthetic and 408 photographs. It was measured, just not by a script in
+the repo, which is why a later search for its source found nothing.
+
+75.2 / 73.0 came from `train_ocr.py`'s own held-out subset, which took the first
+500 rows of `data/ocr/valid`. After the split was rebuilt by label text the
+synthetic crops landed first, so those 500 rows were 500 synthetic images and
+not one of the 408 photographs. The pristine reader gets 73.2% of synthetic
+words and 38.0% of photographed ones, and that gap is the entire discrepancy.
+
+So the amendment raised the bar using the easy half of the job. The subset now
+strides through the file instead (414 synthetic, 86 photographs — 17.2% against
+the set's 17.4%), and both numbers are reported rather than one replacing the
+other.
+
+**It changes no verdict.** Measured on the whole set: words 67.1% → 86.8%,
+diacritics 69.4% → 86.2%. On the subset the run itself reported 75.2% → 89.0%
+and 73.0% → 87.5%. The trained reader clears every bar either version of this
+file ever set, so nothing here was decided by which number was in force.
+
+Photographs gained most: words 38.0% → 74.3%, diacritics 59.7% → 80.0%.
