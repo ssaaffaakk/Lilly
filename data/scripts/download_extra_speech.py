@@ -193,9 +193,14 @@ from download_extra_data import IJEKAVIAN, EKAVIAN  # noqa: E402
 # 27 August and the kernel panicked: 100% of the compressor limit, fifteen
 # swapfiles, watchdog silent for 94 seconds. Each job is reasonable alone and
 # none of them knew the others existed.
+#
+# Claimed in main(), where the harvest starts, and not here at import. At import
+# it also blocked --verify-only, which downloads nothing, decodes one clip per
+# source and re-runs the leakage gate on text: a check that costs nothing was
+# refused by the memory guard on the machine it was written to protect. The same
+# mistake was in training/train_speech.py and training/evaluate_speech.py.
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
-from scripts.guard import claim
-claim(0.8, "speech download")
+from scripts.guard import claim  # noqa: E402
 
 SOURCES = {
     "fleurs_hr": dict(
@@ -826,6 +831,8 @@ def main() -> int:
             return 1
         summarise(metas)
         return 0 if verify(metas) else 1
+
+    claim(0.8, "speech download")
 
     gate = LeakGate(args.jaccard)
     metas = []
