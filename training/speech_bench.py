@@ -366,13 +366,17 @@ def transcribe(build: Path, cases: list, language: str, cache: dict, key: str) -
     if todo:
         if not (build / "model.bin").exists():
             raise SystemExit(f"no listener at {build}")
-        from faster_whisper import WhisperModel
-        model = WhisperModel(str(build), device="cpu", compute_type="int8")
+        # The app's own listener, and its own decode settings. This file used to
+        # construct a WhisperModel of its own; two copies of a decode path are
+        # two things that can drift, and this project has twice published a
+        # number produced by the wrong one.
+        from scripts.guard import claim
+        from app.speech import release, transcribe
+        claim(1.2, f"speech bench ({build.name})")
         started = time.time()
         for i, case in enumerate(todo, 1):
-            segments, _ = model.transcribe(str(case["clip"]), language=language,
-                                           beam_size=5)
-            have[case["clip"].name] = " ".join(s.text.strip() for s in segments)
+            have[case["clip"].name] = transcribe(str(case["clip"]),
+                                                 language=language, build=build)
             if i % 20 == 0 or i == len(todo):
                 cache[key] = have
                 CACHE.write_text(json.dumps(cache, ensure_ascii=False), encoding="utf-8")
@@ -380,6 +384,10 @@ def transcribe(build: Path, cases: list, language: str, cache: dict, key: str) -
                       f"({time.time() - started:.0f}s)", flush=True)
         cache[key] = have
         CACHE.write_text(json.dumps(cache, ensure_ascii=False), encoding="utf-8")
+        # Hand the memory back before the next listener is loaded. Two whisper
+        # builds resident at once on this 8 GB machine is how the guard's own
+        # cautionary tale started.
+        release(build)
     else:
         print(f"  reusing saved transcriptions for {build.name} — --fresh to redo")
     return [have[c["clip"].name] for c in cases]

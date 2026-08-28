@@ -8,6 +8,20 @@ fall back to "hr" — kept as an option here.
 
 Usage:
     python3 app/speech.py recording.wav          # any format ffmpeg-free: wav/mp3/m4a/ogg
+    python3 app/speech.py recording.wav models/lilly/listen-previous
+
+`transcribe` takes an optional `build`, and that is what the measurement code
+uses. The rule on this project is that a score is produced by the path a user's
+audio takes, never by a faster-whisper call assembled beside it — both the
+translator and the reader have been measured on the wrong path here, and the
+translator's moved by 3.36 chrF2 when it was corrected. training/evaluate_speech.py
+and training/speech_bench.py used to build their own WhisperModel with their own
+decode settings; now they call this function, so "the same code" is a fact about
+the code rather than a claim about two copies of it.
+
+One build is held in memory at a time by default. `release()` drops it, which is
+what lets a benchmark score two listeners in one process on an 8 GB machine
+without holding both.
 """
 import sys
 import threading
@@ -19,27 +33,48 @@ class UnreadableAudio(BadInput):
     """Raised when the upload is not audio we can decode."""
 
 
-_model = None
+_models = {}
 _model_lock = threading.Lock()
 _transcribe_lock = threading.Lock()
 
 
-def get_model():
-    global _model
-    if _model is None:
+def _key(build) -> str:
+    return str(Path(build) if build is not None else LISTEN_DIR)
+
+
+def get_model(build=None):
+    """The listener for `build`, loading it once and keeping it.
+
+    Default is the installed listener, which is what the server serves.
+    """
+    key = _key(build)
+    model = _models.get(key)
+    if model is None:
         with _model_lock:
-            if _model is None:
+            model = _models.get(key)
+            if model is None:
                 from faster_whisper import WhisperModel
-                _model = WhisperModel(str(LISTEN_DIR), device="cpu",
-                                      compute_type="int8")
-    return _model
+                model = WhisperModel(key, device="cpu", compute_type="int8")
+                _models[key] = model
+    return model
 
 
-def transcribe(audio_path: str, language: str = "bs") -> str:
+def release(build=None) -> None:
+    """Drop a loaded listener so its memory goes back.
+
+    Only a benchmark needs this: the server loads one listener and keeps it for
+    the life of the process.
+    """
+    with _model_lock:
+        _models.pop(_key(build), None)
+
+
+def transcribe(audio_path: str, language: str = "bs", build=None) -> str:
     with _transcribe_lock:
         try:
-            segments, info = get_model().transcribe(audio_path, language=language,
-                                                    beam_size=5)
+            segments, info = get_model(build).transcribe(audio_path,
+                                                         language=language,
+                                                         beam_size=5)
             # segments is a generator: it has to be drained inside the lock
             return " ".join(seg.text.strip() for seg in segments).strip()
         except BadInput:
@@ -50,9 +85,10 @@ def transcribe(audio_path: str, language: str = "bs") -> str:
 
 def main() -> int:
     if len(sys.argv) < 2 or not Path(sys.argv[1]).exists():
-        print("usage: python3 app/speech.py <audio-file>", file=sys.stderr)
+        print("usage: python3 app/speech.py <audio-file> [build]", file=sys.stderr)
         return 1
-    print(transcribe(sys.argv[1]))
+    build = sys.argv[2] if len(sys.argv) > 2 else None
+    print(transcribe(sys.argv[1], build=build))
     return 0
 
 

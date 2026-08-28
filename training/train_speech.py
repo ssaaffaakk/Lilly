@@ -47,9 +47,16 @@ from transformers import (
 # 27 August and the kernel panicked: 100% of the compressor limit, fifteen
 # swapfiles, watchdog silent for 94 seconds. Each job is reasonable alone and
 # none of them knew the others existed.
+#
+# The claim is made in main(), not here at import. It used to be here, and that
+# meant `from training.train_speech import read_tsv` — a TSV parser, four lines,
+# no model — claimed 2.0 GB and exited. training/speech_bench.py imports it
+# through evaluate_speech.py, so `speech_bench.py --controls-only`, which loads
+# no model at all, refused to run on a machine with 1.6 GB free. Two imports
+# also meant two claims, 3.2 GB, for a job whose largest resident model is about
+# half a gigabyte. Memory is claimed where a model is loaded and nowhere else.
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from scripts.guard import claim
-claim(2.0, "speech training")
+from scripts.guard import claim  # noqa: E402
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 LISTEN_DIR = REPO_ROOT / "models" / "lilly" / "listen"
@@ -302,6 +309,9 @@ def main() -> int:
                     help="skip training: just convert --base into DIR, which is how "
                          "you get a baseline to measure the fine-tune against")
     args = ap.parse_args()
+
+    # Everything below this line either loads a model or converts one.
+    claim(2.0, "speech training")
 
     if args.convert_only:
         convert_for_app(Path(args.base), args.convert_only, args.force)

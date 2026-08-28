@@ -27,9 +27,11 @@ from training.train_speech import read_tsv  # noqa: E402  (same TSV format)
 # 27 August and the kernel panicked: 100% of the compressor limit, fifteen
 # swapfiles, watchdog silent for 94 seconds. Each job is reasonable alone and
 # none of them knew the others existed.
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from scripts.guard import claim
-claim(1.2, "speech scoring")
+#
+# Claimed in main(), not at import: `from training.evaluate_speech import edits`
+# is a word-distance function and must not cost 1.2 GB. See the same note in
+# training/train_speech.py.
+from scripts.guard import claim  # noqa: E402
 
 
 def edits(hyp: list, ref: list) -> int:
@@ -65,15 +67,17 @@ def main() -> int:
         print(f"no usable rows in {args.data}", file=sys.stderr)
         return 1
 
-    from faster_whisper import WhisperModel
-    model = WhisperModel(str(args.model), device="cpu", compute_type="int8")
+    claim(1.2, "speech scoring")
+    # Through the app's own listener, not a faster-whisper call built here. The
+    # decode settings a user gets are then the decode settings that are scored,
+    # by construction rather than by two copies staying in step.
+    from app.speech import transcribe
     print(f"model: {args.model}\nclips: {len(rows)}")
 
     total_edits = total_words = 0
     worst = []
     for clip, reference in rows:
-        segments, _ = model.transcribe(str(clip), language=args.language, beam_size=5)
-        heard = " ".join(s.text.strip() for s in segments)
+        heard = transcribe(str(clip), language=args.language, build=args.model)
         ref_words, hyp_words = normalise(reference), normalise(heard)
         wrong = edits(hyp_words, ref_words)
         total_edits += wrong
