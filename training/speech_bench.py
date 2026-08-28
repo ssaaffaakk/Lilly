@@ -759,6 +759,58 @@ def report(cases: list, results: dict, controls: dict, terms: list,
                           + ", ".join(f"{t} ({k})" for t, k in missed.most_common(15)))
 
 
+# ---------------------------------------------------------------- power
+
+
+def power(cases: list, variety: str, trials: int = 200, seed: int = 5) -> None:
+    """How large a change this instrument could actually detect, simulated.
+
+    Written for the pre-registration, and written before any listener was
+    scored. A gate that says "must not get worse" is worth nothing if the
+    measurement cannot see "worse" until it is enormous, and a tie then reads
+    as reassurance when it is really silence. So this asks the question the
+    other way round: plant a difference of a known size and count how often the
+    bench's own bootstrap finds it.
+
+    Two listeners are simulated on the real targets of this run. Both write the
+    Bosnian form on a target unless they drift; the second drifts more often by
+    the amount being tested. `miss` is the share that resolves to neither
+    variety, which is where about a third of real targets land and which the
+    substitution rate is deliberately blind to.
+
+    Drift is drawn independently for the two listeners, so the pairing gets less
+    help here than it would from two real models that fail on the same hard
+    sentences. That makes every number below a floor rather than a promise.
+    """
+    field, name = ("has_hr", "croatian") if variety == "hr" else ("has_sr", "serbian")
+    targets = [(c["reference"], t) for c in cases for t in c["targets"]
+               if t["hr" if variety == "hr" else "sr"]]
+    if not targets:
+        print(f"  no {name} targets to simulate")
+        return
+    rng = random.Random(seed)
+    base, miss = 0.10, 0.30
+    print(f"\n{name} substitution: {len(targets)} targets, simulated from a "
+          f"{100 * base:.0f}% baseline with {100 * miss:.0f}% resolving to neither")
+    print(f"  {'planted difference':<22}{'detected at p < 0.05':>22}")
+    for delta in (0.05, 0.10, 0.15, 0.20, 0.30):
+        found = 0
+        for _ in range(trials):
+            a, b = [], []
+            for sentence, t in targets:
+                for marks, rate in ((a, base), (b, base + delta)):
+                    r = rng.random()
+                    out = ("neither" if r < miss
+                           else name if r < miss + (1 - miss) * rate else "bosnian")
+                    marks.append({"sentence": sentence, "clip": "", "term": t["term_id"],
+                                  "category": t["category"], "has_hr": bool(t["hr"]),
+                                  "has_sr": bool(t["sr"]), "outcome": out})
+            _, p = paired_bootstrap(a, b, lambda m: variety_substitution(m, variety)[0],
+                                    n_samples=400, seed=rng.randrange(10 ** 6))
+            found += p < 0.05
+        print(f"  {100 * delta:>17.0f} points{100 * found / trials:>21.0f}%")
+
+
 # ---------------------------------------------------------------- main
 
 
@@ -795,6 +847,9 @@ def main() -> int:
     ap.add_argument("--controls-only", action="store_true",
                     help="build the term set and run the checks, no model")
     ap.add_argument("--fresh", action="store_true", help="ignore cached transcriptions")
+    ap.add_argument("--power", action="store_true",
+                    help="simulate how large a difference this run could detect, "
+                         "and stop. No model, for writing a threshold with")
     args = ap.parse_args()
 
     OUT.mkdir(parents=True, exist_ok=True)
@@ -830,6 +885,11 @@ def main() -> int:
               "few points\n  between two listeners will not clear them")
 
     write_artifacts(terms, refused, cases, args.terms)
+
+    if args.power:
+        power(cases, "hr")
+        power(cases, "sr")
+        return 0
 
     hypotheses, matched = control_hypotheses(cases)
     controls = {name: score(cases, hyps) for name, hyps in hypotheses.items()}
