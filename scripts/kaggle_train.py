@@ -8,6 +8,7 @@ two to three, and leaves the laptop alone.
 
     python3 scripts/kaggle_train.py translation   # the translation fine-tune
     python3 scripts/kaggle_train.py speech        # the listening fine-tune
+    python3 scripts/kaggle_train.py ocr           # the photo reader fine-tune
     python3 scripts/kaggle_train.py speech --status
     python3 scripts/kaggle_train.py speech --fetch
 
@@ -57,6 +58,9 @@ JOBS = {
                     "needs_weights": True, "needs_corpus": True},
     "speech":      {"notebook": "Lilly_Speech_Kaggle.ipynb",
                     "slug": "lilly-speech", "title": "Lilly speech",
+                    "needs_weights": False, "needs_corpus": False},
+    "ocr":         {"notebook": "Lilly_OCR_Kaggle.ipynb",
+                    "slug": "lilly-ocr", "title": "Lilly ocr",
                     "needs_weights": False, "needs_corpus": False},
 }
 STAGING = REPO_ROOT / "models" / "kaggle-staging"     # gitignored, under models/
@@ -318,8 +322,14 @@ def main() -> int:
         out = REPO_ROOT / "models" / "kaggle-output"
         out.mkdir(parents=True, exist_ok=True)
         run(KAGGLE, "kernels", "output", slug, "-p", out)
-        print(f"\nfetched to {out}. Unzip the adapter to models/lilly/adapter/, then:")
-        print("  python3 scripts/build_translator.py")
+        print(f"\nfetched to {out}")
+        if args.job == "speech":
+            print("  python3 scripts/install_listen.py")
+        elif args.job == "ocr":
+            print("  unzip lilly-read.zip into models/lilly/read/")
+        else:
+            print("  unzip adapter to models/lilly/adapter/, then:")
+            print("  python3 scripts/build_translator.py")
         return 0
 
     # Before anything is uploaded: the notebook and the cloned scripts have to
