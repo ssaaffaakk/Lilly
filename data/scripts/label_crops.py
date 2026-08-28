@@ -179,10 +179,25 @@ def collect() -> int:
 
 
 def main() -> int:
+    global CROPS, SHEET_DIR, ANSWER_DIR, TRUTH
     ap = argparse.ArgumentParser()
     ap.add_argument("action", choices=("sheets", "collect"))
     ap.add_argument("--per-sheet", type=int, default=PER_SHEET)
+    # A second batch of crops must not overwrite the first batch's sheets or
+    # collect against its manifest — the sheet/index numbering is only unique
+    # within one batch. These point the whole pipeline at a parallel set.
+    ap.add_argument("--crops", type=Path, default=CROPS)
+    ap.add_argument("--sheets", type=Path, default=None)
+    ap.add_argument("--answers", type=Path, default=None)
     args = ap.parse_args()
+    CROPS = args.crops
+    SHEET_DIR = args.sheets or CROPS.parent / (CROPS.name + "-sheets")
+    if args.sheets is None and CROPS == REPO_ROOT / "data" / "ocr" / "crops":
+        SHEET_DIR = REPO_ROOT / "data" / "ocr" / "label-sheets"
+    ANSWER_DIR = args.answers or (REPO_ROOT / "data" / "ocr" / "label-answers"
+                                  if CROPS == REPO_ROOT / "data" / "ocr" / "crops"
+                                  else CROPS.parent / (CROPS.name + "-answers"))
+    TRUTH = CROPS / "labels-human.tsv"
     if args.action == "sheets":
         return 0 if build_sheets(args.per_sheet) else 1
     return collect()
