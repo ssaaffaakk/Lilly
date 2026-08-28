@@ -415,7 +415,34 @@ def main() -> int:
         shutil.copy(weights, keep)
         print(f"kept the shipped reader at {keep}")
     save_weights(model.to("cpu"), weights)
-    print(f"wrote {weights} — the app reads with this now")
+    print(f"wrote {weights}")
+
+    # And into the file the app actually opens, which is not that one.
+    #
+    # app/ocr.py builds its reader with recog_network="lilly", so easyocr loads
+    # models/lilly/read/lilly.pth through user_network/lilly.yaml. latin_g2.pth
+    # is only the starting point: easyocr verifies its MD5 against the weights
+    # it published and refuses to load a file that does not match, which is why
+    # the trained reader ships as a network of its own in the first place.
+    #
+    # Nothing wrote lilly.pth. Training rewrote latin_g2.pth, said "the app
+    # reads with this now", and the app went on reading the previous lilly.pth
+    # untouched. A run that improved held-out crops from 62.2% to 85.4% changed
+    # nothing a user would see, and scoring it on the photographs afterwards
+    # would have measured the old reader and printed the result under the new
+    # one's name. That is the same shape as every measurement mistake in this
+    # project's history: the number was real, it was just of something else.
+    #
+    # The two files are the same architecture -- 44 tensors, matching shapes,
+    # checked before this was written -- so installing is a copy.
+    app_weights = READ_DIR / "lilly.pth"
+    if app_weights.exists():
+        previous = READ_DIR / "lilly-previous.pth"
+        if not previous.exists():
+            shutil.copy(app_weights, previous)
+            print(f"kept the reader the app was using at {previous.name}")
+    shutil.copy(weights, app_weights)
+    print(f"wrote {app_weights} — the app reads with this now")
     return 0
 
 
