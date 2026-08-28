@@ -41,7 +41,12 @@ apoteka bolnica policija restoran kafana pekara pijaca banka pošta muzej
 džemal ćošak žuti šećer noćenje četvrtak subota nedjelja mjesečno godišnje
 """.split()
 
-FONT_DIRS = ("/System/Library/Fonts/Supplemental", "/System/Library/Fonts",
+# data/fonts first: seven OFL faces fetched for exactly this job, glyph
+# coverage verified with fontTools before download (10/10 Bosnian Latin
+# diacritics each) — condensed, narrow and stencil cuts, which is what real
+# signage is set in and what the system folders barely carry.
+FONT_DIRS = (str(DATA_DIR / "fonts"),
+             "/System/Library/Fonts/Supplemental", "/System/Library/Fonts",
              "/Library/Fonts", "/usr/share/fonts")
 
 
@@ -79,8 +84,18 @@ def readable_characters() -> set:
                    "0123456789čćđšžČĆĐŠŽ-'.,")
 
 
+SIGNS = DATA_DIR / "corpus-signs" / "toponyms-and-names.txt"
+
+
 def load_words() -> tuple:
-    """Words from our own corpus if it exists, split into two buckets."""
+    """Words from our own corpus if it exists, split into two buckets.
+
+    Plus the sign corpus: 40,727 GeoNames toponyms and Serbian given names,
+    kept as WHOLE entries ("Aleksina Međa", "Anđelići") rather than split into
+    words, because a place name is exactly what a sign says. 429 of them carry
+    đ — the letter that appears once in all 1,702 hand-transcribed real crops,
+    which is why the reader keeps getting it wrong and why these are here.
+    """
     words = []
     if CORPUS.exists():
         for line in CORPUS.read_text(encoding="utf-8").splitlines():
@@ -93,6 +108,13 @@ def load_words() -> tuple:
         # word killed a whole training run partway through, with a KeyError from
         # deep inside the label encoder.
         words = [w for w in words if set(w) <= readable_characters()]
+    if SIGNS.exists():
+        allowed = readable_characters()
+        entries = [e.strip() for e in SIGNS.read_text(encoding="utf-8").splitlines()]
+        entries = [e for e in entries if 2 <= len(e) <= 26 and set(e) <= allowed]
+        # Repeat them: the corpus words number in the millions and these in the
+        # tens of thousands, and unrepeated they would be noise in the pool.
+        words += entries * 12
     if len(words) < 500:
         words = FALLBACK_WORDS * 40
     with_letters = [w for w in words if any(c in BOSNIAN_LETTERS for c in w)]
@@ -110,8 +132,15 @@ def render(text: str, font_path: Path, rng: random.Random):
     box = font.getbbox(text)
     width, height = box[2] - box[0] + 2 * pad, box[3] - box[1] + 2 * pad
 
-    paper = rng.randint(215, 255)
-    ink = rng.randint(0, 70)
+    if rng.random() < 0.35:
+        # enamel-plate style: light text on a dark ground. Without this every
+        # synthetic crop is ink on paper, and the reader meets a white-on-blue
+        # street plate for the first time in production.
+        paper = rng.randint(10, 70)
+        ink = rng.randint(195, 255)
+    else:
+        paper = rng.randint(215, 255)
+        ink = rng.randint(0, 70)
     image = Image.new("L", (width, height), paper)
     ImageDraw.Draw(image).text((pad - box[0], pad - box[1]), text, fill=ink, font=font)
 
