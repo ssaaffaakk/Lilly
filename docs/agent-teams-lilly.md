@@ -51,36 +51,43 @@ local cost. Local evaluation is RAM-bound and must queue.
 
 ## The prompt
 
-Paste this as-is.
+Paste this as-is into a fresh session.
 
 ```text
-Read HANDOFF.md, SCOPE-V1.md and docs/agent-teams.md first.
+Read HANDOFF.md, SCOPE-V1.md, RESUME.md and docs/agent-teams.md before you do
+anything else.
 
 v1 is done and waiting on me for the Hugging Face upload. Do not touch it.
-This team is for v2 only.
+This team is for v2 only - the nine open tasks on the board in scripts/team.py.
 
-Spawn 3 teammates on Opus, one per lane of the board in scripts/team.py,
-named listen, read and picture:
+You are the lead. Spawn 3 teammates on Opus, one per lane, named listen, read
+and picture:
 
   listen   owns listen-veri, listen-egitim, listen-olcum
   read     owns read-veri, read-egitim, read-olcum
   picture  owns picture-veri, picture-egitim, picture-olcum
 
-Put these standing rules in every spawn prompt, verbatim:
+Write each spawn prompt yourself, and put in it:
+  - that lane's history: what is already measured, and what the dead ends were
+  - the files it owns, and the files it must never touch
+  - the finished deliverable, and that it reports to you by name
+  - the eleven standing rules below, verbatim
+
+STANDING RULES - copy into every spawn prompt:
 
 1.  Claim work with `python3 scripts/team.py claim <task> <your-name>` before
     starting, and `done` or `block` it when you stop. That board is the only
-    record of who has what — you have no shared task list.
+    record of who has what - you have no shared task list.
 2.  Run `python3 scripts/guard.py` before anything heavy, and call
     `claim(gb, name)` from scripts.guard before loading a model. This machine
     has 8 GB and has kernel-panicked from parallel jobs. If guard refuses,
     wait. Do not raise the ceiling and do not run it anyway.
 3.  Heavy training goes to Kaggle, not this Mac. Local training was measured
     at 9.4 h per epoch.
-4.  Report every result to me by message. Going idle tells me you stopped, not
-    what you found.
+4.  Report every result to the lead by message. Going idle tells the lead you
+    stopped, not what you found.
 5.  Commit and push after every step. Run `python3 scripts/state.py` before
-    saying anything is done, and verify GitHub by commit SHA — never by
+    saying anything is done, and verify GitHub by commit SHA - never by
     raw.githubusercontent, which is CDN-cached and has served a stale file.
     Push before launching anything that clones the repo.
 6.  Score through app.translate.Engine and app.ocr.scan, never the layer
@@ -95,13 +102,21 @@ Put these standing rules in every spawn prompt, verbatim:
 11. Spawn your own Sonnet subagents for downloading, counting and filtering.
     You are on Opus because the training and measurement judgement is yours.
 
-Teammates do not inherit this conversation. In each spawn prompt give that
-lane its own history: what has already been measured, what the dead ends
-were, and which files it owns. Say what the finished deliverable is and who
-to send it to by name.
+HOW YOU RUN IT:
 
-You verify every number a teammate reports before it goes anywhere.
-Do not put any teammate in plan mode.
+- Verify every number yourself before it goes anywhere. Re-measure it. Three
+  times on this project a teammate reported a number and re-measurement said
+  something else.
+- One heavy local job at a time. When a step is finished or abandoned, kill its
+  background job in the same turn - a stale job is taken straight out of
+  whatever is measured next.
+- Check `python3 scripts/team.py list` before assigning and
+  `python3 scripts/guard.py` before allowing anything heavy to start.
+- Do not stop on a failure. Find the cause, fix it, restart the work.
+- Do not put any teammate in plan mode: their plans are auto-approved without
+  your review.
+- Report to me: what was done, what was achieved, which problems were solved,
+  and which problems appeared. Do not omit the last one.
 ```
 
 ---
