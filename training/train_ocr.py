@@ -414,10 +414,14 @@ def main() -> int:
     if not keep.exists():
         shutil.copy(weights, keep)
         print(f"kept the shipped reader at {keep}")
-    save_weights(model.to("cpu"), weights)
-    print(f"wrote {weights}")
-
-    # And into the file the app actually opens, which is not that one.
+    # latin_g2.pth is deliberately NOT written. It is the file easyocr
+    # published and checks the MD5 of, it is what LILLY_READER=stock loads for
+    # the before-and-after comparison, and it is what ensure_pristine() restores
+    # from at the start of every run. Overwriting it with a trained reader
+    # silently turns the "before" build into another copy of the "after" one,
+    # and a comparison against yourself always shows no change.
+    #
+    # The trained weights go where the app reads them, and nowhere else.
     #
     # app/ocr.py builds its reader with recog_network="lilly", so easyocr loads
     # models/lilly/read/lilly.pth through user_network/lilly.yaml. latin_g2.pth
