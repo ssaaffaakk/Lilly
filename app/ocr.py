@@ -38,8 +38,30 @@ BOSNIAN_LETTERS = "čćđšžČĆĐŠŽ"
 
 _reader = None
 _allowlist = None
+_cyrillic_reader = None
+_cyrillic_allowlist = None
 _reader_lock = threading.Lock()
 _read_lock = threading.Lock()
+
+# Bosnian is written in both alphabets and the recogniser only knows one.
+# latin_g2 has 351 output classes and not one is Cyrillic, so a Cyrillic sign
+# could not be read however good the photograph or the training -- measured on
+# the scored set, 7.0% of the answer key's words are Cyrillic across 7 of the 40
+# photographs, and 16.2% of the hand-transcribed crops. That is a ceiling, and
+# no amount of Latin fine-tuning moves it.
+#
+# So there is a second recogniser. The detector is shared: CRAFT finds where
+# text is without caring what alphabet it is in, and it is the expensive half.
+# Only recognition runs twice, once per script, over the same boxes, and each
+# region keeps whichever reading came back more confident.
+#
+# CYRILLIC_MARGIN is how much more confident the Cyrillic reading has to be
+# before it displaces the Latin one. It is not a taste setting: 0.0 is the
+# obvious choice and it is wrong, because the Cyrillic model will happily read
+# Latin text as Cyrillic lookalikes -- CTOP for STOP -- with real confidence.
+# The value here was measured on the 40 scored photographs, see
+# training/RESULTS-ocr-cyrillic.md.
+CYRILLIC_MARGIN = float(os.environ.get("LILLY_CYRILLIC_MARGIN", "0.10"))
 
 
 class ImageTooLarge(BadInput):
@@ -146,8 +168,50 @@ def load_within_limits(image_path: str):
         return np.asarray(img)
 
 
+def get_cyrillic_reader():
+    """The second recogniser, for the half of Bosnian signage written in Cyrillic.
+
+    easyocr's rs_cyrillic is Serbian Cyrillic, which is the same alphabet
+    Bosnian uses -- all twelve of Ђ Ј Љ Њ Ћ Џ and their lower case are in its
+    character file, checked rather than assumed. The weights are cyrillic_g2,
+    fetched from easyocr's own distribution like latin_g2 and CRAFT before it.
+
+    No custom network here: nothing has been fine-tuned on Cyrillic. This reads
+    it as well as the published model does, which is the whole of the gain --
+    going from "cannot represent the alphabet at all" to "reads it ordinarily".
+    """
+    global _cyrillic_reader, _cyrillic_allowlist
+    if _cyrillic_reader is None:
+        with _reader_lock:
+            if _cyrillic_reader is None:
+                import easyocr
+                reader = easyocr.Reader(["rs_cyrillic", "en"], gpu=False,
+                                        model_storage_directory=str(READ_DIR),
+                                        download_enabled=False)
+                symbols = {c for c in reader.character if not c.isalpha()}
+                _cyrillic_allowlist = "".join(sorted(
+                    language_characters(["rs_cyrillic"]) | symbols))
+                _cyrillic_reader = reader
+    return _cyrillic_reader
+
+
+def _pick(latin, cyrillic):
+    """One region, two readings, one answer.
+
+    Confidence with a margin, not confidence alone. The Cyrillic model reads
+    Latin words as Cyrillic lookalikes — С for S, Р for P, О for O — and does it
+    confidently, so a bare comparison hands it text it has merely transliterated
+    into the wrong alphabet. The margin makes it earn the region.
+    """
+    if cyrillic is None:
+        return latin
+    if latin is None:
+        return cyrillic
+    return cyrillic if cyrillic[2] > latin[2] + CYRILLIC_MARGIN else latin
+
+
 def read_regions(image, **kwargs):
-    """Every text region the reader finds — the only place readtext is called.
+    """Every text region the reader finds — the only place recognition happens.
 
     The allowlist is not optional and not the caller's business. Leaving it to
     each call site is how the label-making path in training/prepare_ocr_data.py
@@ -155,10 +219,76 @@ def read_regions(image, **kwargs):
     with their diacritics: it built its reader from this module and then called
     readtext itself, so it inherited the check on the weights and none of the
     fix. One door, and forgetting stops being possible.
+
+    Detection runs once and recognition runs twice, once per alphabet, over the
+    same boxes. Grouping into paragraphs happens after the two are merged rather
+    than inside either, or each reader would group its own guesses and the
+    merge would be comparing paragraphs that do not correspond.
     """
-    get_reader()                        # builds the reader and the allowlist
+    import numpy as np
+
+    get_reader()
+    detail = kwargs.pop("detail", 1)
+    paragraph = kwargs.pop("paragraph", False)
+
     with _read_lock:
-        return _reader.readtext(image, allowlist=_allowlist, **kwargs)
+        if not _cyrillic_enabled():
+            out = _reader.readtext(image, allowlist=_allowlist,
+                                   detail=detail, paragraph=paragraph, **kwargs)
+            return out
+
+        img, img_grey = _reader_module_reformat(image)
+        horizontal, free = _reader.detect(img, **kwargs)
+        horizontal, free = horizontal[0], free[0]
+
+        latin = _reader.recognize(img_grey, horizontal, free,
+                                  allowlist=_allowlist, detail=1,
+                                  paragraph=False, reformat=False)
+        cyrillic = get_cyrillic_reader().recognize(
+            img_grey, horizontal, free, allowlist=_cyrillic_allowlist,
+            detail=1, paragraph=False, reformat=False)
+
+        if len(latin) != len(cyrillic):
+            # Should not happen: same boxes, same order. If it ever does, the
+            # merge would silently pair the wrong regions, so take the Latin
+            # side whole rather than produce a scrambled reading.
+            merged = latin
+        else:
+            merged = [_pick(a, b) for a, b in zip(latin, cyrillic)]
+
+    if paragraph:
+        from easyocr.utils import get_paragraph
+        merged = get_paragraph(merged, x_ths=1.0, y_ths=0.5, mode="ltr")
+    if detail == 0:
+        return [r[1] for r in merged]
+    return merged
+
+
+def _cyrillic_enabled() -> bool:
+    """Opt-in, with LILLY_READER=cyrillic. Default off, because it measured worse.
+
+    The second recogniser reads Cyrillic properly -- Сарајево where the Latin
+    model produced "Capajebo" -- and it still made the product worse on the 40
+    scored photographs at every setting tried. Numbers in
+    training/RESULTS-ocr-cyrillic.md. The short version: choosing between the
+    two by confidence loses more good Latin readings than it rescues Cyrillic
+    ones, and emitting both gains 2.3 points of recall while tripling the words
+    invented out of nothing. For an app that translates what it reads, an
+    invented word becomes an invented sentence, so that trade is the wrong way
+    round.
+
+    The plumbing stays because it is correct and because the route that should
+    work needs it: fine-tuning cyrillic_g2 on the 276 Cyrillic crops now
+    transcribed, the same move that took the Latin reader from 36.0% to 54.7%.
+    An untrained second model arbitrated at read time is not that.
+    """
+    return os.environ.get("LILLY_READER", "").lower() == "cyrillic"
+
+
+def _reader_module_reformat(image):
+    """easyocr's own colour/grey pair for an already-loaded array."""
+    from easyocr.utils import reformat_input
+    return reformat_input(image)
 
 
 def scan(image_path: str) -> str:
