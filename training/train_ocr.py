@@ -280,6 +280,10 @@ def main() -> int:
     ap.add_argument("--lr", type=float, default=1e-4)
     ap.add_argument("--limit", type=int, default=None)
     ap.add_argument("--quick-test", action="store_true")
+    ap.add_argument("--keep-trained", type=Path, metavar="PATH",
+                    help="always write the trained weights here, whatever the "
+                         "install gate decides — so a refused run can still be "
+                         "scored on the real photographs")
     args = ap.parse_args()
 
     train_dir, valid_dir = OCR_DATA / "train", OCR_DATA / "valid"
@@ -349,6 +353,28 @@ def main() -> int:
     after = accuracy(model, valid_loader, converter, device)
     print(f"after:  {after[0]:.1f}% words exact, "
           f"{after[1]:.1f}% of {after[2]} Bosnian letters right")
+
+    # Write the trained weights somewhere before the gate decides anything.
+    #
+    # The gate below is right and stays exactly as it is: it decides what the
+    # app reads with, and it refuses on a regression. But it returns without
+    # saving, so a refused run leaves nothing behind to examine -- and the
+    # number that actually matters for this reader is not the one the gate
+    # looks at. The gate scores held-out *crops*, and those crops are mostly
+    # synthetic; the synthetic generator is the one already measured as too
+    # easy, reading 75% where real photographs read 36%. A run can therefore be
+    # refused on a distribution nobody is selling, with no artefact left to
+    # score on the forty real photographs that are.
+    #
+    # So: separate what was trained from what gets installed. That is the same
+    # split train_speech.py already makes with --no-convert, for the same
+    # reason. This writes a file; it does not install one.
+    if args.keep_trained:
+        args.keep_trained.parent.mkdir(parents=True, exist_ok=True)
+        save_weights(model.to(device if device == "cpu" else "cpu"), args.keep_trained)
+        model = model.to(device)
+        print(f"trained weights written to {args.keep_trained} "
+              f"(not installed — the gate below decides that)")
 
     if args.quick_test:
         print("\nquick test — the shipped reader is left alone")
