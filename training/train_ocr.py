@@ -33,6 +33,7 @@ import argparse
 import atexit
 import os
 import shutil
+import subprocess
 import sys
 import time
 from pathlib import Path
@@ -76,6 +77,31 @@ def pid_alive(pid: int) -> bool:
     return True
 
 
+def pid_is_this_trainer(pid: int) -> bool:
+    """Alive is not enough — the pid has to still be *this* script.
+
+    The kernel recycles pids, and on a machine that has been churning through
+    background work all day it recycles them fast. On 28 August a training run
+    died when macOS tore down its Metal compiler service; a few minutes later
+    pid 1602 belonged to ManagedPreferencesSubscriber, an OS daemon. The lock
+    still named 1602, `pid_alive` cheerfully said yes, and the next run refused
+    to start with "pid 1602 is already training the reader" -- guarding weights
+    against a preferences daemon.
+
+    So: ask what the pid actually is. Only a python process running train_ocr
+    counts. Anything else means the trainer is gone and the lock is stale,
+    whoever owns the number now.
+    """
+    if not pid_alive(pid):
+        return False
+    try:
+        out = subprocess.run(["ps", "-o", "command=", "-p", str(pid)],
+                             capture_output=True, text=True, timeout=10).stdout
+    except Exception:
+        return True          # cannot tell -- keep the guard rather than race
+    return "train_ocr" in out
+
+
 def hold_lock() -> None:
     """Refuse to start if another run already has the reader.
 
@@ -99,13 +125,13 @@ def hold_lock() -> None:
         except (ValueError, IndexError, OSError):
             owner = None
         if owner is not None and owner != os.getpid():
-            if pid_alive(owner):
+            if pid_is_this_trainer(owner):
                 raise SystemExit(
                     f"pid {owner} is already training the reader (lock: {LOCK}). "
                     f"Two runs would race to overwrite {READ_DIR/'latin_g2.pth'} "
                     f"and each would report a before/after pair the other "
                     f"invalidated. Wait for it, or kill it first.")
-            print(f"stale lock from pid {owner} — it is gone, taking over")
+            print(f"stale lock from pid {owner} — not a trainer any more, taking over")
     LOCK.write_text(f"{os.getpid()} {time.strftime('%Y-%m-%d %H:%M:%S')}\n",
                     encoding="utf-8")
     atexit.register(release_lock)
