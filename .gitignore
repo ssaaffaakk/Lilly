@@ -22,6 +22,10 @@ data/ocr/*
 data/ocr/crops/*
 !data/ocr/crops/labels-human.tsv
 !data/ocr/label-answers/
+!data/ocr/crops2/
+data/ocr/crops2/*
+!data/ocr/crops2/labels-human.tsv
+!data/ocr/crops2-answers/
 !data/ocr/real-photos/
 data/ocr/real-photos/*
 !data/ocr/real-photos/truth.json
