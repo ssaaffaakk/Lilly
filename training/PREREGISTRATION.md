@@ -616,3 +616,148 @@ TED2020-v1 and wikimedia-v20210402 by name), so both arms are re-weighting
 material the base already has rather than teaching it new text. Only the 1,924
 NTREX rows are genuinely unseen. That frames any result here and is not changed
 by it.
+
+---
+
+# v2 — listen — listen-egitim
+
+Written before the run. Nothing below may be reinterpreted after it.
+
+## Why this section exists at all
+
+The v1 speech section set two thresholds and said "both, not either": word error
+below 35.5%, and a Bosnian-specific term measure not below its baseline. Both
+were cleared and the listener shipped. Two things have changed since, and each
+one invalidates a number rather than an argument.
+
+**The instrument changed.** `training/speech_bench.py` reported ONE variety
+substitution column, and 73 of the 85 targets it computed it over were yat pairs
+whose alternative form is Serbian. The run it judged is the run that added 3,430
+clips of *Croatian*, and Croatian is ijekavian like Bosnian, so those 73 targets
+could not see the failure the gate existed to catch. Croatian and Serbian drift
+are now separate columns over 221 targets, 69 of which can show Croatian drift.
+
+**The decode path changed.** `training/evaluate_speech.py` and
+`training/speech_bench.py` each constructed their own `WhisperModel` beside the
+app's. Both now call `app.speech.transcribe`, so the numbers are produced by the
+path a user's audio takes. Every speech figure on record — 38.5, 35.5, 34.9,
+term recall 65.9 → 68.2, substitution 5.1 → 3.3 — was produced by the OLD path.
+
+## The selection rule for terms, stated before the targets are counted
+
+A term is admitted by corpus evidence alone: rate per million tokens, exclusivity
+in both varieties, alignment, Dice specificity, agreement between the two mining
+directions, and a veto from a second independent Bosnian corpus. The thresholds
+are in `data/scripts/build_speech_terms.py` and they are frozen at the committed
+values for this run.
+
+**No term is admitted, refused, or weighted by whether it lands in the graded
+set, or by how often.** All 349 graded transcripts are removed from every
+corpus before anything is counted. A term has to be scorable to produce a
+target, which is a property of the sentences; that is not the same as choosing
+terms because they score.
+
+Disclosed, because it is the one place the rule was under strain: while choosing
+MIN_RATE I compared 4, 6 and 8 and saw the Croatian target count (72, 71, 69)
+alongside the control quality. I kept 8, the setting with the FEWEST targets,
+because the looser ones raised the Bosnian marker floor from 0.56 to 0.98. That
+decision was made before any listener was scored on the new instrument, and the
+thresholds do not move again.
+
+## The re-measured baseline, and the one degree of freedom this closes
+
+The old thresholds cannot be compared against anything measured through the new
+path. So before the training run:
+
+1. `models/lilly/listen-previous` and `models/lilly/listen` are both scored
+   through the new path, in one process, on the same clips.
+2. Those figures become the baseline. They are recorded here before the run.
+
+**Precommitment, so that re-measuring cannot become a way of moving a
+threshold.** If the re-measured `listen-previous` word error differs from 35.5%
+by more than 0.5 points in either direction, the run does not proceed: the path
+difference is investigated and reported first. A baseline that drifts upward
+would make the gate easier, and the only defence against that is deciding now
+what counts as too much drift.
+
+## The gate
+
+**Both, not either.** A listener that fails any of these does not ship,
+whatever it does to the others.
+
+| | threshold |
+|---|---|
+| word error, the 200-clip prefix, new path both sides | **strictly below the re-measured `listen-previous`** |
+| Bosnian term recall, 349 sentences, mined terms | **not below the re-measured baseline** |
+| Croatian substitution | **not above the re-measured baseline** |
+
+Word error is the hard gate because it has 3,901 reference words behind it. The
+Serbian column (158 targets) and the marker rate (every word of every
+transcript) carry the Bosnian-specific weight.
+
+### What the Croatian column may and may not be used for
+
+Measured by `training/speech_bench.py --power`, on this run's real targets,
+before any listener was scored:
+
+| planted difference | croatian, 69 targets | serbian, 158 targets |
+|---|---|---|
+| 5 points | 20% | 26% |
+| 10 points | 42% | 74% |
+| 15 points | 67% | 89% |
+| 20 points | **76%** | 100% |
+| 30 points | 98% | 100% |
+
+So: **the Croatian column is a coarse alarm with its power stated, and a null
+result is recorded as "the instrument could not see", NEVER as "no drift".**
+Sixty-nine targets need about twenty points before the column speaks at all.
+
+This is a limit of the TEST SET, not of the term list: about 70 of the 349
+FLEURS Bosnian sentences contain a word that has a Croatian counterpart at all,
+and nothing in this project's control raises that.
+
+For calibration, from the cached runs: the whole +5.6-point Croatian move
+between the untrained model and the installed one is ONE occurrence of ONE word
+— `vjerojatno` for `vjerovatno`, 1 of 18 decided targets. That is what a
+movement of this size looks like from the inside.
+
+## The mixture: 0.47 against 0.25, superseding the 0.35 starting point
+
+The v1 section says the plan is "to train at two settings and score each on
+Bosnian specifically rather than to pick a number and defend it afterwards. If
+only one run is affordable, 0.35 is the starting point." That is a starting
+point under a stated constraint. The constraint has gone, and three reasons
+replace it:
+
+1. **The constraint was fleurs_hr, and it was mechanical.** FLEURS hr train IS
+   1,474 FLORES sentences, about 3,430 clips, and that is the entire corpus — no
+   `--hours` value reaches a 35% share because there is no more of it. Croatian
+   audio in general is not scarce: voxpopuli_hr holds ~11,000 clips under CC0.
+2. **No threshold moves.** Word error and term recall are untouched. The share
+   is a design parameter; rule 8 governs thresholds.
+3. **The wider gap is the design more likely to produce an unwelcome answer.**
+   The Croatian column needs about twenty points to speak. 47% against 35% is a
+   small perturbation whose most likely outcome is two ties, which this project
+   would then be tempted to read as "the Croatian audio was harmless". 47%
+   against 25% gives drift a real chance to appear. If it does not appear at
+   25%, that is informative; a null at 35% would only have been quiet.
+
+At 25%, 3,091 Bosnian clips means 9,273 Croatian and 12,364 rows, 1.90x the
+first run's 6,521. The epoch wall-clock is estimated from the first run's
+measured rate and checked against the Kaggle session limit BEFORE launch.
+
+**ParlaSpeech-HR is not used.** It is CC BY-SA, share-alike propagates to
+distributed derivatives, and this project publishes weights. That is the owner's
+decision about the licence of a released artefact and it is not taken here.
+voxpopuli_hr is CC0 and covers the requirement on its own.
+
+## What failure looks like, unchanged from v1 and restated
+
+- **Word error falls, Bosnian terms fall too.** The neighbours drowned the
+  Bosnian. Keep the current model, raise the Bosnian share.
+- **Neither moves.** Record that the neighbour-language route did not work.
+  That is worth publishing, because the obvious next thing to try is more of it.
+- **Word error rises.** Diagnose before retrying; do not simply add more.
+
+One addition, which is what this whole section is for: **a null on the Croatian
+column is not the second case.** It is the instrument being unable to say.
