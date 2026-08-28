@@ -103,6 +103,7 @@ WORD = re.compile(r"[a-zA-ZčćžšđČĆŽŠĐ]+", re.UNICODE)
 MIN_RATE = 8.0      # per million tokens, in the variety that owns the form
 MIN_SHARE = 0.97    # of the two rates, the owning variety's share
 MIN_ASSOC = 0.40    # of aligned sentences, how often the counterpart turns up
+MIN_DICE = 0.30     # and how specific that is, counted from both sides
 MIN_ALIGNED = 6     # aligned sentences the association is computed over
 
 # Gaj's Latin, the standard one-to-one mapping. Serbian is written in both
@@ -149,6 +150,10 @@ NTREX_URL = ("https://raw.githubusercontent.com/MicrosoftTranslator/NTREX/main/"
 # OPUS names a pair alphabetically, which is why two of these read backwards.
 SETIMES_URL = "https://object.pouta.csc.fi/OPUS-SETIMES/v2/moses/{pair}.txt.zip"
 SETIMES_PAIRS = {"bs": "bs-en", "hr": "en-hr", "sr": "en-sr"}
+# A second, unrelated Bosnian corpus. Its whole job is to veto — see
+# independent_bosnian() below for the defect that put it here.
+WIKIMEDIA_URL = ("https://object.pouta.csc.fi/OPUS-wikimedia/v20260327/moses/"
+                 "bs-en.txt.zip")
 
 
 def get(url: str) -> bytes:
@@ -189,6 +194,13 @@ def fetch() -> None:
             name = f"newstest2019-ref.{code}.txt"
             print(f"fetching NTREX {name}", flush=True)
             out.write_bytes(get(NTREX_URL.format(name=name)))
+
+    wiki = TEXT / "wikimedia.bs"
+    if not wiki.exists():
+        print("fetching OPUS wikimedia bs", flush=True)
+        with zipfile.ZipFile(io.BytesIO(get(WIKIMEDIA_URL))) as z:
+            name = next(n for n in z.namelist() if n.endswith(".bs"))
+            wiki.write_bytes(z.read(name))
 
     for lang, pair in SETIMES_PAIRS.items():
         out, out_en = TEXT / f"setimes.{lang}", TEXT / f"setimes.{lang}.en"
@@ -280,6 +292,38 @@ def aligned_triples(exclude: set) -> tuple:
 # ---------------------------------------------------------------- mining
 
 
+def independent_bosnian() -> list:
+    """Bosnian text from somewhere other than SETIMES, used only to refuse pairs.
+
+    Found by one of the bench's own controls rather than reasoned about in
+    advance. The Croatian and Serbian marker words were counted in the graded
+    Bosnian transcripts, where they should be near zero, and among the handful
+    that turned up were *kancelarija* and *kancelarije* — filed here as the
+    Serbian counterparts of *ured*. Both are ordinary Bosnian. What had happened
+    is that SETIMES is one publisher's house style: its Bosnian desk writes
+    *ured*, so *kancelarija* looked exclusively Serbian to a gate that had only
+    SETIMES to look at, and 97% of the aligned Bosnian text is SETIMES.
+
+    Where the Bosnian standard genuinely allows both forms the corpus picks one,
+    and the miner then calls the other a foreign word. So every rate on the
+    Bosnian side is taken as the LARGER of what the aligned corpus says and what
+    this one says. On the Bosnian form that is a loosening and on the
+    alternative it is a tightening, and both are the same rule read in the two
+    directions: a word is Bosnian if any professional Bosnian corpus uses it,
+    and belongs to the neighbour only if none does.
+
+    Wikipedia content translations, a different register and a different set of
+    editors from a news wire. Returns an empty list if it is not on disk, and
+    the run says so rather than quietly dropping the gate.
+    """
+    path = TEXT / "wikimedia.bs"
+    if not path.exists():
+        return []
+    return [l.strip() for l in
+            path.read_text(encoding="utf-8", errors="replace").splitlines()
+            if l.strip()]
+
+
 def document_frequency(sentences: list) -> tuple:
     """Sentences containing each token, and the total token count."""
     df, total = collections.Counter(), 0
@@ -327,14 +371,28 @@ def char_edits(a: str, b: str) -> int:
 
 
 def best_counterparts(triples: list, from_index: int, to_index: int,
-                      rate_from: dict, rate_to: dict, args) -> dict:
+                      rate_from: dict, rate_to: dict, args,
+                      seen_back: dict = None, pre=None) -> dict:
     """For each word of the `from` variety, the `to` variety's word for it.
 
     Both words must clear the rate and exclusivity gates in their own variety,
-    and the counterpart must turn up in at least `min_assoc` of the sentences
-    where the first word appears and it does not.
+    the counterpart must turn up in at least `min_assoc` of the sentences where
+    the first word appears and it does not, AND that co-occurrence must be
+    specific in both directions.
+
+    That last clause is Dice, and it is not decoration. Without it the miner
+    filed Serbian *vestima* against Bosnian *takoder*: SETIMES runs a recurring
+    news-digest formula, so of the 650 sentences whose Serbian side says
+    *vestima*, 615 have *takoder* somewhere in the Bosnian side — 94.6%, which
+    sails past any one-directional threshold. It is not a counterpart, it is a
+    common word inside a repeated sentence shape. *takoder* appears in about
+    4,180 sentences without a Serbian counterpart, so Dice reads
+    2x615/(650+4180) = 0.25 and the pair is refused, while *novosti*, the word
+    that really answers *vestima*, reads 0.71 and is kept.
     """
-    seen, pairs = counterparts(triples, from_index, to_index)
+    seen, pairs = pre if pre is not None else counterparts(triples, from_index,
+                                                          to_index)
+    seen_back = seen_back or {}
     admitted = {}
     for word, n_seen in seen.items():
         if n_seen < args.min_aligned:
@@ -354,13 +412,16 @@ def best_counterparts(triples: list, from_index: int, to_index: int,
                 continue
             if c_to / (c_from + c_to) < args.min_share:      # the other variety
                 continue
-            score = (assoc, -char_edits(word, cand))
+            dice = 2 * n / (n_seen + seen_back.get(cand, n))
+            if dice < args.min_dice:
+                continue
+            score = (dice, assoc, -char_edits(word, cand))
             if best is None or score > best[0]:
-                best = (score, cand, n, assoc)
+                best = (score, cand, n, assoc, dice)
         if best is not None:
-            _, cand, n, assoc = best
+            _, cand, n, assoc, dice = best
             admitted[word] = {"alt": cand, "n_aligned": n_seen, "n_pair": n,
-                              "assoc": assoc}
+                              "assoc": assoc, "dice": dice}
     return admitted
 
 
@@ -413,8 +474,12 @@ def mine(triples: list, rate_bs: dict, rate_other: dict, other_index: int,
     Rejections are returned rather than dropped, because "what did the gate
     throw out" is the question that says whether the gate is sane.
     """
-    forward = best_counterparts(triples, 0, other_index, rate_bs, rate_other, args)
-    reverse = best_counterparts(triples, other_index, 0, rate_other, rate_bs, args)
+    fwd_pre = counterparts(triples, 0, other_index)
+    rev_pre = counterparts(triples, other_index, 0)
+    forward = best_counterparts(triples, 0, other_index, rate_bs, rate_other, args,
+                                seen_back=rev_pre[0], pre=fwd_pre)
+    reverse = best_counterparts(triples, other_index, 0, rate_other, rate_bs, args,
+                                seen_back=fwd_pre[0], pre=rev_pre)
     admitted, rejected = {}, {}
     for word, info in forward.items():
         back = reverse.get(info["alt"])
@@ -428,7 +493,7 @@ def mine(triples: list, rate_bs: dict, rate_other: dict, other_index: int,
             continue
         admitted[word] = {"alt": alt, "n_aligned": info["n_aligned"],
                           "n_pair": info["n_pair"], "assoc": info["assoc"],
-                          "direction": "alt->bs"}
+                          "dice": info["dice"], "direction": "alt->bs"}
     return admitted, rejected
 
 
@@ -470,6 +535,7 @@ def main() -> int:
     ap.add_argument("--min-rate", type=float, default=MIN_RATE)
     ap.add_argument("--min-share", type=float, default=MIN_SHARE)
     ap.add_argument("--min-assoc", type=float, default=MIN_ASSOC)
+    ap.add_argument("--min-dice", type=float, default=MIN_DICE)
     ap.add_argument("--min-aligned", type=int, default=MIN_ALIGNED)
     ap.add_argument("--out", type=Path, default=OUT)
     ap.add_argument("--fetch-only", action="store_true",
@@ -496,6 +562,19 @@ def main() -> int:
     rate_bs, rate_hr, rate_sr = (rates(df_bs, tot_bs), rates(df_hr, tot_hr),
                                  rates(df_sr, tot_sr))
     print(f"tokens: bs {tot_bs:,}  hr {tot_hr:,}  sr {tot_sr:,}")
+
+    wiki = [s for s in independent_bosnian() if s not in graded]
+    if wiki:
+        df_w, tot_w = document_frequency(wiki)
+        rate_w = rates(df_w, tot_w)
+        raised = sum(1 for w, r in rate_w.items() if r > rate_bs.get(w, 0.0))
+        for word, r in rate_w.items():
+            if r > rate_bs.get(word, 0.0):
+                rate_bs[word] = r
+        print(f"independent Bosnian: {len(wiki):,} wikimedia sentences, "
+              f"{tot_w:,} tokens; raised the Bosnian rate of {raised:,} forms")
+    else:
+        print("independent Bosnian: MISSING — the veto gate is not running")
 
     hr, hr_out = mine(triples, rate_bs, rate_hr, 1, args)
     sr, sr_out = mine(triples, rate_bs, rate_sr, 2, args)

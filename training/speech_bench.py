@@ -429,6 +429,37 @@ def variety_substitution(marks: list, variety: str) -> tuple:
     return (a / (a + b) if a + b else 0.0), a, a + b, len(sub)
 
 
+def marker_vocabulary(terms: list) -> tuple:
+    """Every Croatian-exclusive and Serbian-exclusive form the mining found.
+
+    The target-based columns above can only see drift on a word the reference
+    happened to use. A listener that rewords — hears one thing and writes a
+    Croatian sentence around it — moves those columns not at all, because the
+    target lands in "neither", which lowers recall without raising substitution.
+    This is the net cast wider: count every Croatian-marked word anywhere in the
+    transcript, per thousand words, whether or not a target was involved.
+
+    Coarser than the target columns and not a substitute for them. It has no
+    denominator of opportunities, so it moves when the model simply talks more
+    about months. Read it as a second opinion that disagrees loudly or not at
+    all, and read the controls under it before believing either direction.
+    """
+    bos = {f for t in terms for f in t["bos"]}
+    hr = {f for t in terms for f in t["hr"]} - bos
+    sr = {f for t in terms for f in t["sr"]} - bos
+    return hr - sr, sr - hr
+
+
+def marker_rate(hyps: list, vocab: set) -> tuple:
+    """Marked words per thousand words of transcript."""
+    hits = words = 0
+    for hyp in hyps:
+        toks = normalise(hyp)
+        words += len(toks)
+        hits += sum(1 for w in toks if w in vocab)
+    return (1000 * hits / max(words, 1)), hits, words
+
+
 def word_error_rate(cases: list, hyps: list) -> tuple:
     total_edits = total_words = 0
     for case, hyp in zip(cases, hyps):
@@ -627,8 +658,10 @@ def coverage(marks: list) -> None:
               "judge a Croatian-trained model ***")
 
 
-def report(cases: list, results: dict, controls: dict) -> None:
+def report(cases: list, results: dict, controls: dict, terms: list,
+           control_hyps: dict) -> None:
     labels = list(results)
+    hr_vocab, sr_vocab = marker_vocabulary(terms)
 
     if labels:
         base = results[labels[0]]["marks"]
@@ -679,14 +712,26 @@ def report(cases: list, results: dict, controls: dict) -> None:
                       f"paired bootstrap over sentences p = {p:.4f}"
                       + ("" if p < 0.05 else "  (does not clear 0.05)"))
 
+    if labels:
+        print(f"\nmarked words anywhere in the transcript, per 1,000 words "
+              f"({len(hr_vocab)} Croatian forms, {len(sr_vocab)} Serbian)")
+        for label, r in results.items():
+            h, hn, w = marker_rate(r["hyps"], hr_vocab)
+            sm, sn, _ = marker_rate(r["hyps"], sr_vocab)
+            print(f"  {label:<24}croatian {h:>6.2f}  ({hn} of {w} words)"
+                  f"    serbian {sm:>6.2f}  ({sn})")
+
     print("\nchecks on the measurement — no model involved, the transcripts themselves")
     for name, marks in controls.items():
         s, _, decided = substitution(marks)
         shr = variety_substitution(marks, "hr")[0]
         ssr = variety_substitution(marks, "sr")[0]
+        h = marker_rate(control_hyps[name], hr_vocab)[0]
+        sm = marker_rate(control_hyps[name], sr_vocab)[0]
         print(f"  {name:<20}recall {100 * recall(marks):>6.1f}%   "
               f"substitution {100 * s:>6.1f}%   croatian {100 * shr:>6.1f}%   "
-              f"serbian {100 * ssr:>6.1f}%   ({decided} decided)")
+              f"serbian {100 * ssr:>6.1f}%   ({decided} decided)"
+              f"   markers hr {h:>5.2f} sr {sm:>5.2f}")
     print("  the variant controls check the scorer, not a model: audio of a person "
           "saying\n    'mjesto' cannot be edited to say 'mesto', so there is no "
           "audio-side counterfactual.\n    What they establish is that the Croatian "
@@ -808,7 +853,7 @@ def main() -> int:
         print("\nterm-set coverage of the chosen clips")
         coverage(score(cases, [c["reference"] for c in cases]))
 
-    report(cases, results, controls)
+    report(cases, results, controls, terms, hypotheses)
     return 0
 
 
