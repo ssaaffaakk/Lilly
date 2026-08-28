@@ -897,6 +897,15 @@ def main() -> int:
           f"{len(graded)} distinct transcripts")
     print(f"transcripts shared with data/speech/train.tsv: {overlap}"
           + ("" if not overlap else "   *** the listener trained on graded audio ***"))
+    if args.clips != "first200":
+        # The pre-registered speech gate is "below 35.5%" and that 35.5% was
+        # measured on the first 200 clips. The WER column below is over a
+        # different set of recordings, so it is a different number about the
+        # same models, and quoting it against the threshold would be comparing
+        # two measurements that were never the same measurement.
+        print("  NOTE: the WER column below is NOT comparable to the "
+              "pre-registered 35.5%.\n        That figure is the first 200 clips; "
+              "use --clips first200 for it.")
 
     if args.terms == "legacy":
         terms, refused = load_legacy_terms(graded)
