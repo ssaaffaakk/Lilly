@@ -116,8 +116,30 @@ at its full 11.5 h despite being the most expensive source per byte.
 LICENCES -- they differ, and one of them has a condition
 --------------------------------------------------------------------------
   google/fleurs hr_hr      CC BY 4.0     attribution
-  facebook/voxpopuli hr    CC0 1.0       no conditions
+  facebook/voxpopuli hr    CC0 1.0 AND "other" -- NOT "no conditions", see below
   classla/ParlaSpeech-HR   CC BY-SA 4.0  attribution + SHARE-ALIKE
+
+This file used to say voxpopuli was "CC0 1.0, no conditions". That was read off
+the headline licence tag and it is wrong. Checked 2026-08-28 by fetching the
+dataset card rather than trusting it: the Hugging Face card carries TWO licence
+tags, `cc0-1.0` and `other`, and its Licensing Information section says "The
+dataset is distributed under CC0 license, see also European Parliament's legal
+notice for the raw data." The legal notice it points at
+(europarl.europa.eu/legal-notice/en) says reuse of European Union material is
+authorised "for personal use or for further non-commercial or commercial
+dissemination, provided that the entire item is reproduced and the source is
+acknowledged", with the acknowledgement in the form "(c) European Union,
+[year(s)] - Source: European Parliament", and the user undertakes "not to delete
+or change the indications of the author or the source".
+
+So the transcription layer is CC0 and the underlying recordings carry an
+attribution condition. Not a blocker -- attribution is cheap and CREDITS.tsv
+already carries per-source rows -- but "no conditions" was a claim nobody had
+checked, and the difference between CC0 and CC0-plus-attribution is exactly the
+kind of thing that is discovered after publication rather than before. The
+"entire item is reproduced" clause is about redistributing EP material, which
+training weights is not, but that reading is the OWNER's to make and not this
+file's.
 
 Share-alike is the one to think about before shipping: anything you
 distribute that was built from ParlaSpeech-HR is expected to carry the same
@@ -214,7 +236,7 @@ SOURCES = {
     "voxpopuli_hr": dict(
         repo="facebook/voxpopuli", config="hr", split="train",
         text_cols=("raw_text", "normalized_text"),
-        license="CC0 1.0",
+        license="CC0 1.0 + EP legal notice (attribution)",
         note="European Parliament floor speeches, official human record. "
              "Spontaneous speech, which read-speech FLEURS has none of.",
         default_hours=8.0,    # ~172 MB/h upstream -> ~1.4 GB streamed
