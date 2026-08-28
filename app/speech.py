@@ -19,9 +19,10 @@ and training/speech_bench.py used to build their own WhisperModel with their own
 decode settings; now they call this function, so "the same code" is a fact about
 the code rather than a claim about two copies of it.
 
-One build is held in memory at a time by default. `release()` drops it, which is
-what lets a benchmark score two listeners in one process on an 8 GB machine
-without holding both.
+One build is held in memory at a time, enforced by get_model() rather than by
+callers remembering: loading a second evicts the first. `release()` drops it
+early, which is what lets a benchmark hand the memory back before it starts the
+next build rather than during it.
 """
 import sys
 import threading
@@ -52,6 +53,13 @@ def get_model(build=None):
     """The listener for `build`, loading it once and keeping it.
 
     Default is the installed listener, which is what the server serves.
+
+    At most ONE listener is resident. Loading a second build evicts the first,
+    structurally rather than by remembering to call release(): a dict that can
+    hold several half-gigabyte models is the 27 August failure rebuilt inside
+    one process, and a benchmark that scores two builds is exactly the caller
+    that would fill it. The server only ever asks for the default, so it loads
+    once and keeps it for the life of the process either way.
     """
     key = _key(build)
     model = _models.get(key)
@@ -59,6 +67,7 @@ def get_model(build=None):
         with _model_lock:
             model = _models.get(key)
             if model is None:
+                _models.clear()
                 from faster_whisper import WhisperModel
                 model = WhisperModel(key, device="cpu", compute_type="int8")
                 _models[key] = model
