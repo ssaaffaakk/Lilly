@@ -63,3 +63,32 @@ above are the shipped numbers.
 
 Sweep artefacts: `/tmp/margin-capture.json` (one capture of both readings for
 all 40), `margin-sweep.log`, `/tmp/rule_sweep.py`.
+
+---
+
+## Correction, 28 August 2026 — the crop count
+
+This page says the corresponding move is "fine-tuning `cyrillic_g2` on the
+**276** Cyrillic crops already transcribed". The count is **272**, re-measured
+from `data/ocr/crops/labels-human.tsv` three ways with no disagreement between
+them: labels containing any Cyrillic letter (272), labels entirely Cyrillic
+(271), and labels containing any non-Latin letter at all (272, with zero labels
+non-Latin without being Cyrillic).
+
+Nothing else on this page moves — every figure in the sweep tables has crops or
+words as its denominator, not this count.
+
+Two things about that set, measured since and relevant to anyone acting on the
+recommendation above:
+
+- The 272 come from **37 photographs**, and `Information_board_in_Jajce` alone
+  supplies 97 of them — 35.7%. A train/valid split **by crop** would put the
+  same board on both sides. Split by source photograph.
+- **`Џ` has zero examples** in the transcribed set, and `Ђ` and `Љ` have three
+  each. The sentence higher up this page — "all twelve of Ђ Ј Љ Њ Ћ Џ and lower
+  case verified present" — is about `cyrillic_g2`'s **output classes**, not about
+  our training data. Both statements are true and they are about different
+  things; read together carelessly they would send a fine-tune to train a class
+  with no examples in it.
+
+Full working in `training/RESULTS-ocr-dataset.md`.

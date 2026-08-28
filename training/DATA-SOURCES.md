@@ -71,7 +71,7 @@ Worth adding as harvester seeds; a few hundred images, not thousands.
   recogniser. Rejected on glyph inventory, not on volume.
 
 Conclusion: no ready-made Serbian-Cyrillic crop dataset exists. The viable
-route is our own: 276 real transcribed Cyrillic crops + synthetic Cyrillic
+route is our own: 272 real transcribed Cyrillic crops + synthetic Cyrillic
 generated with the verified fonts (PT Sans/Fira/Oswald all carry the full
 Serbian set) over the PD Serbian corpora.
 
@@ -105,6 +105,6 @@ Serbian set) over the PD Serbian corpora.
 2. **Synthetic v2** — 4 font families × the OSM/GeoNames/names corpora, both
    scripts, đ oversampled, harder compositing. This attacks the measured
    weakness (đ×1, č×14 in real data) directly.
-3. **Cyrillic fine-tune** of cyrillic_g2 on 276 real + synthetic-v2 Cyrillic.
+3. **Cyrillic fine-tune** of cyrillic_g2 on 272 real + synthetic-v2 Cyrillic.
 4. **Commons category top-up** into the existing harvester.
 5. **NARA pull** for the ruler pool (PD street scenes, browser-driven).

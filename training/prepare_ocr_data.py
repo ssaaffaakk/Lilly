@@ -112,8 +112,8 @@ def build_splits(labels_path: Path) -> int:
             # the only thing a Latin model can be trained on.
             #
             # Worth stating rather than filtering silently, because it is a
-            # ceiling and not a detail: 276 of 1,702 hand-transcribed crops
-            # (16.2%) are Cyrillic, and on the scored photographs 7.0% of the
+            # ceiling and not a detail: 272 of 1,702 hand-transcribed crops
+            # (16.0%) are Cyrillic, and on the scored photographs 7.0% of the
             # answer key's words are, across 7 of the 40. The app builds its
             # reader as easyocr.Reader(["bs", "en"]), which is Latin-only, so
             # that 7% is unreachable by any amount of Latin fine-tuning. Reading
