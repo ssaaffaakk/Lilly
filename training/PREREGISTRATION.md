@@ -379,3 +379,118 @@ is not reported at all — the discrepancy is reported instead.
   to fix, and fine-tuning the recogniser further is polishing behind a closed
   door. That would be a genuinely unwelcome result and is the reason for writing
   this paragraph before seeing the number.
+
+### Note — provenance count corrected
+
+The section above reads "1,914 regions the detector produced across **285**
+photographs". The correct figure is **200**. 285 was the candidate pool;
+200 of them actually yielded crops. Verified independently by the lead, three
+times, and by me at crop level.
+
+**It changes no figure in the section and no threshold anywhere.** The precision
+numbers are 39/1,914 = 2.0% and 173/1,914 = 9.0%, whose denominator is
+*regions*, not photographs. Nothing above moves, and no bar shifts.
+
+Recorded as a note rather than an edit because this file's own rule (lines 3–5)
+is that nothing may be rewritten after the fact, and that rule binds hardest
+when the change would be an improvement — otherwise it is not a rule.
+
+Provenance of the error, since it is the second time this number has come back
+after being corrected: 285 is still printed uncorrected in
+`training/RESULTS-ocr-realcrops.md`, which is where it keeps being re-read from.
+A pointer has now been added there so the source stops reissuing it.
+
+## v2 — picture — picture-egitim
+
+Written before the run and before any of its numbers exist. The four decisions
+below were ruled by the lead after the ceilings were measured and before any
+training was attempted; they are recorded here so neither of us can choose
+after the fact.
+
+### The bar — both, not either
+
+| | threshold | now |
+|---|---|---|
+| words found per photograph | **> 75.0%** | 54.7% |
+| words invented that are on no sign | **≤ 180** | 180 |
+
+**Both must hold.** The acceptance test as written on the board — *kelime >
+%75* — constrains recall and nothing else, and this lane has a **measured** way
+to buy recall with garbage: the union rule in `RESULTS-ocr-cyrillic.md` gains
+2.3 points of per-photo recall and takes invented words from 180 to 546. A
+single-sided bar certifies that as a pass. For an app that translates what it
+reads, an invented word becomes an invented sentence and the user cannot tell
+which words are real.
+
+The invented-words bar is **no-regression, not improvement**, and that asymmetry
+is deliberate: recall is what this run is for, hallucination is what it may not
+pay with.
+
+### Which figure, and why it is the per-photo one
+
+**Per-photo.** Not chosen now — inherited. `RESULTS-ocr-realcrops.md` already
+designates it "the number that describes pointing a camera at a sign", and
+`evaluate_ocr.py:316` prints that sentence. Adopting a designation fixed before
+this decision existed beats making one against a result.
+
+Disclosed plainly: per-photo is also the **softer** of the two bars in relative
+terms — 75% is 82.8% of its reachable range against 80.6% of pooled's, and
+clearing it means taking 56.6% of the remaining headroom rather than 62.5%.
+
+A second reason, from the lead: **pooled is 39% one photograph.**
+`Spanish_square_08034.JPG` holds 144 of the 373 words, so "pooled" is
+substantially "how well does it read Spanish_square". Per-photo weights every
+photograph equally, which is what a user experiences.
+
+**Pooled is reported beside it every time, never instead of it.**
+
+### The set — all 28, unchanged
+
+The 40 scored photographs, the 28 of them carrying text, `truth.json` as it
+stands. Comparability with 36.0% and 54.7% is worth more than the 1.7 points of
+purity available from dropping the two items in the set that are not
+photographs (`Banjaluka_streetmap.jpg`, an OpenStreetMap render, and a 1900s
+postcard). **The 26-item figure — 53.0% per-photo, 42.7% pooled — is reported
+beside the 28-item figure every time**, so the caveat never stops being visible.
+
+The ruler is not re-sampled. `training/sample_photos.py` refuses, and it keeps
+refusing.
+
+### Which build is judged
+
+**The shipped configuration**, which today is Latin-only. Its ceilings:
+per-photo **90.6%**, pooled **93.0%** — the two differ because Cyrillic is
+concentrated on 7 of the 28 photographs rather than spread.
+
+If the run proposes a **Cyrillic-enabled** build, that build is judged against
+**the same two bars**, with its own ceiling stated alongside — because enabling
+Cyrillic lifts the per-photo ceiling from 90.6% toward 100% and makes 75%
+materially easier, while the invented-words bar is precisely where every
+Cyrillic union rule has already failed. It is reported as a secondary line.
+**Neither build gets a bar chosen after its number exists.**
+
+### Constraints on the training pool, fixed now
+
+- **The 15 scored photographs present in `harvested/` are excluded by canonical
+  Commons `File:` page identity, not by byte hash.** The hash sees only 4 of the
+  15, because `scored/` holds the 1280 px `screen_url` rendering and
+  `harvested/` the larger `keep_url` original. Training from `harvested/`
+  unfiltered puts 37.5% of the ruler into the training set.
+- **The six flat-artwork items are excluded when crops are cut** — three
+  postcards, a travel poster, a document scan and an OpenStreetMap render, named
+  in `data/ocr/real-photos/EXCLUDE-flat-artwork.txt`. Their text is the
+  synthetic distribution, which is the thing that cannot close this gap.
+- `train-photos/` is 285 dangling symlinks and **must not be silently replaced
+  by `harvested/`**; that directory was what enforced the exclusion above.
+
+### What failure looks like
+
+- **Recall clears 75% and invented words rise above 180.** Not a pass. The run
+  bought recall with hallucination, which is the trade this bar exists to
+  refuse. Report both numbers and keep the current reader.
+- **Invented words hold and recall lands short of 75%.** An honest miss.
+  Report it, and report R_d from `picture-olcum` beside it, because if detection
+  is the ceiling then no amount of recogniser training reaches this bar and the
+  bar was aimed at the wrong stage.
+- **Neither holds.** The recipe hurt. Keep the current reader and say so.
+- **Both hold.** Install, and publish these thresholds beside the result.

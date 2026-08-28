@@ -41,8 +41,6 @@ sys.path.insert(0, str(REPO_ROOT))
 
 from scripts.guard import claim
 
-claim(1.4, "detector measurement")
-
 
 def load_sample(path: Path) -> list:
     return [line.strip() for line in path.read_text(encoding="utf-8").splitlines()
@@ -95,6 +93,11 @@ def main() -> int:
                     default=REPO_ROOT / "data/ocr/real-photos/detection-boxes.json")
     args = ap.parse_args()
 
+    # Claimed here and not at import, because a claim at import charges 1.4 GB
+    # to merely importing the module: --help is refused, and so is any run that
+    # loads no model at all. listen found the same defect in two of its scripts,
+    # where importing cost 2 GB and a controls-only run could not start.
+    claim(1.4, "detector measurement")
     from app.ocr import load_within_limits, read_regions
 
     names = load_sample(args.sample)

@@ -152,9 +152,22 @@ mean over the other 26                       53.0%
 
 The postcard is **the only item in the whole set the reader gets perfect**, and
 it is the one whose text is flat, high-contrast, axis-aligned type with no
-perspective and no lighting — the synthetic distribution exactly. That is not a
-coincidence; it is this project's own thesis (synthetic reads 75% where real
-photographs read 36%) turning up inside its ruler.
+perspective and no lighting — the synthetic distribution exactly.
+
+**This is independent corroboration of this project's central claim, arriving
+from a direction nobody designed.** The claim is that synthetic crops read at
+about 75% where real photographs read at 36%, and that the gap between those two
+distributions is the whole problem. Here is a set of 28 items averaging 53.0%
+per photograph, containing exactly one item whose text is synthetic-shaped, and
+that item scores 100.0%. Nobody put it there to prove anything — it survived a
+harvest whose screening rule was "does the detector find at least two confident
+regions", which flat printed captions satisfy easily. A believed hypothesis
+usually gets tested by an experiment built to test it. This one was tested by an
+accident inside its own ruler, and it held.
+
+It also explains why the accident is dangerous rather than merely interesting:
+every synthetic-shaped item added to a "real photograph" set lifts the headline
+without the reader having got any better at photographs.
 
 **The ruler is not being changed.** Replacing it is precisely what
 `training/sample_photos.py` was taught to refuse, and 54.7% / 45.0% stay the

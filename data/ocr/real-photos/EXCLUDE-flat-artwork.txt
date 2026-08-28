@@ -1,0 +1,32 @@
+# Photographs to exclude when cutting crops, one filename per line.
+#
+# These are not photographs of signage. Their text is flat, high-contrast,
+# axis-aligned type printed across an image with no perspective and no lighting
+# -- the synthetic distribution, which is exactly the thing that cannot close
+# the gap between reading synthetic crops at 75% and real photographs at 36%.
+# HANDOFF.md rejected the whole Europeana collection for this same property.
+#
+# Verified by looking at every candidate, not by filename pattern. A pattern
+# first returned 8 and was wrong in both directions: it caught three real
+# photographs of real signage (Franciscan_church_Mostar.jpg,
+# The_old_Vratnik_fort_map.JPG, Zenica_map.jpg -- two of them photographs OF
+# mounted interpretive boards, which is the product's own use case), and it
+# missed a 1909 postcard whose title is Cyrillic, because razglednica spelled
+# разгледница is not reachable by a Latin pattern.
+#
+# A map printed on a board in the street is signage. A map file is not. No
+# filename rule separates those, which is why this is a list of names and not a
+# rule anything can re-derive.
+#
+# Two of the six are inside the 40 scored photographs and are NOT removed from
+# the ruler -- see training/RESULTS-ocr-dataset.md. This file governs which
+# photographs crops are cut FROM, nothing else.
+#
+# Written by picture, 28 August 2026.
+
+Narrow-Gauge-Railway_Spalatobahn_Station-Travnik.jpg
+Narrow-Gauge-Railway_Spalatobahn_Station-Travnik_3_.jpg
+Зеница_-_1909_-_чаршија_улице_Кочева_чаршија_које_више_нема_од_краја_1968._године_разгледница.jpg
+Sarajevo_Jugoslavija_Poster.jpg
+Old_driver_s_license_of_Yugoslavia_-_page_26-27.jpg
+Banjaluka_streetmap.jpg
