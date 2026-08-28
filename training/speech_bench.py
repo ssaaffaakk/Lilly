@@ -132,6 +132,7 @@ clips, so an interrupted run resumes rather than restarting.
 import argparse
 import collections
 import csv
+import hashlib
 import json
 import random
 import re
@@ -581,6 +582,31 @@ def control_hypotheses(cases: list) -> tuple:
 # ---------------------------------------------------------------- transcribing
 
 
+def fingerprint(build: Path) -> str:
+    """A hash of the weights, which is what the transcription cache is keyed on.
+
+    Not the directory name. models/lilly/listen is a path that gets overwritten
+    every time a candidate is installed, and the cache written under that name by
+    the run BEFORE an install is served straight back to the run after it. That
+    is not hypothetical here: bench/speech/.outputs.json held a "listen" entry
+    scoring 35.53% — 1386 word errors of 3901, which is exactly the figure
+    models/lilly/listen-previous/built.json records for itself — while the
+    weights at models/lilly/listen score 34.86%. The next benchmark of the
+    installed listener would have reported its predecessor's transcriptions
+    under its name and found no difference between them.
+
+    The reader had this same defect and the same fix; see the note about the
+    reading cache in HANDOFF.md. Keyed on content, two builds that are byte
+    identical share their transcriptions — listen and listen-candidate are the
+    same file — and a build whose weights changed cannot reach the old ones.
+    """
+    h = hashlib.md5()
+    for name in sorted(p.name for p in build.iterdir() if p.is_file()):
+        h.update(name.encode())
+        h.update((build / name).read_bytes())
+    return h.hexdigest()
+
+
 def transcribe(build: Path, cases: list, language: str, cache: dict, key: str) -> list:
     have = cache.get(key, {})
     todo = [c for c in cases if c["clip"].name not in have]
@@ -903,8 +929,12 @@ def main() -> int:
         cache = {} if args.fresh else (
             json.loads(CACHE.read_text(encoding="utf-8")) if CACHE.exists() else {})
         for build in builds:
+            if not build.is_dir():
+                raise SystemExit(f"no listener at {build}")
+            fp = fingerprint(build)
+            print(f"  {build.name}: weights {fp[:16]}")
             hyps = transcribe(build, cases, args.language, cache,
-                              f"{build.name}:{args.language}")
+                              f"{fp[:16]}:{args.language}")
             wer, wrong, words = word_error_rate(cases, hyps)
             results[build.name] = {"hyps": hyps, "marks": score(cases, hyps),
                                    "wer": wer, "wrong": wrong, "words": words}
