@@ -96,10 +96,72 @@ useful and one is the failure mode this project has already rejected once:
   which is the thing that cannot close the gap to real photographs.
 
 A targeted census for that last class — filename and attribution matched against
-postcard, lithograph, poster, map and pre-1940 date patterns — finds **8
-candidates in 286 (2.8%)**, consistent with the 1-in-50 the random sample hit.
-It is a small contaminant, it is now identified, and it should be excluded when
-crops are cut rather than discovered afterwards.
+postcard, lithograph, poster, map and pre-1940 date patterns — first returned 8
+candidates. **Every candidate was then looked at, and the pattern was wrong in
+both directions.** The verified count is **6 in 286 (2.1%)**, consistent with
+the 1-in-50 the random sample hit.
+
+Three of the 8 were false positives — real photographs of real signage that the
+filename pattern caught by accident:
+
+| | what it actually is |
+|---|---|
+| `Franciscan_church_Mostar.jpg` | street scene; Dubrovnik/Split/Sarajevo direction signs and a HOTEL sign |
+| `The_old_Vratnik_fort_map.JPG` | a photograph **of** a mounted interpretive board, trilingual, in situ |
+| `Zenica_map.jpg` | a photograph **of** a mounted "PLAN GRADA ZENICE" board, buildings behind it |
+
+A map printed on a board in the street is signage, and photographing one is
+exactly what the app is for. A map file is not. No filename pattern can tell
+those apart, which is why this list was checked by eye and why it is quoted as a
+list of six names rather than as a rule anything could re-derive.
+
+The pattern also missed one, for the reason patterns miss things:
+`Зеница_-_1909_-_чаршија_улице_Кочева_...разгледница.jpg`, a 1909 postcard —
+*разгледница* is *razglednica*, and no Latin pattern reaches it.
+
+**The exclusion list, all six looked at:**
+
+```
+Narrow-Gauge-Railway_Spalatobahn_Station-Travnik.jpg      postcard, caption across the sky
+Narrow-Gauge-Railway_Spalatobahn_Station-Travnik_3_.jpg   postcard, same series
+Зеница_-_1909_-_чаршија_улице_Кочева_...разгледница.jpg   postcard, caption across the top
+Sarajevo_Jugoslavija_Poster.jpg                           travel poster, flat graphic art
+Old_driver_s_license_of_Yugoslavia_-_page_26-27.jpg       scan of a book spread
+Banjaluka_streetmap.jpg                                   OpenStreetMap raster render
+```
+
+### Two of those six are inside the scored ruler
+
+`Banjaluka_streetmap.jpg` is not a photograph — it is an OpenStreetMap raster
+render, attributed to OpenStreetMap.org. `Narrow-Gauge-Railway_Spalatobahn_
+Station-Travnik.jpg` is a 1900s postcard. Both are among the 40 scored.
+
+| | n | per-photo | pooled |
+|---|---|---|---|
+| as published | 28 | 54.7% | 45.0% (168/373) |
+| without the two non-photographs | 26 | 53.0% | 42.7% (141/330) |
+
+They inflate the per-photo figure by 1.7 points and the pooled one by 2.3. The
+individual scores are the part worth keeping:
+
+```
+Narrow-Gauge-Railway...Travnik.jpg    9/9  = 100.0%
+Banjaluka_streetmap.jpg              18/34 =  52.9%
+mean over the other 26                       53.0%
+```
+
+The postcard is **the only item in the whole set the reader gets perfect**, and
+it is the one whose text is flat, high-contrast, axis-aligned type with no
+perspective and no lighting — the synthetic distribution exactly. That is not a
+coincidence; it is this project's own thesis (synthetic reads 75% where real
+photographs read 36%) turning up inside its ruler.
+
+**The ruler is not being changed.** Replacing it is precisely what
+`training/sample_photos.py` was taught to refuse, and 54.7% / 45.0% stay the
+published numbers so they stay comparable to the 36.0% they are measured
+against. What this section exists to do is make the caveat permanent, and to
+force the choice — bar on all 28, or on the 26 — to be made *before* a run
+rather than after one.
 
 ## Three problems found that the acceptance test does not ask about
 
@@ -165,10 +227,32 @@ photographs. 285 was the candidate pool; 200 of them actually yielded crops.
 
 Unchanged by anything above, and it constrains `picture-egitim`:
 
-- **Cyrillic.** `app/ocr.py` builds `easyocr.Reader(["bs","en"])` and `latin_g2`
-  has no Cyrillic among its 351 classes. 7.0% of the scored answer key is
-  Cyrillic, so the photograph ruler is capped at 93%. More photographs do not
-  move this; a trained Cyrillic recogniser might.
+- **Cyrillic, and the two figures do not share a ceiling.** `app/ocr.py` builds
+  `easyocr.Reader(["bs","en"])` and `latin_g2` has no Cyrillic among its 351
+  classes. 26 of the 373 answer-key words are Cyrillic, so the **pooled** figure
+  is capped at **93.0%** — the number quoted everywhere else in this project.
+  The **per-photo** figure is capped at **90.6%**, and it is lower because
+  Cyrillic is concentrated rather than spread: it sits on 7 of the 28
+  photographs that carry text, and sits heavily.
+
+  | photograph | Cyrillic | its ceiling |
+  |---|---|---|
+  | `Putokaz2.jpg` | 8/14 | 42.9% |
+  | `Mostar_signs.JPG` | 2/4 | 50.0% |
+  | `Editing_Wikipedia_Workshop_in_Visegrad_-_76.JPG` | 3/8 | 62.5% |
+  | `Entrance_to_Bosnia_and_Herzegovina_at_Brod.jpg` | 7/20 | 65.0% |
+  | `Sarajevo_Trebević_Sign.jpg` | 2/6 | 66.7% |
+  | `Putokaz_za_manastir_Krupu.jpg` | 3/10 | 70.0% |
+  | `Trg_Krajine_čajavčev_i_ulaz_u_gospodsku.jpg` | 1/5 | 80.0% |
+
+  Averaging a fraction capped at 42.9% on one photograph against 21 uncapped
+  ones is the whole of the difference. This matters to `picture-egitim` because
+  "75% is 80% of the reachable range" is true of pooled and not of per-photo,
+  where 75% is 82.8% of it. Against the current figures, clearing 75% means
+  taking 56.6% of the remaining headroom per-photo, or 62.5% of it pooled.
+  More photographs do not move any of this; a trained Cyrillic recogniser would
+  lift the per-photo ceiling from 90.6% toward 100%, which is why *which build
+  is being judged* has to be fixed before the run and not after.
 - **Diacritics.** 180 of 1,702 real labels carry any of č ć đ š ž, and `đ`
   appears once in the entire set. Real signage barely teaches the letters the
   reader is worst at, which is why the synthetic crops stay in the mix. This
