@@ -326,6 +326,44 @@ Bosnian signage does not contain enough of the rare letters to teach them, and
 the synthetic generator is the only thing that can. Synthetic Cyrillic belongs
 in the plan from the start, not after a run discovers Џ was never there.
 
+### The generator cannot currently produce a single Cyrillic letter
+
+Checked rather than assumed, because "the synthetic data can cover it" is the
+kind of claim that is only true until someone looks:
+
+- **Fonts: ready.** Six of the seven faces in `data/fonts/` carry the full
+  Serbian Cyrillic set including Ђ Ј Љ Њ Ћ Џ — Fira Sans Condensed (both
+  weights), Oswald, and all three PT Sans. Only `BigShouldersStencil` lacks it.
+- **Text: absent.** `data/corpus-signs/toponyms-and-names.txt` is 40,727 lines
+  and **zero of them contain a Cyrillic character**. The generator has nothing
+  Cyrillic to render, so it renders none.
+
+**Transliteration closes it, and the arithmetic is worth seeing.** Bosnian Latin
+and Cyrillic are a near-exact 1:1 mapping once the three digraphs (`lj`→љ,
+`nj`→њ, `dž`→џ) are handled longest-first. Applying it to the toponym list:
+
+| letter | occurrences after transliteration | toponyms containing it | in the real crops |
+|---|---|---|---|
+| Ђ / ђ | 5 / 449 | 454 | 3 / 3 |
+| Ј / ј | 1,480 / 5,621 | 6,930 | 39 / 43 |
+| Љ / љ | 372 / 3,081 | 3,425 | 3 / 8 |
+| Њ / њ | 86 / 4,314 | 4,190 | 14 / 12 |
+| Ћ / ћ | 212 / 6,513 | 6,612 | 6 / 13 |
+| **Џ / џ** | **106 / 283** | **389** | **0 / 2** |
+
+13,778 toponyms contain at least one of Ђ Љ Њ Ћ Џ. The letter with **zero** real
+examples gets 389 sources, from a corpus already in the repository and fonts
+already on disk.
+
+**One trap in doing it.** The toponym list carries anglicised duplicates —
+`Abdulichi` beside `Abdići`, `Akhmichi` beside `Ahmići` — and transliterating
+those naively produces `Абдулицхи`, a letter sequence (`цх`) that does not occur
+in Bosnian. There are **1,174 of them, 2.9%**, findable by `ch|sh|zh|kh|ts`
+appearing in an entry that has no native diacritic. Filtering those and two
+bracketed oddities leaves **39,551 clean entries, 97.1%**. Transliterating
+without that filter would teach the recogniser 1,174 words' worth of letter
+pairs that Bosnian does not contain.
+
 ## Reproducing this
 
 ```
