@@ -95,9 +95,30 @@ Put these standing rules in every spawn prompt, verbatim:
 11. Spawn your own Sonnet subagents for downloading, counting and filtering.
     You are on Opus because the training and measurement judgement is yours.
 
+Teammates do not inherit this conversation. In each spawn prompt give that
+lane its own history: what has already been measured, what the dead ends
+were, and which files it owns. Say what the finished deliverable is and who
+to send it to by name.
+
 You verify every number a teammate reports before it goes anywhere.
 Do not put any teammate in plan mode.
 ```
+
+---
+
+## Do and don't
+
+The right-hand column is not hypothetical. Each one has cost this project a run,
+a night, or a number.
+
+| do | don't | why it bites here |
+| :--- | :--- | :--- |
+| **Own specific files.** One lane, one set of paths, written into the spawn prompt. | **Share the same file.** | Two teammates editing one file means overwrites, and the loser's work is gone with no error. `test.tsv` moving silently invalidates every published number. |
+| **Define the output.** Name the artefact and the acceptance test: a number, a file, a table. | **Vague deliverables.** | A task with no acceptance criterion is a wish — `scripts/team.py add` refuses one for exactly this reason. |
+| **Name recipients.** Say who each result goes to, by name. | **Assume the plan is understood.** | There is no broadcast: one message per recipient. A teammate that assumes someone else is watching the board reports to nobody, and its idle notification carries no output. |
+| **Three to five teammates.** Three lanes, three teammates. | **Ten or more.** | Token cost scales linearly, coordination overhead scales worse. On 8 GB with 1.3 GB free, ten agents is the 27 August kernel panic with more steps. |
+| **Give full context.** History, measured numbers, dead ends, in the spawn prompt. | **No history given.** | Teammates load CLAUDE.md, skills and MCP — but **not this conversation**. A lane without its history re-tries Mapillary, Panoramax and KartaView, all three already measured dead. |
+| **Push after every step**, verified by commit SHA. | **Nothing pushed to GitHub.** | Kaggle notebooks clone from GitHub. An uncommitted rewrite killed a run 35 minutes in, and `truth.json` — the answer key behind the whole photograph measurement — sat untracked, one disk failure from taking it with it. |
 
 ---
 

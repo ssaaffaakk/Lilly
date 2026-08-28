@@ -578,6 +578,9 @@ Ask the researcher teammate to shut down
 
 ## 16. Pre-flight checklist
 
+A paired do/don't card, grounded in this project's own failures, lives in
+[`agent-teams-lilly.md`](agent-teams-lilly.md). Single-sourced there — do not copy it here.
+
 Before spawning a team:
 
 - [ ] Is this genuinely parallel? Sequential or same-file work → single session.
