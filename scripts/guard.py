@@ -35,29 +35,31 @@ RESERVE_GB = 2.5
 
 def free_gb() -> float:
     """Memory that could be handed out now, without swapping for it."""
-    out = subprocess.run(["vm_stat"], capture_output=True, text=True).stdout
-    size = int(re.search(r"page size of (\d+)", out).group(1))
-    pages = {}
-    for line in out.splitlines():
-        if ":" not in line:
-            continue
-        key, value = line.split(":", 1)
-        value = value.strip().rstrip(".")
-        # The header line is "Mach Virtual Memory Statistics: (page size ...)",
-        # which has a colon and no number. Skipping non-numeric values by hand
-        # rather than wrapping the whole parse in try/except: an exception here
-        # used to return infinity, which is a guard that never guards and never
-        # says so.
-        if value.isdigit():
-            pages[key.strip()] = int(value)
-    if "Pages free" not in pages:
-        raise RuntimeError(f"could not read vm_stat; got keys {sorted(pages)}")
-    # Inactive and speculative pages are reclaimable; compressed ones are
-    # already the symptom rather than headroom.
-    usable = (pages["Pages free"]
-              + pages.get("Pages inactive", 0)
-              + pages.get("Pages speculative", 0))
-    return usable * size / 1024 ** 3
+    if sys.platform == "darwin":
+        out = subprocess.run(["vm_stat"], capture_output=True, text=True).stdout
+        size = int(re.search(r"page size of (\d+)", out).group(1))
+        pages = {}
+        for line in out.splitlines():
+            if ":" not in line:
+                continue
+            key, value = line.split(":", 1)
+            value = value.strip().rstrip(".")
+            if value.isdigit():
+                pages[key.strip()] = int(value)
+        if "Pages free" not in pages:
+            raise RuntimeError(f"could not read vm_stat; got keys {sorted(pages)}")
+        usable = (pages["Pages free"]
+                  + pages.get("Pages inactive", 0)
+                  + pages.get("Pages speculative", 0))
+        return usable * size / 1024 ** 3
+    # Kaggle and other Linux hosts have no vm_stat. MemAvailable is the same
+    # question: how much could a new allocation get without pushing into swap?
+    meminfo = Path("/proc/meminfo").read_text(encoding="utf-8")
+    for line in meminfo.splitlines():
+        if line.startswith("MemAvailable:"):
+            kb = int(line.split()[1])
+            return kb / 1024 ** 2
+    raise RuntimeError("could not read MemAvailable from /proc/meminfo")
 
 
 def running_jobs() -> list:

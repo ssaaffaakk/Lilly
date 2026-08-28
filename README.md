@@ -1,111 +1,185 @@
-# Lilly — Bosnian to English Translator
+# Lilly
 
-Lilly is our own Bosnian-to-English translation model and app. The goal is exact, real Bosnian — not generic "Serbo-Croatian" output — with three ways to use it:
+**Real Bosnian → English.** Type it, speak it, or photograph a sign — not generic
+Serbo-Croatian dressed up as Bosnian.
 
-- **Type it** — write Bosnian, get accurate English
-- **Say it** — press the microphone, speak Bosnian, and Lilly answers back in English **voice**
-- **Snap it** — take a picture of text (a sign, a menu, a document) and the translation appears in the chat
+[![Python 3.12+](https://img.shields.io/badge/python-3.12+-blue.svg)](https://www.python.org/downloads/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.115+-009688.svg)](https://fastapi.tiangolo.com/)
+[![License: mixed](https://img.shields.io/badge/license-see%20NOTICE-lightgrey)](models/lilly/README.md)
 
-And one thing most translators don't have: a **"This translation is wrong" button**. Press it, say what's wrong, and after review the correction goes into our database — the model is retrained on real corrections and keeps getting better the more it is used.
+---
 
-## How it works
+## Why Lilly exists
 
-| Part | What it does |
-|------|--------------|
-| Translation | Our Bosnian-to-English model, trained on 337k real Bosnian-English sentence pairs so the Bosnian is exact |
-| Listening | Turns spoken Bosnian into text |
-| Speaking | Reads the English translation out loud, natural voice |
-| Photo scan | Pulls the text out of the picture, then translates it |
-| Corrections | Verified user corrections become new training data |
-| App | Python API server + web frontend — works in the browser on any phone or computer |
+Most tools treat Bosnian as “close enough” to Serbian or Croatian. Lilly is built
+for people who need **actual Bosnian**: diaspora reading family messages, visitors
+reading signs in Sarajevo or Mostar, learners who care about č/ć/đ, and anyone
+tired of `>>eng<<` leaking into translations.
 
-Every part Lilly needs sits in one folder, `models/lilly/` — `translate`, `listen`, `speak`, `read` — and one object in [app/lilly.py](app/lilly.py) puts all four behind a single door:
+| You need… | Lilly gives you… |
+| --- | --- |
+| Accurate written translation | Fine-tuned Marian model on 350k+ Bosnian–English pairs |
+| Spoken Bosnian understood | Whisper listener fine-tuned on Bosnian speech |
+| Text on a sign or menu | OCR reader trained on real Bosnian signage + synthetic crops |
+| English read aloud | Kokoro TTS (stock) |
+| Something wrong? | **“This translation is wrong”** → verified corrections feed retraining |
+
+---
+
+## Demo (add screenshots)
+
+Capture four screens from `http://localhost:8000` into [`docs/images/`](docs/images/)
+and they appear here on GitHub:
+
+| | |
+| --- | --- |
+| **Type** — Bosnian in, English out | `docs/images/demo-translate.png` *(add)* |
+| **Speak** — microphone, Bosnian speech → English voice | `docs/images/demo-speak.png` *(add)* |
+| **Snap** — photo of a sign → text + translation | `docs/images/demo-photo.png` *(add)* |
+
+Until those exist, run locally (below) or see measured numbers in the
+[model card](models/lilly/README.md).
+
+---
+
+## Measured quality (v1, pre-registered)
+
+Honest numbers — same code path the app serves:
+
+| Ability | Metric | Result | Notes |
+| --- | --- | --- | --- |
+| **Translation** | chrF2 (FLORES-200, 2,009 pairs) | **67.47** | +0.14 vs base; language-tag defect fixed |
+| **Speech** | WER (200 held-out clips) | **34.9%** | vs 35.5% previous listener (whisper-small) |
+| **Photographs** | Words correct per photo (40 Commons signs) | **54.7%** | Latin Bosnian; up from 36.0% after real-crop training |
+| **BosnianBench** | Term recall | 91.5% → 91.7% (p = 0.465) | Does **not** support “understands Bosnian better” — stated in model card |
+
+**v2 in progress:** whisper-**large-v3** listener + longer OCR training on Kaggle.
+See [`docs/V2-BOUNDARIES.md`](docs/V2-BOUNDARIES.md).
+
+---
+
+## Architecture
+
+```mermaid
+flowchart LR
+  subgraph input [Input]
+    T[Typed text]
+    M[Microphone]
+    P[Photo]
+  end
+  subgraph lilly [models/lilly]
+    TR[translate]
+    LI[listen]
+    RE[read]
+    SP[speak]
+  end
+  T --> TR --> EN[English text]
+  M --> LI --> TR
+  P --> RE --> TR
+  EN --> SP --> OUT[English audio]
+```
+
+All weights live under `models/lilly/`. One API in [`app/lilly.py`](app/lilly.py):
 
 ```python
 from app.lilly import lilly
 
-lilly.translate("Dobar dan")          # Bosnian text   -> English text
-lilly.listen("clip.m4a")              # spoken Bosnian -> Bosnian text
-lilly.speak("Good day", "out.wav")    # English text   -> spoken English
-lilly.read("sign.jpg")                # photo          -> Bosnian text
+lilly.translate("Dobar dan")       # Bosnian text   → English text
+lilly.listen("clip.m4a")             # spoken Bosnian → Bosnian text
+lilly.speak("Good day", "out.wav")   # English text   → spoken English
+lilly.read("sign.jpg")               # photo          → Bosnian text
 ```
 
-Nothing is fetched over the network while Lilly runs: the weights are read straight off this disk, so it works with the wifi off. Each ability loads the first time it is used, so starting up costs nothing.
+**Offline at runtime** — weights load from disk; no network call per request.
 
-Design direction for the app: glass, smooth, Apple-like. Calm, quick, easy to use. Bosnian imagery (Mostar) as atmosphere, not decoration. No emojis, no clutter.
+---
 
-Training runs on free Google Colab GPUs; the Mac is used for building the app and running the finished model.
+## Quick start
+
+```bash
+uv venv .venv --python 3.12
+uv pip install --python .venv/bin/python -r requirements.txt
+
+# Weights (~1.3 GB) are not in git
+.venv/bin/python scripts/fetch_models.py
+.venv/bin/python scripts/build_translator.py
+
+.venv/bin/uvicorn app.server:app --port 8000
+# → http://localhost:8000
+```
+
+Docker: see [`Dockerfile`](Dockerfile). Needs **~4 GB RAM** for photo requests.
+
+---
 
 ## Project layout
 
 ```
 Lilly/
-├── data/        # scripts that download & clean Bosnian-English data (the data itself is not committed)
-├── training/    # model training scripts (run on Colab GPU)
-├── models/
-│   └── lilly/   # every weight Lilly uses: translate, listen, speak, read, adapter
-│                # (not committed — 1.3 GB, too big for git)
-├── app/         # lilly.py (one object, four abilities) + server + web frontend
-└── docs/        # roadmap and notes
+├── app/              # FastAPI server + glass web UI
+├── models/lilly/     # translate, listen, read, speak (not in git — fetch separately)
+├── training/         # train & evaluate scripts; Kaggle notebooks
+├── data/             # download & clean scripts (large data gitignored)
+├── scripts/          # fetch_models, build_translator, kaggle_train, guard, publish_to_hf
+└── docs/             # V2-BOUNDARIES, WHITE-PAPER, ROADMAP
 ```
 
-## Roadmap
+---
 
-See [docs/ROADMAP.md](docs/ROADMAP.md). Every finished step gets pushed to this repo.
+## Training
+
+Heavy training runs on **Kaggle GPU** (T4), not on a laptop — local Mac is 8 GB and
+kernel-panicked under parallel jobs.
+
+```bash
+python3 scripts/kaggle_train.py speech        # listener fine-tune
+python3 scripts/kaggle_train.py speech --status
+python3 scripts/kaggle_train.py speech --fetch
+```
+
+Translation: `python3 scripts/kaggle_train.py translation`. Details in
+[`training/README.md`](training/README.md).
+
+---
+
+## Documentation
+
+| Doc | Purpose |
+| --- | --- |
+| [`models/lilly/README.md`](models/lilly/README.md) | Model card (HF) — scores, limits, credits |
+| [`docs/V2-BOUNDARIES.md`](docs/V2-BOUNDARIES.md) | v2 scope & rules |
+| [`docs/WHITE-PAPER.md`](docs/WHITE-PAPER.md) | Sources & licences (filled at v2 release) |
+| [`docs/ROADMAP.md`](docs/ROADMAP.md) | Phases |
+| [`HANDOFF.md`](HANDOFF.md) | Engineer handoff — traps & measured dead ends |
+
+---
+
+## Design
+
+Glass, calm, Apple-like. Mostar atmosphere — not decoration. No emoji clutter.
+Works in the mobile browser; microphone requires HTTPS in production.
+
+---
 
 ## Status
 
-- [x] Phase 0 — Project setup
-- [x] Phase 1 — Collect & clean Bosnian-English data (337,790 clean pairs — see [data/STATS.md](data/STATS.md))
-- [ ] Phase 2 — Fine-tune the translation model
-- [x] Phase 3 — Speech input (listen to Bosnian)
-- [x] Phase 4 — Voice output (speak the English)
-- [x] Phase 5 — Photo scan & translate
-- [x] Phase 6 — Web app (glass design, first version — design polish pending)
-- [x] Phase 7 — Correction button + database (retraining export ready; periodic retraining pending)
-- [ ] Phase 2 — Fine-tune the translation model (runs on Colab, base model live meanwhile)
-- [ ] Phase 8 — Deploy
+- [x] Data pipeline (313k filtered train pairs + 38k extra corpus)
+- [x] Translation fine-tune (Arm B shipped)
+- [x] Speech listen + English speak
+- [x] Photo OCR + translate
+- [x] Web app + correction export
+- [ ] Hugging Face publish (owner)
+- [ ] v2 — large-v3 speech + OCR retrain (Kaggle)
 
-## Run it
+---
 
-```
-uv venv .venv --python 3.12
-uv pip install --python .venv/bin/python -r requirements.txt
-.venv/bin/uvicorn app.server:app --port 8000
-```
+## Citation
 
-The weights are 1.3 GB, so they are not in git. Fetch them, then build the
-translator the app serves from — that step quantises it and folds in the
-fine-tuning, and has to be re-run after every training run:
+If you use Lilly in research or a product, cite the repo and link the
+[model card](models/lilly/README.md). Full bibliography in
+[`docs/WHITE-PAPER.md`](docs/WHITE-PAPER.md) at release.
 
-```
-.venv/bin/python scripts/fetch_models.py
-.venv/bin/python scripts/build_translator.py
-```
+---
 
-Then open http://localhost:8000. `python3 app/lilly.py` prints what is in the model
-folder and what is missing.
-
-## Deploying it
-
-```
-docker build -t lilly .
-docker run -p 8000:8000 -v lilly-data:/data lilly
-```
-
-Three things decide whether a deployment works:
-
-**Memory.** Measured on CPU, which is what a server is. Translation rests at 670 MB
-and peaks at 975 MB on the largest input it accepts; reading a photo is the expensive
-one and takes the process to about 3 GB. Give it **4 GB**, and one worker — a second
-worker loads its own full copy of the weights. This rules out the common free tiers;
-most give 512 MB.
-
-**HTTPS.** The microphone is one of the three ways to use Lilly, and browsers only
-hand it over on a secure origin. Served over plain http from anything other than
-localhost, the button fails and blames the user. Put TLS in front of it.
-
-**A volume for the corrections.** `data/feedback.db` is the only thing the app
-writes, and everything a person ever corrected is in it. Anywhere inside the
-deployment directory is wiped by the next deploy — mount a volume and point
-`LILLY_DB` at it, as the Dockerfile does.
+Built by [@ssaaffaakk](https://github.com/ssaaffaakk). Bosnian for people who need
+Bosnian — not the closest Slavic language the model already knew.
