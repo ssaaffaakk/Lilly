@@ -74,10 +74,20 @@ def running_jobs() -> list:
             continue
         if str(REPO_ROOT) not in command and ".venv/bin/python" not in command:
             continue
-        if "python" not in command:
+        # Match on the executable, not on the whole command line. A job started
+        # as `zsh -c '.venv/bin/python training/train_ocr.py'` mentions python
+        # inside the shell's own argument, so the wrapper matched too and one
+        # real run was reported as two — the phantom named after whatever the
+        # fallback below happened to find first, which read as a username.
+        words = command.split()
+        executable = Path(words[0]).name.lower() if words else ""
+        if "python" not in executable:
             continue
-        script = next((w for w in command.split() if w.endswith(".py")), command[:40])
-        jobs.append((pid, rss / 1024 ** 2, Path(script).name))
+        script = next((w for w in words if w.endswith(".py")), command[:40])
+        # ps reports rss in kilobytes. Dividing by 1024**2 gives gigabytes, and
+        # the result was printed under an "MB" heading: a 607 MB process read as
+        # "0.6 MB" in the one message whose whole job is to name what to stop.
+        jobs.append((pid, rss / 1024, Path(script).name))
     return jobs
 
 
