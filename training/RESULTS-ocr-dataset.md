@@ -253,10 +253,78 @@ Unchanged by anything above, and it constrains `picture-egitim`:
   More photographs do not move any of this; a trained Cyrillic recogniser would
   lift the per-photo ceiling from 90.6% toward 100%, which is why *which build
   is being judged* has to be fixed before the run and not after.
-- **Diacritics.** 180 of 1,702 real labels carry any of č ć đ š ž, and `đ`
-  appears once in the entire set. Real signage barely teaches the letters the
-  reader is worst at, which is why the synthetic crops stay in the mix. This
-  corpus does not fix it either.
+- **Diacritics.** 180 of 1,702 real labels carry any of č ć đ š ž — 10.6%,
+  exactly as documented. One precision on the per-letter counts, because a
+  recogniser treats `Đ` and `đ` as different classes and the published figures
+  are lower case only:
+
+  | | lower | upper | total |
+  |---|---|---|---|
+  | č | 14 | 27 | 41 |
+  | ć | 32 | 31 | 63 |
+  | **đ** | **1** | **7** | **8** |
+  | š | 31 | 31 | 62 |
+  | ž | 9 | 30 | 39 |
+
+  "đ appears exactly once" is true of the lower case; the letter appears 8 times
+  across both. Signage is mostly upper case, so the real training signal is
+  three to five times what the published numbers suggest. The conclusion does
+  not move — 8 examples cannot teach a letter — but 8 is the number to plan
+  against, not 1.
+
+## The Cyrillic crops, for whoever fine-tunes on them
+
+The identified next move for this lane is fine-tuning `cyrillic_g2` on the
+Cyrillic crops already transcribed. Three things about that set were measured
+here rather than assumed, and each changes the plan.
+
+**There are 272 of them, not 276.** Counted three ways — labels containing any
+Cyrillic letter, labels entirely Cyrillic (271), and labels containing any
+non-Latin letter at all, which is what a Latin-only model literally cannot
+represent — every count gives 272 (16.0% of 1,702), with zero labels that are
+non-Latin without being Cyrillic. 276 appears in `HANDOFF.md` and
+`RESULTS-ocr-realcrops.md` and cannot be reconstructed from the labels on disk.
+All 272 crop files are present.
+
+**They come from 37 photographs, and one of them is over a third of the set.**
+
+```
+Information_board_in_Jajce                      97 crops   35.7%
+Natpis_na_Domu_kulture_u_Derventi               32
+Gavrilo_Princip_plaque_1960s                    14
+A_plaque_dedicated_to_British_..._Banja_Luka    12
+Tabla222                                        12
+                              top five combined            61.4%
+median crops per source 3, seven singletons
+```
+
+So a train/valid split **by crop leaks badly**: crops off one information board
+share font, lighting, camera and repeated words, and 97 of them would sit on
+both sides of the split. It has to be split by **source photograph** — the
+discipline `ocr_split.py` already applies by label text on the Latin side — and
+even then, one photograph carrying 36% makes the split lumpy whichever side it
+lands on.
+
+For scale: the Latin move that bought 36.0% → 54.7% had 1,294 crops from 186
+photographs. This is 272 from 37. Expecting a proportional gain would be wrong.
+
+**The distinctively Serbian-Cyrillic letters are barely in the data.**
+
+```
+Ђ 3    Ј 39    Љ 3    Њ 14    Ћ  6    Џ 0
+ђ 3    ј 43    љ 8    њ 12    ћ 13    џ 2
+```
+
+`Џ` has **zero** examples in the entire transcribed set. `RESULTS-ocr-cyrillic.md`
+says all twelve of Ђ Ј Љ Њ Ћ Џ were verified present — that is about
+`cyrillic_g2`'s **output classes**, not about our training data. Both statements
+are true, they are about different things, and the difference is exactly what
+would send a training run the wrong way.
+
+This is the same shape as the diacritic problem, on the other alphabet: real
+Bosnian signage does not contain enough of the rare letters to teach them, and
+the synthetic generator is the only thing that can. Synthetic Cyrillic belongs
+in the plan from the start, not after a run discovers Џ was never there.
 
 ## Reproducing this
 
