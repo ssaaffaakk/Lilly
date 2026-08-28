@@ -122,6 +122,24 @@ def read_photo(path: Path) -> str:
     return scan(str(path))
 
 
+def reader_fingerprint() -> str:
+    """Which reader produced a cached reading.
+
+    Size and mtime of every weight file the reader loads, hashed. Not the file
+    contents: latin_g2.pth is 15 MB and this runs on every invocation, and a
+    retrain rewrites the file, so size-and-mtime separates the versions without
+    reading a hundred megabytes to find that out.
+    """
+    import hashlib
+    read_dir = REPO_ROOT / "models" / "lilly" / "read"
+    parts = []
+    for f in sorted(read_dir.rglob("*")):
+        if f.is_file() and f.suffix in {".pth", ".pt", ".yaml", ".py"}:
+            stat = f.stat()
+            parts.append(f"{f.relative_to(read_dir)}:{stat.st_size}:{int(stat.st_mtime)}")
+    return hashlib.blake2b("|".join(parts).encode(), digest_size=8).hexdigest()
+
+
 def cached_reads(names: list, photos: Path, cache: Path, full=False) -> dict:
     """Read every photograph once, keep the answers.
 
@@ -130,8 +148,27 @@ def cached_reads(names: list, photos: Path, cache: Path, full=False) -> dict:
     half. The cache holds the reader's output only; the answer key it is scored
     against lives in a separate file written by people looking at the pictures,
     and the two never meet until here.
+
+    The cache is stamped with which reader wrote it. Without that stamp it is
+    keyed on the photograph's name alone, so the first score taken after a
+    retrain reads every answer back out of the old reader's cache and reports
+    the old number as the new model's -- a training run that changed nothing
+    and a training run that changed everything both print 36.0%, and nothing
+    anywhere says which happened. A changed fingerprint throws the cache away
+    and re-reads, which costs an hour and is the only honest option.
     """
-    have = json.loads(cache.read_text(encoding="utf-8")) if cache.exists() else {}
+    stamp = reader_fingerprint()
+    raw = json.loads(cache.read_text(encoding="utf-8")) if cache.exists() else {}
+    have = raw.get("readings", {}) if "readings" in raw else raw
+    was = raw.get("reader") if isinstance(raw, dict) else None
+    if have and was is not None and was != stamp:
+        print(f"the reader changed since this cache was written "
+              f"({was} -> {stamp}); re-reading all {len(names)} photographs")
+        have = {}
+    elif have and was is None:
+        print(f"cache predates reader stamping; re-reading all {len(names)} "
+              f"photographs rather than scoring an unknown reader")
+        have = {}
     todo = [n for n in names if n not in have]
     if todo:
         print(f"reading {len(todo)} photographs ({len(have)} already cached)")
@@ -142,7 +179,8 @@ def cached_reads(names: list, photos: Path, cache: Path, full=False) -> dict:
         except Exception as exc:
             print(f"  {i}/{len(todo)} {name}: FAILED {exc}", file=sys.stderr)
             continue
-        cache.write_text(json.dumps(have, ensure_ascii=False, indent=1),
+        cache.write_text(json.dumps({"reader": stamp, "readings": have},
+                                    ensure_ascii=False, indent=1),
                          encoding="utf-8")
         print(f"  {i}/{len(todo)} {name}  {time.time() - start:.0f}s  "
               f"{len(have[name].split())} words", flush=True)
