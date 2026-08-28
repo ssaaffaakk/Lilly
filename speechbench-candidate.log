@@ -1,0 +1,62 @@
+objc[75846]: Class AVFFrameReceiver is implemented in both /Users/safaksurmeli/Desktop/Lilly/.venv/lib/python3.12/site-packages/av/.dylibs/libavdevice.62.3.102.dylib (0x10f8cc3a8) and /Users/safaksurmeli/Desktop/Lilly/.venv/lib/python3.12/site-packages/cv2/.dylibs/libavdevice.61.3.100.dylib (0x117a283a8). This may cause spurious casting failures and mysterious crashes. One of the duplicates must be removed or renamed.
+objc[75846]: Class AVFAudioReceiver is implemented in both /Users/safaksurmeli/Desktop/Lilly/.venv/lib/python3.12/site-packages/av/.dylibs/libavdevice.62.3.102.dylib (0x10f8cc3f8) and /Users/safaksurmeli/Desktop/Lilly/.venv/lib/python3.12/site-packages/cv2/.dylibs/libavdevice.61.3.100.dylib (0x117a283f8). This may cause spurious casting failures and mysterious crashes. One of the duplicates must be removed or renamed.
+clips: 200 of 349 in /Users/safaksurmeli/Desktop/Lilly/data/speech/test.tsv
+transcripts shared with data/speech/train.tsv: 0
+term evidence: flores 1660, ntrex 1924, setimes 136323 sentences (349 removed for also being a graded transcript)
+terms in bench/terms.tsv: 240;  still admitted on held-out evidence: 240;  dropped: 0
+targets: 85 across 66 of 200 clips, 48 distinct terms
+  small sample: the intervals below are wide, and a difference of a few points
+  between two listeners will not clear them
+  reusing saved transcriptions for listen — --fresh to redo
+  listen: WER 35.5%  (1386 wrong of 3901 words)
+  listen-candidate 20/200  (56s)
+  listen-candidate 40/200  (121s)
+  listen-candidate 60/200  (203s)
+  listen-candidate 80/200  (272s)
+  listen-candidate 100/200  (342s)
+  listen-candidate 120/200  (420s)
+  listen-candidate 140/200  (497s)
+  listen-candidate 160/200  (569s)
+  listen-candidate 180/200  (647s)
+  listen-candidate 200/200  (724s)
+  listen-candidate: WER 34.9%  (1360 wrong of 3901 words)
+
+                               WER  term recall      95% interval   variety substitution      95% interval
+  listen                     35.5%        65.9%  [ 55.3,  75.1]                  5.1%  [  1.7,  13.9]
+  listen-candidate           34.9%        68.2%  [ 57.7,  77.2]                  3.3%  [  0.9,  11.4]
+  targets                                   85                                      59 decided
+
+by category — term recall, then variety substitution
+                                             lex                   yat
+  listen                          41.7%    16.7%        69.9%     3.8%
+  listen-candidate                41.7%    16.7%        72.6%     1.9%
+  targets                                     12                    73
+
+by the variety the alternative belongs to
+                                              hr                 hr/sr                    sr                 sr/hr
+  listen                          40.0%     0.0%       100.0%     0.0%        69.9%     3.8%         0.0%   100.0%
+  listen-candidate                40.0%     0.0%       100.0%     0.0%        72.6%     1.9%         0.0%   100.0%
+  targets                                     10                     1                    73                     1
+
+listen-candidate - listen: +2.4 points of term recall, paired bootstrap p = 0.1475  (does not clear 0.05)
+listen-candidate - listen: -1.8 points of variety substitution, paired bootstrap p = 0.0925  (does not clear 0.05)
+
+checks on the measurement — no model involved, the transcripts themselves
+  reference control     recall  100.0%   substitution    0.0%   (85 of 85 decided)
+  shuffled control      recall    1.2%   substitution    0.0%   (1 of 85 decided)
+  variant control       recall    0.0%   substitution  100.0%   (85 of 85 decided)
+  variant control is a check on the scorer, not on a model: audio of a person saying
+    'mjesto' cannot be edited to say 'mesto', so there is no audio-side counterfactual.
+
+what this metric does not see
+  targets the model resolved to neither variety: 26 of 85 (30.6%)
+    of those, 17 (65%) have a word within two characters of the spoken form in the transcript — heard, mis-spelled, and scored as neither rather than as drift
+  73 of 85 targets (86%) are yat pairs, whose alternative is Serbian only, and 73 of 85 (86%)
+    contrast with Serbian at all — drift toward Croatian has far less to land on here.
+  drift into a form that is not in the term's alternative list — a different
+    inflection, a paraphrase — lands in 'neither', which lowers recall without
+    raising substitution.
+
+  written in the other variety by listen: nedjelju (1), historija (1), primjer (1)
+
+  written in the other variety by listen-candidate: nedjelju (1), historija (1)

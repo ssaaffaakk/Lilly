@@ -81,6 +81,53 @@ knows more Bosnian terms.
 Below either and, by the pre-registered rule, it does not ship however good its
 word error rate looks.
 
+### Both gates run. It ships.
+
+Same 200 clips, both listeners scored locally through the same code so the
+comparison is like for like:
+
+| | `listen` (was) | `listen-candidate` (now) |
+|---|---|---|
+| word error | 35.5% | **34.9%** |
+| Bosnian term recall | 65.9% | **68.2%** |
+| variety substitution | 5.1% | **3.3%** |
+
+| pre-registered gate | threshold | measured | |
+|---|---|---|---|
+| word error, 200 Bosnian clips | below 35.5% | 34.9% | pass |
+| Bosnian term recall | not below 65.9% | 68.2% | pass |
+
+"Both, not either" — both pass, so it is installed, with the listener it
+replaces kept at `models/lilly/listen-previous/`.
+
+**What must not be overclaimed.** Neither term difference is significant:
+recall +2.4 points at **p = 0.1475**, substitution −1.8 points at **p = 0.0925**.
+Both are ties. The defensible claim is *not* that the Croatian audio made the
+model more Bosnian — it is that **it did not make it less Bosnian**, which is
+precisely the failure this gate was built to catch, and it did not happen. The
+substitution rate moved the favourable way after 3,430 Croatian clips, which is
+worth noting and not worth calling a result at p = 0.09.
+
+And the honest asterisk on the gate itself: 73 of its 85 targets are yat pairs
+whose alternative is Serbian. Drift toward *Croatian* has little here to land
+on, so this instrument is weaker against exactly the drift this run risked than
+its numbers make it look.
+
+### One discrepancy, recorded rather than reconciled away
+
+The same candidate reads **33.9%** on Kaggle and **34.9%** here — a full point
+apart on identical clips. Kaggle ran a T4 with whatever faster-whisper and
+ctranslate2 `pip install` gave it that hour; this machine runs int8 on CPU with
+the pinned versions. Neither number is wrong and neither is the other's
+correction.
+
+It matters for how the headline is quoted. The gate above compares 34.9% against
+35.5% — **both measured here, on the same hardware, through the same code** — so
+the 0.6-point improvement over the previous fine-tune is the like-for-like one.
+The 4.5-point figure at the top of this file is the candidate against *untrained*
+whisper-small, both measured on Kaggle. They are different comparisons and
+mixing them would overstate the gain by a factor of seven.
+
 Two limits of this instrument, from its own output and not to be forgotten when
 reading the next number: 27 of 85 targets (31.8%) resolve to neither variety,
 and 16 of those have a word within two characters of the spoken form — heard,
