@@ -73,17 +73,52 @@ def cut_out_text(photo_dir: Path, out_dir: Path) -> int:
     return len(rows)
 
 
+def reader_charset() -> str:
+    """The characters the shipped recogniser can actually produce.
+
+    Read from easyocr's own config for the latin_g2 model rather than written
+    out here, so it cannot drift from the weights the trainer loads.
+    """
+    from easyocr import config
+    return config.recognition_models["gen2"]["latin_g2"]["characters"]
+
+
 def build_splits(labels_path: Path) -> int:
     """Turn corrected crops into the folder + gt.txt layout the trainer reads."""
     import shutil
 
-    rows = []
+    rows, unrepresentable = [], []
+    charset = reader_charset()
     for line in labels_path.read_text(encoding="utf-8").splitlines():
         parts = line.split("\t")
         if len(parts) >= 2 and parts[1].strip():
             source = labels_path.parent / parts[0]
-            if source.exists():
-                rows.append((source, parts[1].strip()))
+            if not source.exists():
+                continue
+            text = parts[1].strip()
+            # The recogniser is a Latin one. Its output layer has 351 classes
+            # and not one of them is Cyrillic, so a Cyrillic label cannot be
+            # encoded, cannot be a training target, and cannot be produced --
+            # the trainer dies on the first batch containing one with a bare
+            # KeyError. Dropping them is not a workaround for that crash; it is
+            # the only thing a Latin model can be trained on.
+            #
+            # Worth stating rather than filtering silently, because it is a
+            # ceiling and not a detail: 276 of 1,702 hand-transcribed crops
+            # (16.2%) are Cyrillic, and on the scored photographs 7.0% of the
+            # answer key's words are, across 7 of the 40. The app builds its
+            # reader as easyocr.Reader(["bs", "en"]), which is Latin-only, so
+            # that 7% is unreachable by any amount of Latin fine-tuning. Reading
+            # it needs a second recogniser, not a better one.
+            if all(c in charset for c in text):
+                rows.append((source, text))
+            else:
+                unrepresentable.append(text)
+    if unrepresentable:
+        print(f"{len(unrepresentable):,} label(s) dropped: the Latin recogniser "
+              f"has no class for their characters (Cyrillic).")
+        print(f"  This is a ceiling, not a filter -- see the note in "
+              f"prepare_ocr_data.py.")
     if not rows:
         print(f"no labelled crops in {labels_path}", file=sys.stderr)
         return 1
