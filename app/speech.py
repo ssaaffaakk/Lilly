@@ -39,7 +39,13 @@ _transcribe_lock = threading.Lock()
 
 
 def _key(build) -> str:
-    return str(Path(build) if build is not None else LISTEN_DIR)
+    """One cache key per build directory, however the caller spelled the path.
+
+    Resolved, because "models/lilly/listen" and the absolute path are the same
+    weights and would otherwise load two copies of the same half-gigabyte model
+    into an 8 GB machine.
+    """
+    return str(Path(build).resolve() if build is not None else LISTEN_DIR.resolve())
 
 
 def get_model(build=None):
