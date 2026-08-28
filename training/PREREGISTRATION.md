@@ -309,3 +309,73 @@ each on Bosnian specifically rather than to pick a number and defend it
 afterwards. If only one run is affordable, 0.35 is the starting point — high
 enough that 3,091 clips cannot be drowned by ten times as many neighbours, low
 enough that the neighbours still teach something.
+
+## v2 — picture — picture-olcum
+
+Written before the run, per rule 8. Nothing below is reinterpreted afterwards.
+
+**The question.** The reader finds 54.7% of a photograph's words. That number is
+the product of two stages and cannot say which one is the ceiling: a word the
+detector never boxed is lost before the recogniser is asked, and a word boxed
+but misread is lost after. Fine-tuning fixes the second and does nothing for the
+first. `picture-egitim` is about to pick a recipe, and picking one without this
+split is guessing.
+
+**The set.** The 40 scored photographs in `data/ocr/real-photos/scored/`, listed
+in `scored-sample.txt`. The answer key is `truth.json`: 373 agreed words across
+the 28 that carry text, transcribed by two blind transcribers at 91.2%
+agreement. The same set and the same key as the 36.0% and 54.7% figures, so the
+result is comparable to both. No re-sampling — `training/sample_photos.py`
+refuses now, and it should keep refusing.
+
+**The scorer.** `training/measure_detection.py`, which draws every region the
+detector returned and computes nothing. Then a human count against `truth.json`.
+
+**The two figures, named now.**
+
+- **Detection recall R_d = (truth words covered by at least one detected box) /
+  373.** A word counts as covered when a box overlaps the glyphs of that word on
+  the drawn overlay. Partial overlap of a word counts as covered, because the
+  detector's job is to point at the text, and a box clipping one letter is a
+  recognition problem rather than a miss. A box that covers a *different*
+  instance of the same string does not count for this one; the key is a multiset
+  and so is this count.
+- **Recognition given detection = 45.0% / R_d**, using the pooled figure because
+  it is the one whose denominator is the same 373 words. The per-photo 54.7%
+  weights photographs equally and cannot be divided by a word-level recall
+  without changing what the ratio means. **The pooled figure is the one this
+  decomposition uses, and it is named here so it cannot be swapped later for
+  whichever number flatters the result.**
+
+**Detection precision, which needs no run and is fixed now at:** of the 1,914
+regions the detector produced across 285 photographs and twelve blind
+annotators, 39 (2.0%) contain no text at all and 173 (9.0%) contain text no
+human could read. 1,702 (89.0%) are usable. These are already on disk in
+`data/ocr/label-answers/`; they are quoted, not recomputed.
+
+**What counts as this task being done.** `SCOPE-V1.md` asks for the detector's
+find-rate on real photographs to be measured. R_d is that number. There is no
+threshold to clear, because this is a measurement and not a gate — inventing a
+bar for it after seeing it would be the exact failure this file exists to
+prevent. What is committed in advance is the definition, the set, and which of
+the two live recall figures the ratio is taken against.
+
+**A validity check that can fail, and stops the task if it does.** Before the
+decomposition is reported, `app.ocr.scan` is run over all 40 photographs and
+must reproduce 45.0% pooled and 54.7% per-photo. If it does not, the detector
+being measured is not the one behind the shipped number, and the decomposition
+is not reported at all — the discrepancy is reported instead.
+
+**What each outcome would mean.**
+
+- **R_d high (say above 85%).** The detector finds nearly everything and the
+  ceiling is recognition. `picture-egitim` should spend its effort on the
+  recogniser, and the Cyrillic fine-tune is the strongest remaining move.
+- **R_d middling (say 60–85%).** Both stages are losing words, and the 75% bar
+  in `picture-egitim` cannot be reached by recogniser training alone — the
+  arithmetic ceiling is R_d itself, which would need saying out loud before that
+  run rather than after it.
+- **R_d low (below 60%).** The detector is the ceiling, stock CRAFT is the thing
+  to fix, and fine-tuning the recogniser further is polishing behind a closed
+  door. That would be a genuinely unwelcome result and is the reason for writing
+  this paragraph before seeing the number.
