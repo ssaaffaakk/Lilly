@@ -494,3 +494,125 @@ Cyrillic union rule has already failed. It is reported as a secondary line.
   bar was aimed at the wrong stage.
 - **Neither holds.** The recipe hurt. Keep the current reader and say so.
 - **Both hold.** Install, and publish these thresholds beside the result.
+
+---
+
+## v2 — read — read-egitim
+
+Written **before** the full fine-tune starts and before any of its numbers
+exist. The `--full-finetune` path in `training/train_translation.py` has never
+been run on this project, so nothing below is informed by a result.
+
+### The question
+
+`training/train_translation.py`'s own docstring states the capacity arithmetic
+that motivates this run:
+
+    LoRA r=16 on this model  =  270,336 x r  =  4,325,376 parameters
+    at ~2 bits/parameter     =  8.65 M bits of capacity
+    corpus target side       =  9.87 M tokens, ~1 bit/token upper bound
+
+The two numbers are the same size, which is the regime where LoRA is reported to
+start losing to full fine-tuning. Everything Lilly has ever shipped is LoRA. So:
+**does training all 237.7 M parameters beat the r=16 adapter on the product
+path?** That is an empirical claim the project has argued from arithmetic and
+never measured.
+
+### What the two arms are
+
+**LoRA arm — already run, already measured, and NOT re-run.** Arm B is exactly
+the LoRA arm of this comparison: the same `train-mix.tsv`, the same 2 epochs,
+the same `ntrex-holdout.tsv` validation, r=16, lr 2e-4. Its numbers are in
+"Outcome — Arm B wins" above: **42.18 BLEU / 67.47 chrF2**. Re-running it would
+spend three to four GPU hours to reproduce a number that already exists under
+the identical recipe, and the seed is fixed. If a re-run is later judged
+necessary, that is a new decision and it is not this one.
+
+**Full fine-tune arm — the new run.** Identical corpus (`train-mix.tsv`,
+361,621 examples), identical validation (`ntrex-holdout.tsv`, 462 professional
+pairs), identical 2 epochs, identical seed. One thing changes: all 237.7 M
+parameters train, at `FULL_LR = 2e-5` rather than LoRA's 2e-4. That learning
+rate is not a free choice made here — it is the constant already resolved in
+`train_translation.py` from the mode, on the measured ten-to-one LoRA/full ratio
+the file cites. Changing the corpus *and* the training mode at once would repeat
+the mistake the Arm A / Arm B split was created to avoid.
+
+### The measurement that decides
+
+    python3 training/evaluate_app.py --tuned <the candidate build>
+
+Both builds int8 CTranslate2 through `app.translate.Engine`, 2,009 FLORES-200
+pairs (dev + devtest), language tag stripped. Nothing else counts. This project
+has already measured the same fine-tune three ways and watched the answer move
+3.36 chrF2 with the layer.
+
+### The threshold
+
+Taken from the board, unchanged, and not reinterpretable:
+
+| | installed (Arm B) | full fine-tune must reach |
+|---|---|---|
+| BLEU | 42.18 | **> 42.18** |
+| chrF2 | 67.47 | **> 67.47** |
+
+**Both, not either.** Strictly greater, not equal: replacing an installed model
+requires exceeding it, so an exact tie leaves Arm B in place.
+
+**On the bar itself.** I will re-measure the installed build with the command
+above before judging the candidate, because I have not personally reproduced
+42.18 / 67.47 and `HANDOFF.md` carried a wrong translation figure until today.
+Stated now so it cannot be adjusted later: **if my re-measurement of the
+installed build disagrees with 42.18 / 67.47, the bar stays at 42.18 / 67.47.**
+The disagreement becomes a reported finding about the measurement path, not a
+new and conveniently lower threshold. A bar that moves when you measure it is
+not a bar.
+
+### The tie-break, written before either number exists
+
+- **Both above.** The full fine-tune ships. Report it, install it, and put this
+  section beside the numbers.
+- **BLEU above, chrF2 not.** Does not ship. This is the trade the whole project
+  has been fighting — BLEU bought with terseness — and taking it here would undo
+  the one thing Arm B was chosen for.
+- **chrF2 above, BLEU not.** Does not ship. Same rule, applied honestly in the
+  direction that is less tempting.
+- **Neither.** Does not ship. Arm B stays installed and the result is published
+  as what it is: at this corpus size a 4.3 M-parameter adapter matches or beats
+  training all 237.7 M, and the capacity arithmetic in `train_translation.py`
+  predicted the wrong winner. That is a genuinely useful negative and it is the
+  outcome I would bet on.
+
+### Significance is reported, and does not move the bar
+
+Paired bootstrap against Arm B on both metrics, 1,000 resamples, reported
+whatever it says. It does **not** change the ship decision — the bar above is
+the bar. But a win that clears the bar while failing p < 0.05 must be described
+in the model card as a difference not distinguishable from noise, in the same
+words used for the chrF2 tie. Pre-committed so the sentence cannot be softened
+after seeing which way it falls.
+
+### Robustness checks that cannot change the decision
+
+Recorded now so they cannot be promoted to evidence afterwards:
+
+- **Split-half.** devtest (1,012) and dev (997) scored separately from the same
+  saved translations. If the candidate wins on the pooled set but loses on a
+  half, the write-up says so. It does not overturn the pooled decision.
+- **Length ratio vs reference.** Arm B is 0.997-ish. Terseness is this project's
+  known failure mode and it is watched every time.
+- **BosnianBench.** Reported for continuity. It has never moved (91.5% -> 91.7%,
+  p = 0.465) and `read-olcum` established that its Turkism category cannot be
+  built from any available corpus, so it is not expected to say anything and is
+  not evidence for or against this run.
+
+### What this run cannot settle
+
+The same sentence that was true of Arm A and Arm B stays true: the gain is
+concentrated in clean news prose (SETIMES +3.05 BLEU against TED2020 -0.82) and
+nothing here distinguishes "learned better Bosnian" from "adapted to news
+style". Also new, from `read-veri`: `data/clean/train.tsv` is inside the base
+model's own training data (opusTCv20210807 contains WikiMatrix-v1, SETIMES-v2,
+TED2020-v1 and wikimedia-v20210402 by name), so both arms are re-weighting
+material the base already has rather than teaching it new text. Only the 1,924
+NTREX rows are genuinely unseen. That frames any result here and is not changed
+by it.
