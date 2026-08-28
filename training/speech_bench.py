@@ -829,7 +829,7 @@ def main() -> int:
         print("  small sample: the intervals below are wide, and a difference of a "
               "few points\n  between two listeners will not clear them")
 
-    write_artifacts(terms, refused, cases)
+    write_artifacts(terms, refused, cases, args.terms)
 
     hypotheses, matched = control_hypotheses(cases)
     controls = {name: score(cases, hyps) for name, hyps in hypotheses.items()}
@@ -857,9 +857,17 @@ def main() -> int:
     return 0
 
 
-def write_artifacts(terms: list, refused: list, cases: list) -> None:
+def write_artifacts(terms: list, refused: list, cases: list, source: str) -> None:
+    """The term set and the cases, named after which term source produced them.
+
+    Named, because they were not. A `--terms legacy` run overwrote the mined
+    run's terms.tsv and cases.tsv, and the next person to read those files —
+    me, an hour later — read the 85-target legacy set under the impression it
+    was the 221-target mined one.
+    """
+    tag = "" if source == "mined" else f"-{source}"
     used = collections.Counter(t["term_id"] for c in cases for t in c["targets"])
-    with open(OUT / "terms.tsv", "w", encoding="utf-8", newline="") as f:
+    with open(OUT / f"terms{tag}.tsv", "w", encoding="utf-8", newline="") as f:
         w = csv.writer(f, delimiter="\t", lineterminator="\n")
         w.writerow(["term_id", "category", "bosnian_forms", "hr_forms", "sr_forms",
                     "n_clips_in_run"])
@@ -867,13 +875,13 @@ def write_artifacts(terms: list, refused: list, cases: list) -> None:
             w.writerow([r["term_id"], r["category"], "|".join(r["bos"]),
                         "|".join(r["hr"]), "|".join(r["sr"]), used[r["term_id"]]])
     if refused:
-        with open(OUT / "terms-dropped.tsv", "w", encoding="utf-8", newline="") as f:
+        with open(OUT / f"terms{tag}-dropped.tsv", "w", encoding="utf-8", newline="") as f:
             w = csv.writer(f, delimiter="\t", lineterminator="\n")
             w.writerow(["term_id", "category", "bosnian_forms", "alt_forms"])
             for r in sorted(refused, key=lambda r: -int(r["n_bosnian_sources"])):
                 w.writerow([r["term_id"], r["category"], r["bosnian_forms"],
                             r["alt_forms"]])
-    with open(OUT / "cases.tsv", "w", encoding="utf-8", newline="") as f:
+    with open(OUT / f"cases{tag}.tsv", "w", encoding="utf-8", newline="") as f:
         w = csv.writer(f, delimiter="\t", lineterminator="\n")
         w.writerow(["clip", "reference", "terms", "categories", "spoken_forms",
                     "hr_variants", "sr_variants", "croatian_reference",

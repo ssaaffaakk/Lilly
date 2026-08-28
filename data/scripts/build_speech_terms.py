@@ -500,24 +500,52 @@ def mine(triples: list, rate_bs: dict, rate_other: dict, other_index: int,
 # ---------------------------------------------------------------- families
 
 
-def families(words: list) -> dict:
+def families(words: list, hr: dict, sr: dict) -> dict:
     """Group inflections of one word so a sentence yields one decision, not three.
-
-    Two Bosnian forms belong together when one is a prefix-extension of the
-    other by at most three characters — mjesto/mjesta/mjestu, izvjestaj/
-    izvjestaja. Crude on purpose: the alternative is a lemmatiser this project
-    does not have, and every grouping it makes is written into the output file
-    where it can be read and disagreed with.
 
     The reason to group at all is statistical. Two inflections of one lemma in
     one sentence are not two independent chances to drift, and counting them as
-    two would narrow every interval this bench prints.
+    two would narrow every interval the bench prints. The alternative forms are
+    pooled over the family too, so a listener that drifts to *duljini* when the
+    mined pair recorded *duljine* is still scored as drift.
+
+    That pooling is why the grouping cannot be a prefix rule on the Bosnian form
+    alone, which is what this was first. Five shared characters put *prijedlog*
+    and *prijevoznik* in one family, and *svijet* with *svijest* — so the family
+    for *prijedlog* carried *avioprevoznik* among its Serbian forms, and a
+    listener writing that word anywhere in the sentence would have been recorded
+    as drift on a word it never touched.
+
+    So two forms join only when their counterparts agree as well: a shared
+    five-character prefix on the Bosnian side, and a shared four-character
+    prefix on the alternative side in every variety where both forms have one.
+    Where they have no variety in common there is no evidence they belong
+    together, and they stay apart. That still merges *svjetlo* with *svjetski*,
+    whose Serbian forms both begin *svet* — harmless, because every alternative
+    in that cluster is an ekavian spelling and writing any of them is the drift
+    the target is there to catch.
+
+    Crude on purpose: the alternative is a lemmatiser this project does not
+    have, and every grouping it makes is written into the output file where it
+    can be read and disagreed with.
     """
+    def agrees(a: str, b: str) -> bool:
+        shared = False
+        for table in (hr, sr):
+            x, y = table.get(a), table.get(b)
+            if not (x and y):
+                continue
+            shared = True
+            if x["alt"][:4] != y["alt"][:4]:
+                return False
+        return shared
+
     out, roots = {}, []
     for w in sorted(words, key=lambda w: (len(w), w)):
         placed = False
         for root in roots:
-            if w.startswith(root[:5]) and len(w) - len(root) <= 3 and len(root) >= 5:
+            if (len(root) >= 5 and w.startswith(root[:5])
+                    and len(w) - len(root) <= 3 and agrees(w, root)):
                 out[w] = root
                 placed = True
                 break
@@ -584,7 +612,7 @@ def main() -> int:
         print(f"  hr  {word:<18} -> {alt:<18} {why}")
 
     words = sorted(set(hr) | set(sr))
-    fam = families(words)
+    fam = families(words, hr, sr)
     print(f"{len(words)} Bosnian forms in {len(set(fam.values()))} families")
 
     args.out.parent.mkdir(parents=True, exist_ok=True)
