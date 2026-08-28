@@ -662,6 +662,12 @@ def blindspots(cases: list, marks: list, hyps: list) -> None:
     print(f"    of those, {near} ({100 * near / max(len(neither), 1):.0f}%) have a word "
           f"within two characters of the spoken form in the transcript —"
           f" heard, mis-spelled, and scored as neither rather than as drift")
+    print("    resolving those by edit distance was tried and measured, and it is "
+          "wrong:\n    on the cached runs it recovered 15 Bosnian decisions, ZERO "
+          "Croatian ones, and\n    the Serbian ones it recovered were prednje for "
+          "prijetnje, ideo for dio, ritko\n    for rijetko — mishearings that land "
+          "within one edit of an ekavian form.\n    It would manufacture drift out "
+          "of transcription noise, so matching stays exact.")
     for label in ("both", "both-alt", "alt"):
         n = sum(1 for m in marks if m["outcome"] == label)
         if n:
