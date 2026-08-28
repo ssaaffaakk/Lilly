@@ -37,12 +37,21 @@ MIN_WIDTH = 800    # same bar the harvester uses
 
 
 def call(params: dict) -> dict:
+    """One API call, retried. Commons times out often enough that a bare
+    urlopen kills the whole run several hundred files in — which is exactly
+    what happened twice before this retry was added."""
     params = {**params, "format": "json"}
     url = API + "?" + urllib.parse.urlencode(params)
     req = urllib.request.Request(url, headers={"User-Agent": UA})
-    time.sleep(GAP)
-    with urllib.request.urlopen(req, timeout=60) as r:
-        return json.loads(r.read())
+    for attempt in range(5):
+        time.sleep(GAP * (1 + attempt))
+        try:
+            with urllib.request.urlopen(req, timeout=90) as r:
+                return json.loads(r.read())
+        except Exception as exc:
+            if attempt == 4:
+                raise
+            print(f"  retry {attempt + 1}/4 after {type(exc).__name__}", flush=True)
 
 
 def members(cat: str, depth: int, seen: set) -> list:
@@ -105,11 +114,19 @@ def main() -> int:
             url = info.get("thumburl") or info["url"]
             req = urllib.request.Request(url, headers={"User-Agent": UA})
             time.sleep(GAP)
-            try:
-                with urllib.request.urlopen(req, timeout=120) as r:
-                    target.write_bytes(r.read())
-            except Exception as exc:
-                print(f"  failed {name[:50]}: {exc}", file=sys.stderr)
+            ok = False
+            for attempt in range(3):
+                try:
+                    with urllib.request.urlopen(req, timeout=180) as r:
+                        target.write_bytes(r.read())
+                    ok = True
+                    break
+                except Exception as exc:
+                    if attempt == 2:
+                        print(f"  failed {name[:50]}: {exc}", file=sys.stderr)
+                    else:
+                        time.sleep(GAP * (2 + attempt))
+            if not ok:
                 continue
             artist = (meta.get("Artist") or {}).get("value", "")[:120]
             with open(credits, "a", encoding="utf-8") as f:
