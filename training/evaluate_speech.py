@@ -23,6 +23,14 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO_ROOT))
 from training.train_speech import read_tsv  # noqa: E402  (same TSV format)
 
+# Refuse to start if the machine has no room. Five of these ran at once on
+# 27 August and the kernel panicked: 100% of the compressor limit, fifteen
+# swapfiles, watchdog silent for 94 seconds. Each job is reasonable alone and
+# none of them knew the others existed.
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from scripts.guard import claim
+claim(1.2, "speech scoring")
+
 
 def edits(hyp: list, ref: list) -> int:
     """Levenshtein distance in words — substitutions, deletions, insertions."""

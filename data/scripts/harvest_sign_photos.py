@@ -97,6 +97,14 @@ from pathlib import Path
 
 import requests
 
+# Refuse to start if the machine has no room. Five of these ran at once on
+# 27 August and the kernel panicked: 100% of the compressor limit, fifteen
+# swapfiles, watchdog silent for 94 seconds. Each job is reasonable alone and
+# none of them knew the others existed.
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+from scripts.guard import claim
+claim(1.4, "photo harvest")
+
 REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
@@ -912,6 +920,11 @@ def screen_staged(staged: dict, decided: dict, target: int, max_screen: int,
     screened = 0
     if not todo:
         return kept
+    # Each worker loads its own reader, so the pool commits `workers` times what
+    # claim() measured at startup. Asking again here is what stops two of them
+    # from being started on a machine with room for one.
+    from scripts.guard import workers_for
+    workers = workers_for(1.4, workers, "readers")
     print(f"screening {len(todo)} staged images on {workers} reader(s)...")
 
     context = get_context("spawn")

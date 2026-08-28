@@ -43,6 +43,14 @@ from transformers import (
     WhisperProcessor,
 )
 
+# Refuse to start if the machine has no room. Five of these ran at once on
+# 27 August and the kernel panicked: 100% of the compressor limit, fifteen
+# swapfiles, watchdog silent for 94 seconds. Each job is reasonable alone and
+# none of them knew the others existed.
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from scripts.guard import claim
+claim(2.0, "speech training")
+
 REPO_ROOT = Path(__file__).resolve().parents[1]
 LISTEN_DIR = REPO_ROOT / "models" / "lilly" / "listen"
 SAMPLE_RATE = 16_000

@@ -189,6 +189,14 @@ SAMPLE_RATE = 16_000
 sys.path.insert(0, str(SCRIPTS_DIR))
 from download_extra_data import IJEKAVIAN, EKAVIAN  # noqa: E402
 
+# Refuse to start if the machine has no room. Five of these ran at once on
+# 27 August and the kernel panicked: 100% of the compressor limit, fifteen
+# swapfiles, watchdog silent for 94 seconds. Each job is reasonable alone and
+# none of them knew the others existed.
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+from scripts.guard import claim
+claim(0.8, "speech download")
+
 SOURCES = {
     "fleurs_hr": dict(
         repo="google/fleurs", config="hr_hr", split="train",

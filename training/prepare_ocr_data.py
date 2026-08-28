@@ -32,6 +32,14 @@ sys.path.insert(0, str(REPO_ROOT))
 
 from training.ocr_split import VALID_SHARE, is_valid_text, split_key  # noqa: E402
 
+# Refuse to start if the machine has no room. Five of these ran at once on
+# 27 August and the kernel panicked: 100% of the compressor limit, fifteen
+# swapfiles, watchdog silent for 94 seconds. Each job is reasonable alone and
+# none of them knew the others existed.
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from scripts.guard import claim
+claim(1.4, "crop cutting")
+
 OCR_DIR = REPO_ROOT / "data" / "ocr"
 IMAGE_TYPES = {".jpg", ".jpeg", ".png", ".webp", ".bmp", ".tif", ".tiff"}
 OURS = "syn"      # what this script names its files; anything else belongs to someone else
