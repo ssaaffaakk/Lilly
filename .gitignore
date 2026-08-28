@@ -31,6 +31,29 @@ data/ocr/real-photos/*
 !data/ocr/real-photos/truth.json
 !data/ocr/real-photos/scored-sample.txt
 !data/ocr/real-photos/scored-sources.tsv
+# The provenance of the harvest is the same shape of irreplaceable as the
+# transcriptions, and it was untracked too. CREDITS.tsv is the only mapping
+# from a local filename to the Commons page that licenses it: lose it and 286
+# photographs become unattributable and therefore unusable, whatever survives
+# on disk. screened.tsv is the only record of the 1,626 candidates that were
+# judged, and the only route back to the 219 photographs the crops were cut
+# from before the harvester deleted its own staging directory. staged.json
+# carries the screen_url of every kept photograph -- the 1280px rendering that
+# was actually read, not the different picture keep_url points at. All three
+# are small; the photographs they describe are the gigabytes.
+!data/ocr/real-photos/harvested/
+data/ocr/real-photos/harvested/*
+!data/ocr/real-photos/harvested/CREDITS.tsv
+!data/ocr/real-photos/harvested/.state/
+data/ocr/real-photos/harvested/.state/*
+!data/ocr/real-photos/harvested/.state/screened.tsv
+!data/ocr/real-photos/harvested/.state/staged.json
+!data/ocr/real-photos/commons-cats/
+data/ocr/real-photos/commons-cats/*
+!data/ocr/real-photos/commons-cats/CREDITS.tsv
+!data/ocr/real-photos/commons/
+data/ocr/real-photos/commons/*
+!data/ocr/real-photos/commons/CREDITS.txt
 data/speech/
 data/feedback.db
 models/
