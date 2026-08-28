@@ -9,7 +9,7 @@ when it stops being true; a stale handoff is worse than none.
 |---|---|---|---|
 | Translation | chrF2 **67.34** | FLORES-200 devtest, 1,012 pairs, through `app.translate.Engine` | level of NLLB-200-3.3B (67.2), best of 30 published systems on this pair |
 | Photographs | **54.7%** of words per photo | the same 40 Commons photographs, answer key from two blind transcribers at 91.2% agreement | was 36.0% before training on real crops |
-| Speech | **33.9%** word error | 200 held-out FLEURS Bosnian clips | untouched whisper-small reads 38.4% on the same clips; the previous fine-tune read 35.5% |
+| Speech | **34.9%** word error | 200 held-out FLEURS Bosnian clips, measured here | the listener it replaced reads 35.5% on the same clips through the same code. Kaggle measured the same model at 33.9% on a T4 — quote the local pair for the like-for-like gain, the Kaggle pair (38.4% → 33.9%) only against untrained whisper-small |
 
 **The finding that still matters more than any of them:** the translator's
 fine-tuning does not move chrF2. −0.16 at p = 0.128, a bootstrap tie. Its
@@ -26,32 +26,41 @@ how Lilly scores.
 
 ## Open, in order of urgency
 
-1. **The speech run has cleared one of its two pre-registered gates.** WER is
-   33.9% against a 35.5% threshold — passes. The Bosnian-term gate has not been
-   run on it, because the trained listener has not been downloaded: Kaggle has
-   been returning 429 on `ListKernelSessionOutput` since a large fetch was
-   killed, and a retry loop is running. The baseline it must beat is measured
-   and waiting: **65.9% term recall, 5.1% variety substitution** (`listen`), from
-   `training/speech_bench.py`. Below either and, by `PREREGISTRATION.md`, it
-   does not ship however good the WER looks. Do not install it on the WER alone.
-   Note while reading that gate: 73 of its 85 targets are yat pairs whose
-   alternative is Serbian, and the run being judged added *Croatian* — so the
-   instrument has very little for the specific drift this run risks to land on.
-
-2. **Bosnian Cyrillic is unreadable and nothing in the current plan changes
+1. **Bosnian Cyrillic is unreadable and nothing in the current plan changes
    that.** `app/ocr.py` builds `easyocr.Reader(["bs","en"])`, which is Latin
    only; `latin_g2` has 351 output classes and none are Cyrillic. 16.2% of the
    hand-transcribed crops and 7.0% of the scored answer key are Cyrillic, so the
    photograph ruler is capped at 93%. That needs a second recogniser, not more
    fine-tuning of this one.
 
-3. **Diacritics are the reader's weakest column and real signage barely teaches
+2. **Diacritics are the reader's weakest column and real signage barely teaches
    them.** 180 of 1,702 real labels carry any of č ć đ š ž; đ appears once in
    the entire set. The synthetic crops are the only thing teaching those letters,
    which is why they stayed in the mix. More real photographs will not fix this
    on their own.
 
+3. **The speech gain over the previous fine-tune is 0.6 points and untested for
+   significance.** The big number (38.4% → 33.9%) is against *untrained*
+   whisper-small. Against the listener actually replaced it is 35.5% → 34.9%,
+   and the two Bosnian-term measures are both ties (p = 0.15, p = 0.09). The
+   second run the pre-registration asked for — a different `--share` — has not
+   happened, and would need more than the 3,430 Croatian clips `--hours 12`
+   returned, since Bosnian was already above the 0.35 floor at 47%.
+
+4. **SpeechBench is weak against Croatian drift specifically.** 73 of its 85
+   targets are yat pairs whose alternative is Serbian. The run it just judged is
+   the one that added Croatian. It passed, and the instrument had little for
+   that particular failure to land on.
+
 ## Settled today
+
+**The speech listener passed both pre-registered gates and is installed.** Word
+error 35.5% → 34.9% and term recall 65.9% → 68.2%, both measured here on the
+same 200 clips through the same code; variety substitution fell 5.1% → 3.3%.
+"Both, not either", both hold. The listener it replaced is at
+`models/lilly/listen-previous/`. Neither term difference is significant, so the
+claim is that the Croatian audio did not make the model less Bosnian — the
+failure the gate was built to catch — not that it made it more so.
 
 **The reader now reads 54.7% of a photograph's words, up from 36.0%**, after
 training on 1,294 hand-transcribed real crops alongside the 20,000 synthetic
