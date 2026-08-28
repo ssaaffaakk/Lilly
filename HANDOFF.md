@@ -36,14 +36,16 @@ how Lilly scores.
    score on the same 40 photographs. Note what the training data is today: all
    of it is synthetic — 18,060 `syn*` from one generator and 3,592 `photo*`
    from the other — so **the reader has never seen a real crop.**
-2. **The harvest will not reach 1,500 and never could.** Measured at 1,499
-   screened: keep rate 17.4% overall, 20.2% on live candidates, 263 kept, ~388
-   still staged. That lands near ~340 photographs from this run. The ceiling is
-   the pool: 3,207 candidates at ~20% is ~650 even if every one were screened,
-   and `--max-screen` defaults to 1,400 per run on top of that. `--target 1500`
-   is not a goal this pool can meet.
-   (An earlier note here said ~215–250. That read the 1,400 staged as a cap on
-   the run; it is a staging window the harvester refills, so the figure was low.)
+2. **The harvest is finished: 286 photographs, not 1,500.** It stopped on
+   `--max-screen` (1,400 screenings per run, the default), not on the target.
+   Final screening: 1,114 drop, 286 keep, 219 skip, 7 refused — a 17.6% keep
+   rate. 524.4 MB on disk, diacritics on 107 of the 286. CREDITS.tsv is clean:
+   286 rows, nothing missing a licence, attribution or source page, no orphan
+   rows, no files without a row. Licences are CC BY-SA 221, CC BY 35, PD 20,
+   CC0 10.
+   `--target 1500` was never reachable from this pool — 3,207 candidates at
+   ~17.6% caps out near 560 even if every one were screened, across several
+   runs. Raising `--max-screen` buys more per run; it does not buy 1,500.
 
 ## Settled today
 
