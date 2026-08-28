@@ -57,6 +57,37 @@ So: the trained listener has cleared one of its two bars. It is not installed
 and should not be until SpeechBench has been run on it and on the listener it
 would replace.
 
+### The baseline the new listener has to beat — measured
+
+SpeechBench, run locally on the same 200 clips, on the two listeners that exist
+here today:
+
+| | WER | term recall | variety substitution |
+|---|---|---|---|
+| `listen.before-training` | 38.5% | 60.0% | 12.1% |
+| `listen` (the current one) | 35.5% | **65.9%** | **5.1%** |
+
+85 targets, 58 of them decided one way or the other. The WER column reproduces
+`evaluate_speech.py` exactly — 38.5% and 35.5% — which is worth saying because
+it means the two instruments agree about the models they share.
+
+What the current fine-tune bought, read honestly: +5.9 points of term recall at
+**p = 0.1045**, which does not clear 0.05 and is a tie; and −7.0 points of
+variety substitution at **p = 0.0050**, which does. The defensible claim is that
+the current listener drifts toward Croatian/Serbian less often, not that it
+knows more Bosnian terms.
+
+**So the bar for the new listener is 65.9% term recall and 5.1% substitution.**
+Below either and, by the pre-registered rule, it does not ship however good its
+word error rate looks.
+
+Two limits of this instrument, from its own output and not to be forgotten when
+reading the next number: 27 of 85 targets (31.8%) resolve to neither variety,
+and 16 of those have a word within two characters of the spoken form — heard,
+misspelled, scored as neither rather than as drift. And 73 of 85 targets are yat
+pairs whose alternative is Serbian, so **drift toward Croatian has very little
+here to land on.** The run being judged added 3,430 clips of *Croatian*.
+
 ## Worst clips, for the record
 
     00073.wav — 80%
