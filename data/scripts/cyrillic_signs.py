@@ -82,10 +82,26 @@ SINGLE = {
 ANGLICISED = re.compile(r"ch|sh|zh|kh|ts|yu|ya|ye|ii\b", re.IGNORECASE)
 NATIVE = re.compile(f"[{DIACRITICS}]")
 
-# Two entries are wrapped in double parentheses -- `(( Vranovic ))`. Editorial
-# marks, not names. Matched on the doubled bracket rather than on any bracket,
-# because single parentheses appear inside legitimate names.
-BRACKETED = "(("
+# THE CHARACTER RULE IS AN ALLOWLIST, AND THAT IS THE POINT.
+#
+# It started as a blocklist -- drop `((`, drop anglicised spellings -- and a
+# blocklist leaked three times in a row. First the doubled bracket of
+# `(( Vranovic ))`. Then a stray CLOSING pair, `Bekija))` and `Subašići))`,
+# which a rule looking for `((` passes. Then, on finally auditing the character
+# inventory instead of the failures people happened to notice, 1,322 entries
+# carrying letters from thirty other writing systems: Arabic (593), Katakana
+# (121), CJK (104), Ethiopic (93), Devanagari, Bengali, Gurmukhi, Greek,
+# Hangul, Hebrew, Armenian, Georgian and more. GeoNames carries alternate names
+# in every script, and some rows mix them into Latin words -- `goraዝde`,
+# `bijiልjina`. `transliterate` leaves anything it has no mapping for untouched,
+# so those would have gone onto synthetic Bosnian signs as Ethiopic and Arabic.
+#
+# Every one of those was a category somebody had to think of. So the rule is
+# inverted: an entry survives only if EVERY character is one this alphabet
+# actually uses. Bosnian gajica has no q, w, x or y either, which is why
+# `Alexander`, `Andrew` and `Avaz Twist Tower` drop out for free -- they are
+# English, and nothing in the blocklist would ever have caught them.
+ALLOWED = set(SINGLE.keys()) | set(" -")
 
 
 def is_cyrillic(text: str) -> bool:
@@ -96,6 +112,11 @@ def transliterate(text: str) -> str:
     for latin, cyrillic in DIGRAPHS:
         text = text.replace(latin, cyrillic)
     return "".join(SINGLE.get(ch, ch) for ch in text)
+
+
+def is_bosnian_latin(entry: str) -> bool:
+    """Every character is one the Bosnian Latin alphabet uses, or space/hyphen."""
+    return bool(entry) and all(ch in ALLOWED for ch in entry)
 
 
 def is_anglicised(entry: str) -> bool:
@@ -185,18 +206,20 @@ def transliterate_report(write: Path | None) -> int:
     print(f"{TOPONYMS.relative_to(REPO_ROOT)}: {len(lines)} entries, "
           f"{sum(1 for l in lines if is_cyrillic(l))} containing Cyrillic")
 
-    anglicised = [l for l in lines if is_anglicised(l)]
-    bracketed = [l for l in lines if BRACKETED in l]
-    dropped = set(anglicised) | set(bracketed)
-    kept = [l for l in lines if l not in dropped]
+    foreign = [l for l in lines if not is_bosnian_latin(l)]
+    anglicised = [l for l in lines if is_bosnian_latin(l) and is_anglicised(l)]
+    kept = [l for l in lines if is_bosnian_latin(l) and not is_anglicised(l)]
 
-    print(f"\n  dropped, anglicised duplicates : {len(anglicised)} "
+    print(f"\n  dropped, a character this alphabet does not use : {len(foreign)} "
+          f"({100 * len(foreign) / len(lines):.1f}%)")
+    print(f"    other scripts, q/w/x/y, brackets, digits, punctuation")
+    print(f"    examples: {foreign[:4]}")
+    print(f"  dropped, anglicised spelling                    : {len(anglicised)} "
           f"({100 * len(anglicised) / len(lines):.1f}%)")
     print(f"    predicate: re.search(r'{ANGLICISED.pattern}', entry, re.I) "
           f"and not re.search(r'[{DIACRITICS}]', entry)")
-    print(f"    examples: {anglicised[:6]}")
-    print(f"  dropped, '((' editorial marks  : {len(bracketed)} {bracketed}")
-    print(f"  kept                           : {len(kept)} "
+    print(f"    examples: {anglicised[:4]}")
+    print(f"  KEPT                                            : {len(kept)} "
           f"({100 * len(kept) / len(lines):.1f}%)")
 
     out = [transliterate(l) for l in kept]

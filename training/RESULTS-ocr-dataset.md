@@ -353,29 +353,66 @@ kind of claim that is only true until someone looks:
 
 **Transliteration closes it, and the arithmetic is worth seeing.** Bosnian Latin
 and Cyrillic are a near-exact 1:1 mapping once the three digraphs (`lj`→љ,
-`nj`→њ, `dž`→џ) are handled longest-first. Applying it to the toponym list:
+`nj`→њ, `dž`→џ) are handled longest-first. Applying it to the filtered list:
 
-| letter | occurrences after transliteration | toponyms containing it | in the real crops |
+| letter | occurrences after transliteration | entries containing it | in the real crops |
 |---|---|---|---|
-| Ђ / ђ | 5 / 449 | 454 | 3 / 3 |
-| Ј / ј | 1,480 / 5,621 | 6,930 | 39 / 43 |
-| Љ / љ | 372 / 3,081 | 3,425 | 3 / 8 |
-| Њ / њ | 86 / 4,314 | 4,190 | 14 / 12 |
-| Ћ / ћ | 212 / 6,513 | 6,612 | 6 / 13 |
-| **Џ / џ** | **106 / 283** | **389** | **0 / 2** |
+| Ђ / ђ | 5 / 424 | 407 | 3 / 3 |
+| Ј / ј | 1,451 / 5,304 | 6,595 | 39 / 43 |
+| Љ / љ | 354 / 3,042 | 3,369 | 3 / 8 |
+| Њ / њ | 85 / 4,266 | 4,143 | 14 / 12 |
+| Ћ / ћ | 211 / 6,423 | 6,523 | 6 / 13 |
+| **Џ / џ** | **105 / 281** | **386** | **0 / 2** |
 
-13,778 toponyms contain at least one of Ђ Љ Њ Ћ Џ. The letter with **zero** real
-examples gets 389 sources, from a corpus already in the repository and fonts
+13,574 entries contain at least one of Ђ Љ Њ Ћ Џ. The letter with **zero** real
+examples gets 386 sources, from a corpus already in the repository and fonts
 already on disk.
 
-**One trap in doing it.** The toponym list carries anglicised duplicates —
-`Abdulichi` beside `Abdići`, `Akhmichi` beside `Ahmići` — and transliterating
-those naively produces `Абдулицхи`, a letter sequence (`цх`) that does not occur
-in Bosnian. There are **1,174 of them, 2.9%**, findable by `ch|sh|zh|kh|ts`
-appearing in an entry that has no native diacritic. Filtering those and two
-bracketed oddities leaves **39,551 clean entries, 97.1%**. Transliterating
-without that filter would teach the recogniser 1,174 words' worth of letter
-pairs that Bosnian does not contain.
+### The filter had to be inverted, and that is the transferable part
+
+The first version of this filter was a blocklist, and **it leaked three times in
+a row**, each time on a category nobody had thought of:
+
+1. `(( Vranovic ))` — double parentheses, editorial marks rather than names.
+2. `Bekija))` and `Subašići))` — a stray *closing* pair, which a rule looking
+   for `((` sails straight past. Found by the lead widening the check.
+3. **1,322 entries carrying letters from thirty other writing systems** — Arabic
+   (593), Katakana (121), CJK (104), Ethiopic (93), Devanagari, Bengali,
+   Gurmukhi, Greek, Hangul, Hebrew, Armenian, Georgian and more. GeoNames
+   carries alternate names in every script, and some rows *mix* them into Latin
+   words: `goraዝde`, `bijiልjina`. Found only by auditing the character inventory
+   instead of the failures somebody happened to notice.
+
+The third one is the dangerous one, because `transliterate` leaves any character
+it has no mapping for untouched. Those entries would have gone onto synthetic
+Bosnian signs carrying Ethiopic and Arabic, and a recogniser trained on them
+would have been taught glyphs that appear on no sign in the country — the exact
+failure the filter existed to prevent, at eleven times the scale of the
+anglicised problem it was built for.
+
+So the character rule is now an **allowlist**: an entry survives only if every
+character is one this alphabet actually uses. Bosnian gajica has no `q`, `w`,
+`x` or `y`, so `Alexander`, `Andrew` and `Avaz Twist Tower` fall out for free —
+English entries that no blocklist would ever have caught.
+
+| | entries | |
+|---|---|---|
+| total | 40,727 | |
+| dropped, character not in the Bosnian Latin alphabet | 2,735 | 6.7% |
+| dropped, anglicised spelling | 805 | 2.0% |
+| **kept** | **37,187** | **91.3%** |
+
+The anglicised rule stays, because it is about letter *sequences* and not
+characters: `Abdulichi` is pure Bosnian Latin and still wrong, transliterating
+to `Абдулицхи` where `цх` occurs in no Bosnian word. Its count falls from 1,174
+to 805 only because the character rule now catches the overlap first.
+
+**Verified rather than asserted:** transliterating all 37,187 kept entries yields
+**zero** characters that are not Cyrillic, space or hyphen.
+
+An earlier version of this section reported 1,174 dropped and 39,551 kept
+(97.1%). Both were wrong — that count was taken before the foreign-script
+category was known. The numbers above supersede them.
 
 ## Reproducing this
 
