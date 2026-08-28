@@ -201,36 +201,81 @@ def main() -> int:
     src, refs = pairs(args.limit)
     print(f"{len(src):,} pairs, both models through app.translate.Engine")
 
-    # The two sides are cached separately because only one of them changes. The
-    # base build is the same in every comparison, and re-translating it costs
-    # half an hour per candidate for an answer already on disk. Any cache with
-    # the right number of rows can supply it, so a new candidate borrows the
-    # base from whatever earlier run produced it.
-    def cached(path):
-        if args.fresh or not path.exists():
-            return {}
-        data = json.loads(path.read_text(encoding="utf-8"))
-        return data if data.get("n") == len(src) else {}
+    # The two sides are cached separately because only one of them changes, and
+    # re-translating the base costs half an hour per candidate for an answer
+    # already on disk. THE CACHE IS KEYED ON THE BUILD, NOT ONLY ON THE ROW
+    # COUNT, and that is the whole point of the next thirty lines.
+    #
+    # It used to be keyed on `n == len(src)` alone. Every FLORES run has 2,009
+    # rows, so every saved file matched every build, and a candidate silently
+    # inherited whatever translations the last run happened to leave behind.
+    # Found live: training/app-hypotheses.json held the PREVIOUS fine-tune's
+    # output (42.04 / 67.11) while models/lilly/translator is Arm B
+    # (42.18 / 67.47). Running this file with no flags would have reported the
+    # old model's score, and `build_fingerprint` below would have stamped the
+    # INSTALLED build's fingerprint onto it — binding one model's number to
+    # another model's weights, which is the exact failure the fingerprint was
+    # added to prevent, defeated by the cache sitting above it.
+    #
+    # This is the same bug as the reader's photograph cache keyed on the file
+    # name alone, which HANDOFF.md already lists as a trap this project fell
+    # into. Same shape, different file: a cache whose key does not mention the
+    # thing that changed.
+    #
+    # So a side is reused only when the saved fingerprint equals the fingerprint
+    # of the build being asked for. A file written before this change carries no
+    # fingerprint, and is not reused — for either side. That costs one base
+    # re-translation, once. Reusing text whose provenance cannot be checked is
+    # how the wrong number gets published, and half an hour is cheaper than that.
+    def fingerprint_of(build: Path) -> str:
+        try:
+            return build_fingerprint(build)
+        except (FileNotFoundError, NotADirectoryError):
+            return ""
 
-    saved = cached(args.saved)
-    base = saved.get("base") or []
-    if len(base) != len(src):
+    base_fp, tuned_fp = fingerprint_of(BASE_BUILD), fingerprint_of(args.tuned)
+
+    def cached_side(path, side, want_fp):
+        """Saved translations for `side`, but only if they came from `want_fp`."""
+        if args.fresh or not path.exists() or not want_fp:
+            return []
+        data = json.loads(path.read_text(encoding="utf-8"))
+        if data.get("n") != len(src):
+            return []
+        have = data.get(f"{side}_build")
+        rows = data.get(side) or []
+        if len(rows) != len(src):
+            return []
+        if have != want_fp:
+            print(f"  {path.name}: {side} translations are from build "
+                  f"{have or 'unrecorded'}, not {want_fp[:16]} — re-translating")
+            return []
+        return rows
+
+    base = cached_side(args.saved, "base", base_fp)
+    if not base:
+        # The base build really is the same in every comparison, so a cache
+        # written by an earlier candidate can still supply it — but only one
+        # that says so by fingerprint.
         for other in sorted(REPO_ROOT.glob("training/app-hypotheses*.json")):
-            spare = cached(other).get("base") or []
-            if len(spare) == len(src):
+            spare = cached_side(other, "base", base_fp)
+            if spare:
                 print(f"  base translations reused from {other.name}")
                 base = spare
                 break
-    if len(base) != len(src):
+    if not base:
         base = translate_all(BASE_BUILD, src, "base")
 
-    tuned = saved.get("lilly") or []
-    if len(tuned) != len(src):
-        tuned = translate_all(args.tuned, src, args.tuned.name)
+    tuned = cached_side(args.saved, "lilly", tuned_fp)
+    if tuned:
+        print(f"  candidate translations reused (build {tuned_fp[:16]})"
+              f" — --fresh to redo them")
     else:
-        print("  candidate translations reused — --fresh to redo them")
+        tuned = translate_all(args.tuned, src, args.tuned.name)
 
-    args.saved.write_text(json.dumps({"n": len(src), "base": base, "lilly": tuned},
+    args.saved.write_text(json.dumps({"n": len(src),
+                                      "base": base, "base_build": base_fp,
+                                      "lilly": tuned, "lilly_build": tuned_fp},
                                      ensure_ascii=False), encoding="utf-8")
 
     # Everything above translated the whole set, because the cache is keyed on
@@ -265,7 +310,7 @@ def main() -> int:
                   + ("" if p < 0.05 else "   (does not clear 0.05)"))
         tables[title] = r
 
-    fingerprint = build_fingerprint(args.tuned)
+    fingerprint = tuned_fp or build_fingerprint(args.tuned)
     print(f"\nscored build: {fingerprint}")
     write_report(len(src), leaked, leaked_t, tables, fingerprint,
                  split=args.split, out=args.out)
