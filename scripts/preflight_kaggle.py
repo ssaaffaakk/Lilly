@@ -55,11 +55,19 @@ def check_ocr(text: str) -> None:
         fail("OCR notebook must search /kaggle/input for lilly.pth (zip or nested)")
 
 
+def check_train_ocr() -> None:
+    text = (REPO / "training" / "train_ocr.py").read_text(encoding="utf-8")
+    if "shutil.copy(weights, app_weights)" in text:
+        fail("train_ocr installs the starting checkpoint as lilly.pth — "
+             "Kaggle pass-1 shipped stock latin_g2 (md5 46986913)")
+
+
 def main() -> int:
     for path, fn in ((SPEECH, check_speech), (OCR, check_ocr)):
         if not path.is_file():
             fail(f"missing {path}")
         fn(read_nb(path))
+    check_train_ocr()
     print("preflight ok: speech + OCR notebooks")
     return 0
 

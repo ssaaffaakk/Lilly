@@ -558,7 +558,21 @@ def main() -> int:
         if not previous.exists():
             shutil.copy(app_weights, previous)
             print(f"kept the reader the app was using at {previous.name}")
-    shutil.copy(weights, app_weights)
+    # Install the trained network, not the file we started from.
+    # Copying the init checkpoint into lilly.pth shipped latin_g2 as the app
+    # reader (md5 46986913) after Kaggle pass-1 had actually trained.
+    if args.keep_trained and args.keep_trained.is_file():
+        shutil.copy(args.keep_trained, app_weights)
+    else:
+        save_weights(model.cpu(), app_weights)
+        model = model.to(device)
+    # #region agent log
+    _dbg("E", "installed trained weights not init file",
+         init_path=str(weights), init_md5=checksum(weights),
+         installed_md5=checksum(app_weights),
+         same_as_init=checksum(app_weights) == checksum(weights),
+         keep_trained=str(args.keep_trained) if args.keep_trained else None)
+    # #endregion
     print(f"wrote {app_weights} — the app reads with this now")
     return 0
 
