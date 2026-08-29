@@ -40,6 +40,8 @@ def check_ocr(text: str) -> None:
         fail("OCR notebook must not treat train_ocr exit 1 as failure when keep-trained exists")
     if "latin_g2.pth" not in text:
         fail("OCR notebook missing base weight check")
+    if "user_network" not in text:
+        fail("OCR notebook missing user_network/lilly.yaml paths")
     if "--quick-test" not in text:
         fail("OCR notebook missing GPU training smoke (--quick-test) before long run")
 

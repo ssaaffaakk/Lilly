@@ -31,6 +31,7 @@ latin_g2-previous.pth so there is a way back and something to measure against.
 """
 import argparse
 import atexit
+import math
 import os
 import shutil
 import subprocess
@@ -371,6 +372,9 @@ def main() -> int:
                 (logits.size(1),), logits.size(0), dtype=torch.int32, device=device)
             lengths = lengths.to(device=device, dtype=torch.int32)
             loss = criterion(logits, targets.to(device), input_lengths, lengths)
+            if not math.isfinite(loss.item()):
+                print(f"\nloss became non-finite at step {step} — stopping early")
+                break
             optimiser.zero_grad()
             loss.backward()
             nn.utils.clip_grad_norm_(model.parameters(), 5)
@@ -383,6 +387,11 @@ def main() -> int:
     after = accuracy(model, valid_loader, converter, device)
     print(f"after:  {after[0]:.1f}% words exact, "
           f"{after[1]:.1f}% of {after[2]} Bosnian letters right")
+
+    collapsed = step < steps or (before[0] > 50 and after[0] < 10)
+    if collapsed:
+        print("\ntraining collapsed — not writing weights")
+        return 1
 
     # Write the trained weights somewhere before the gate decides anything.
     #
