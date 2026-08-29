@@ -327,6 +327,9 @@ def main() -> int:
     ap.add_argument("--epochs", type=float, default=3.0)
     ap.add_argument("--batch-size", type=int, default=16)
     ap.add_argument("--lr", type=float, default=1e-4)
+    ap.add_argument("--weights", type=Path, default=None,
+                    help="starting weights (default: latin_g2.pth). Pass lilly.pth "
+                         "to continue a previous fine-tune.")
     ap.add_argument("--limit", type=int, default=None)
     ap.add_argument("--quick-test", action="store_true")
     ap.add_argument("--keep-trained", type=Path, metavar="PATH",
@@ -353,8 +356,13 @@ def main() -> int:
     device = ("mps" if torch.backends.mps.is_available()
               else "cuda" if torch.cuda.is_available() else "cpu")
     model = build_model(len(converter.character))
-    weights = READ_DIR / "latin_g2.pth"
-    ensure_pristine(weights)
+    weights = args.weights or (READ_DIR / "latin_g2.pth")
+    if weights.resolve() == (READ_DIR / "latin_g2.pth").resolve():
+        ensure_pristine(weights)
+    elif not weights.is_file():
+        raise SystemExit(f"weights not found: {weights}")
+    else:
+        print(f"continuing from {weights} (not the published latin_g2 baseline)")
     load_weights(model, weights)
     model = model.to(device).train()
     print(f"device: {device}  |  vocabulary: {len(converter.character)} classes")

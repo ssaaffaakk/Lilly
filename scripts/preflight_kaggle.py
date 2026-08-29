@@ -47,6 +47,10 @@ def check_ocr(text: str) -> None:
              "floods Output and the weights zip never downloads")
     if "--quick-test" not in text:
         fail("OCR notebook missing GPU training smoke (--quick-test) before long run")
+    if '"--epochs", "7"' not in text and '"--epochs", "10"' not in text:
+        fail("OCR notebook should train 7+ epochs for heavy pass-2")
+    if "--weights" not in text:
+        fail("OCR notebook missing --weights for pass-2 continuation")
 
 
 def main() -> int:

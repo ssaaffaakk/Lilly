@@ -78,7 +78,7 @@ watch_job() {
 log "watch started (interval ${INTERVAL}s) — speech + ocr"
 
 while true; do
-  sleep "$INTERVAL"
   watch_job speech "${USER}/lilly-speech"
   watch_job ocr "${USER}/lilly-ocr"
+  sleep "$INTERVAL"
 done

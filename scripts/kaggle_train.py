@@ -20,6 +20,7 @@ import argparse
 import hashlib
 import json
 import os
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -32,6 +33,7 @@ import state as repo_state
 REPO_ROOT = Path(__file__).resolve().parents[1]
 KAGGLE = str(REPO_ROOT / ".venv" / "bin" / "kaggle")
 WEIGHTS = REPO_ROOT / "models" / "lilly" / "translate"
+READ_PASS1 = REPO_ROOT / "models" / "lilly" / "read" / "lilly.pth"
 # The extra corpus travels with the run instead of being re-harvested on Kaggle.
 # data/extra/ is gitignored, so the notebook used to rebuild it up there with
 # download_extra_data.py -- and a live web corpus does not come back
@@ -61,7 +63,8 @@ JOBS = {
                     "needs_weights": False, "needs_corpus": False},
     "ocr":         {"notebook": "Lilly_OCR_Kaggle.ipynb",
                     "slug": "lilly-ocr", "title": "Lilly ocr",
-                    "needs_weights": False, "needs_corpus": False},
+                    "needs_weights": False, "needs_corpus": False,
+                    "needs_read_pass1": True},
 }
 STAGING = REPO_ROOT / "models" / "kaggle-staging"     # gitignored, under models/
 
@@ -184,6 +187,38 @@ def push_corpus(user: str) -> str:
         run(KAGGLE, "datasets", "create", "-p", stage, "-r", "zip")
     wait_until_ready(slug)
     marker.write_text(digest)
+    return slug
+
+
+def push_read_pass1(user: str) -> str:
+    """Pass-1 lilly.pth + user_network, so heavy pass-2 continues instead of restarting."""
+    slug = f"{user}/lilly-read-pass1"
+    net = READ_PASS1.parent / "user_network"
+    for needed in (READ_PASS1, net / "lilly.yaml", net / "lilly.py"):
+        if not needed.is_file():
+            raise SystemExit(
+                f"no pass-1 reader at {needed} — fetch lilly-read.zip from the "
+                f"last OCR run first, then launch heavy pass-2.")
+    stage = STAGING / "read-pass1"
+    stage.mkdir(parents=True, exist_ok=True)
+    dest = stage / "read"
+    dest.mkdir(exist_ok=True)
+    for name in ("lilly.pth",):
+        (dest / name).write_bytes(READ_PASS1.read_bytes())
+    shutil.copytree(net, dest / "user_network", dirs_exist_ok=True)
+    (stage / "dataset-metadata.json").write_text(json.dumps({
+        "title": "Lilly read pass-1", "id": slug,
+        "licenses": [{"name": "other"}]}, indent=1))
+
+    existing = subprocess.run([KAGGLE, "datasets", "status", slug],
+                              text=True, capture_output=True)
+    if "ready" in existing.stdout.lower():
+        print(f"read pass-1 dataset already there: {slug}")
+        return slug
+    mb = sum(f.stat().st_size for f in stage.rglob("*") if f.is_file()) / 1048576
+    print(f"uploading {mb:.0f} MB pass-1 reader to {slug}")
+    run(KAGGLE, "datasets", "create", "-p", stage, "-r", "zip")
+    wait_until_ready(slug)
     return slug
 
 
@@ -364,6 +399,8 @@ def main() -> int:
         datasets.append(push_weights(user))
     if job["needs_corpus"]:
         datasets.append(push_corpus(user))
+    if job.get("needs_read_pass1"):
+        datasets.append(push_read_pass1(user))
 
     push_notebook(user, job, datasets)
     print(f"\nrunning: https://www.kaggle.com/code/{slug}")
