@@ -335,6 +335,7 @@ def main() -> int:
     # Before anything is uploaded: the notebook and the cloned scripts have to
     # be the same version of this project. See require_github_matches_notebook.
     require_github_matches_notebook()
+    run(sys.executable, str(REPO_ROOT / "scripts" / "preflight_kaggle.py"))
 
     datasets = []
     if job["needs_weights"]:
