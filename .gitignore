@@ -71,6 +71,7 @@ overnight-v2.state.json
 skills-lock.json
 /lilly-speech.ipynb
 training/RESULTS-v2-full.log
+data/signs/.osm-harvest.progress.json
 *.zip
 *.bin
 *.safetensors

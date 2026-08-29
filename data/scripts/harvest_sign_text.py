@@ -429,14 +429,42 @@ def reject_reason(text: str) -> str:
     return ""
 
 
-def harvest(cap: int, cache_dir: Path, use_cache: bool) -> tuple:
+def harvest(cap: int, cache_dir: Path, use_cache: bool,
+            resume: bool = False, progress_path: Path | None = None,
+            out_path: Path | None = None) -> tuple:
     """Query every city. Returns (rows, rejects) with rows deduped on text."""
-    seen = {}
+    progress_path = progress_path or OUT_FILE.parent / ".osm-harvest.progress.json"
+    out_path = out_path or OUT_FILE
+    seen: dict = {}
+    completed: set[str] = set()
+
+    if resume and out_path.exists():
+        for line in out_path.read_text("utf-8").splitlines()[1:]:
+            parts = line.split("\t")
+            if len(parts) >= 5:
+                seen[parts[0]] = {
+                    "text": parts[0],
+                    "kind": parts[1],
+                    "city": parts[2],
+                    "script": parts[3],
+                    "has_diacritic": int(parts[4]),
+                }
+    if resume and progress_path.exists():
+        try:
+            completed = set(json.loads(progress_path.read_text("utf-8")).get("completed_cities", []))
+        except (json.JSONDecodeError, OSError):
+            completed = set()
+    if seen:
+        print(f"  resume: {len(seen):,} rows loaded, {len(completed)} cities done", flush=True)
+
     rejects = Counter()
-    reject_samples = {}
+    reject_samples: dict = {}
     raw_total = 0
 
     for city, bbox in CITIES.items():
+        if city in completed:
+            print(f"  {city:<18} skip (checkpoint)", flush=True)
+            continue
         city_kept = 0
         for group in ("poi", "transport"):
             query = overpass_query(bbox, group, cap)
@@ -469,7 +497,17 @@ def harvest(cap: int, cache_dir: Path, use_cache: bool) -> tuple:
                 city_kept += 1
             if not was_cached:
                 time.sleep(PAUSE_SECONDS)
-        print(f"  {city:<18} +{city_kept:>5} new", flush=True)
+        completed.add(city)
+        write_tsv(list(seen.values()), out_path)
+        progress_path.write_text(
+            json.dumps({
+                "completed_cities": sorted(completed),
+                "row_count": len(seen),
+                "updated": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+            }, indent=2) + "\n",
+            encoding="utf-8",
+        )
+        print(f"  {city:<18} +{city_kept:>5} new  (checkpoint {len(seen):,} total)", flush=True)
 
     print(f"\nraw elements returned: {raw_total:,}")
     return list(seen.values()), (rejects, reject_samples)
@@ -581,6 +619,8 @@ def main() -> int:
                         help="re-query Overpass instead of reusing cached JSON")
     parser.add_argument("--sample", type=int, default=0,
                         help="print N random kept texts for hand-checking")
+    parser.add_argument("--resume", action="store_true",
+                        help="skip cities in checkpoint; append to existing TSV")
     args = parser.parse_args()
 
     cache_dir = Path(tempfile.gettempdir()) / "lilly-overpass-cache"
@@ -588,7 +628,8 @@ def main() -> int:
           f"cache {cache_dir}\n", flush=True)
 
     try:
-        rows, rejects = harvest(args.cap, cache_dir, not args.no_cache)
+        rows, rejects = harvest(args.cap, cache_dir, not args.no_cache,
+                                resume=args.resume, out_path=args.out)
     except urllib.error.HTTPError as err:
         print(f"Overpass refused: HTTP {err.code} {err.reason}", file=sys.stderr)
         return 1

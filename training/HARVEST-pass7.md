@@ -16,11 +16,20 @@ Owner signed off autonomous collection. No Flickr (Pro required). NARA deferred
 
 ## Watchdog
 
-`scripts/harvest_watch.sh` — every **5 min** checks for crash/stall; restarts
-`harvest_pass7.sh` if the orchestrator died. Emits `AGENT_LOOP_TICK_harvest_watch`.
+`scripts/harvest_watch.sh` — every **5 min** runs `harvest_report.py` and restarts
+only when status is `STALLED` or `FAILED` (exit code 1). Does **not** restart if
+`logs/harvest-pass7.lock` is held (duplicate orchestrators were killing OSM mid-run).
 
-State: `logs/harvest-pass7.state.json` (resumable steps).  
-White paper: `data/ocr/HARVEST-MANIFEST.tsv` (git-tracked, append per batch).
+Honest status (`harvest_report.py`):
+
+| Status | Meaning |
+|---|---|
+| `RUNNING` | Counter moved or log/heartbeat fresh |
+| `WAITING` | Process up, counters flat (Overpass slot wait — normal) |
+| `STALLED` | No process, stale heartbeat, or duplicate orchestrators |
+| `COMPLETE` | `=== pipeline complete ===` in log |
+
+Metrics ledger: `logs/harvest-metrics.json` (counter snapshots for delta checks).
 
 ## Pipeline
 
