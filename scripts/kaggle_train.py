@@ -265,9 +265,27 @@ def push_notebook(user: str, job: dict, datasets: list) -> str:
         "competition_sources": [],
         "kernel_sources": [],
     }, indent=1))
-    run(KAGGLE, "kernels", "push", "-p", stage)
+    confirm_push(run(KAGGLE, "kernels", "push", "-p", stage, quiet=True))
     confirm_accelerator(slug, stage)
     return slug
+
+
+def confirm_push(pushed) -> None:
+    """Refuse to report a run that was never started.
+
+    `kernels push` exits 0 when the server rejects it. "Maximum batch GPU
+    session count of 2 reached" came back on stdout with a zero status, and the
+    launcher went on to print the kernel's URL and "running" — so a run that
+    does not exist looks exactly like one that does, and the watcher then polls
+    the previous version's status and reports it as this one's.
+    """
+    output = (pushed.stdout or "") + (pushed.stderr or "")
+    print(output.strip())
+    if "successfully pushed" not in output.lower():
+        raise SystemExit(
+            "Not running: Kaggle refused the push (see the message above).\n"
+            "A GPU session limit means a run has to finish or be stopped in the "
+            "browser first;\nnothing was launched, so nothing is worth watching.")
 
 
 def confirm_accelerator(slug: str, stage: Path) -> None:
