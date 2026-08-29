@@ -1,0 +1,2 @@
+recorded_utc	source	script	count	credits_path	note
+2026-08-29T21:05:00Z	Wikimedia Commons categories	fetch_commons_categories.py	343	data/ocr/real-photos/commons-cats/CREDITS.tsv	CC/PD per row; NC/ND skipped; pass-7 step 1 complete

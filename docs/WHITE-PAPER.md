@@ -49,8 +49,11 @@ See also `docs/V2-BOUNDARIES.md` for scope and workflow rules.
 ### Photographs
 
 - Wikimedia Commons — 286 harvested photographs (`data/ocr/real-photos/harvested/CREDITS.tsv`)
+- Commons category trees — `data/ocr/real-photos/commons-cats/CREDITS.tsv`
+- **Pass-7 harvest manifest** — `data/ocr/HARVEST-MANIFEST.tsv` (append-only; one row per batch with source, licence note, count, date)
 - 40 scored test photographs — blind transcriptions (`truth.json`)
 - Synthetic OCR crops — `data/scripts/generate_ocr_photos.py`
+- OSM sign text — `data/signs/sign-text.tsv` (ODbL)
 
 *(Fill: exact commit SHAs, row counts, download dates.)*
 

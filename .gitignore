@@ -55,9 +55,22 @@ data/ocr/real-photos/commons-cats/*
 !data/ocr/real-photos/commons/
 data/ocr/real-photos/commons/*
 !data/ocr/real-photos/commons/CREDITS.txt
+!data/ocr/HARVEST-MANIFEST.tsv
 data/speech/
 data/feedback.db
 models/
+
+# Local agent / overnight runs — not source of truth
+logs/
+/*.log
+*.nohup
+harvest-pass7.state.json
+kaggle-launch.json
+kaggle-poll.state.json
+overnight-v2.state.json
+skills-lock.json
+/lilly-speech.ipynb
+training/RESULTS-v2-full.log
 *.zip
 *.bin
 *.safetensors
