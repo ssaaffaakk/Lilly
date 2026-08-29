@@ -27,6 +27,12 @@ def check_speech(text: str) -> None:
         fail("speech notebook missing sharded-weight check")
     if "lilly-listen-trained.zip" not in text:
         fail("speech notebook missing early zip of listen-trained")
+    if "voxpopuli_hr" not in text:
+        fail("speech pass-2 must pull voxpopuli_hr, not FLEURS hr alone")
+    if "BOSNIAN_SHARE = 0.47" not in text:
+        fail("speech mix share must be 0.47 once extra Croatian is in")
+    if "SPEECH_EPOCHS = 2" not in text:
+        fail("speech pass-2 must set SPEECH_EPOCHS = 2 (12h wall with large-v3)")
 
 
 def check_ocr(text: str) -> None:
@@ -47,10 +53,14 @@ def check_ocr(text: str) -> None:
              "floods Output and the weights zip never downloads")
     if "--quick-test" not in text:
         fail("OCR notebook missing GPU training smoke (--quick-test) before long run")
-    if '"--epochs", "7"' not in text:
-        fail("OCR notebook should train 7 epochs for pass-4 real+synthetic mix")
+    if '"--epochs", "5"' not in text:
+        fail("OCR notebook should train 5 epochs for pass-5 real×6 + synthetic mix")
     if '"--count", "30000"' not in text:
-        fail("OCR notebook should generate 30k synthetic crops for pass-4")
+        fail("OCR notebook should generate 30k synthetic crops")
+    if "REAL_REPEAT = 6" not in text:
+        fail("OCR pass-5 must repeat real train crops (REAL_REPEAT = 6)")
+    if "heavy-pass5" not in text:
+        fail("OCR notebook still labelled pass-4")
     if "--weights" not in text:
         fail("OCR notebook missing --weights to continue from the installed reader")
     if "rglob(\"lilly.pth\")" not in text and "rglob('lilly.pth')" not in text:
