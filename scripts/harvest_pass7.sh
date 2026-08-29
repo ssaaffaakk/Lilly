@@ -4,18 +4,17 @@
 # White-paper manifest: data/ocr/HARVEST-MANIFEST.tsv (git-tracked)
 set -euo pipefail
 cd "$(dirname "$0")/.."
+# shellcheck source=harvest_lock.sh
+source "$(dirname "$0")/harvest_lock.sh"
 mkdir -p logs
 LOG=logs/harvest-pass7.log
 STATE=logs/harvest-pass7.state.json
-LOCK=logs/harvest-pass7.lock
 MANIFEST=data/ocr/HARVEST-MANIFEST.tsv
 PY=.venv/bin/python3
 ts() { date -u +"%Y-%m-%dT%H:%M:%SZ"; }
 
-# One orchestrator at a time — duplicate restarts were re-running OSM from scratch.
-exec 9>"$LOCK"
-if ! flock -n 9; then
-  echo "[$(ts)] SKIP already running (lock $(basename "$LOCK"))" | tee -a "$LOG"
+if ! harvest_acquire_lock; then
+  echo "[$(ts)] SKIP already running (lock $(basename "$HARVEST_LOCKDIR"))" | tee -a "$LOG"
   exit 0
 fi
 

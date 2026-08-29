@@ -13,7 +13,6 @@ LOGS = REPO / "logs"
 STATE = LOGS / "harvest-pass7.state.json"
 LOG = LOGS / "harvest-pass7.log"
 METRICS = LOGS / "harvest-metrics.json"
-LOCK = LOGS / "harvest-pass7.lock"
 
 # No counter movement for this long while a step is "running" => stalled.
 STALL_COUNTER_SECONDS = 600

@@ -2,9 +2,10 @@
 # Every 5 min: honest progress report + restart only when truly stalled.
 set -u
 cd "$(dirname "$0")/.."
+# shellcheck source=harvest_lock.sh
+source "$(dirname "$0")/harvest_lock.sh"
 PY=.venv/bin/python3
 ORCH=./scripts/harvest_pass7.sh
-LOCK=logs/harvest-pass7.lock
 mkdir -p logs
 
 while true; do
@@ -15,11 +16,11 @@ while true; do
     exit 0
   fi
   if [[ $rc -eq 1 ]]; then
-    if flock -n "$LOCK" true 2>/dev/null; then
+    if harvest_lock_held; then
+      echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] watchdog skip — lock held" >>logs/harvest-pass7.log
+    else
       echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] watchdog restart (stalled)" >>logs/harvest-pass7.log
       nohup "$ORCH" >>logs/harvest-pass7.nohup 2>&1 &
-    else
-      echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] watchdog skip — lock held" >>logs/harvest-pass7.log
     fi
   fi
   sleep 300
