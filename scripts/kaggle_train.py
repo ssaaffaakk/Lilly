@@ -34,6 +34,7 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 KAGGLE = str(REPO_ROOT / ".venv" / "bin" / "kaggle")
 WEIGHTS = REPO_ROOT / "models" / "lilly" / "translate"
 READ_PASS1 = REPO_ROOT / "models" / "lilly" / "read" / "lilly.pth"
+OCR_CROPS = REPO_ROOT / "data" / "ocr" / "crops"
 # The extra corpus travels with the run instead of being re-harvested on Kaggle.
 # data/extra/ is gitignored, so the notebook used to rebuild it up there with
 # download_extra_data.py -- and a live web corpus does not come back
@@ -64,7 +65,7 @@ JOBS = {
     "ocr":         {"notebook": "Lilly_OCR_Kaggle.ipynb",
                     "slug": "lilly-ocr", "title": "Lilly ocr",
                     "needs_weights": False, "needs_corpus": False,
-                    "needs_read_pass1": True},
+                    "needs_read_pass1": True, "needs_ocr_crops": True},
 }
 STAGING = REPO_ROOT / "models" / "kaggle-staging"     # gitignored, under models/
 
@@ -229,6 +230,56 @@ def push_read_pass1(user: str) -> str:
             "-m", f"lilly.pth md5 {digest}")
     else:
         print(f"uploading {mb:.0f} MB pass-1 reader to {slug}")
+        run(KAGGLE, "datasets", "create", "-p", stage, "-r", "zip")
+    wait_until_ready(slug)
+    marker.write_text(digest)
+    return slug
+
+
+def push_ocr_crops(user: str) -> str:
+    """Hand-labelled real crop PNGs. They are not in git; the notebook copies them.
+
+    One zip at the dataset root (same trap as pass-1: a nested `crops/` folder
+    packed with `-r zip` becomes `crops.zip` and cell 5b never sees a PNG).
+    """
+    import zipfile
+
+    slug = f"{user}/lilly-ocr-crops"
+    labels = OCR_CROPS / "labels-human.tsv"
+    pngs = sorted(OCR_CROPS.glob("*.png"))
+    if not labels.is_file():
+        raise SystemExit(f"no real-crop labels at {labels}")
+    if len(pngs) < 500:
+        raise SystemExit(
+            f"only {len(pngs)} crop PNGs in {OCR_CROPS} — pass-3 needs the "
+            f"hand-labelled set (about 1,900). They are gitignored.")
+    stage = STAGING / "ocr-crops"
+    if stage.exists():
+        shutil.rmtree(stage)
+    stage.mkdir(parents=True)
+    zip_path = stage / "crops.zip"
+    with zipfile.ZipFile(zip_path, "w", compression=zipfile.ZIP_STORED) as zf:
+        zf.write(labels, "labels-human.tsv")
+        for png in pngs:
+            zf.write(png, png.name)
+    digest = hashlib.md5(zip_path.read_bytes()).hexdigest()
+    (stage / "dataset-metadata.json").write_text(json.dumps({
+        "title": "Lilly OCR real crops", "id": slug,
+        "licenses": [{"name": "other"}]}, indent=1))
+    marker = STAGING / "ocr-crops.md5"
+
+    state = subprocess.run([KAGGLE, "datasets", "status", slug],
+                           text=True, capture_output=True).stdout.lower()
+    if "ready" in state and marker.exists() and marker.read_text().strip() == digest:
+        print(f"real crops already there: {slug} ({len(pngs)} pngs, md5 {digest[:8]})")
+        return slug
+    mb = zip_path.stat().st_size / 1048576
+    if "ready" in state:
+        print(f"real crops changed — pushing a new version of {slug} ({mb:.0f} MB)")
+        run(KAGGLE, "datasets", "version", "-p", stage, "-r", "zip",
+            "-m", f"crops.zip md5 {digest} n={len(pngs)}")
+    else:
+        print(f"uploading {mb:.0f} MB real crops ({len(pngs)} pngs) to {slug}")
         run(KAGGLE, "datasets", "create", "-p", stage, "-r", "zip")
     wait_until_ready(slug)
     marker.write_text(digest)
@@ -414,6 +465,8 @@ def main() -> int:
         datasets.append(push_corpus(user))
     if job.get("needs_read_pass1"):
         datasets.append(push_read_pass1(user))
+    if job.get("needs_ocr_crops"):
+        datasets.append(push_ocr_crops(user))
 
     push_notebook(user, job, datasets)
     print(f"\nrunning: https://www.kaggle.com/code/{slug}")

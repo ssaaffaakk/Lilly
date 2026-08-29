@@ -161,6 +161,9 @@ def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--count", type=int, default=5000)
     ap.add_argument("--words", type=int, default=1, help="words per image")
+    ap.add_argument("--seed", type=int, default=SEED,
+                    help="RNG seed (default 41). Pass-3 uses a new seed so the "
+                         "20k images are not the set 7 synthetic epochs overfit.")
     ap.add_argument("--build-splits", action="store_true", default=True,
                     help="also run the split builder when done")
     args = ap.parse_args()
@@ -173,7 +176,7 @@ def main() -> int:
     print(f"fonts: {len(fonts)}  words: {len(with_letters):,} with diacritics, "
           f"{len(without):,} without")
 
-    rng = random.Random(SEED)
+    rng = random.Random(args.seed)
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     letters = Counter()
     with open(OUT_DIR / "labels.tsv", "w", encoding="utf-8") as f:

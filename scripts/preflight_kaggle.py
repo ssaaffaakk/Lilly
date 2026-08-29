@@ -47,12 +47,17 @@ def check_ocr(text: str) -> None:
              "floods Output and the weights zip never downloads")
     if "--quick-test" not in text:
         fail("OCR notebook missing GPU training smoke (--quick-test) before long run")
-    if '"--epochs", "7"' not in text and '"--epochs", "10"' not in text:
-        fail("OCR notebook should train 7+ epochs for heavy pass-2")
+    if '"--epochs", "3"' not in text:
+        fail("OCR notebook should train 3 epochs for pass-3 real crops "
+             "(7 synthetic-only overfit: 86%→82% words)")
     if "--weights" not in text:
-        fail("OCR notebook missing --weights for pass-2 continuation")
+        fail("OCR notebook missing --weights to continue from the installed reader")
     if "rglob(\"lilly.pth\")" not in text and "rglob('lilly.pth')" not in text:
         fail("OCR notebook must search /kaggle/input for lilly.pth (zip or nested)")
+    if "lilly-ocr-crops" not in text:
+        fail("OCR notebook must attach/copy real crops (lilly-ocr-crops)")
+    if "no real crop images in clone — synthetic only" in text:
+        fail("OCR notebook must not silently fall back to synthetic-only on Kaggle")
 
 
 def check_train_ocr() -> None:
