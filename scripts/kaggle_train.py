@@ -191,7 +191,12 @@ def push_corpus(user: str) -> str:
 
 
 def push_read_pass1(user: str) -> str:
-    """Pass-1 lilly.pth + user_network, so heavy pass-2 continues instead of restarting."""
+    """Pass-1 lilly.pth + user_network, so heavy pass-2 continues instead of restarting.
+
+    Files sit at the dataset root. `datasets create -r zip` would otherwise pack
+    a `read/` folder into `read.zip`, and the notebook would never see lilly.pth
+    (v3 died on that in ~30s).
+    """
     slug = f"{user}/lilly-read-pass1"
     net = READ_PASS1.parent / "user_network"
     for needed in (READ_PASS1, net / "lilly.yaml", net / "lilly.py"):
@@ -200,25 +205,33 @@ def push_read_pass1(user: str) -> str:
                 f"no pass-1 reader at {needed} — fetch lilly-read.zip from the "
                 f"last OCR run first, then launch heavy pass-2.")
     stage = STAGING / "read-pass1"
-    stage.mkdir(parents=True, exist_ok=True)
-    dest = stage / "read"
-    dest.mkdir(exist_ok=True)
-    for name in ("lilly.pth",):
-        (dest / name).write_bytes(READ_PASS1.read_bytes())
-    shutil.copytree(net, dest / "user_network", dirs_exist_ok=True)
+    if stage.exists():
+        shutil.rmtree(stage)
+    stage.mkdir(parents=True)
+    (stage / "lilly.pth").write_bytes(READ_PASS1.read_bytes())
+    shutil.copy(net / "lilly.yaml", stage / "lilly.yaml")
+    shutil.copy(net / "lilly.py", stage / "lilly.py")
+    digest = hashlib.md5((stage / "lilly.pth").read_bytes()).hexdigest()
     (stage / "dataset-metadata.json").write_text(json.dumps({
         "title": "Lilly read pass-1", "id": slug,
         "licenses": [{"name": "other"}]}, indent=1))
+    marker = STAGING / "read-pass1.md5"
 
-    existing = subprocess.run([KAGGLE, "datasets", "status", slug],
-                              text=True, capture_output=True)
-    if "ready" in existing.stdout.lower():
-        print(f"read pass-1 dataset already there: {slug}")
+    state = subprocess.run([KAGGLE, "datasets", "status", slug],
+                              text=True, capture_output=True).stdout.lower()
+    if "ready" in state and marker.exists() and marker.read_text().strip() == digest:
+        print(f"read pass-1 already there: {slug} (md5 {digest[:8]})")
         return slug
-    mb = sum(f.stat().st_size for f in stage.rglob("*") if f.is_file()) / 1048576
-    print(f"uploading {mb:.0f} MB pass-1 reader to {slug}")
-    run(KAGGLE, "datasets", "create", "-p", stage, "-r", "zip")
+    mb = (stage / "lilly.pth").stat().st_size / 1048576
+    if "ready" in state:
+        print(f"pass-1 reader changed — pushing a new version of {slug} ({mb:.0f} MB)")
+        run(KAGGLE, "datasets", "version", "-p", stage, "-r", "zip",
+            "-m", f"lilly.pth md5 {digest}")
+    else:
+        print(f"uploading {mb:.0f} MB pass-1 reader to {slug}")
+        run(KAGGLE, "datasets", "create", "-p", stage, "-r", "zip")
     wait_until_ready(slug)
+    marker.write_text(digest)
     return slug
 
 

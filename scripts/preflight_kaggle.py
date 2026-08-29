@@ -51,6 +51,8 @@ def check_ocr(text: str) -> None:
         fail("OCR notebook should train 7+ epochs for heavy pass-2")
     if "--weights" not in text:
         fail("OCR notebook missing --weights for pass-2 continuation")
+    if "rglob(\"lilly.pth\")" not in text and "rglob('lilly.pth')" not in text:
+        fail("OCR notebook must search /kaggle/input for lilly.pth (zip or nested)")
 
 
 def main() -> int:
