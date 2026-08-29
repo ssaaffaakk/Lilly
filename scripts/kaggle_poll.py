@@ -1,12 +1,15 @@
 #!/usr/bin/env python3
 """Poll Kaggle speech + OCR. Do not trust API RUNNING.
 
-This project has already watched a session finish in the UI while
-`kernels status` stayed RUNNING. The thing that decides "done" is the
-output zip, listed by `kernels files`, not the status string.
+v13–v15 finished in the UI while `kernels status` stayed RUNNING. A zip on
+the files list is not enough either: it may be the *previous* version (this
+pass saw an 853-byte lilly-read-trained.zip from an earlier run while v10
+had only just been pushed).
 
-    python3 scripts/kaggle_poll.py          # crash check (both jobs)
-    python3 scripts/kaggle_poll.py --done   # also treat output zips as finished
+A job is actually done when a *new, large* zip appears after this launch.
+
+    python3 scripts/kaggle_poll.py          # crash check
+    python3 scripts/kaggle_poll.py --done   # also decide finished-vs-API-lie
 
 Exit: 0 still going, 1 crashed, 2 finished (API may still say RUNNING).
 """
@@ -23,14 +26,17 @@ REPO = Path(__file__).resolve().parents[1]
 KAGGLE = REPO / ".venv" / "bin" / "kaggle"
 LOG = REPO / "kaggle-kernels-watch.log"
 STATE = REPO / "kaggle-poll.state.json"
+LAUNCH = REPO / "kaggle-launch.json"
 JOBS = {
     "speech": {
         "slug": "afaksrmeli/lilly-speech",
         "done_names": ("lilly-listen.zip", "lilly-listen-trained.zip"),
+        "min_bytes": 1_000_000,
     },
     "ocr": {
         "slug": "afaksrmeli/lilly-ocr",
         "done_names": ("lilly-read.zip", "lilly-read-trained.zip"),
+        "min_bytes": 100_000,
     },
 }
 
@@ -60,69 +66,123 @@ def kind(line: str) -> str:
     return "UNKNOWN"
 
 
-def file_names(slug: str) -> list[str]:
-    raw = kaggle("kernels", "files", slug, "-v", "--page-size", "200")
-    names = []
-    for row in raw.splitlines():
-        if row.lower().startswith("name,") or not row.strip():
+def parse_kaggle_date(raw: str) -> datetime | None:
+    raw = raw.strip().strip('"')
+    if not raw:
+        return None
+    for fmt in (
+        "%I:%M %p, %A %d %B %Y UTC",
+        "%Y-%m-%dT%H:%M:%SZ",
+        "%Y-%m-%d %H:%M:%S",
+    ):
+        try:
+            return datetime.strptime(raw, fmt).replace(tzinfo=timezone.utc)
+        except ValueError:
             continue
-        names.append(row.split(",", 1)[0].strip().strip('"'))
-    if not names:
-        # table mode fallback
-        for row in raw.splitlines():
-            for part in row.replace("|", " ").split():
-                if part.endswith(".zip"):
-                    names.append(part)
-    return names
+    return None
 
 
-def poll_job(name: str, spec: dict, probe_files: bool) -> dict:
+def launched_at(job: str) -> datetime | None:
+    if not LAUNCH.is_file():
+        return None
+    try:
+        data = json.loads(LAUNCH.read_text(encoding="utf-8"))
+    except json.JSONDecodeError:
+        return None
+    stamp = (data.get(job) or {}).get("pushed")
+    return parse_kaggle_date(stamp) if stamp else None
+
+
+def list_files(slug: str) -> list[dict]:
+    raw = kaggle("kernels", "files", slug, "-v", "--page-size", "200")
+    rows = []
+    for line in raw.splitlines():
+        if not line.strip() or line.lower().startswith("name,") or line.startswith("Next Page"):
+            continue
+        parts = line.split(",")
+        if len(parts) < 2:
+            continue
+        name = parts[0].strip().strip('"')
+        try:
+            size = int(parts[1].strip().strip('"'))
+        except ValueError:
+            size = 0
+        created = parse_kaggle_date(",".join(parts[2:])) if len(parts) > 2 else None
+        rows.append({"name": name, "size": size, "created": created})
+    return rows
+
+
+def fresh_zips(job: str, spec: dict, files: list[dict]) -> list[dict]:
+    want = spec["done_names"]
+    min_bytes = spec["min_bytes"]
+    start = launched_at(job)
+    found = []
+    for f in files:
+        base = Path(f["name"]).name
+        if base not in want and f["name"] not in want:
+            continue
+        if f["size"] < min_bytes:
+            continue
+        if start is not None and f["created"] is not None and f["created"] < start:
+            continue
+        found.append(f)
+    return found
+
+
+def poll_job(name: str, spec: dict) -> dict:
     slug = spec["slug"]
     status = kaggle("kernels", "status", slug)
     st = kind(status)
-    names = file_names(slug) if probe_files or st in ("RUNNING", "COMPLETE", "UNKNOWN") else []
-    zips = [n for n in names if any(n.endswith(z) or n == z for z in spec["done_names"])]
-    # kernels files sometimes returns the basename only
-    zips += [n for n in names if Path(n).name in spec["done_names"]]
-    zips = sorted(set(zips))
+    files = list_files(slug)
+    zips = fresh_zips(name, spec, files)
+    zip_names = [f"{Path(z['name']).name} {z['size']}B" for z in zips]
     actually_done = st == "COMPLETE" or bool(zips)
-    crashed = st in ("ERROR", "CANCEL")
+    # COMPLETE with only a tiny leftover zip is still COMPLETE.
+    if st == "COMPLETE" and not zips:
+        actually_done = True
+    crashed = st in ("ERROR", "CANCEL") and not actually_done
     api_lie = st == "RUNNING" and bool(zips)
-    row = {
-        "job": name,
-        "slug": slug,
-        "api": st,
-        "status_line": status.replace("\n", " ")[:300],
-        "output_zips": zips,
-        "actually_done": actually_done,
-        "crashed": crashed,
-        "api_lie": api_lie,
-    }
     extra = ""
     if api_lie:
-        extra = " — API RUNNING but output zip exists (treat as DONE)"
+        extra = " — API RUNNING but a fresh zip exists (DONE)"
     elif actually_done:
-        extra = f" — done ({', '.join(zips) or 'COMPLETE'})"
+        extra = f" — done ({', '.join(zip_names) or st})"
     elif crashed:
         extra = " — CRASH"
     log(f"{name}: api={st}{extra}")
     if status:
         log(f"  {status}")
     if zips:
-        log(f"  zips: {zips}")
-    return row
+        log(f"  zips: {zip_names}")
+    tiny = [
+        f"{Path(f['name']).name}:{f['size']}"
+        for f in files
+        if Path(f["name"]).name in spec["done_names"] and f["size"] < spec["min_bytes"]
+    ]
+    if tiny and not zips:
+        log(f"  ignoring undersized leftover: {tiny}")
+    return {
+        "job": name,
+        "slug": slug,
+        "api": st,
+        "status_line": status.replace("\n", " ")[:300],
+        "output_zips": zip_names,
+        "actually_done": actually_done,
+        "crashed": crashed,
+        "api_lie": api_lie,
+    }
 
 
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--done", action="store_true",
-                    help="probe output files even when status looks live")
-    args = ap.parse_args()
+                    help="watcher flag; files are always listed")
+    ap.parse_args()
 
-    rows = [poll_job(n, s, probe_files=args.done) for n, s in JOBS.items()]
+    rows = [poll_job(n, s) for n, s in JOBS.items()]
     STATE.write_text(json.dumps({"when": ts(), "jobs": rows}, indent=2), encoding="utf-8")
 
-    if any(r["crashed"] and not r["actually_done"] for r in rows):
+    if any(r["crashed"] for r in rows):
         return 1
     if any(r["actually_done"] for r in rows):
         return 2

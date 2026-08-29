@@ -233,6 +233,17 @@ class Crops(Dataset):
         name, text = self.rows[idx]
         return prepare(self.folder / name), text
 
+    def subset(self, real: bool):
+        """Real crops are every filename that is not syn*. Pass-5 was refused
+        on a pooled valid set that is mostly synthetic — the easy half."""
+        other = Crops.__new__(Crops)
+        other.folder = self.folder
+        if real:
+            other.rows = [(n, t) for n, t in self.rows if not n.startswith("syn")]
+        else:
+            other.rows = [(n, t) for n, t in self.rows if n.startswith("syn")]
+        return other
+
 
 def collate(batch):
     """Pad to the widest image in this batch, not to a fixed width.
@@ -346,20 +357,40 @@ def main() -> int:
     print(f"device: {device}  |  vocabulary: {len(converter.character)} classes")
 
     train = Crops(train_dir, args.limit)
-    valid = Crops(valid_dir, min(args.limit or 500, 500))
-    print(f"training crops: {len(train):,}  |  held out: {len(valid):,}")
+    # Full valid, not a 500-row cap: that cap, plus synthetic rows landing
+    # first, is how a photograph-aimed run was judged on the easy half.
+    valid = Crops(valid_dir, args.limit)
+    valid_real = valid.subset(real=True)
+    valid_syn = valid.subset(real=False)
+    print(f"training crops: {len(train):,}  |  held out: {len(valid):,} "
+          f"({len(valid_real)} real, {len(valid_syn)} synthetic)")
     if not train:
         print("nothing to train on", file=sys.stderr)
         return 1
 
     train_loader = DataLoader(train, batch_size=args.batch_size, shuffle=True,
                               collate_fn=collate, num_workers=0)
-    valid_loader = DataLoader(valid, batch_size=args.batch_size, collate_fn=collate,
-                              num_workers=0)
 
-    before = accuracy(model, valid_loader, converter, device)
-    print(f"before: {before[0]:.1f}% words exact, "
-          f"{before[1]:.1f}% of {before[2]} Bosnian letters right")
+    def score(crops):
+        if not crops:
+            return None
+        loader = DataLoader(crops, batch_size=args.batch_size, collate_fn=collate,
+                            num_workers=0)
+        return accuracy(model, loader, converter, device)
+
+    before = score(valid)
+    before_real = score(valid_real)
+    before_syn = score(valid_syn)
+    print(f"before pooled: {before[0]:.1f}% words, "
+          f"{before[1]:.1f}% of {before[2]} Bosnian letters")
+    if before_real:
+        print(f"before real:   {before_real[0]:.1f}% words, "
+              f"{before_real[1]:.1f}% of {before_real[2]} Bosnian letters "
+              f"({len(valid_real)} crops)")
+    if before_syn:
+        print(f"before syn:    {before_syn[0]:.1f}% words, "
+              f"{before_syn[1]:.1f}% of {before_syn[2]} Bosnian letters "
+              f"({len(valid_syn)} crops)")
 
     criterion = nn.CTCLoss(zero_infinity=True)
     optimiser = torch.optim.AdamW(model.parameters(), lr=args.lr)
@@ -396,9 +427,17 @@ def main() -> int:
                 print(f"  {step}/{steps}  loss {loss.item():.4f}  "
                       f"{(time.time() - t0) / step:.2f}s/step", flush=True)
 
-    after = accuracy(model, valid_loader, converter, device)
-    print(f"after:  {after[0]:.1f}% words exact, "
-          f"{after[1]:.1f}% of {after[2]} Bosnian letters right")
+    after = score(valid)
+    after_real = score(valid_real)
+    after_syn = score(valid_syn)
+    print(f"after pooled: {after[0]:.1f}% words, "
+          f"{after[1]:.1f}% of {after[2]} Bosnian letters")
+    if after_real:
+        print(f"after real:   {after_real[0]:.1f}% words, "
+              f"{after_real[1]:.1f}% of {after_real[2]} Bosnian letters")
+    if after_syn:
+        print(f"after syn:    {after_syn[0]:.1f}% words, "
+              f"{after_syn[1]:.1f}% of {after_syn[2]} Bosnian letters")
 
     # Write the trained weights somewhere before the gate decides anything.
     #
@@ -442,26 +481,39 @@ def main() -> int:
               f"leaving the shipped reader alone")
         return 0
 
-    # Both numbers have to rise, not just the one this run was aimed at. A model
-    # that saves diacritics by getting whole words wrong more often has made a
-    # trade, not an improvement, and the diacritic number alone waves it through:
-    # spelling `Čaršija` as `Čaršijaa` keeps every Bosnian letter and loses the
-    # word. This project has already been bitten once by a metric that moved the
-    # flattering way while its partner moved the other way, so the gate asks for
-    # both. Written before this run produced a number.
-    words_up = after[0] > before[0]
-    letters_up = after[1] > before[1]
-    if not (words_up and letters_up):
-        print(f"\nwords {before[0]:.1f}% -> {after[0]:.1f}%, "
-              f"Bosnian letters {before[1]:.1f}% -> {after[1]:.1f}%")
-        if letters_up and not words_up:
-            print("the Bosnian letters improved but whole words got worse — "
-                  "that is a trade, not a better reader. Not replacing it.")
-        elif words_up and not letters_up:
-            print("whole words improved but the Bosnian letters did not — "
-                  "this run was aimed at the letters. Not replacing it.")
+    # Pass-5 (Kaggle v10) trained to the end and was refused: pooled words
+    # 88.8% -> 88.0% on a valid set that is mostly synthetic, which is already
+    # at ceiling. The run was aimed at photographs. Judging it on the generator
+    # is the same mistake as scoring 500 synthetic rows and calling that the
+    # reader. Written before pass-6 produces a number:
+    #
+    #   real held-out crops: words strictly up; Bosnian letters not down
+    #   synthetic held-out:  neither number down (a floor, not a target)
+    #
+    # Both halves, not either. A real-crop gain paid for with synthetic
+    # collapse does not install. A synthetic tick with real crops unchanged
+    # does not install either — that is pass-4's job, already done.
+    if before_real is None or after_real is None or len(valid_real) < 40:
+        print("\ntoo few real valid crops to decide a photograph-aimed run")
+        return 1
+    if before_syn is None or after_syn is None:
+        print("\nno synthetic valid crops — the mix is missing, not replacing")
+        return 1
+    real_words_up = after_real[0] > before_real[0]
+    real_letters_ok = after_real[1] >= before_real[1]
+    syn_ok = after_syn[0] >= before_syn[0] and after_syn[1] >= before_syn[1]
+    print(f"\nreal  words {before_real[0]:.1f}% -> {after_real[0]:.1f}%, "
+          f"letters {before_real[1]:.1f}% -> {after_real[1]:.1f}%")
+    print(f"syn   words {before_syn[0]:.1f}% -> {after_syn[0]:.1f}%, "
+          f"letters {before_syn[1]:.1f}% -> {after_syn[1]:.1f}%")
+    if not (real_words_up and real_letters_ok and syn_ok):
+        if not real_words_up:
+            print("real-crop words did not rise — not replacing the shipped reader")
+        elif not real_letters_ok:
+            print("real-crop words rose but Bosnian letters fell — a trade. "
+                  "Not replacing it.")
         else:
-            print("neither number improved — not replacing the shipped reader")
+            print("real crops improved but synthetic valid fell — not replacing")
         return 1
 
     keep = READ_DIR / "latin_g2-previous.pth"

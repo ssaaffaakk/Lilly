@@ -54,13 +54,13 @@ def check_ocr(text: str) -> None:
     if "--quick-test" not in text:
         fail("OCR notebook missing GPU training smoke (--quick-test) before long run")
     if '"--epochs", "5"' not in text:
-        fail("OCR notebook should train 5 epochs for pass-5 real×6 + synthetic mix")
+        fail("OCR notebook should train 5 epochs for pass-6")
     if '"--count", "30000"' not in text:
         fail("OCR notebook should generate 30k synthetic crops")
-    if "REAL_REPEAT = 6" not in text:
-        fail("OCR pass-5 must repeat real train crops (REAL_REPEAT = 6)")
-    if "heavy-pass5" not in text:
-        fail("OCR notebook still labelled pass-4")
+    if "REAL_REPEAT = 2" not in text:
+        fail("OCR pass-6 must repeat real train crops ×2, not ×6")
+    if "heavy-pass6" not in text:
+        fail("OCR notebook still labelled an older pass")
     if "--weights" not in text:
         fail("OCR notebook missing --weights to continue from the installed reader")
     if "rglob(\"lilly.pth\")" not in text and "rglob('lilly.pth')" not in text:
@@ -76,6 +76,8 @@ def check_train_ocr() -> None:
     if "shutil.copy(weights, app_weights)" in text:
         fail("train_ocr installs the starting checkpoint as lilly.pth — "
              "Kaggle pass-1 shipped stock latin_g2 (md5 46986913)")
+    if "valid_real" not in text or "after_syn" not in text:
+        fail("train_ocr must split real vs synthetic valid (pass-5 pooled gate refused a photo run)")
 
 
 def main() -> int:
