@@ -1,2 +1,3 @@
 recorded_utc	source	script	count	credits_path	note
 2026-08-29T21:05:00Z	Wikimedia Commons categories	fetch_commons_categories.py	343	data/ocr/real-photos/commons-cats/CREDITS.tsv	CC/PD per row; NC/ND skipped; pass-7 step 1 complete
+2026-08-29T22:20:10Z	OpenStreetMap sign text	harvest_sign_text.py	9507	data/signs/sign-text.tsv	ODbL; attribution required

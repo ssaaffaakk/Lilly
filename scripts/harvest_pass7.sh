@@ -1,22 +1,37 @@
 #!/usr/bin/env bash
 # OCR pass-7 data collection — serial, resumable, watchdog-friendly.
-# Logs: logs/harvest-pass7.log  State: logs/harvest-pass7.state.json
-# White-paper manifest: data/ocr/HARVEST-MANIFEST.tsv (git-tracked)
+# Logs: logs/harvest/pass7.log  State: logs/harvest/pass7.state.json
 set -euo pipefail
 cd "$(dirname "$0")/.."
+# shellcheck source=logs_paths.sh
+source "$(dirname "$0")/logs_paths.sh"
+PY=.venv/bin/python3
+# Leave the Cursor/agent process group before taking the lock.
+if [[ "${LILLY_HARVEST_ROLE:-}" != "orch" ]]; then
+  exec "$PY" scripts/harvest_detach.py --role orch --log "$LOG_HARVEST/pass7.nohup" -- "$PWD/scripts/harvest_pass7.sh" "$@"
+fi
 # shellcheck source=harvest_lock.sh
 source "$(dirname "$0")/harvest_lock.sh"
-mkdir -p logs
-LOG=logs/harvest-pass7.log
-STATE=logs/harvest-pass7.state.json
+mkdir -p "$LOG_HARVEST"
+LOG="$LOG_HARVEST/pass7.log"
+STATE="$LOG_HARVEST/pass7.state.json"
 MANIFEST=data/ocr/HARVEST-MANIFEST.tsv
-PY=.venv/bin/python3
 ts() { date -u +"%Y-%m-%dT%H:%M:%SZ"; }
+
+_on_orch_signal() {
+  harvest_release_lock
+  exit 128
+}
 
 if ! harvest_acquire_lock; then
   echo "[$(ts)] SKIP already running (lock $(basename "$HARVEST_LOCKDIR"))" | tee -a "$LOG"
   exit 0
 fi
+
+trap 'harvest_release_lock' EXIT
+trap '_on_orch_signal HUP' HUP
+trap '_on_orch_signal TERM' TERM
+trap '_on_orch_signal INT' INT
 
 init_state() {
   if [[ ! -f "$STATE" ]]; then

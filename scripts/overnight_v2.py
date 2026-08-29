@@ -24,10 +24,14 @@ from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[1]
 PY = REPO / ".venv" / "bin" / "python"
-KAGGLE = REPO / ".venv" / "bin" / "kaggle"
-LOG = REPO / "overnight-v2.log"
+KAGGLE_BIN = REPO / ".venv" / "bin" / "kaggle"
+_SCRIPTS = Path(__file__).resolve().parent
+sys.path.insert(0, str(_SCRIPTS))
+from log_paths import TRAINING  # noqa: E402
+
+LOG = TRAINING / "overnight-v2.log"
 REPORT = REPO / "overnight-v2.report.md"
-STATE = REPO / "overnight-v2.state.json"
+STATE = TRAINING / "overnight-v2.state.json"
 SPEECH_SLUG = "afaksrmeli/lilly-speech"
 OCR_SLUG = "afaksrmeli/lilly-ocr"
 POLL = 300          # seconds between status checks
@@ -86,7 +90,7 @@ def run(cmd: list[str], **kw) -> subprocess.CompletedProcess:
 
 def kernel_status(slug: str) -> str:
     for attempt in range(3):
-        r = run([str(KAGGLE), "kernels", "status", slug])
+        r = run([str(KAGGLE_BIN), "kernels", "status", slug])
         if r.returncode == 0 and r.stdout.strip():
             return r.stdout.strip()
         time.sleep(10)
@@ -128,7 +132,7 @@ def watch_kernel(slug: str, label: str) -> None:
         if kind in ("ERROR", "CANCEL"):
             out = REPO / "models" / "kaggle-output" / f"{label}-error"
             out.mkdir(parents=True, exist_ok=True)
-            run([str(KAGGLE), "kernels", "output", slug, "-p", str(out)])
+            run([str(KAGGLE_BIN), "kernels", "output", slug, "-p", str(out)])
             stop(
                 f"{label} kernel {kind}",
                 f"Kernel `{slug}` ended with {kind}.\n\nOutput fetched to `{out}`.\n\n"
@@ -205,7 +209,7 @@ def stage5_watch_ocr_and_fetch() -> None:
     log("stage 5: watch OCR + fetch")
     watch_kernel(OCR_SLUG, "ocr")
     out = REPO / "models" / "kaggle-output"
-    r = run([str(KAGGLE), "kernels", "output", OCR_SLUG, "-p", str(out)])
+    r = run([str(KAGGLE_BIN), "kernels", "output", OCR_SLUG, "-p", str(out)])
     if r.returncode != 0:
         stop("OCR fetch failed", r.stdout + r.stderr)
     zips = list(out.rglob("lilly-read.zip"))

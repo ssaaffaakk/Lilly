@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Portable single-instance lock (macOS has no flock). Source from harvest scripts.
 set -u
-HARVEST_LOCKDIR="${HARVEST_LOCKDIR:-logs/harvest-pass7.lock.d}"
+HARVEST_LOCKDIR="${HARVEST_LOCKDIR:-logs/harvest/pass7.lock.d}"
 
 harvest_lock_stale() {
   [[ ! -d "$HARVEST_LOCKDIR" ]] && return 0

@@ -11,7 +11,9 @@
 set -u
 REPO=/Users/safaksurmeli/Desktop/Lilly
 CLAUDE=/Users/safaksurmeli/.local/bin/claude
-LOG=$REPO/night-watch.log
+# shellcheck source=logs_paths.sh
+source "$REPO/scripts/logs_paths.sh"
+LOG="$LOG_TRAINING/night-watch.log"
 DEADLINE=$(( $(date +%s) + 13*3600 ))   # sabah rapordan sonra kendini bırakır
 
 cd "$REPO" || exit 1
@@ -74,7 +76,7 @@ Sırayla: `cat RESUME.md`, `tail -40 NIGHT-LOG.md`, `cat training/PREREGISTRATIO
 Koşan işleri kontrol et:
   .venv/bin/kaggle kernels status afaksrmeli/lilly-translation
   pgrep -fl "train_ocr|train_translation|evaluate"
-  tail -5 wer-trained.log ocr-train.log 2>/dev/null
+  tail -5 "$LOG_TRAINING/wer-trained.log" "$LOG_OCR/ocr-train.log" 2>/dev/null
 
 Karar ver ve uygula:
 - Biten iş varsa sonucunu OKU ve doğrula — çıkış kodunu değil, ürettiği sayıyı. Eşikler ön-kayıtta ve yeniden yorumlanamaz.

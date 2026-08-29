@@ -4,8 +4,10 @@
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
+# shellcheck source=logs_paths.sh
+source "$(dirname "$0")/logs_paths.sh"
 INTERVAL="${1:-300}"
-LOG="$ROOT/kaggle-kernels-watch.log"
+LOG="$LOG_KAGGLE/kernels-watch.log"
 KAGGLE="$ROOT/.venv/bin/kaggle"
 USER="${KAGGLE_USER:-afaksrmeli}"
 LAST_speech=""

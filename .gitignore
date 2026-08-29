@@ -56,21 +56,20 @@ data/ocr/real-photos/commons-cats/*
 data/ocr/real-photos/commons/*
 !data/ocr/real-photos/commons/CREDITS.txt
 !data/ocr/HARVEST-MANIFEST.tsv
+!data/signs/
+data/signs/*
+!data/signs/sign-text.tsv
 data/speech/
 data/feedback.db
 models/
 
 # Local agent / overnight runs — not source of truth
-logs/
+logs/*
+!logs/README.md
 /*.log
 *.nohup
-harvest-pass7.state.json
-kaggle-launch.json
-kaggle-poll.state.json
-overnight-v2.state.json
 skills-lock.json
 /lilly-speech.ipynb
-training/RESULTS-v2-full.log
 data/signs/.osm-harvest.progress.json
 *.zip
 *.bin
@@ -82,35 +81,24 @@ data/signs/.osm-harvest.progress.json
 .DS_Store
 .vscode/
 .idea/
+.cursor/
 
 # Secrets
 .env
+.agents/
+
+# Legacy root log names (migrated to logs/<category>/ — keep ignored if recreated)
 training.log
 remaining.log
 significance.log
 speech-retry.log
 eval-full.log
-.agents/
-
-# Local Claude Code scaffolding, not part of the project
-.claude/agents/
-.claude/agent-loop/
-.claude/scheduled_tasks.lock
-app-path-eval.log
-training/hypotheses.json
-training/app-hypotheses.json
-NIGHT-LOG.md
-RESUME.md
 night-watch.log
 kaggle-translation-launch.log
 wer-*.log
 ocr-train.log
 app-path-eval.log
-.night_watch.lock
-models/lilly/read/.train_ocr.lock
 ocr-train.log.*
-bench/.outputs.json
-bench/run-full.log
 app-server.log
 kaggle-armB.log
 kaggle-fetch.log
@@ -119,5 +107,17 @@ eval-armA.log
 ocr-full-eval.log
 kaggle-armB-relaunch.log
 ocr-product.log
+
+# Local Claude Code scaffolding, not part of the project
+.claude/agents/
+.claude/agent-loop/
+.claude/scheduled_tasks.lock
+training/hypotheses.json
+training/app-hypotheses.json
+NIGHT-LOG.md
+RESUME.md
+.night_watch.lock
+models/lilly/read/.train_ocr.lock
+bench/.outputs.json
 data/osm/
-data/signs/
+# data/signs/ — see exceptions above (sign-text.tsv for white paper)

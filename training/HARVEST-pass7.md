@@ -16,9 +16,14 @@ Owner signed off autonomous collection. No Flickr (Pro required). NARA deferred
 
 ## Watchdog
 
-`scripts/harvest_watch.sh` — every **5 min** runs `harvest_report.py` and restarts
-only when status is `STALLED` or `FAILED` (exit code 1). Does **not** restart if
-`logs/harvest-pass7.lock` is held (duplicate orchestrators were killing OSM mid-run).
+`scripts/harvest_watch.sh` — **double-fork + new session** (`scripts/harvest_detach.py`)
+so Cursor/agent shells cannot kill the job. `nohup` alone is not enough: harvest
+was staying in the agent's process group (`pgid`) and dying with no `FAIL` line.
+
+Every **5 min** runs `harvest_report.py` and restarts only when status is `STALLED`
+or `FAILED` (exit code 1). Does **not** restart if the lockdir is held.
+
+Start: `./scripts/harvest_watch.sh` (returns immediately; job detaches).
 
 Honest status (`harvest_report.py`):
 
@@ -29,11 +34,11 @@ Honest status (`harvest_report.py`):
 | `STALLED` | No process, stale heartbeat, or duplicate orchestrators |
 | `COMPLETE` | `=== pipeline complete ===` in log |
 
-Metrics ledger: `logs/harvest-metrics.json` (counter snapshots for delta checks).
+Metrics ledger: `logs/harvest/metrics.json` (counter snapshots for delta checks).
 
 ## Pipeline
 
-Serial script: `scripts/harvest_pass7.sh` → log `logs/harvest-pass7.log`
+Serial script: `scripts/harvest_pass7.sh` → log `logs/harvest/pass7.log`
 
 | Step | Script | API key? |
 |---|---|---|

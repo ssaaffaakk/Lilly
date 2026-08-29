@@ -60,7 +60,9 @@ bounding box around a border town does not stop at the border.
 import argparse
 import hashlib
 import json
+import os
 import re
+import signal
 import sys
 import tempfile
 import time
@@ -340,6 +342,8 @@ def fetch(query: str, cache_dir: Path, use_cache: bool) -> list:
                 # once it has decided a client is too pushy, so treat it as the
                 # harshest possible "back off", not as a permanently dead host.
                 reason = f"{host} {err}"
+            except Exception as err:
+                raise
         if raw is not None:
             break
         if attempt == 2:
@@ -609,6 +613,11 @@ def write_tsv(rows: list, path: Path) -> None:
 
 
 def main() -> int:
+    def _on_signal(signum, _frame):
+        raise SystemExit(128 + signum)
+
+    for _sig in (signal.SIGHUP, signal.SIGTERM, signal.SIGINT):
+        signal.signal(_sig, _on_signal)
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--cap", type=int, default=1200,
                         help="max elements per city per group (default 1200: "

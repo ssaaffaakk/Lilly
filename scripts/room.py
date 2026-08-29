@@ -38,7 +38,7 @@ def running(pattern: str) -> bool:
     return bool(shell("pgrep", "-f", pattern).strip())
 
 
-def eval_progress(name: str = "eval-full.log") -> tuple:
+def eval_progress(name: str = "logs/eval/eval-full.log") -> tuple:
     """How far a scoring run has got, from its own log."""
     log = REPO_ROOT / name
     if not log.exists():
@@ -90,7 +90,7 @@ def build_runs() -> list:
     # through app/translate.py, sentence splitting included. The older run above
     # feeds rows to the model whole, which is not what the app does — and the
     # difference is not small, so the room has to show which one is speaking.
-    done, total = eval_progress("app-path-eval.log")
+    done, total = eval_progress("logs/app/app-path-eval.log")
     alive = running("app_path_eval.py")
     if done and total:
         pct = round(100 * done / total)

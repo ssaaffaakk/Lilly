@@ -23,10 +23,14 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[1]
-KAGGLE = REPO / ".venv" / "bin" / "kaggle"
-LOG = REPO / "kaggle-kernels-watch.log"
-STATE = REPO / "kaggle-poll.state.json"
-LAUNCH = REPO / "kaggle-launch.json"
+KAGGLE_BIN = REPO / ".venv" / "bin" / "kaggle"
+_SCRIPTS = Path(__file__).resolve().parent
+sys.path.insert(0, str(_SCRIPTS))
+from log_paths import KAGGLE as KAGGLE_LOG  # noqa: E402
+
+LOG = KAGGLE_LOG / "kernels-watch.log"
+STATE = KAGGLE_LOG / "poll.state.json"
+LAUNCH = KAGGLE_LOG / "launch.json"
 JOBS = {
     "speech": {
         "slug": "afaksrmeli/lilly-speech",
@@ -54,7 +58,7 @@ def log(msg: str) -> None:
 
 def kaggle(*args: str, timeout: int = 120) -> str:
     r = subprocess.run(
-        [str(KAGGLE), *args],
+        [str(KAGGLE_BIN), *args],
         capture_output=True, text=True, timeout=timeout, cwd=REPO)
     return ((r.stdout or "") + (r.stderr or "")).strip()
 

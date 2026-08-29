@@ -1,7 +1,0 @@
-objc[2573]: Class AVFFrameReceiver is implemented in both /Users/safaksurmeli/Desktop/Lilly/.venv/lib/python3.12/site-packages/av/.dylibs/libavdevice.62.3.102.dylib (0x10f8f03a8) and /Users/safaksurmeli/Desktop/Lilly/.venv/lib/python3.12/site-packages/cv2/.dylibs/libavdevice.61.3.100.dylib (0x1139cc3a8). This may cause spurious casting failures and mysterious crashes. One of the duplicates must be removed or renamed.
-objc[2573]: Class AVFAudioReceiver is implemented in both /Users/safaksurmeli/Desktop/Lilly/.venv/lib/python3.12/site-packages/av/.dylibs/libavdevice.62.3.102.dylib (0x10f8f03f8) and /Users/safaksurmeli/Desktop/Lilly/.venv/lib/python3.12/site-packages/cv2/.dylibs/libavdevice.61.3.100.dylib (0x1139cc3f8). This may cause spurious casting failures and mysterious crashes. One of the duplicates must be removed or renamed.
-/Users/safaksurmeli/Desktop/Lilly/.venv/lib/python3.12/site-packages/transformers/modeling_utils.py:2810: UserWarning: Moving the following attributes in the config to the generation config: {'max_length': 512, 'num_beams': 4, 'bad_words_ids': [[59882]], 'forced_eos_token_id': 33523}. You are seeing this warning because you've set generation parameters in the model config, as opposed to in the generation config.
-  warnings.warn(
-merging models/lilly/adapter-armA
-serving the fine-tuned weights
-built models/lilly/translator-armA: 237 MB (int8)

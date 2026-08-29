@@ -9,10 +9,13 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[1]
-LOGS = REPO / "logs"
-STATE = LOGS / "harvest-pass7.state.json"
-LOG = LOGS / "harvest-pass7.log"
-METRICS = LOGS / "harvest-metrics.json"
+_SCRIPTS = Path(__file__).resolve().parent
+sys.path.insert(0, str(_SCRIPTS))
+from log_paths import HARVEST  # noqa: E402
+
+STATE = HARVEST / "pass7.state.json"
+LOG = HARVEST / "pass7.log"
+METRICS = HARVEST / "metrics.json"
 
 # No counter movement for this long while a step is "running" => stalled.
 STALL_COUNTER_SECONDS = 600
@@ -70,7 +73,7 @@ def _load_metrics() -> dict:
 
 
 def _save_metrics(payload: dict) -> None:
-    LOGS.mkdir(parents=True, exist_ok=True)
+    HARVEST.mkdir(parents=True, exist_ok=True)
     METRICS.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
 
 
@@ -81,7 +84,9 @@ def _running() -> dict:
         text=True,
     ).stdout.strip()
     names = procs.splitlines() if procs else []
-    orch = sum(1 for n in names if "harvest_pass7" in n)
+    # caffeinate's argv also contains the script path — do not count it as a second orch.
+    names = [n for n in names if "caffeinate" not in n and "harvest_detach.py" not in n]
+    orch = sum(1 for n in names if "harvest_pass7.sh" in n)
     return {
         "orchestrator": orch > 0,
         "orchestrator_count": orch,
