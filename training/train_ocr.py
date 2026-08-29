@@ -147,28 +147,6 @@ def release_lock() -> None:
         pass
 
 
-# #region agent log
-def _dbg(hypothesis: str, message: str, **data) -> None:
-    """Debug-session instrumentation. NDJSON to .cursor/, and to stdout because
-    the run that has to be observed is a Kaggle kernel, not this machine."""
-    import json as _json
-    line = _json.dumps({"sessionId": "487aad",
-                        "runId": os.environ.get("LILLY_RUN_ID", "run1"),
-                        "hypothesisId": hypothesis,
-                        "location": "training/train_ocr.py",
-                        "message": message, "data": data,
-                        "timestamp": int(time.time() * 1000)}, ensure_ascii=False)
-    print("DBGLOG " + line, flush=True)
-    try:
-        log = REPO_ROOT / ".cursor" / "debug-487aad.log"
-        log.parent.mkdir(parents=True, exist_ok=True)
-        with log.open("a", encoding="utf-8") as fh:
-            fh.write(line + "\n")
-    except Exception:
-        pass
-# #endregion
-
-
 def load_charset() -> str:
     import easyocr.config as config
     return config.recognition_models["gen2"]["latin_g2"]["characters"]
@@ -391,7 +369,6 @@ def main() -> int:
     step = 0
     t0 = time.time()
     stop = False
-    first_bad = None
     while step < steps and not stop:
         for images, texts in train_loader:
             if step >= steps:
@@ -406,35 +383,6 @@ def main() -> int:
             lengths = lengths.to(device=device, dtype=torch.int32)
             loss = criterion(logits, targets.to(device), input_lengths, lengths)
             finite = math.isfinite(loss.item())
-            # #region agent log
-            if step == 0:
-                _dbg("A", "ctc call devices and settings", device=device,
-                     logits_device=str(logits.device), targets_device=str(targets.device),
-                     input_lengths_device=str(input_lengths.device),
-                     target_lengths_device=str(lengths.device),
-                     zero_infinity=True, steps=steps, batch_size=args.batch_size,
-                     train_crops=len(train))
-            over = int((lengths > input_len).sum().item())
-            if step % 250 == 0 or over:
-                _dbg("B", "step health", step=step, loss=repr(loss.item()),
-                     input_len=input_len, image_width=int(images.size(3)),
-                     target_len_min=int(lengths.min().item()),
-                     target_len_max=int(lengths.max().item()),
-                     targets_over_input=over,
-                     logit_absmax=float(logits.detach().abs().max().item()))
-            if first_bad is None and not finite:
-                first_bad = step
-                bad = [n for n, p in model.named_parameters()
-                       if not torch.isfinite(p).all()]
-                longest = max(texts, key=len)
-                _dbg("D", "first non-finite loss", step=step, loss=repr(loss.item()),
-                     input_len=input_len, image_width=int(images.size(3)),
-                     target_lengths=[int(v) for v in lengths.tolist()],
-                     targets_over_input=over, longest_text=longest,
-                     longest_text_len=len(longest),
-                     logit_absmax=float(logits.detach().abs().max().item()),
-                     non_finite_param_count=len(bad), non_finite_params=bad[:5])
-            # #endregion
             if not finite:
                 print(f"\nloss became non-finite at step {step} — stopping early")
                 stop = True
@@ -444,13 +392,6 @@ def main() -> int:
             grad_norm = nn.utils.clip_grad_norm_(model.parameters(), 5)
             optimiser.step()
             step += 1
-            # #region agent log
-            if step % 250 == 0:
-                _dbg("C", "gradient and weight health after step", step=step,
-                     grad_norm=repr(float(grad_norm)),
-                     params_all_finite=all(torch.isfinite(p).all().item()
-                                           for p in model.parameters()))
-            # #endregion
             if step % 50 == 0 or step == steps:
                 print(f"  {step}/{steps}  loss {loss.item():.4f}  "
                       f"{(time.time() - t0) / step:.2f}s/step", flush=True)
@@ -566,13 +507,6 @@ def main() -> int:
     else:
         save_weights(model.cpu(), app_weights)
         model = model.to(device)
-    # #region agent log
-    _dbg("E", "installed trained weights not init file",
-         init_path=str(weights), init_md5=checksum(weights),
-         installed_md5=checksum(app_weights),
-         same_as_init=checksum(app_weights) == checksum(weights),
-         keep_trained=str(args.keep_trained) if args.keep_trained else None)
-    # #endregion
     print(f"wrote {app_weights} — the app reads with this now")
     return 0
 
