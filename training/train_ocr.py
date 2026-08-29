@@ -365,7 +365,11 @@ def main() -> int:
                 break
             targets, lengths = converter.encode(texts)
             logits = model(images.to(device), None).log_softmax(2).permute(1, 0, 2)
-            input_lengths = torch.IntTensor([logits.size(0)] * logits.size(1))
+            # CTCLoss needs every tensor on the same device. On CPU this was invisible;
+            # on Kaggle CUDA it dies at step 1 before any weights are saved.
+            input_lengths = torch.full(
+                (logits.size(1),), logits.size(0), dtype=torch.int32, device=device)
+            lengths = lengths.to(device=device, dtype=torch.int32)
             loss = criterion(logits, targets.to(device), input_lengths, lengths)
             optimiser.zero_grad()
             loss.backward()
