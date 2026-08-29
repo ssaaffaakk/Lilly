@@ -42,6 +42,9 @@ def check_ocr(text: str) -> None:
         fail("OCR notebook missing base weight check")
     if "user_network" not in text:
         fail("OCR notebook missing user_network/lilly.yaml paths")
+    if "/kaggle/temp" not in text:
+        fail("OCR notebook must clone to scratch — a clone in /kaggle/working "
+             "floods Output and the weights zip never downloads")
     if "--quick-test" not in text:
         fail("OCR notebook missing GPU training smoke (--quick-test) before long run")
 
