@@ -287,7 +287,7 @@ def push_ocr_crops(user: str) -> str:
     return slug
 
 
-def push_ocr_harvest(user: str) -> str | None:
+def push_ocr_harvest(user: str) -> "str | None":
     """Pass-7 Commons photographs (full scenes + CREDITS). Optional if thin."""
     import zipfile
 
