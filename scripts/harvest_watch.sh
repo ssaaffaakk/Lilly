@@ -19,6 +19,11 @@ while true; do
   if [[ $rc -eq 2 ]]; then
     exit 0
   fi
+  if [[ $rc -eq 3 ]]; then
+    echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] watchdog skip — step failed (not a stall)" >>"$LOG_HARVEST/pass7.log"
+    sleep 300
+    continue
+  fi
   if [[ $rc -eq 1 ]]; then
     if harvest_lock_held; then
       echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] watchdog skip — lock held" >>"$LOG_HARVEST/pass7.log"

@@ -65,7 +65,8 @@ JOBS = {
     "ocr":         {"notebook": "Lilly_OCR_Kaggle.ipynb",
                     "slug": "lilly-ocr", "title": "Lilly ocr",
                     "needs_weights": False, "needs_corpus": False,
-                    "needs_read_pass1": True, "needs_ocr_crops": True},
+                    "needs_read_pass1": True, "needs_ocr_crops": True,
+                    "needs_ocr_harvest": True},
 }
 STAGING = REPO_ROOT / "models" / "kaggle-staging"     # gitignored, under models/
 
@@ -286,6 +287,52 @@ def push_ocr_crops(user: str) -> str:
     return slug
 
 
+def push_ocr_harvest(user: str) -> str | None:
+    """Pass-7 Commons photographs (full scenes + CREDITS). Optional if thin."""
+    import zipfile
+
+    harvested = REPO_ROOT / "data" / "ocr" / "real-photos" / "harvested"
+    credits = harvested / "CREDITS.tsv"
+    photos = sorted(
+        p for p in harvested.iterdir()
+        if p.is_file() and p.suffix.lower() in {".png", ".jpg", ".jpeg", ".webp"}
+    )
+    if not credits.is_file() or len(photos) < 50:
+        print(f"harvest photos not ready ({len(photos)} files) — skipping lilly-ocr-harvest")
+        return None
+    slug = f"{user}/lilly-ocr-harvest"
+    stage = STAGING / "ocr-harvest"
+    if stage.exists():
+        shutil.rmtree(stage)
+    stage.mkdir(parents=True)
+    zip_path = stage / "harvest.zip"
+    with zipfile.ZipFile(zip_path, "w", compression=zipfile.ZIP_STORED) as zf:
+        zf.write(credits, "CREDITS.tsv")
+        for photo in photos:
+            zf.write(photo, f"harvest/{photo.name}")
+    digest = hashlib.md5(zip_path.read_bytes()).hexdigest()
+    (stage / "dataset-metadata.json").write_text(json.dumps({
+        "title": "Lilly OCR harvest photos", "id": slug,
+        "licenses": [{"name": "other"}]}, indent=1))
+    marker = STAGING / "ocr-harvest.md5"
+    state = subprocess.run([KAGGLE, "datasets", "status", slug],
+                           text=True, capture_output=True).stdout.lower()
+    if "ready" in state and marker.exists() and marker.read_text().strip() == digest:
+        print(f"harvest photos already there: {slug} ({len(photos)} files, md5 {digest[:8]})")
+        return slug
+    mb = zip_path.stat().st_size / 1048576
+    if "ready" in state:
+        print(f"harvest photos changed — pushing {slug} ({mb:.0f} MB, {len(photos)} files)")
+        run(KAGGLE, "datasets", "version", "-p", stage, "-r", "zip",
+            "-m", f"harvest.zip md5 {digest} n={len(photos)}")
+    else:
+        print(f"uploading {mb:.0f} MB harvest photos ({len(photos)} files) to {slug}")
+        run(KAGGLE, "datasets", "create", "-p", stage, "-r", "zip")
+    wait_until_ready(slug)
+    marker.write_text(digest)
+    return slug
+
+
 def require_github_matches_notebook() -> None:
     """Refuse to launch while GitHub and this machine disagree about the code.
 
@@ -467,6 +514,10 @@ def main() -> int:
         datasets.append(push_read_pass1(user))
     if job.get("needs_ocr_crops"):
         datasets.append(push_ocr_crops(user))
+    if job.get("needs_ocr_harvest"):
+        hv = push_ocr_harvest(user)
+        if hv:
+            datasets.append(hv)
 
     push_notebook(user, job, datasets)
     print(f"\nrunning: https://www.kaggle.com/code/{slug}")

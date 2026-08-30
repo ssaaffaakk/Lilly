@@ -68,12 +68,16 @@ run_step() {
   local step="$1"; shift
   mark_step "$step" "running"
   echo "[$(ts)] START [$step] $*" | tee -a "$LOG"
-  if "$@" >>"$LOG" 2>&1; then
+  set +e
+  "$@" >>"$LOG" 2>&1
+  local rc=$?
+  set -e
+  if [[ $rc -eq 0 ]]; then
     echo "[$(ts)] DONE  [$step] $*" | tee -a "$LOG"
     mark_step "$step" "done"
     return 0
   fi
-  echo "[$(ts)] FAIL  [$step] exit=$? $*" | tee -a "$LOG"
+  echo "[$(ts)] FAIL  [$step] exit=$rc $*" | tee -a "$LOG"
   mark_step "$step" "failed"
   return 1
 }
@@ -134,18 +138,32 @@ if [[ "$(step_done osm_signs)" != "True" ]]; then
     "data/signs/sign-text.tsv" "ODbL; attribution required"
 fi
 
-# --- 3. Synthetic v2 ---
+# --- 3. Synthetic v2 (images on disk are enough; splits are a trainer job) ---
 if [[ "$(step_done synth_flat)" != "True" ]]; then
-  run_step synth_flat "$PY" data/scripts/generate_ocr_data.py --count 50000
-  n=$(ls data/ocr/synthetic 2>/dev/null | wc -l | tr -d ' ')
+  if pgrep -f "generate_ocr_data.py" >/dev/null 2>&1; then
+    wait_worker "generate_ocr_data.py" synth_flat
+  fi
+  n=$("$PY" -c "from pathlib import Path; print(len(list(Path('data/ocr/synthetic').glob('*.png'))))")
+  if [[ "$n" -ge 50000 ]]; then
+    echo "[$(ts)] SKIP [synth_flat] $n images already on disk" | tee -a "$LOG"
+    mark_step synth_flat done
+  else
+    run_step synth_flat "$PY" data/scripts/generate_ocr_data.py --count 50000 --no-build-splits
+  fi
+  n=$("$PY" -c "from pathlib import Path; print(len(list(Path('data/ocr/synthetic').glob('*.png'))))")
   manifest_row "Synthetic OCR crops" "generate_ocr_data.py" "$n" \
-    "data/ocr/synthetic/" "labels by construction; đ oversampled"
+    "data/ocr/synthetic/" "labels by construction; đ oversampled; splits not built on Mac"
 fi
 
 # --- 4. Commons photo harvest (EasyOCR screen) ---
 if [[ "$(step_done commons_harvest)" != "True" ]]; then
-  run_step commons_harvest "$PY" data/scripts/harvest_sign_photos.py \
-    --target 500 --max-screen 2500 --workers 1 --max-crawl-calls 400
+  if pgrep -f "harvest_sign_photos.py" >/dev/null 2>&1; then
+    wait_worker "harvest_sign_photos.py" commons_harvest
+  fi
+  if [[ "$(step_done commons_harvest)" != "True" ]]; then
+    run_step commons_harvest "$PY" data/scripts/harvest_sign_photos.py \
+      --target 500 --max-screen 2500 --workers 1 --max-crawl-calls 400
+  fi
   n=$(($(count_lines data/ocr/real-photos/harvested/CREDITS.tsv) - 1))
   manifest_row "Wikimedia Commons photos" "harvest_sign_photos.py" "$n" \
     "data/ocr/real-photos/harvested/CREDITS.tsv" "text-on-sign filter; scored set excluded"

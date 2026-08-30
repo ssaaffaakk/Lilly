@@ -53,13 +53,15 @@ def check_ocr(text: str) -> None:
              "floods Output and the weights zip never downloads")
     if "--quick-test" not in text:
         fail("OCR notebook missing GPU training smoke (--quick-test) before long run")
-    if '"--epochs", "5"' not in text:
-        fail("OCR notebook should train 5 epochs for pass-6")
-    if '"--count", "30000"' not in text:
-        fail("OCR notebook should generate 30k synthetic crops")
+    if '"--epochs", "7"' not in text:
+        fail("OCR notebook should train 7 epochs for pass-7")
+    if '"--count", "50000"' not in text:
+        fail("OCR notebook should generate 50k synthetic crops")
+    if "generate_ocr_photos" not in text:
+        fail("OCR pass-7 must generate photo-style synthetic on Kaggle")
     if "REAL_REPEAT = 2" not in text:
-        fail("OCR pass-6 must repeat real train crops ×2, not ×6")
-    if "heavy-pass6" not in text:
+        fail("OCR pass-7 must repeat real train crops ×2, not ×6")
+    if "heavy-pass7" not in text:
         fail("OCR notebook still labelled an older pass")
     if "--weights" not in text:
         fail("OCR notebook missing --weights to continue from the installed reader")

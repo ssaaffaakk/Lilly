@@ -85,7 +85,14 @@ def _running() -> dict:
     ).stdout.strip()
     names = procs.splitlines() if procs else []
     # caffeinate's argv also contains the script path — do not count it as a second orch.
-    names = [n for n in names if "caffeinate" not in n and "harvest_detach.py" not in n]
+    # pgrep's own argv contains the pattern (harvest_sign|...) — that is not a worker.
+    names = [
+        n for n in names
+        if "caffeinate" not in n
+        and "harvest_detach.py" not in n
+        and "pgrep" not in n
+        and "harvest_report.py" not in n
+    ]
     orch = sum(1 for n in names if "harvest_pass7.sh" in n)
     return {
         "orchestrator": orch > 0,
@@ -236,6 +243,8 @@ def main() -> int:
         print("  ⏳ worker alive — no counter delta yet (long Overpass query?)")
     elif r["status"] == "STALLED":
         print("  ⚠ stalled — watchdog should restart (single instance only)")
+    elif r["status"] == "FAILED":
+        print("  ✖ step failed — do not restart the same recipe")
     print(
         f"AGENT_LOOP_TICK_harvest_progress "
         f'{{"overall":{r["overall_pct"]},"status":"{r["status"]}",'
@@ -243,7 +252,9 @@ def main() -> int:
     )
     if r["status"] == "COMPLETE":
         return 2
-    if r["status"] in ("STALLED", "FAILED"):
+    if r["status"] == "FAILED":
+        return 3
+    if r["status"] == "STALLED":
         return 1
     return 0
 

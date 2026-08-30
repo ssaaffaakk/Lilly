@@ -94,13 +94,20 @@ def running_jobs() -> list:
 
 
 def claim(gigabytes: float, name: str, force_env: str = "LILLY_IGNORE_GUARD") -> None:
-    """Stop here unless there is room for `gigabytes` on top of what is running."""
+    """Stop here unless there is room for `gigabytes` on top of what is running.
+
+    Stacking jobs is what panicked this machine on 27 August. One serial job
+    on 8 GB is the designed path: require only the model, not model + 2.5 GB
+    reserve (that bar is ~3.9 GB free and never clears while the editor is open).
+    A second Lilly job still pays the reserve, so two EasyOCR copies cannot start.
+    """
     if os.environ.get(force_env):
         return
     free = free_gb()
-    if free >= gigabytes + RESERVE_GB:
-        return
     jobs = running_jobs()
+    required = gigabytes + RESERVE_GB if jobs else gigabytes
+    if free >= required:
+        return
     lines = [f"not enough memory to start {name}: it needs about "
              f"{gigabytes:.1f} GB and {free:.1f} GB is free, with "
              f"{RESERVE_GB:.1f} GB reserved for everything else."]

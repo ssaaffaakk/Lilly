@@ -166,6 +166,8 @@ def main() -> int:
                          "20k images are not the set 7 synthetic epochs overfit.")
     ap.add_argument("--build-splits", action="store_true", default=True,
                     help="also run the split builder when done")
+    ap.add_argument("--no-build-splits", dest="build_splits", action="store_false",
+                    help="write images + labels.tsv only (harvest; skip RAM-heavy split copy)")
     args = ap.parse_args()
 
     fonts = find_fonts()
