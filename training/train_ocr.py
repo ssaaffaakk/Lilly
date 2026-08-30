@@ -321,6 +321,11 @@ def main() -> int:
                          "to continue a previous fine-tune.")
     ap.add_argument("--limit", type=int, default=None)
     ap.add_argument("--quick-test", action="store_true")
+    ap.add_argument("--grad-clip", type=float, default=5.0,
+                    help="max gradient norm (default 5; pass-7 uses 1)")
+    ap.add_argument("--warmup-frac", type=float, default=0.0,
+                    help="fraction of steps for linear LR warmup (default 0; "
+                         "pass-7b uses 0.05)")
     ap.add_argument("--keep-trained", type=Path, metavar="PATH",
                     help="always write the trained weights here, whatever the "
                          "install gate decides — so a refused run can still be "
@@ -395,7 +400,16 @@ def main() -> int:
     criterion = nn.CTCLoss(zero_infinity=True)
     optimiser = torch.optim.AdamW(model.parameters(), lr=args.lr)
     steps = int(len(train_loader) * args.epochs)
-    print(f"{steps:,} steps")
+    warmup_steps = max(1, int(steps * args.warmup_frac))
+    print(f"{steps:,} steps  (warmup {warmup_steps}, grad-clip {args.grad_clip})")
+
+    def lr_lambda(current_step):
+        if current_step < warmup_steps:
+            return current_step / warmup_steps
+        progress = (current_step - warmup_steps) / max(1, steps - warmup_steps)
+        return 0.5 * (1.0 + math.cos(math.pi * progress))
+
+    scheduler = torch.optim.lr_scheduler.LambdaLR(optimiser, lr_lambda)
 
     step = 0
     t0 = time.time()
@@ -406,8 +420,6 @@ def main() -> int:
                 break
             targets, lengths = converter.encode(texts)
             logits = model(images.to(device), None).log_softmax(2).permute(1, 0, 2)
-            # CTCLoss needs every tensor on the same device. On CPU this was invisible;
-            # on Kaggle CUDA it dies at step 1 before any weights are saved.
             input_len = logits.size(0)
             input_lengths = torch.full(
                 (logits.size(1),), input_len, dtype=torch.int32, device=device)
@@ -420,11 +432,15 @@ def main() -> int:
                 break
             optimiser.zero_grad()
             loss.backward()
-            grad_norm = nn.utils.clip_grad_norm_(model.parameters(), 5)
+            grad_norm = nn.utils.clip_grad_norm_(model.parameters(),
+                                                  args.grad_clip)
             optimiser.step()
+            scheduler.step()
             step += 1
             if step % 50 == 0 or step == steps:
+                cur_lr = scheduler.get_last_lr()[0]
                 print(f"  {step}/{steps}  loss {loss.item():.4f}  "
+                      f"lr {cur_lr:.2e}  "
                       f"{(time.time() - t0) / step:.2f}s/step", flush=True)
 
     after = score(valid)
