@@ -161,8 +161,10 @@ if [[ "$(step_done commons_harvest)" != "True" ]]; then
     wait_worker "harvest_sign_photos.py" commons_harvest
   fi
   if [[ "$(step_done commons_harvest)" != "True" ]]; then
+    # Keep rate so far is ~16% (286 keep / 1779 decided). 2500 screens
+    # cannot reach 500 keeps; 5000 is the budget that can.
     run_step commons_harvest "$PY" data/scripts/harvest_sign_photos.py \
-      --target 500 --max-screen 2500 --workers 1 --max-crawl-calls 400
+      --target 500 --max-screen 5000 --workers 1 --max-crawl-calls 400
   fi
   n=$(($(count_lines data/ocr/real-photos/harvested/CREDITS.tsv) - 1))
   manifest_row "Wikimedia Commons photos" "harvest_sign_photos.py" "$n" \
@@ -171,8 +173,15 @@ fi
 
 # --- 5. Photo-style synthetic ---
 if [[ "$(step_done synth_photo)" != "True" ]]; then
-  run_step synth_photo "$PY" data/scripts/generate_ocr_photos.py --count 20000
-  n=$(ls data/ocr/train/photo*.png 2>/dev/null | wc -l | tr -d ' ')
+  n=$("$PY" -c "from pathlib import Path; print(len(list(Path('data/ocr/train').glob('photo*.png'))) + len(list(Path('data/ocr/valid').glob('photo*.png'))))")
+  if [[ "$n" -ge 20000 ]]; then
+    echo "[$(ts)] SKIP [synth_photo] $n images already on disk" | tee -a "$LOG"
+    mark_step synth_photo done
+  else
+    need=$((20000 - n))
+    run_step synth_photo "$PY" data/scripts/generate_ocr_photos.py --count "$need"
+  fi
+  n=$("$PY" -c "from pathlib import Path; print(len(list(Path('data/ocr/train').glob('photo*.png'))) + len(list(Path('data/ocr/valid').glob('photo*.png'))))")
   manifest_row "Photographic synthetic" "generate_ocr_photos.py" "$n" \
     "data/ocr/train/" "degradation-matched to real failure modes"
 fi

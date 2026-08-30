@@ -9,7 +9,7 @@ source "$(dirname "$0")/logs_paths.sh"
 INTERVAL="${1:-300}"
 LOG="$LOG_KAGGLE/kernels-watch.log"
 KAGGLE="$ROOT/.venv/bin/kaggle"
-USER="${KAGGLE_USER:-afaksrmeli}"
+USER="${KAGGLE_USER:-$(python3 -c 'import json; from pathlib import Path; print(json.loads((Path.home()/".kaggle"/"kaggle.json").read_text())["username"])')}"
 LAST_speech=""
 LAST_ocr=""
 

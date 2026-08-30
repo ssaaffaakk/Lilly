@@ -2,3 +2,5 @@ recorded_utc	source	script	count	credits_path	note
 2026-08-29T21:05:00Z	Wikimedia Commons categories	fetch_commons_categories.py	343	data/ocr/real-photos/commons-cats/CREDITS.tsv	CC/PD per row; NC/ND skipped; pass-7 step 1 complete
 2026-08-29T22:20:10Z	OpenStreetMap sign text	harvest_sign_text.py	9507	data/signs/sign-text.tsv	ODbL; attribution required
 2026-08-29T22:45:36Z	Synthetic OCR crops	generate_ocr_data.py	50000	data/ocr/synthetic/	labels by construction; đ oversampled; splits not built on Mac
+2026-08-30T17:21:49Z	Wikimedia Commons photos	harvest_sign_photos.py	486	data/ocr/real-photos/harvested/CREDITS.tsv	text-on-sign filter; scored set excluded
+2026-08-30T17:24:22Z	Photographic synthetic	generate_ocr_photos.py	20000	data/ocr/train/	degradation-matched to real failure modes

@@ -31,6 +31,17 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 # Leave this much for the operating system, the editor and the browser. Below
 # it macOS is already compressing and swapping, which is where the panic began.
 RESERVE_GB = 2.5
+# Short-lived or meta processes that share the repo venv. Counting them as
+# "another EasyOCR" is what made photo harvest refuse to start while only
+# harvest_report.py / a poll tick was alive. Spawn workers re-import the
+# parent script — that parent must not be treated as a second job either
+# (claim belongs in main(), not at import).
+IGNORE_SCRIPTS = frozenset({
+    "guard.py",
+    "harvest_report.py",
+    "harvest_detach.py",
+    "kaggle_poll.py",
+})
 
 
 def free_gb() -> float:
@@ -72,7 +83,7 @@ def running_jobs() -> list:
         if len(parts) < 3:
             continue
         pid, rss, command = int(parts[0]), int(parts[1]), parts[2]
-        if pid == os.getpid() or "guard.py" in command:
+        if pid in (os.getpid(), os.getppid()):
             continue
         if str(REPO_ROOT) not in command and ".venv/bin/python" not in command:
             continue
@@ -85,11 +96,17 @@ def running_jobs() -> list:
         executable = Path(words[0]).name.lower() if words else ""
         if "python" not in executable:
             continue
-        script = next((w for w in words if w.endswith(".py")), command[:40])
+        # No .py → not a Lilly job (a truncated path used to show up as ".venv").
+        script_word = next((w for w in words if w.endswith(".py")), None)
+        if script_word is None:
+            continue
+        script = Path(script_word).name
+        if script in IGNORE_SCRIPTS:
+            continue
         # ps reports rss in kilobytes. Dividing by 1024**2 gives gigabytes, and
         # the result was printed under an "MB" heading: a 607 MB process read as
         # "0.6 MB" in the one message whose whole job is to name what to stop.
-        jobs.append((pid, rss / 1024, Path(script).name))
+        jobs.append((pid, rss / 1024, script))
     return jobs
 
 

@@ -29,7 +29,7 @@ STEPS = [
     ("osm_signs", "OSM sign text", 12000, lambda: _wc(REPO / "data/signs/sign-text.tsv")),
     ("synth_flat", "Synthetic crops", 50000, lambda: len(list((REPO / "data/ocr/synthetic").glob("*.png")))),
     ("commons_harvest", "Commons photos (text filter)", 500, lambda: _count(REPO / "data/ocr/real-photos/harvested/CREDITS.tsv") - 1),
-    ("synth_photo", "Photo-style synthetic", 20000, lambda: len(list((REPO / "data/ocr/train").glob("photo*.png")))),
+    ("synth_photo", "Photo-style synthetic", 20000, lambda: len(list((REPO / "data/ocr/train").glob("photo*.png"))) + len(list((REPO / "data/ocr/valid").glob("photo*.png")))),
 ]
 
 

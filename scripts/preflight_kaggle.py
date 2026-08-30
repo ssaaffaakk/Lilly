@@ -71,6 +71,10 @@ def check_ocr(text: str) -> None:
         fail("OCR notebook must attach/copy real crops (lilly-ocr-crops)")
     if "no real crop images in clone — synthetic only" in text:
         fail("OCR notebook must not silently fall back to synthetic-only on Kaggle")
+    if 'HARVEST_EXT' not in text or ".jpg" not in text:
+        fail("OCR harvest copy must include .jpg (Commons photos are JPEG, not PNG)")
+    if "ocr-harvest is attached but only" not in text:
+        fail("OCR notebook must refuse to train if harvest is attached but unused")
 
 
 def check_train_ocr() -> None:

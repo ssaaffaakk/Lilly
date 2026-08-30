@@ -103,7 +103,9 @@ import requests
 # none of them knew the others existed.
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 from scripts.guard import claim
-claim(1.4, "photo harvest")
+# claim() is in main(), not here. multiprocessing spawn re-imports this file
+# in every reader; import-time claim saw the parent as "already running"
+# and the workers died at ~19 MB, so screening never started.
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
@@ -1133,6 +1135,7 @@ def main() -> int:
         print("priority bands:", dict(sorted(bands.items(), reverse=True)))
         return 0
 
+    claim(1.4, "photo harvest")
     run(args.target, args.max_screen, args.workers, args.max_crawl_calls,
         not args.no_openverse)
     return 0

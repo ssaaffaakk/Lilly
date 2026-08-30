@@ -62,7 +62,8 @@ def kaggle_state(slug: str) -> str:
 def build_runs() -> list:
     runs = []
 
-    state = kaggle_state("afaksrmeli/lilly-speech")
+    user = json.loads((Path.home() / ".kaggle" / "kaggle.json").read_text())["username"]
+    state = kaggle_state(f"{user}/lilly-speech")
     live = state in ("RUNNING", "QUEUED")
     runs.append({
         "name": "Ses eğitimi", "where": "Kaggle T4",

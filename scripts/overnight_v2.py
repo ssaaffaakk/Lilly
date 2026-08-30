@@ -32,8 +32,14 @@ from log_paths import TRAINING  # noqa: E402
 LOG = TRAINING / "overnight-v2.log"
 REPORT = REPO / "overnight-v2.report.md"
 STATE = TRAINING / "overnight-v2.state.json"
-SPEECH_SLUG = "afaksrmeli/lilly-speech"
-OCR_SLUG = "afaksrmeli/lilly-ocr"
+
+
+def kaggle_user() -> str:
+    return json.loads((Path.home() / ".kaggle" / "kaggle.json").read_text())["username"]
+
+
+SPEECH_SLUG = f"{kaggle_user()}/lilly-speech"
+OCR_SLUG = f"{kaggle_user()}/lilly-ocr"
 POLL = 300          # seconds between status checks
 MAX_STATUS_FAILS = 6
 MAX_RELAUNCH = 0    # no silent relaunch overnight unless we add resume notebook

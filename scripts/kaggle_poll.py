@@ -31,18 +31,27 @@ from log_paths import KAGGLE as KAGGLE_LOG  # noqa: E402
 LOG = KAGGLE_LOG / "kernels-watch.log"
 STATE = KAGGLE_LOG / "poll.state.json"
 LAUNCH = KAGGLE_LOG / "launch.json"
-JOBS = {
-    "speech": {
-        "slug": "afaksrmeli/lilly-speech",
-        "done_names": ("lilly-listen.zip", "lilly-listen-trained.zip"),
-        "min_bytes": 1_000_000,
-    },
-    "ocr": {
-        "slug": "afaksrmeli/lilly-ocr",
-        "done_names": ("lilly-read.zip", "lilly-read-trained.zip"),
-        "min_bytes": 100_000,
-    },
-}
+
+
+def kaggle_user() -> str:
+    token = Path.home() / ".kaggle" / "kaggle.json"
+    return json.loads(token.read_text())["username"]
+
+
+def jobs() -> dict:
+    user = kaggle_user()
+    return {
+        "speech": {
+            "slug": f"{user}/lilly-speech",
+            "done_names": ("lilly-listen.zip", "lilly-listen-trained.zip"),
+            "min_bytes": 1_000_000,
+        },
+        "ocr": {
+            "slug": f"{user}/lilly-ocr",
+            "done_names": ("lilly-read.zip", "lilly-read-trained.zip"),
+            "min_bytes": 100_000,
+        },
+    }
 
 
 def ts() -> str:
@@ -183,7 +192,7 @@ def main() -> int:
                     help="watcher flag; files are always listed")
     ap.parse_args()
 
-    rows = [poll_job(n, s) for n, s in JOBS.items()]
+    rows = [poll_job(n, s) for n, s in jobs().items()]
     STATE.write_text(json.dumps({"when": ts(), "jobs": rows}, indent=2), encoding="utf-8")
 
     if any(r["crashed"] for r in rows):

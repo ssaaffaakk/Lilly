@@ -28,8 +28,14 @@ LOG = TRAINING / "overnight-sleep.log"
 STATE = TRAINING / "overnight-sleep.state.json"
 REPORT = REPO / "overnight-sleep.report.md"
 POLL = 180
-SPEECH_SLUG = "afaksrmeli/lilly-speech"
-OCR_SLUG = "afaksrmeli/lilly-ocr"
+
+
+def kaggle_user() -> str:
+    return json.loads((Path.home() / ".kaggle" / "kaggle.json").read_text())["username"]
+
+
+SPEECH_SLUG = f"{kaggle_user()}/lilly-speech"
+OCR_SLUG = f"{kaggle_user()}/lilly-ocr"
 
 
 def ts() -> str:

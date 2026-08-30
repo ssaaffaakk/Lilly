@@ -74,7 +74,7 @@ Lilly projesinde gece nöbetindesin, /Users/safaksurmeli/Desktop/Lilly. Kullanı
 Sırayla: `cat RESUME.md`, `tail -40 NIGHT-LOG.md`, `cat training/PREREGISTRATION.md`.
 
 Koşan işleri kontrol et:
-  .venv/bin/kaggle kernels status afaksrmeli/lilly-translation
+  .venv/bin/kaggle kernels status "$(python3 -c 'import json; from pathlib import Path; print(json.loads((Path.home()/".kaggle"/"kaggle.json").read_text())["username"])')/lilly-translation"
   pgrep -fl "train_ocr|train_translation|evaluate"
   tail -5 "$LOG_TRAINING/wer-trained.log" "$LOG_OCR/ocr-train.log" 2>/dev/null
 
