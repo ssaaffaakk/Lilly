@@ -4,6 +4,9 @@
 **North star:** [`V2-BOUNDARIES.md`](V2-BOUNDARIES.md)  
 **Sources (legal, end of project):** [`WHITE-PAPER.md`](WHITE-PAPER.md)
 
+**v3 ops plan (fail-stop, speech halves, OCR pass-7c, half-2 wait):**
+[`V3-PLAN.md`](V3-PLAN.md) — use that for “where are we now” after 31 Aug 2026.
+
 ---
 
 ## Where we are right now
