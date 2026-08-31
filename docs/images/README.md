@@ -7,8 +7,9 @@ Committed images for the GitHub README (keep each file under ~500 KB when possib
 | `lilly-hero.jpg` | Hero / brand banner |
 | `lilly-modes.jpg` | Type · Speak · Snap |
 | `lilly-architecture.jpg` | Illustrated stack |
-| `architecture.svg` | Exact offline architecture diagram |
-| `kaggle-flow.svg` | Speech half-1/2 + OCR training flow |
+| `architecture.png` | Exact offline architecture diagram (README; GitHub blocks SVG in many views) |
+| `kaggle-flow.png` | Speech half-1/2 + OCR training flow |
+| `architecture.svg` / `kaggle-flow.svg` | Editable sources — not embedded in README |
 
 Optional later (capture from http://localhost:8000):
 

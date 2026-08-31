@@ -1,8 +1,6 @@
 # Lilly
 
-<p align="center">
-  <img src="docs/images/lilly-hero.jpg" alt="Lilly — Bosnian first" width="100%">
-</p>
+![Lilly — Bosnian first](docs/images/lilly-hero.jpg)
 
 <p align="center">
   <strong>The only assistant that speaks Bosnian</strong> — not “close enough” Serbian,<br>
@@ -30,9 +28,7 @@ relabeled at the last minute.
 
 ## Three ways in
 
-<p align="center">
-  <img src="docs/images/lilly-modes.jpg" alt="Type, Speak, Snap" width="100%">
-</p>
+![Type, Speak, Snap](docs/images/lilly-modes.jpg)
 
 | | What you do | What Lilly does |
 | --- | --- | --- |
@@ -47,9 +43,7 @@ Most translators stop at the keyboard. Lilly lives where Bosnian actually lives:
 
 ## Architecture
 
-<p align="center">
-  <img src="docs/images/architecture.svg" alt="Lilly offline architecture" width="100%">
-</p>
+![Lilly offline architecture](docs/images/architecture.png)
 
 Four abilities, one folder, **zero network at inference**:
 
@@ -73,9 +67,7 @@ lilly.read("sign.jpg")
 
 Illustrated overview (same stack):
 
-<p align="center">
-  <img src="docs/images/lilly-architecture.jpg" alt="Lilly stack illustration" width="100%">
-</p>
+![Lilly stack illustration](docs/images/lilly-architecture.jpg)
 
 Training runs on **Kaggle GPU**. The Mac commits, launches, and fetches — it does
 not suffer multi-hour fine-tunes. Contract: [`docs/V2-BOUNDARIES.md`](docs/V2-BOUNDARIES.md).
@@ -106,9 +98,7 @@ We pre-register thresholds. We bind builds to hashes. We do not move the goalpos
 
 ## Training right now (v3)
 
-<p align="center">
-  <img src="docs/images/kaggle-flow.svg" alt="Kaggle training flow" width="100%">
-</p>
+![Kaggle training flow](docs/images/kaggle-flow.png)
 
 | Lane | What | Gate before zip |
 | --- | --- | --- |
