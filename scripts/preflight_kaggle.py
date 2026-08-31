@@ -72,8 +72,10 @@ def check_ocr(text: str) -> None:
         fail("OCR notebook must not pip-install CPU torch")
     if "read-trained.zip" not in text:
         fail("OCR notebook missing early zip of read-trained.pth")
-    if "check=False" not in text and "returncode" not in text:
-        fail("OCR notebook must not treat train_ocr exit 1 as failure when keep-trained exists")
+    if "NOT SHIPPABLE" in text:
+        fail("OCR must not swallow a gate refusal as a complete kernel")
+    if "assert proc.returncode == 0" not in text:
+        fail("OCR must fail the kernel when train_ocr exits non-zero")
     if "latin_g2.pth" not in text:
         fail("OCR notebook missing base weight check")
     if "user_network" not in text:
