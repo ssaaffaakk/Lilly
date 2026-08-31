@@ -16,6 +16,7 @@ work, however cleanly it ran.
 Same TSV as training: audio path, tab, what is actually said.
 """
 import argparse
+import json
 import sys
 from pathlib import Path
 
@@ -60,6 +61,8 @@ def main() -> int:
     ap.add_argument("--language", default="bs")
     ap.add_argument("--limit", type=int, default=None)
     ap.add_argument("--show", type=int, default=5, help="worst clips to print")
+    ap.add_argument("--json", type=Path,
+                    help="also write WER where a gate can read it")
     args = ap.parse_args()
 
     rows = read_tsv(args.data)[: args.limit]
@@ -87,6 +90,14 @@ def main() -> int:
 
     wer = 100 * total_edits / max(total_words, 1)
     print(f"\nword error rate: {wer:.1f}%  ({total_edits} wrong of {total_words} words)")
+    if args.json:
+        args.json.parent.mkdir(parents=True, exist_ok=True)
+        args.json.write_text(json.dumps({
+            "wer": round(wer, 4),
+            "edits": total_edits,
+            "words": total_words,
+            "clips": len(rows),
+        }) + "\n", encoding="utf-8")
 
     worst.sort(reverse=True)
     if args.show and worst:

@@ -48,8 +48,8 @@ Copy this shape. Do not invent a softer variant.
 
 ```text
 Cell A  Markdown: job name, pass id, required attaches, what is NOT done here
-Cell 1  GPU assert + Internet + def run(*cmd) with check=True
-Cell 2  Clone to /kaggle/temp (never /kaggle/working)
+Cell 1  GPU assert + Internet + def run(*cmd) that tees to /kaggle/working/stdout.txt
+Cell 2  Clone to /kaggle/temp (never /kaggle/working); then Offload(...)
 Cell 3  pip from requirements.txt pins (OCR: never pip-install torch)
 Cell 4  Short CUDA / LoRA / train smoke (~20–60s)
 Cell …  Required data: attach or download; missing → SystemExit
@@ -61,13 +61,42 @@ Last    Markdown: ERROR → do not install; fix + relaunch
 
 ### Required `run` helper (every notebook)
 
+Child stdout is not the Kaggle log. `subprocess.run(check=True)` can COMPLETE a
+kernel that never printed a loss line. Tee into Output:
+
 ```python
+TEE = Path("/kaggle/working/stdout.txt")
+
+def run(*cmd, quiet=False):
+    line = "$ " + " ".join(str(c) for c in cmd)
+    print(line, flush=True)
+    with TEE.open("a", encoding="utf-8") as sink:
+        sink.write(line + "\n")
+        child = subprocess.Popen([str(c) for c in cmd], stdout=subprocess.PIPE,
+                                 stderr=subprocess.STDOUT, text=True, bufsize=1)
+        for out in child.stdout:
+            if not quiet:
+                print(out, end="", flush=True)
+            sink.write(out)
+        code = child.wait()
+    if code:
+        raise subprocess.CalledProcessError(code, cmd)
+```
+
+After clone, start the offload log (`training/kaggle_offload.py`):
+`experiment_log.json`, `metrics.jsonl`, `artifacts_manifest.json`. Scan the tee
+with `OFF.check_trainproof()` before packaging. Not a competition — do not
+`kaggle competitions submit`. Poll with `scripts/kaggle_poll.py` (120 s), not
+the shepsci 30 s helper.
+
+### Illegal soft wrappers (do not write these)
+
+```python
+# BAD — child's loss / 0-grad / WER never reaches the log or Output
 def run(*cmd):
     print("$", " ".join(str(c) for c in cmd), flush=True)
     subprocess.run([str(c) for c in cmd], check=True)
 ```
-
-### Illegal soft wrappers (do not write these)
 
 ```python
 # BAD — train fails, notebook continues, later cells zip garbage
@@ -199,11 +228,12 @@ Legal split (wall-clock), **illegal** to skip measurement on the ship half:
 8. Train:
 
 ```python
-run("python3", "training/train_speech.py",
+run("python3", "-u", "training/train_speech.py",
     "--data", MIX, "--base", "openai/whisper-large-v3",
     "--epochs", "1", "--batch-size", "1", "--grad-accum", "16",
     "--keep-adapter", "--no-convert")
 assert (Path("models/lilly/listen-adapter") / "trainer_state.json").is_file()
+OFF.check_trainproof()
 run("zip", "-qr", "/kaggle/working/lilly-listen-half1.zip",
     "models/lilly/listen-adapter")
 ```
@@ -225,9 +255,11 @@ Same setup/clone/pip/smoke/download/mix as half 1, then:
 - **Order is mandatory:**
 
 ```python
-run("python3", "training/evaluate_speech.py",
+run("python3", "-u", "training/evaluate_speech.py",
     "--data", "data/speech/test.tsv",
-    "--model", "models/lilly/listen", "--limit", "200", "--show", "3")
+    "--model", "models/lilly/listen", "--limit", "200", "--show", "3",
+    "--json", "/kaggle/working/speech-wer.json")
+got = require_wer(Path("/kaggle/working/speech-wer.json"))
 run("zip", "-qr", "/kaggle/working/lilly-listen.zip", "models/lilly/listen")
 ```
 
@@ -271,7 +303,7 @@ python3 scripts/kaggle_train.py speech-half2    # only then
 | Photo read fail → `continue`, still print % | `evaluate_ocr.py`: hole → stop |
 | Synthetic before real crops (prepare wipes syn*) | Real merge **first**, then sign-letters |
 | EasyOCR auto-crops drown human labels (pass-7c) | Pass-8: **no** harvest auto-crops, **no** `generate_ocr_photos.py` |
-| Buffered stdout hid gate refusal | `python -u` + `PYTHONUNBUFFERED` + `run()` tee |
+| Buffered / missing child stdout | `run()` tees to `stdout.txt`; `OFF.check_trainproof()` |
 | Crop gate pass, photographs worse, still ship | Photograph gate (40 photos) before `lilly-read.zip` |
 | Relaunch pass-7c unchanged | Change the mix first; 7c already lost on photographs |
 
@@ -438,12 +470,14 @@ so the forbidden string or missing required string fails closed.
 Examples already enforced:
 
 - No `/kaggle/working/Lilly` clone
-- Speech half 1: `--keep-adapter`, no `evaluate_speech`
-- Speech half 2: `--resume`, WER before zip path
+- Speech half 1: `--keep-adapter`, no `evaluate_speech`, tee + `check_trainproof`
+- Speech half 2: `--resume`, `require_wer` before zip path
 - OCR: no `check=False`, no 50k generate, no `generate_ocr_photos.py`, no harvest
   `SystemExit`, `heavy-pass8`, `lilly-ocr-sign-letters`, photograph `diacritic`+`invented`;
-  poller done zip is `lilly-read.zip` only (not `lilly-read-trained.zip`)
+  poller done zip is `lilly-read.zip` only (not `lilly-read-trained.zip`);
+  tee + `experiment_log.json`
 - `train_speech`: Encoder `SystemExit`, `FiniteLossCheck`
+- All three notebooks: `stdout.txt` + `Offload` + no competition submit
 
 If preflight cannot express a rule, put it here and in the Cursor rule anyway —
 then add a check when possible.
@@ -454,8 +488,9 @@ then add a check when possible.
 
 ```text
 [ ] preflight exits 0
-[ ] run() uses check=True everywhere train/data runs
+[ ] run() tees to /kaggle/working/stdout.txt (Popen, not bare subprocess.run)
 [ ] Clone path is /kaggle/temp
+[ ] Offload writes experiment_log.json; check_trainproof before the ship zip
 [ ] Required datasets stated as required in markdown
 [ ] Measure/gate cell index < shippable zip cell index
 [ ] No zip of refused / unmeasured weights
@@ -479,7 +514,8 @@ then add a check when possible.
 | `scripts/kaggle_poll.py` | CANCEL/ERROR = crash |
 | `training/train_speech.py` | `--keep-adapter`, `--resume`, 0-grad / NaN stop |
 | `training/train_ocr.py` | Crop install gate; keep-trained after pass |
-| `training/evaluate_speech.py` | AFTER WER (half 2 only on Kaggle) |
+| `training/kaggle_offload.py` | `experiment_log.json` / metrics / trainproof tee scan |
+| `training/evaluate_speech.py` | AFTER WER (half 2 only on Kaggle); `--json` for the gate |
 | `training/evaluate_ocr.py` | 40-photo score on Kaggle (pass-8) and locally; no holes |
 | `docs/kaggle-fail-stop.md` | Short mistake list |
 | `.cursor/rules/kaggle-fail-stop.mdc` | Always-apply summary |

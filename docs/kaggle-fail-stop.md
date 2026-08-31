@@ -38,14 +38,17 @@ These were done on purpose so a kernel could COMPLETE. Do not do them again.
     score.
 14. Write `--keep-trained` / shippable names before the gate, then refuse.
     A refused run must not leave a file that looks installable.
+15. Let a child trainer print to its own stdout and treat the Kaggle log as
+    enough. The log never sees that fd. Tee to `/kaggle/working/stdout.txt`
+    and write `experiment_log.json`. COMPLETE + zip is still not install.
 
 ## Gates
 
 | Job | Must happen | Must not happen |
 | :--- | :--- | :--- |
-| Speech half 1 | Clone `/kaggle/temp`, 1 epoch, `--keep-adapter`, zip `lilly-listen-half1.zip` | BEFORE/AFTER WER, merge 3 GB, clone `/kaggle/working` |
+| Speech half 1 | Clone `/kaggle/temp`, 1 epoch, `--keep-adapter`, zip `lilly-listen-half1.zip`, tee + trainproof | BEFORE/AFTER WER, merge 3 GB, clone `/kaggle/working` |
 | Speech half 2 | `--resume`, `SPEECH_EPOCHS = 2`, AFTER WER **then** zip `lilly-listen.zip` | `--base` merged weights, zip before WER |
-| OCR | Attach what **this pass** requires, `run(..., check=True)`, zip `lilly-read.zip` only after the photograph gate | `check=False`, skip required data, zip refused `read-trained.pth` as the app package |
+| OCR | Attach what **this pass** requires, tee + photograph gate, zip `lilly-read.zip` only after the gate | `check=False`, skip required data, zip refused `read-trained.pth` as the app package |
 
 Launch: `python3 scripts/kaggle_train.py speech` / `speech-half2` / `ocr`.
 Preflight: `python3 scripts/preflight_kaggle.py`.

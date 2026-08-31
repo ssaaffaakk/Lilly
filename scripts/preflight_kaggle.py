@@ -21,7 +21,25 @@ def fail(msg: str) -> None:
     sys.exit(1)
 
 
+def check_offload(text: str, name: str) -> None:
+    """agentic-kaggle-skill logs + trainproof tee. NVIDIA submit is not this job."""
+    if "competitions submit" in text or "kaggle kernels submit" in text:
+        fail(f"{name}: competition submit is NVIDIA/kaggle-skill work, not a train notebook")
+    if 'Path("/kaggle/working/stdout.txt")' not in text:
+        fail(f"{name}: run() must tee child stdout to /kaggle/working/stdout.txt")
+    if "subprocess.Popen" not in text:
+        fail(f"{name}: run() must Popen+tee — subprocess.run hides train logs "
+             "(OCR pass-7c / speech half-1 hole)")
+    if "from training.kaggle_offload import Offload" not in text:
+        fail(f"{name}: must import Offload after clone")
+    if "experiment_log.json" not in text:
+        fail(f"{name}: must write experiment_log.json")
+    if "check_trainproof" not in text:
+        fail(f"{name}: must scan the tee for NaN/0-grad before packaging")
+
+
 def check_speech(text: str) -> None:
+    check_offload(text, "speech half-1")
     if "/kaggle/working/Lilly" in text or 'os.chdir("/kaggle/working")' in text:
         fail("speech half-1 must clone to /kaggle/temp — a clone in /kaggle/working "
              "floods Output and the zip never downloads")
@@ -44,6 +62,14 @@ def check_speech(text: str) -> None:
 
 
 def check_speech_half2(text: str) -> None:
+    check_offload(text, "speech half-2")
+    if "require_wer" not in text or "speech-wer.json" not in text:
+        fail("speech half-2 must write speech-wer.json and require_wer before "
+             "lilly-listen.zip (trainsafe analog: scored nothing is not shippable)")
+    wer_at = text.find("require_wer")
+    zip_at = text.find("/kaggle/working/lilly-listen.zip")
+    if wer_at < 0 or zip_at < 0 or zip_at < wer_at:
+        fail("speech half-2 must require_wer before zipping lilly-listen.zip")
     if "/kaggle/working/Lilly" in text or 'os.chdir("/kaggle/working")' in text:
         fail("speech half-2 must clone to /kaggle/temp — a clone in /kaggle/working "
              "floods Output and the zip never downloads")
@@ -70,6 +96,7 @@ def check_speech_half2(text: str) -> None:
 
 
 def check_ocr(text: str) -> None:
+    check_offload(text, "OCR")
     if "from data.scripts import" in text:
         fail("OCR notebook imports data.scripts as package — will break on Kaggle")
     if "--extra-index-url" in text or 'pip install"*, "torch"' in text:
@@ -172,6 +199,12 @@ def main() -> int:
         fail("train_speech must stop when the encoder gets no gradient, not warn and continue")
     if "FiniteLossCheck" not in speech_train or "logging_nan_inf_filter=False" not in speech_train:
         fail("train_speech must stop on NaN/Inf loss, not filter it out of the log")
+    eval_speech = (REPO / "training" / "evaluate_speech.py").read_text(encoding="utf-8")
+    if '"--json"' not in eval_speech and "'--json'" not in eval_speech:
+        fail("evaluate_speech.py must write --json so half-2 can gate on WER")
+    offload = (REPO / "training" / "kaggle_offload.py").read_text(encoding="utf-8")
+    if "experiment_log.json" not in offload or "scan_trainproof" not in offload:
+        fail("training/kaggle_offload.py must write experiment_log.json and scan the tee")
     print("preflight ok: speech half-1 + half-2 + OCR notebooks")
     return 0
 
