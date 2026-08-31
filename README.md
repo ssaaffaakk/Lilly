@@ -28,33 +28,56 @@ relabeled at the last minute.
 
 ## Why I built this
 
-I applied for an internship. They did not take me.
+I applied for an internship. They didn’t take me.
 
-Not because the code was weak. The reason came back shorter and colder than
-that: **you do not know Bosnian. You will not understand.** I had heard the same
-line trying to get internships, applying for jobs, etc...
-Same sentence, different room. The language stopped being a language and became a
-door I was always on the wrong side of.
+Not because my code was weak. The reason was shorter, colder: I didn’t know
+Bosnian.
 
-The problem was never that Bosnian is unlearnable. The problem was that every
-tool I could reach treated Bosnian as a rounding error — one South Slavic bucket,
-a different flag on the label, and nobody in Sarajevo is supposed to notice.
-**Recognizing South Slavic is solved. Serving Bosnian is not.**
+I had heard some version of that sentence before — during internships, job
+applications, and conversations that ended before they really began.
 
-So I asked the only questions that mattered to me in that room:
+Same sentence. Different room.
 
-If they are speaking — why can’t I press the mic and hear English?
-If they write on the board — why can’t I photograph it and understand?
-If I need to answer — why can’t I type it and have it spoken out loud?
+At some point, language stopped feeling like a language and started feeling like
+a door. A door I was always standing on the wrong side of.
 
-Nobody was going to build that for me. So I trained **real Bosnian** on purpose,
-measured it, and published the numbers even where they do not flatter me.
-Type. Speak. Snap. That decision is Lilly.
+The frustrating part was that Bosnian itself was never the problem. It was
+learnable. The problem was the technology around it.
 
-They said I did not know Bosnian. So I built the thing that understands it.
+Most tools treated Bosnian as a rounding error: one more language inside a
+broader South Slavic category, perhaps a different flag on the interface. The
+technology could recognize the region. But recognizing South Slavic is not the
+same as understanding Bosnian.
 
-I build things because I run into problems and refuse to accept that they can’t
-be solved.
+So I started asking myself a few simple questions:
+
+If someone is speaking Bosnian, why can’t I press a microphone and hear it in
+English?
+
+If someone writes something on a board, why can’t I take a photo and understand
+it?
+
+If I need to respond, why can’t I type what I mean and have it spoken out loud?
+
+These didn’t feel like impossible problems.
+
+They felt like problems nobody had bothered to solve properly.
+
+So I decided to build it myself.
+
+I trained on real Bosnian, deliberately. I measured it. I tested it. And I
+published the numbers — including the ones that didn’t flatter me.
+
+Type. Speak. Snap.
+
+That decision became Lilly.
+
+They told me I didn’t know Bosnian.
+
+So I built the thing that understands it.
+
+I build things because when I run into a problem, I’d rather solve it than accept
+that it can’t be solved.
 
 Full story: [`docs/STORY.md`](docs/STORY.md).
 
