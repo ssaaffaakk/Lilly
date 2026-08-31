@@ -25,6 +25,7 @@ Cursor agents also load `.cursor/rules/kaggle-fail-stop.mdc` (always apply).
 
 | Doc | Use when |
 | :--- | :--- |
+| [`STORY.md`](STORY.md) | **Why Lilly exists** — founder story |
 | [`WHITE-PAPER.md`](WHITE-PAPER.md) | Licences and sources (fill at publish time) |
 | [`BOSNIAN_METRIC.md`](BOSNIAN_METRIC.md) | Why Bosnian metrics are hard |
 | [`ROADMAP.md`](ROADMAP.md) | Early phase roadmap (historical; prefer V3-PLAN for now) |

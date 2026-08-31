@@ -26,6 +26,26 @@ relabeled at the last minute.
 
 ---
 
+## Why I built this
+
+People kept telling me I did not know Bosnian.
+
+Internet password applications. Job applications. Classes. The same line:
+*you will not understand.*
+
+So I asked: why don’t I train **real** Bosnian myself?
+
+If they speak — press the mic, hear English.  
+If they write on the board — take a photo, understand it.  
+If I need to answer — type it, let Lilly speak it.
+
+I stopped waiting for a generic “South Slavic” model to care. I built my own
+way through. That decision is Lilly.
+
+Full story: [`docs/STORY.md`](docs/STORY.md).
+
+---
+
 ## Three ways in
 
 ![Type, Speak, Snap](docs/images/lilly-modes.jpg)
