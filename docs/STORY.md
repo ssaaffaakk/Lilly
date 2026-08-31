@@ -6,7 +6,7 @@ Not because the code was weak. Not because the interview went badly. The reason
 came back shorter and colder than that: **you do not know Bosnian. You will not
 understand.**
 
-I had heard that sentence before. When I applied for an internet password. When
+I had heard that sentence before. When I went to get the internet connected. When
 I applied for jobs. When they talked about the classes I would be sitting in.
 Same sentence, different room. The language stopped being a language and became
 a door — and I was always on the wrong side of it.
