@@ -5,6 +5,10 @@ must not override the gate. Cursor agents also load
 `.cursor/rules/kaggle-fail-stop.mdc` (always apply). Standing rule 9 in
 `docs/agent-teams-lilly.md` is the same decision.
 
+**Full notebook writing guide** (skeleton, wrong/right snippets, anti-patterns,
+cell contracts, launcher/poller, preflight checklist — so the next agent does
+not reopen these holes): [`docs/kaggle-notebooks.md`](kaggle-notebooks.md).
+
 ## What went wrong
 
 These were done on purpose so a kernel could COMPLETE. Do not do them again.

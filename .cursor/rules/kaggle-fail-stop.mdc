@@ -5,6 +5,8 @@ alwaysApply: true
 
 # Fail-stop (speech, OCR, translation)
 
+Notebook writing guide: `docs/kaggle-notebooks.md`.
+
 A known failure is not an optimization. COMPLETE, a zip, or a 12h wall must not override the gate.
 
 - `run(..., check=True)` / non-zero exit. No `check=False` then zip then assert.
