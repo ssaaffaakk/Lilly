@@ -3,8 +3,7 @@
 ![Lilly — Bosnian first](docs/images/lilly-hero.jpg)
 
 <p align="center">
-  <strong>The only assistant that speaks Bosnian</strong> — not “close enough” Serbian,<br>
-  not Croatian with a different flag.
+  <strong>The only assistant that speaks Bosnian</strong> — 
 </p>
 
 <p align="center">
