@@ -81,7 +81,9 @@ data/signs/.osm-harvest.progress.json
 .DS_Store
 .vscode/
 .idea/
-.cursor/
+.cursor/*
+!.cursor/rules/
+!.cursor/rules/**
 
 # Secrets
 .env

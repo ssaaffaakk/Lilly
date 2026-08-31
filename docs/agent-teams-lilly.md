@@ -98,6 +98,11 @@ STANDING RULES - copy into every spawn prompt:
 8.  Write your threshold into training/PREREGISTRATION.md before the run
     starts, and do not reinterpret it afterwards.
 9.  No band-aids. Solve the cause or report the blocker. Never defer.
+    A failed train, download, gate or measurement must stop the kernel
+    (ERROR). Do not zip refused weights, skip WER to COMPLETE, skip
+    OCR harvest and train synthetic-only, or treat CANCEL+zip as success.
+    GitHub is the store: commit and push (never tokens). "Local only" is
+    not a backup.
 10. Signals, not conversation: task, acceptance test, result. Nothing else.
 11. Spawn your own Sonnet subagents for downloading, counting and filtering.
     You are on Opus because the training and measurement judgement is yours.
@@ -112,7 +117,8 @@ HOW YOU RUN IT:
   whatever is measured next.
 - Check `python3 scripts/team.py list` before assigning and
   `python3 scripts/guard.py` before allowing anything heavy to start.
-- Do not stop on a failure. Find the cause, fix it, restart the work.
+- Do not bandage a failure so the pipeline COMPLETEs. Find the cause, fix it,
+  push to GitHub, restart the work.
 - Do not put any teammate in plan mode: their plans are auto-approved without
   your review.
 - Report to me: what was done, what was achieved, which problems were solved,
@@ -151,7 +157,7 @@ Every one of these prevents something that has already happened on this project.
 | 6 — score through the app | The translation number moved 3.36 chrF2 depending on which layer was measured. |
 | 7 — file ownership | Two teammates on one file means overwrites. `test.tsv` moving silently invalidates every published number. |
 | 8 — pre-register | The same fine-tune scored three ways, all three moving in the flattering direction. |
-| 9 — no band-aids | The standing rule. Every band-aid here became a wrong number later. |
+| 9 — no band-aids | A failed speech train still COMPLETEd; OCR zipped refused weights; harvest skipped and the notebook trained synthetic-only. |
 | 11 — model per job | Data work on Opus is expensive and slow. Routing is by *detectability*: a bad download fails loudly, a bad benchmark stays plausible for months. |
 
 ### Two warnings specific to teams

@@ -150,11 +150,13 @@ def poll_job(name: str, spec: dict) -> dict:
     files = list_files(slug)
     zips = fresh_zips(name, spec, files)
     zip_names = [f"{Path(z['name']).name} {z['size']}B" for z in zips]
-    actually_done = st == "COMPLETE" or bool(zips)
-    # COMPLETE with only a tiny leftover zip is still COMPLETE.
-    if st == "COMPLETE" and not zips:
-        actually_done = True
-    crashed = st in ("ERROR", "CANCEL") and not actually_done
+    # A job needs a fresh, large zip to count as done — COMPLETE with no zip
+    # means the kernel finished without writing output, which is a failure.
+    actually_done = st == "COMPLETE" and bool(zips)
+    # ERROR and CANCEL are always failures, even when a zip was recovered from a
+    # previous version. A CANCEL+zip is not success; it is a crashed run that
+    # happened to leave old output on disk.
+    crashed = st in ("ERROR", "CANCEL") or (st == "COMPLETE" and not bool(zips))
     api_lie = st == "RUNNING" and bool(zips)
     extra = ""
     if api_lie:

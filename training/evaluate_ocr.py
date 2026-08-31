@@ -185,8 +185,10 @@ def cached_reads(names: list, photos: Path, cache: Path, full=False) -> dict:
         try:
             have[name] = (read_photo_full if full else read_photo)(photos / name)
         except Exception as exc:
-            print(f"  {i}/{len(todo)} {name}: FAILED {exc}", file=sys.stderr)
-            continue
+            raise SystemExit(
+                f"  {i}/{len(todo)} {name}: FAILED {exc}\n"
+                f"photo read failed — scoring with holes is not allowed.\n"
+                f"Fix the reader or remove '{name}' from the scored set.")
         cache.write_text(json.dumps({"reader": stamp, "readings": have},
                                     ensure_ascii=False, indent=1),
                          encoding="utf-8")
@@ -259,8 +261,9 @@ def main() -> int:
             empty_truth += 1
             continue
         if name not in readings:
-            print(f"  {i}/{len(names)} {name}: never read", file=sys.stderr)
-            continue
+            print(f"  {i}/{len(names)} {name}: never read — cannot score with holes",
+                  file=sys.stderr)
+            return 1
         found = words(readings[name])
 
         hit, need = recall(want, found)

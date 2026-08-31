@@ -455,27 +455,9 @@ def main() -> int:
         print(f"after syn:    {after_syn[0]:.1f}% words, "
               f"{after_syn[1]:.1f}% of {after_syn[2]} Bosnian letters")
 
-    # Write the trained weights somewhere before the gate decides anything.
-    #
-    # The gate below is right and stays exactly as it is: it decides what the
-    # app reads with, and it refuses on a regression. But it returns without
-    # saving, so a refused run leaves nothing behind to examine -- and the
-    # number that actually matters for this reader is not the one the gate
-    # looks at. The gate scores held-out *crops*, and those crops are mostly
-    # synthetic; the synthetic generator is the one already measured as too
-    # easy, reading 75% where real photographs read 36%. A run can therefore be
-    # refused on a distribution nobody is selling, with no artefact left to
-    # score on the forty real photographs that are.
-    #
-    # So: separate what was trained from what gets installed. That is the same
-    # split train_speech.py already makes with --no-convert, for the same
-    # reason. This writes a file; it does not install one.
-    if args.keep_trained:
-        args.keep_trained.parent.mkdir(parents=True, exist_ok=True)
-        save_weights(model.to(device if device == "cpu" else "cpu"), args.keep_trained)
-        model = model.to(device)
-        print(f"trained weights written to {args.keep_trained} "
-              f"(not installed — the gate below decides that)")
+    # The gate below decides whether to install. --keep-trained is written only
+    # when the gate passes so a refused run cannot be mistaken for shippable
+    # weights (see the install block below where it is written).
 
     if args.quick_test:
         print("\nquick test — the shipped reader is left alone")
@@ -566,6 +548,15 @@ def main() -> int:
         if not previous.exists():
             shutil.copy(app_weights, previous)
             print(f"kept the reader the app was using at {previous.name}")
+    # Write --keep-trained only here, after the gate passed. Writing it earlier
+    # (before the gate) left a refused run's weights sitting on disk looking
+    # like shippable output.
+    if args.keep_trained:
+        args.keep_trained.parent.mkdir(parents=True, exist_ok=True)
+        save_weights(model.to("cpu"), args.keep_trained)
+        model = model.to(device)
+        print(f"trained weights written to {args.keep_trained}")
+
     # Install the trained network, not the file we started from.
     # Copying the init checkpoint into lilly.pth shipped latin_g2 as the app
     # reader (md5 46986913) after Kaggle pass-1 had actually trained.

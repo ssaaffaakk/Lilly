@@ -1,0 +1,17 @@
+---
+description: Kaggle and training must stop on failure; GitHub is the store
+alwaysApply: true
+---
+
+# Fail-stop (speech, OCR, translation)
+
+A known failure is not an optimization. COMPLETE, a zip, or a 12h wall must not override the gate.
+
+- `run(..., check=True)` / non-zero exit. No `check=False` then zip then assert.
+- Do not zip refused, collapsed, or unmeasured weights into Output.
+- Do not skip AFTER WER (speech half 2) or the OCR install gate to force COMPLETE.
+- Do not launch OCR without `lilly-ocr-harvest` if the notebook is a harvest pass. Do not train "synthetic only" when harvest was required.
+- Encoder 0-grad, NaN/Inf loss, missing split/source, interrupted download: `SystemExit` / exit 1. Not a warning.
+- Watcher/poll: CANCEL and ERROR are failures even if a zip was recovered. Recovery is not success.
+- GitHub is the store. Commit and push after the step (never tokens, `kaggle.json`, `.env`). Do not leave the real fix "local only."
+- Fix the cause and relaunch. Do not bandage the pipeline so the next run can COMPLETE past the same hole.

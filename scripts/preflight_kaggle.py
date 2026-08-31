@@ -102,22 +102,6 @@ def check_ocr(text: str) -> None:
         fail("OCR notebook still labelled an older pass")
     # Substring-only checks passed pass-7c even though the names were never
     # assigned — Kaggle then NameError'd on AUTO_CAP_MULT in cell 5d.
-    # #region agent log
-    import json as _json, time as _time
-    _dbg = Path("/Users/safaksurmeli/Desktop/Lilly/.cursor/debug-6af128.log")
-    with _dbg.open("a") as _f:
-        _f.write(_json.dumps({
-            "sessionId": "6af128", "runId": "pre-launch", "hypothesisId": "H1",
-            "location": "preflight_kaggle.py:check_ocr",
-            "message": "AUTO_* assignment presence",
-            "data": {
-                "has_AUTO_MIN_CONF_assign": "AUTO_MIN_CONF =" in text,
-                "has_AUTO_CAP_MULT_assign": "AUTO_CAP_MULT =" in text,
-                "has_filter_print": "harvest filters defined" in text,
-            },
-            "timestamp": int(_time.time() * 1000),
-        }) + "\n")
-    # #endregion
     if "AUTO_MIN_CONF =" not in text:
         fail("OCR harvest must assign AUTO_MIN_CONF (mentioning the name is not enough)")
     if "AUTO_CAP_MULT =" not in text:
@@ -136,6 +120,12 @@ def check_ocr(text: str) -> None:
         fail("OCR harvest copy must include .jpg (Commons photos are JPEG, not PNG)")
     if "ocr-harvest is attached but only" not in text:
         fail("OCR notebook must refuse to train if harvest is attached but unused")
+    if "training on human crops + synthetic only" in text:
+        fail("OCR notebook silently falls back to synthetic-only — "
+             "harvest is required for this pass; raise SystemExit instead")
+    if "raise SystemExit" not in text or "Harvest photos are required" not in text:
+        fail("OCR notebook harvest else-branch must raise SystemExit when no harvest "
+             "photos are present, not print and continue")
 
 
 def check_train_ocr() -> None:
@@ -157,6 +147,10 @@ def main() -> int:
             fail(f"missing {path}")
         fn(read_nb(path))
     check_train_ocr()
+    kaggle_train = (REPO / "scripts" / "kaggle_train.py").read_text(encoding="utf-8")
+    if "hv is None" not in kaggle_train:
+        fail("kaggle_train.py must exit 1 when push_ocr_harvest returns None — "
+             "currently it can skip harvest and still launch the notebook")
     speech_train = (REPO / "training" / "train_speech.py").read_text(encoding="utf-8")
     if "--keep-adapter" not in speech_train or "resume_from_checkpoint" not in speech_train:
         fail("train_speech.py must support --keep-adapter and resume_from_checkpoint")

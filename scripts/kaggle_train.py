@@ -293,7 +293,7 @@ def push_ocr_crops(user: str) -> str:
 
 
 def push_ocr_harvest(user: str) -> "str | None":
-    """Pass-7 Commons photographs (full scenes + CREDITS). Optional if thin."""
+    """Pass-7 Commons photographs (full scenes + CREDITS). Required for OCR."""
     import zipfile
 
     harvested = REPO_ROOT / "data" / "ocr" / "real-photos" / "harvested"
@@ -303,7 +303,7 @@ def push_ocr_harvest(user: str) -> "str | None":
         if p.is_file() and p.suffix.lower() in {".png", ".jpg", ".jpeg", ".webp"}
     )
     if not credits.is_file() or len(photos) < 50:
-        print(f"harvest photos not ready ({len(photos)} files) — skipping lilly-ocr-harvest")
+        print(f"harvest photos not ready ({len(photos)} files, need CREDITS.tsv + ≥50 photos)")
         return None
     slug = f"{user}/lilly-ocr-harvest"
     stage = STAGING / "ocr-harvest"
@@ -524,8 +524,11 @@ def main() -> int:
         datasets.append(push_ocr_crops(user))
     if job.get("needs_ocr_harvest"):
         hv = push_ocr_harvest(user)
-        if hv:
-            datasets.append(hv)
+        if hv is None:
+            raise SystemExit(
+                "OCR harvest photos are required for this pass but are not ready.\n"
+                "Run the harvester (lilly-ocr-harvest) first, then relaunch.")
+        datasets.append(hv)
 
     push_notebook(user, job, datasets)
     print(f"\nrunning: https://www.kaggle.com/code/{slug}")
