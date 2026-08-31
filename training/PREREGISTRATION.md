@@ -761,3 +761,135 @@ voxpopuli_hr is CC0 and covers the requirement on its own.
 
 One addition, which is what this whole section is for: **a null on the Croatian
 column is not the second case.** It is the instrument being unable to say.
+
+---
+
+# v3 — reply — English to Bosnian, written before the run
+
+Written **before** the fine-tune starts and before any of its numbers exist. The
+reverse direction ships today as the untuned base and `built.json` says so
+(`fine_tuned: false`). This section fixes what would have to be true for that to
+change.
+
+## What is being changed
+
+A LoRA fine-tune of `opus-mt-tc-base-en-sh`, the same recipe as the forward
+direction, run through `training/train_translation.py --direction en-bs`. The
+corpus is the same file: `read_tsv` flips source and target, so the pairs and
+the length band are the ones the forward corpus was already rebuilt to hold. No
+second corpus is built, and none should be.
+
+**The base is `tc-base`, not `tc-big`.** Helsinki publishes a big model into
+English and nothing big back out, so this direction starts at 29.57 BLEU /
+58.96 chrF2 where the forward one started at 40.81 / 67.34. Every threshold
+below is written against **this** base. Comparing the two directions' scores to
+each other is not a result and will not appear in the write-up as one.
+
+## The trap this is written to catch
+
+This decoder serves five South Slavic languages and picks between them from
+`>>bos_Latn<<` on the front of the source sentence. A fine-tune can weaken the
+label's grip on the decoder without weakening anything a translation metric
+looks at, because Croatian scored against Bosnian references still scores well —
+they are close, and chrF2 is a character measure.
+
+So the failure mode is fluent, plausible, confidently wrong-language output that
+*improves* on chrF2. `scripts/fetch_translate_base.py` already documents this
+shape for a label the tokenizer does not know. The same shape is available to a
+model that still tokenizes the label and has stopped listening to it, and no
+number in the table below would catch it on its own.
+
+## The measurement that decides
+
+`training/evaluate.py --direction en-bs` on the 2,009 held-out FLORES-200 pairs,
+the same set and the same label as the base numbers in
+`training/RESULTS-en-bs.md`, so the columns differ only by the fine-tuning.
+
+| | base | threshold to replace it |
+|---|---|---|
+| chrF2, FLORES-200 | 58.96 | **above 58.96** |
+| BLEU, FLORES-200 | 29.57 | **not below 29.57** |
+| Bosnian form rate, output side | measured before the fine-tune runs | **not below that baseline** |
+
+Both directions of the bar, not either. A model that scores higher while writing
+less Bosnian does not ship.
+
+**chrF2 decides, BLEU is the floor.** In this direction Bosnian is the *output*,
+so the morphology being scored is the morphology being generated, and a character
+measure is the fairer instrument for a heavily inflecting target. If the two
+disagree, chrF2 wins. This tie-break is written here, before either number
+exists, because the forward direction's arm choice showed how easily the other
+rule looks better afterwards.
+
+## The Bosnian form rate, and why this direction can finally measure it
+
+`training/bosnian_bench.py` says plainly what it cannot do: "The direction is
+bs->en, so nothing Bosnian survives into the output — you cannot look at English
+and ask whether it is ijekavica." That limitation is why the forward direction's
+Bosnian claim came back +0.5 points at p = 0.360 and stayed unproven.
+
+It does not apply here. In this direction Bosnian **is** the output, so the
+question becomes directly checkable: given an English sentence whose
+professional Bosnian translation uses a Bosnian-only term, does the model write
+that term or its Croatian or Serbian counterpart? One target, one bit, nothing
+averaged away.
+
+The data for it is already in `bench/cases.tsv` and no new collection is needed:
+`en` is the source to feed, `terms` is the Bosnian-only target term, and
+`variant_swaps` names the Croatian or Serbian counterpart it is being weighed
+against. The scorer reads the output and asks which of the two it wrote. Fixing
+the columns here means the measure cannot be quietly redefined once a number
+exists.
+
+This is the first time the project can test its own central claim head-on rather
+than around the edge of it. Because that makes the measure load-bearing, three
+things are fixed now:
+
+1. **The baseline is measured on the base before the fine-tune is launched** and
+   written into this file. A baseline recovered afterwards is not a baseline.
+2. **The cases come from `bench/`, reused, not rebuilt.** A new case set chosen
+   while a reverse model is in hand is a set chosen to be passed.
+3. **A case whose Bosnian and Croatian forms score the same is dropped before
+   the run, not after.** The forward direction found only 3.6% of swapped
+   targets scored differently; the same audit runs here first, and if the
+   discriminating subset is too small to say anything, that is reported as the
+   instrument being unable to speak — not as a pass.
+
+## Controls that are reported and cannot change the decision
+
+Run after the deciding numbers are in, stated here so they cannot be presented
+as the headline if they happen to flatter:
+
+- **The label still tokenizes.** `>>bos_Latn<<` survives tokenisation as one
+  piece, the check `fetch_translate_base.py` already performs.
+- **The label still steers.** Decode the same FLORES source twice, once with
+  `>>bos_Latn<<` and once with `>>hrv<<`. If the outputs are identical, or
+  nearly so, the fine-tune has deafened the decoder to its own selector and the
+  model does not ship whatever the table says. The base's own gap on this pair
+  is measured first, for the same reason as everything else here.
+- **Significance.** Paired bootstrap on chrF2 and BLEU, reported with the
+  numbers. It does not move the bar; the bar is the table.
+
+## What failure looks like
+
+- **chrF2 rises, Bosnian form rate falls.** The model got better at
+  Serbo-Croatian. Keep the base, and record that the reverse LoRA bought
+  fluency by spending the thing this project is for.
+- **Both flat.** `tc-base` had nothing left to give on this corpus. Publish the
+  null. It is the more useful result of the two, because the obvious next move
+  is a bigger base and this says whether that is the reason.
+- **The label stops steering.** Diagnose the recipe before retraining. Do not
+  raise the learning rate and try again.
+- **BLEU falls below 29.57 while chrF2 rises.** The floor holds and it does not
+  ship. The forward direction accepted a chrF2 that merely stopped getting worse;
+  this direction does not get the mirror of that concession, because here chrF2
+  is the deciding measure and not the consolation.
+
+## What this run cannot settle
+
+The ceiling. `tc-base` is a smaller model than the forward direction's base and
+this fine-tune does not change that. A good result here is a good result for
+`tc-base` and says nothing about what the direction could do on a larger one.
+Nothing in the write-up may imply that English → Bosnian and Bosnian → English
+are of comparable quality; on the evidence available they are not, and the
+README already says so.
