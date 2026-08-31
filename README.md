@@ -28,19 +28,26 @@ relabeled at the last minute.
 
 ## Why I built this
 
-People kept telling me I did not know Bosnian.
+I am a university student. I applied for an internship.
 
-Internet password applications. Job applications. Classes. The same line:
-*you will not understand.*
+They did not take me.
 
-So I asked: why don’t I train **real** Bosnian myself?
+The reason was not a long technical debate. It was simpler, and colder:
+**you do not know Bosnian.** You will not understand. I had already heard that
+line for an internet password, for jobs, for classes — the language treated like
+a door I was standing on the wrong side of.
 
-If they speak — press the mic, hear English.  
-If they write on the board — take a photo, understand it.  
-If I need to answer — type it, let Lilly speak it.
+So I asked different questions.
 
-I stopped waiting for a generic “South Slavic” model to care. I built my own
-way through. That decision is Lilly.
+If they speak — why can’t I press the mic and hear English?  
+If they write on the board — why can’t I photograph it and understand?  
+If I need to answer — why can’t I type it and have it spoken?
+
+I stopped waiting for a generic “South Slavic” model to care. I trained **real
+Bosnian** on purpose. Type. Speak. Snap. That decision is Lilly.
+
+I build things because I run into problems and refuse to accept that they can’t
+be solved.
 
 Full story: [`docs/STORY.md`](docs/STORY.md).
 
