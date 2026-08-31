@@ -125,10 +125,18 @@ def check_ocr(text: str) -> None:
     if "data/scripts/generate_ocr_photos.py" in text:
         fail("OCR pass-8 must not run generate_ocr_photos.py "
              "(pass-7c photo-style + harvest already refused on photographs)")
-    if "REAL_REPEAT = 2" not in text:
-        fail("OCR must repeat real train crops ×2, not ×6")
-    if "heavy-pass8" not in text:
-        fail("OCR notebook still labelled an older pass (want heavy-pass8)")
+    if "REAL_REPEAT = 4" not in text:
+        fail("OCR pass-9 must repeat real train crops ×4 (pass-8 ×2 drowned them in plates)")
+    if "REAL_REPEAT = 2" in text:
+        fail("OCR still uses pass-8 REAL_REPEAT = 2 — that mix spent Bosnian letters")
+    if "share >= 0.45" not in text:
+        fail("OCR pass-9 must assert human share ≥ 45% of train (pass-8 was ~12%)")
+    if "letter_score" not in text:
+        fail("OCR pass-9 must keep čćđšž plates first when capping sign-letters")
+    if "heavy-pass9" not in text:
+        fail("OCR notebook still labelled an older pass (want heavy-pass9)")
+    if 'LILLY_RUN_ID"] = "heavy-pass8"' in text or "heavy-pass8" in text:
+        fail("OCR notebook still launches pass-8 — crop gate already refused that mix")
     if "heavy-pass7c" in text:
         fail("OCR notebook still launches pass-7c — that recipe already lost on photographs")
     if "AUTO_MIN_CONF =" in text or "AUTO_CAP_MULT =" in text:

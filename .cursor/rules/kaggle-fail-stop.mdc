@@ -12,7 +12,7 @@ A known failure is not an optimization. COMPLETE, a zip, or a 12h wall must not 
 - `run()` must tee child stdout to `/kaggle/working/stdout.txt`. `check=True` alone is not enough — the Kaggle log never sees the child's fd.
 - Do not zip refused, collapsed, or unmeasured weights into Output.
 - Do not skip AFTER WER (speech half 2) or the OCR install gate to force COMPLETE.
-- Do not launch OCR without `lilly-ocr-harvest` if the notebook is a harvest pass. Do not train "synthetic only" when harvest was required. Pass-8 requires `lilly-ocr-sign-letters` + `lilly-ocr-crops`, not harvest; do not relaunch pass-7c.
+- Do not launch OCR without `lilly-ocr-harvest` if the notebook is a harvest pass. Do not train "synthetic only" when harvest was required. Pass-9 requires `lilly-ocr-sign-letters` + `lilly-ocr-crops`, not harvest; do not relaunch pass-7c or pass-8 (pass-8 spent real-crop letters).
 - Encoder 0-grad, NaN/Inf loss, missing split/source, interrupted download: `SystemExit` / exit 1. Not a warning.
 - Watcher/poll: CANCEL and ERROR are failures even if a zip was recovered. Recovery is not success.
 - GitHub is the store. Commit and push after the step (never tokens, `kaggle.json`, `.env`). Do not leave the real fix "local only."

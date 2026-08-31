@@ -306,15 +306,16 @@ python3 scripts/kaggle_train.py speech-half2    # only then
 | Buffered / missing child stdout | `run()` tees to `stdout.txt`; `OFF.check_trainproof()` |
 | Crop gate pass, photographs worse, still ship | Photograph gate (40 photos) before `lilly-read.zip` |
 | Relaunch pass-7c unchanged | Change the mix first; 7c already lost on photographs |
+| Pass-8: 12% human + 18k plates, letters 64%→60% | Pass-9: human ×4, cap plates, human share ≥ 45% |
 
-### OCR data order (pass-8)
+### OCR data order (pass-9)
 
 ```text
 1. Copy real crops from lilly-ocr-crops (skip harvest, skip syn*, skip sign-letters)
 2. prepare_ocr_data.py --labels <human labels>     # MUST succeed
 3. Copy sign-letter plates from lilly-ocr-sign-letters, prepare --labels
 4. Assert zero photo*.png and zero auto_* in train
-5. Oversample human rows REAL_REPEAT = 2
+5. Human ×4, keep čćđšž plates first, cap plates so human share ≥ 45%
 6. train_ocr.py --quick-test
 7. train_ocr.py heavy (5 epochs, crop gate inside)
 8. restore_scored_photos.py + evaluate_ocr.py photograph gate
@@ -377,6 +378,7 @@ A failed photo read is a failed score — no `continue` that leaves holes.
 
 ```text
 ✗ Relaunch pass-7c (harvest auto-crop + 50k + photo-style)
+✗ Relaunch pass-8 (human ×2 + all 18k plates — real-crop letters fell)
 ✗ Launch OCR when push_ocr_sign_letters has nothing to upload
 ✗ check=False on train_ocr “so we can still zip for debugging”
 ✗ Zip lilly-read.zip then assert returncode / skip the photograph gate
@@ -473,7 +475,7 @@ Examples already enforced:
 - Speech half 1: `--keep-adapter`, no `evaluate_speech`, tee + `check_trainproof`
 - Speech half 2: `--resume`, `require_wer` before zip path
 - OCR: no `check=False`, no 50k generate, no `generate_ocr_photos.py`, no harvest
-  `SystemExit`, `heavy-pass8`, `lilly-ocr-sign-letters`, photograph `diacritic`+`invented`;
+  `SystemExit`, `heavy-pass9`, human share ≥ 45%, `lilly-ocr-sign-letters`, photograph `diacritic`+`invented`;
   poller done zip is `lilly-read.zip` only (not `lilly-read-trained.zip`);
   tee + `experiment_log.json`
 - `train_speech`: Encoder `SystemExit`, `FiniteLossCheck`
@@ -508,7 +510,7 @@ then add a check when possible.
 | :--- | :--- |
 | `training/Lilly_Speech_Kaggle.ipynb` | Speech half 1 |
 | `training/Lilly_Speech_Kaggle_Half2.ipynb` | Speech half 2 |
-| `training/Lilly_OCR_Kaggle.ipynb` | OCR pass-8 (sign letters) |
+| `training/Lilly_OCR_Kaggle.ipynb` | OCR pass-9 (human-majority mix) |
 | `scripts/preflight_kaggle.py` | Launch gate |
 | `scripts/kaggle_train.py` | Push + sign-letters required |
 | `scripts/kaggle_poll.py` | CANCEL/ERROR = crash |
