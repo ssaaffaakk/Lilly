@@ -493,9 +493,8 @@ def main() -> int:
     # on a handful of steps the two measurements are noise against each other and
     # the comparison below will happily wave through a model trained for seconds.
     if steps < MIN_STEPS:
-        print(f"\nonly {steps} steps — too short to mean anything, "
-              f"leaving the shipped reader alone")
-        return 0
+        print(f"\nonly {steps} steps — too short to mean anything")
+        return 1
 
     # Pass-5 (Kaggle v10) trained to the end and was refused: pooled words
     # 88.8% -> 88.0% on a valid set that is mostly synthetic, which is already

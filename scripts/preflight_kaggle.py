@@ -140,6 +140,9 @@ def check_train_ocr() -> None:
              "Kaggle pass-1 shipped stock latin_g2 (md5 46986913)")
     if "valid_real" not in text or "after_syn" not in text:
         fail("train_ocr must split real vs synthetic valid (pass-5 pooled gate refused a photo run)")
+    min_idx = text.find("if steps < MIN_STEPS:")
+    if min_idx < 0 or "return 0" in text[min_idx:min_idx + 220]:
+        fail("a too-short OCR run must return 1, not 0 (exit 0 would package the old reader)")
 
 
 def main() -> int:
