@@ -1,9 +1,13 @@
 #!/usr/bin/env python3
-"""Lilly's translation engine — Bosnian -> English on this machine.
+"""Lilly's translation engine — Bosnian -> English, and English -> Bosnian back.
 
-Serves the quantised model in models/lilly/translator/, built by
-scripts/build_translator.py. That build is where our fine-tuning gets folded in,
-so what runs here is Lilly rather than the untuned base once the adapter exists.
+Serves the quantised models in models/lilly/translator/ (bs-en) and
+models/lilly/translator-en-bs/ (en-bs), built by scripts/build_translator.py.
+That build is where our fine-tuning gets folded in, so what runs here is Lilly
+rather than the untuned base once the adapter exists.
+
+The two directions are separate models, separate builds and separate loads.
+en-bs additionally needs a target label on every sentence -- see DIRECTIONS.
 
 Quantised on purpose: the same weights served as float32 PyTorch cost about
 1.8 GB resident and run roughly half as fast, for a chrF2 that matches to two
@@ -11,6 +15,7 @@ decimal places.
 
 Usage:
     python3 app/translate.py "Dobar dan, kako ste?"
+    python3 app/translate.py --direction en-bs "Where is the bus station?"
     python3 app/translate.py            # interactive: type a line, get the translation
 """
 import json
@@ -18,7 +23,7 @@ import re
 import sys
 import threading
 
-from app.lilly import BadInput, TRANSLATOR_DIR
+from app.lilly import BadInput, TRANSLATOR_DIR, TRANSLATOR_EN_BS_DIR
 
 # Cost is driven by sentences x longest sentence, not by how many characters
 # arrived, so the limits are in tokens. Every sentence in a batch is padded to
@@ -37,7 +42,18 @@ MAX_SENTENCE_TOKENS = 256
 # forbidden. The lines are the sentence boundaries the punctuation is missing.
 SENTENCE_BREAK = re.compile(r"(?<=[.!?])\s+|\s*\n+\s*")
 
-_engine = None
+# Each direction is its own build, its own tokenizer and its own target label.
+# The label is not decoration: this base decodes five South Slavic languages and
+# picks between them from the front of the source sentence, so a missing label
+# returns fluent Croatian to somebody who asked for Bosnian.
+DIRECTIONS = {
+    "bs-en": {"dir": TRANSLATOR_DIR, "tag": None,
+              "reads": "Bosnian", "writes": "English"},
+    "en-bs": {"dir": TRANSLATOR_EN_BS_DIR, "tag": ">>bos_Latn<<",
+              "reads": "English", "writes": "Bosnian"},
+}
+
+_engines = {}
 _engine_lock = threading.Lock()
 # Translation is CPU-bound and the server hands requests to a wide threadpool.
 # Without this, ten callers each get their own copy of the peak allocation.
@@ -49,7 +65,7 @@ class TextTooLong(BadInput):
 
 
 class Engine:
-    def __init__(self, directory=None):
+    def __init__(self, directory=None, direction="bs-en"):
         """directory lets a measurement load a different build of the same model.
 
         Scoring has to go through this class, not around it: the sentence
@@ -63,20 +79,30 @@ class Engine:
         import ctranslate2
         from transformers import AutoTokenizer
 
-        directory = directory or TRANSLATOR_DIR
+        spec = DIRECTIONS[direction]
+        directory = directory or spec["dir"]
         if not (directory / "model.bin").exists():
             raise FileNotFoundError(
-                f"no translator at {directory} — run scripts/build_translator.py")
+                f"no {direction} translator at {directory} — run "
+                f"scripts/build_translator.py --direction {direction}")
         self.tokenizer = AutoTokenizer.from_pretrained(str(directory))
         self.device = "cuda" if ctranslate2.get_cuda_device_count() else "cpu"
         self.translator = ctranslate2.Translator(
             str(directory), device=self.device, compute_type="int8")
+        self.direction = direction
+        self.tag = spec["tag"]
+        if self.tag and self.tokenizer.convert_tokens_to_ids(
+                [self.tag])[0] in (None, self.tokenizer.unk_token_id):
+            # Refuse at load rather than answer in the wrong language all day.
+            raise FileNotFoundError(
+                f"the build at {directory} does not know {self.tag}, so it "
+                f"cannot be held to Bosnian — rebuild it from the {direction} base")
         built = directory / "built.json"
         tuned = json.loads(built.read_text())["fine_tuned"] if built.exists() else False
         self.name = "Lilly (fine-tuned)" if tuned else "base model (not fine-tuned yet)"
 
     def translate(self, text: str, truncate: bool = False) -> str:
-        """Bosnian in, English out.
+        """Source language in, target language out, per this engine's direction.
 
         The model silently drops sentences when fed several at once, so the text
         is split and translated sentence by sentence. Those sentences go out in
@@ -88,6 +114,11 @@ class Engine:
         where a refusal would be baffling.
         """
         sentences = [s for s in SENTENCE_BREAK.split(text.strip()) if s.strip()] or [text]
+        # Every sentence carries the label, not just the first one: the splitter
+        # above means each sentence is its own decode, and a label on the first
+        # of five steers only the first of five.
+        if self.tag:
+            sentences = [f"{self.tag} {s}" for s in sentences]
         tokenised = [self.tokenizer.convert_ids_to_tokens(
                         self.tokenizer.encode(s, truncation=True,
                                               max_length=MAX_SENTENCE_TOKENS))
@@ -132,27 +163,34 @@ class Engine:
             yield group
 
 
-def get_engine() -> Engine:
-    """Shared lazy singleton so the web server loads the model once.
+def get_engine(direction: str = "bs-en") -> Engine:
+    """Shared lazy singleton per direction, so the web server loads each once.
 
     Locked, because the server answers requests from a threadpool: without it a
-    first burst of traffic starts several loads at once.
+    first burst of traffic starts several loads at once. Per direction rather
+    than one global, because the reply side is a different model and loading it
+    should not cost anybody who only ever reads Bosnian.
     """
-    global _engine
-    if _engine is None:
+    if direction not in _engines:
         with _engine_lock:
-            if _engine is None:
-                _engine = Engine()
-    return _engine
+            if direction not in _engines:
+                _engines[direction] = Engine(direction=direction)
+    return _engines[direction]
 
 
 def main() -> int:
-    engine = get_engine()
-    print(f"[model: {engine.name}, device: {engine.device}]", file=sys.stderr)
-    if len(sys.argv) > 1:
-        print(engine.translate(" ".join(sys.argv[1:])))
+    argv = sys.argv[1:]
+    direction = "bs-en"
+    if argv and argv[0] == "--direction":
+        direction, argv = argv[1], argv[2:]
+    engine = get_engine(direction)
+    spec = DIRECTIONS[direction]
+    print(f"[model: {engine.name}, device: {engine.device}, "
+          f"{spec['reads']} -> {spec['writes']}]", file=sys.stderr)
+    if argv:
+        print(engine.translate(" ".join(argv)))
         return 0
-    print("Type Bosnian, press Enter (Ctrl-D to quit):", file=sys.stderr)
+    print(f"Type {spec['reads']}, press Enter (Ctrl-D to quit):", file=sys.stderr)
     for line in sys.stdin:
         line = line.strip()
         if line:

@@ -27,23 +27,32 @@ MODELS = REPO_ROOT / "models" / "lilly"
 SOURCE = MODELS / "translate"          # transformers format, what training reads
 ADAPTER = MODELS / "adapter"           # our fine-tuning, if it has been trained
 DEST = MODELS / "translator"           # quantised, what the app serves
+# Each direction is a separate base, a separate adapter and a separate served
+# build. They are named together here so a reverse-direction adapter can never
+# be merged into the forward base -- peft applies it without complaint, and the
+# result translates confidently in the wrong direction.
+DIRECTIONS = {
+    "bs-en": {"source": SOURCE, "adapter": ADAPTER, "dest": DEST},
+    "en-bs": {"source": MODELS / "translate-en-bs",
+              "adapter": MODELS / "adapter-en-bs",
+              "dest": MODELS / "translator-en-bs"},
+}
 # the app needs these beside the weights to turn text into tokens and back
 TOKENIZER_FILES = ("source.spm", "target.spm", "vocab.json",
                    "tokenizer_config.json", "special_tokens_map.json")
 
 
-def merge_adapter(into: Path, adapter: Path = None) -> bool:
+def merge_adapter(into: Path, adapter: Path, source: Path) -> bool:
     """Fold the fine-tuning into the weights. Quantised models cannot take it later."""
-    adapter = adapter or ADAPTER
     if not (adapter / "adapter_config.json").exists():
         return False
     from peft import PeftModel
     from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
-    print(f"merging {adapter}")
-    model = AutoModelForSeq2SeqLM.from_pretrained(str(SOURCE))
+    print(f"merging {adapter} into {source.name}")
+    model = AutoModelForSeq2SeqLM.from_pretrained(str(source))
     model = PeftModel.from_pretrained(model, str(adapter)).merge_and_unload()
     model.save_pretrained(str(into))
-    AutoTokenizer.from_pretrained(str(SOURCE)).save_pretrained(str(into))
+    AutoTokenizer.from_pretrained(str(source)).save_pretrained(str(into))
     return True
 
 
@@ -75,10 +84,12 @@ def convert(source: Path, dest: Path, quantization: str) -> None:
 
 def main() -> int:
     ap = argparse.ArgumentParser()
+    ap.add_argument("--direction", default="bs-en", choices=sorted(DIRECTIONS),
+                    help="which direction to build; sets source, adapter and dest")
     ap.add_argument("--quantization", default="int8",
                     help="int8 (default), int8_float32, float16 or float32")
-    ap.add_argument("--source", type=Path, default=SOURCE)
-    ap.add_argument("--dest", type=Path, default=DEST)
+    ap.add_argument("--source", type=Path, default=None)
+    ap.add_argument("--dest", type=Path, default=None)
     # Comparing the fine-tuned model against the base is only honest if both are
     # built the same way. Serving one as int8 CTranslate2 and scoring the other
     # as float32 PyTorch measures the quantisation as much as the training.
@@ -89,41 +100,47 @@ def main() -> int:
     ap.add_argument("--adapter", type=Path, default=None,
                     help="use this adapter instead of models/lilly/adapter")
     args = ap.parse_args()
+    spec = DIRECTIONS[args.direction]
+    base = args.source or spec["source"]
+    dest = args.dest or spec["dest"]
+    adapter = args.adapter or spec["adapter"]
 
-    if not (args.source / "config.json").exists():
-        print(f"no model at {args.source} — run scripts/fetch_models.py first",
-              file=sys.stderr)
+    if not (base / "config.json").exists():
+        hint = ("scripts/fetch_models.py" if args.direction == "bs-en" else
+                f"scripts/fetch_translate_base.py --direction {args.direction}")
+        print(f"no model at {base} — run {hint} first", file=sys.stderr)
         return 1
 
-    source = args.source
-    merged_dir = MODELS / "translate-merged"
+    source = base
+    merged_dir = MODELS / f"translate-merged-{args.direction}"
     if args.no_adapter:
         print("building the untuned base on purpose")
-    elif merge_adapter(merged_dir, args.adapter):
+    elif merge_adapter(merged_dir, adapter, base):
         source = merged_dir
         print("serving the fine-tuned weights")
     else:
         print("no adapter yet — serving the untuned base")
 
-    convert(source, args.dest, args.quantization)
+    convert(source, dest, args.quantization)
     for name in TOKENIZER_FILES:
         found = source / name
         if not found.exists():
-            found = SOURCE / name
+            found = base / name
         if found.exists():
-            shutil.copy(found, args.dest / name)
+            shutil.copy(found, dest / name)
 
     # Record what went in, so the app can say honestly which model it is serving
     # rather than guessing from whether an adapter folder happens to exist.
     import json
-    (args.dest / "built.json").write_text(json.dumps(
-        {"fine_tuned": source == merged_dir, "quantization": args.quantization}))
+    (dest / "built.json").write_text(json.dumps(
+        {"fine_tuned": source == merged_dir, "quantization": args.quantization,
+         "direction": args.direction}))
 
     if source == merged_dir:
         shutil.rmtree(merged_dir, ignore_errors=True)
 
-    size = sum(f.stat().st_size for f in args.dest.rglob("*") if f.is_file())
-    print(f"built {args.dest}: {size / 1048576:.0f} MB ({args.quantization})")
+    size = sum(f.stat().st_size for f in dest.rglob("*") if f.is_file())
+    print(f"built {dest}: {size / 1048576:.0f} MB ({args.quantization})")
     return 0
 
 

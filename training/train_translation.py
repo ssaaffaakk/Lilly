@@ -48,9 +48,32 @@ from transformers import (
 
 MAX_LEN = 128
 REPO_ROOT = Path(__file__).resolve().parents[1]
-# Weights normally sit in the project's own model folder. On a machine that has
-# no copy (a fresh Kaggle runtime, say) point LILLY_BASE at one.
-BASE_MODEL = os.environ.get("LILLY_BASE") or str(REPO_ROOT / "models" / "lilly" / "translate")
+
+# The two directions do not share a base model, and the corpus is the same file
+# read the other way round. bs-en is single-target: Bosnian in, English out.
+# en-bs is one decoder serving five South Slavic languages, chosen by a label on
+# the front of the source sentence -- so `>>bos_Latn<<` is the only thing
+# separating Bosnian output from Croatian, and it has to be on every row of
+# training data as well as every sentence at inference. Train without it and the
+# adapter learns to translate the label-free distribution, which is the wrong
+# distribution to serve.
+DIRECTIONS = {
+    "bs-en": {"base": REPO_ROOT / "models" / "lilly" / "translate",
+              "tag": None, "adapter": "adapter", "fullft": "translate-fullft",
+              "probe": "riječ"},
+    "en-bs": {"base": REPO_ROOT / "models" / "lilly" / "translate-en-bs",
+              "tag": ">>bos_Latn<<", "adapter": "adapter-en-bs",
+              "fullft": "translate-en-bs-fullft", "probe": "word"},
+}
+
+
+def base_model(direction: str) -> str:
+    """Where the trainable base for this direction is.
+
+    Weights normally sit in the project's own model folder. On a machine that
+    has no copy (a fresh Kaggle runtime, say) point LILLY_BASE at one.
+    """
+    return os.environ.get("LILLY_BASE") or str(DIRECTIONS[direction]["base"])
 
 # LoRA's own learning rate is not full fine-tuning's. Schulman et al. measure the
 # optimum for LoRA at about ten times the optimum for full fine-tuning, over 14
@@ -63,29 +86,40 @@ LORA_LR = 2e-4
 FULL_LR = 2e-5
 
 
-def read_tsv(path: Path, limit=None):
+def read_tsv(path: Path, limit=None, direction="bs-en"):
+    """Rows as (source, target) for this direction.
+
+    The corpus file is `corpus \t bosnian \t english` either way; which column
+    is the source is the direction, not a different dataset.
+    """
     rows = []
+    reverse = direction == "en-bs"
     with open(path, encoding="utf-8") as f:
         for line in f:
             parts = line.rstrip("\n").split("\t")
             if len(parts) == 3:
-                rows.append((parts[1], parts[2]))  # (bosnian, english)
+                bosnian, english = parts[1], parts[2]
+                rows.append((english, bosnian) if reverse else (bosnian, english))
             if limit and len(rows) >= limit:
                 break
     return rows
 
 
 class PairDataset(Dataset):
-    def __init__(self, pairs, tokenizer):
+    def __init__(self, pairs, tokenizer, tag=None):
         self.pairs = pairs
         self.tok = tokenizer
+        self.tag = tag
 
     def __len__(self):
         return len(self.pairs)
 
     def __getitem__(self, idx):
-        bs, en = self.pairs[idx]
-        enc = self.tok(bs, text_target=en, max_length=MAX_LEN, truncation=True)
+        source, target = self.pairs[idx]
+        if self.tag:
+            source = f"{self.tag} {source}"
+        enc = self.tok(source, text_target=target, max_length=MAX_LEN,
+                       truncation=True)
         return {k: enc[k] for k in ("input_ids", "attention_mask", "labels")}
 
 
@@ -131,7 +165,7 @@ def chrf_metric(tokenizer):
 
 
 def build_model(args):
-    model = AutoModelForSeq2SeqLM.from_pretrained(BASE_MODEL)
+    model = AutoModelForSeq2SeqLM.from_pretrained(base_model(args.direction))
     if args.full_finetune:
         total = sum(p.numel() for p in model.parameters() if p.requires_grad)
         print(f"full fine-tune: {total:,} trainable parameters "
@@ -179,8 +213,10 @@ def preflight(args, model, tokenizer, pairs) -> None:
     # The widest batch is what sets the peak, and group_by_length guarantees one
     # batch of nothing but full-length sequences. So the probe is that batch, not
     # an average one: MAX_LEN tokens on both sides, every row.
-    long = "riječ " * (MAX_LEN * 2)
-    batch = collator([{**PairDataset([(long, long)], tokenizer)[0]}
+    spec = DIRECTIONS[args.direction]
+    long = f"{spec['probe']} " * (MAX_LEN * 2)
+    batch = collator([{**PairDataset([(long, long)], tokenizer,
+                                     tag=spec["tag"])[0]}
                       for _ in range(args.batch_size)])
     batch = {k: v.to(device) for k, v in batch.items()}
     print(f"probe batch: input_ids {tuple(batch['input_ids'].shape)}, "
@@ -227,6 +263,8 @@ def preflight(args, model, tokenizer, pairs) -> None:
 
 def main() -> int:
     ap = argparse.ArgumentParser()
+    ap.add_argument("--direction", default="bs-en", choices=sorted(DIRECTIONS),
+                    help="bs-en is what Lilly shipped; en-bs is the reply side")
     ap.add_argument("--epochs", type=float, default=1.0)
     ap.add_argument("--batch-size", type=int, default=16)
     ap.add_argument("--grad-accum", type=int, default=4)
@@ -276,9 +314,10 @@ def main() -> int:
             f"destroys the pre-training in the first few hundred steps. Use "
             f"{FULL_LR:g}, or say so explicitly by staying under 1e-4.")
 
+    spec = DIRECTIONS[args.direction]
     if args.output is None:
         args.output = str(REPO_ROOT / "models" / "lilly" /
-                          ("translate-fullft" if args.full_finetune else "adapter"))
+                          (spec["fullft"] if args.full_finetune else spec["adapter"]))
 
     if args.quick_test:
         # small enough to fit an 8 GB laptop — the full run needs a 16 GB GPU
@@ -286,21 +325,37 @@ def main() -> int:
         args.eval_steps = 10
         # never into the real output: a 200-pair toy sitting at that path would
         # be picked up by the app, and evaluated and shipped as the finished model
+        kind = "fullft" if args.full_finetune else "adapter"
         args.output = str(REPO_ROOT / "models" /
-                          ("quicktest-fullft" if args.full_finetune else "quicktest-adapter"))
+                          f"quicktest-{args.direction}-{kind}")
 
-    tokenizer = AutoTokenizer.from_pretrained(BASE_MODEL)
+    base = base_model(args.direction)
+    print(f"direction {args.direction} | base {base}"
+          + (f" | target label {spec['tag']}" if spec["tag"] else ""))
+    tokenizer = AutoTokenizer.from_pretrained(base)
+    if spec["tag"] and tokenizer.convert_tokens_to_ids([spec["tag"]])[0] in (
+            None, tokenizer.unk_token_id):
+        # Not a warning. An unknown label is translated as text, the decoder
+        # falls back to its majority target, and every number this run produces
+        # would describe a Croatian model wearing a Bosnian name.
+        raise SystemExit(
+            f"{spec['tag']} is not in the vocabulary of {base}. This base "
+            f"cannot be steered to Bosnian — run "
+            f"scripts/fetch_translate_base.py --direction {args.direction}")
     model = build_model(args)
 
     if args.preflight:
         preflight(args, model, tokenizer,
-                  read_tsv(args.data, limit=args.batch_size * 4))
+                  read_tsv(args.data, limit=args.batch_size * 4,
+                           direction=args.direction))
         return 0
 
-    train_pairs = read_tsv(args.data, limit=200 if args.quick_test else None)
+    train_pairs = read_tsv(args.data, limit=200 if args.quick_test else None,
+                           direction=args.direction)
     valid_pairs = read_tsv(args.valid,
                            limit=20 if args.quick_test
-                           else (args.valid_limit or None))
+                           else (args.valid_limit or None),
+                           direction=args.direction)
     print(f"training on {args.data.name}: {len(train_pairs):,} pairs | "
           f"validating on {args.valid.name}: {len(valid_pairs):,}")
     random.Random(41).shuffle(train_pairs)
@@ -361,8 +416,8 @@ def main() -> int:
     trainer = Seq2SeqTrainer(
         model=model,
         args=train_args,
-        train_dataset=PairDataset(train_pairs, tokenizer),
-        eval_dataset=PairDataset(valid_pairs, tokenizer),
+        train_dataset=PairDataset(train_pairs, tokenizer, tag=spec["tag"]),
+        eval_dataset=PairDataset(valid_pairs, tokenizer, tag=spec["tag"]),
         data_collator=DataCollatorForSeq2Seq(tokenizer, model=model),
         processing_class=tokenizer,
         compute_metrics=chrf_metric(tokenizer) if by_chrf else None,

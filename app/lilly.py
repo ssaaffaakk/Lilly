@@ -17,6 +17,7 @@ from pathlib import Path
 
 MODELS = Path(__file__).resolve().parents[1] / "models" / "lilly"
 TRANSLATOR_DIR = MODELS / "translator"  # Bosnian -> English, quantised, what we serve
+TRANSLATOR_EN_BS_DIR = MODELS / "translator-en-bs"  # English -> Bosnian, the reply side
 TRANSLATE_DIR = MODELS / "translate"   # the trainable copy, only training reads it
 LISTEN_DIR = MODELS / "listen"         # speech -> text
 SPEAK_DIR = MODELS / "speak"           # text -> speech
@@ -45,6 +46,16 @@ class Lilly:
     def translate(self, bosnian: str, truncate: bool = False) -> str:
         from app.translate import get_engine
         return get_engine().translate(bosnian, truncate=truncate)
+
+    def reply(self, english: str, truncate: bool = False) -> str:
+        """English in, Bosnian out — for answering back, not for reading.
+
+        A separate method rather than a flag on translate(): the two directions
+        are different weights with different quality, and the caller should have
+        to name which one it wants.
+        """
+        from app.translate import get_engine
+        return get_engine("en-bs").translate(english, truncate=truncate)
 
     def listen(self, audio_path: str, language: str = "bs") -> str:
         from app.speech import transcribe

@@ -135,6 +135,23 @@ async def translate(body: TranslateIn):
     return {"bosnian": body.text, "english": english}
 
 
+@app.post("/api/reply")
+async def reply(body: TranslateIn):
+    """The other direction: type English, get Bosnian to say back to somebody.
+
+    Its own route rather than a flag on /api/translate, because the response
+    keys mean the same thing in both — which side was typed is the difference,
+    and a client reading `english` should not have to know how it was produced.
+    """
+    try:
+        bosnian = await run_in_threadpool(lilly.reply, body.text)
+    except FileNotFoundError as exc:
+        # The reply model is a separate download. Missing weights is not a bug
+        # in the request and not a crash, so it is neither 400 nor 500.
+        return JSONResponse(status_code=503, content={"error": str(exc)})
+    return {"bosnian": bosnian, "english": body.text}
+
+
 @app.post("/api/speech")
 async def speech(file: UploadFile):
     tmp_path = await _save_upload(file, "a.webm", MAX_UPLOAD["/api/speech"])

@@ -49,21 +49,41 @@ sys.path.insert(0, str(REPO_ROOT))
 BASE_MODEL = os.environ.get("LILLY_BASE") or str(REPO_ROOT / "models" / "lilly" / "translate")
 FLORES_DIR = REPO_ROOT / "data" / "flores"
 
+# Imported rather than restated: the base a direction is scored on and the
+# target label its sources carry have to be the same ones it was trained with.
+# Two copies of that pair is how a Croatian model gets measured under a Bosnian
+# heading, and the mistake leaves no trace in the output.
+from training.train_translation import DIRECTIONS, base_model  # noqa: E402
 
-def load_test(limit=None):
+
+def artifacts(direction: str) -> tuple:
+    """Where this direction's saved translations and report live.
+
+    bs-en keeps the original names because its numbers are already published
+    and cited; a second direction writing over them would rewrite history.
+    """
+    suffix = "" if direction == "bs-en" else f"-{direction}"
+    return (REPO_ROOT / "training" / f"hypotheses{suffix}.json",
+            REPO_ROOT / "training" / f"RESULTS{suffix}.md")
+
+
+def load_test(limit=None, direction="bs-en"):
     """The in-house split, keeping which corpus each pair came from."""
     rows = []
+    reverse = direction == "en-bs"
     with open(REPO_ROOT / "data" / "clean" / "test.tsv", encoding="utf-8") as f:
         for line in f:
             parts = line.rstrip("\n").split("\t")
             if len(parts) == 3:
-                rows.append(tuple(parts))
+                corpus, bosnian, english = parts
+                rows.append((corpus, english, bosnian) if reverse
+                            else (corpus, bosnian, english))
             if limit and len(rows) >= limit:
                 break
     return rows
 
 
-def load_flores(limit=None):
+def load_flores(limit=None, direction="bs-en"):
     """FLORES-200, if it has been fetched. Unseen by the base model.
 
     Both halves — devtest (1,012) and dev (997). They were built the same way and
@@ -75,8 +95,9 @@ def load_flores(limit=None):
     for half in ("devtest", "dev"):
         bs, en = FLORES_DIR / f"{half}.bs", FLORES_DIR / f"{half}.en"
         if bs.exists() and en.exists():
-            rows += list(zip(bs.read_text(encoding="utf-8").splitlines(),
-                             en.read_text(encoding="utf-8").splitlines()))
+            source, target = ((en, bs) if direction == "en-bs" else (bs, en))
+            rows += list(zip(source.read_text(encoding="utf-8").splitlines(),
+                             target.read_text(encoding="utf-8").splitlines()))
     return [("FLORES", s, r) for s, r in rows[:limit]]
 
 
@@ -230,7 +251,7 @@ def sources_digest(rows) -> str:
     return hashlib.sha256(joined.encode("utf-8")).hexdigest()[:16]
 
 
-def run(model, tokenizer, rows, device, label, saved=None):
+def run(model, tokenizer, rows, device, label, saved=None, tag=None):
     """Translate the rows, reusing any saved translations that cover the start.
 
     The test set grows — FLORES arrived in two halves — and re-translating what
@@ -246,8 +267,10 @@ def run(model, tokenizer, rows, device, label, saved=None):
     else:
         print(f"scoring {label} on {len(rows)} pairs…", flush=True)
     t0 = time.time()
-    raw = reuse + (translate_all(model, tokenizer, [s for _, s, _ in todo], device)
-                   if todo else [])
+    # The target label goes on at translate time, not in the loader: the report
+    # and the sentence digests describe the English the user would actually type.
+    sources = [f"{tag} {s}" if tag else s for _, s, _ in todo]
+    raw = reuse + (translate_all(model, tokenizer, sources, device) if todo else [])
     hyps, leaked = strip_tags(raw)
     overall = score(hyps, [r for _, _, r in rows])
     leak_note = f"  |  language tag in {leaked}/{len(rows)} outputs" if leaked else ""
@@ -258,8 +281,17 @@ def run(model, tokenizer, rows, device, label, saved=None):
 
 def main() -> int:
     ap = argparse.ArgumentParser()
+    ap.add_argument("--direction", default="bs-en", choices=sorted(DIRECTIONS),
+                    help="bs-en scores what Lilly ships; en-bs scores the reply side")
     ap.add_argument("--adapter", default=None,
                     help="path to LoRA adapter; omit to score the base model only")
+    # Which label the sources carry is a measurable choice, not a constant. The
+    # upstream en-bs base answers a >>bos_Latn<< request in ekavian Serbian on
+    # sentences where >>hrv<< gives the ijekavian form a Bosnian speaker would
+    # write -- so "how good is this base at Bosnian" has a different answer per
+    # label, and the comparison has to be runnable.
+    ap.add_argument("--tag", default=None,
+                    help="override the target label, e.g. >>hrv<< (en-bs only)")
     ap.add_argument("--limit", type=int, default=None)
     ap.add_argument("--fresh", action="store_true",
                     help="translate everything again instead of reusing what is "
@@ -271,15 +303,29 @@ def main() -> int:
                          "run that already cost hours")
     args = ap.parse_args()
 
+    default_tag = DIRECTIONS[args.direction]["tag"]
+    tag = args.tag if args.tag is not None else default_tag
+    # A non-default label is a different experiment, so it gets its own files.
+    # Writing it over the default run's would leave two different measurements
+    # under one name and no way to tell which is on disk.
+    slug = args.direction if tag == default_tag else \
+        f"{args.direction}-{re.sub(r'[^a-zA-Z_]', '', tag or 'notag')}"
+
     if args.rescore:
-        return rescore()
+        return rescore(slug, args.direction, tag)
+
+    global BASE_MODEL
+    BASE_MODEL = base_model(args.direction)
+    saved_path, results_path = artifacts(slug)
 
     device = ("cuda" if torch.cuda.is_available()
               else "mps" if torch.backends.mps.is_available() else "cpu")
     print(f"device: {device}")
+    print(f"direction {args.direction} | base {BASE_MODEL}"
+          + (f" | target label {tag}" if tag else ""))
 
-    in_house = load_test(args.limit)
-    flores = load_flores(args.limit)
+    in_house = load_test(args.limit, args.direction)
+    flores = load_flores(args.limit, args.direction)
     available = flores_on_disk()
     print(f"in-house: {len(in_house)} pairs"
           + (f"  |  FLORES-200: {len(flores)} pairs" if flores
@@ -290,7 +336,6 @@ def main() -> int:
               file=sys.stderr)
 
     saved = {}
-    saved_path = REPO_ROOT / "training" / "hypotheses.json"
     if saved_path.exists() and not args.fresh:
         data = json.loads(saved_path.read_text())
         same_weights = data.get("fingerprint") in (None, fingerprint(args.adapter))
@@ -320,24 +365,28 @@ def main() -> int:
     hyps = {}
     leaks = {}
     hyps["base_in"], results[("Base (untuned)", "in-house")], leaks["base_in"] = run(
-        base, tokenizer, in_house, device, "base / in-house", saved.get("base_in"))
+        base, tokenizer, in_house, device, "base / in-house", saved.get("base_in"),
+        tag=tag)
     if flores:
         hyps["base_fl"], results[("Base (untuned)", "FLORES-200")], leaks["base_fl"] = run(
-            base, tokenizer, flores, device, "base / FLORES-200", saved.get("base_fl"))
+            base, tokenizer, flores, device, "base / FLORES-200",
+            saved.get("base_fl"), tag=tag)
 
     tuned = None
     if args.adapter:
         from peft import PeftModel
         tuned = PeftModel.from_pretrained(base, args.adapter)
         hyps["tuned_in"], results[("Lilly (fine-tuned)", "in-house")], leaks["tuned_in"] = run(
-            tuned, tokenizer, in_house, device, "Lilly / in-house", saved.get("tuned_in"))
+            tuned, tokenizer, in_house, device, "Lilly / in-house",
+            saved.get("tuned_in"), tag=tag)
         if flores:
             hyps["tuned_fl"], results[("Lilly (fine-tuned)", "FLORES-200")], leaks["tuned_fl"] = run(
-                tuned, tokenizer, flores, device, "Lilly / FLORES-200", saved.get("tuned_fl"))
+                tuned, tokenizer, flores, device, "Lilly / FLORES-200",
+                saved.get("tuned_fl"), tag=tag)
 
     # Keep the outputs. Re-running the significance test on saved text costs
     # seconds; regenerating it costs an hour of translation.
-    out = REPO_ROOT / "training" / "hypotheses.json"
+    out = saved_path
     out.write_text(json.dumps({
         "fingerprint": fingerprint(args.adapter),
         "in_house_digest": sources_digest(in_house),
@@ -348,20 +397,20 @@ def main() -> int:
     print(f"kept the translations in {out.name}")
 
     write_results(in_house, flores, results, hyps, bool(args.adapter), leaks,
-                  available)
-    print("wrote training/RESULTS.md")
+                  available, args.direction, tag, results_path)
+    print(f"wrote {results_path.relative_to(REPO_ROOT)}")
     return 0
 
 
-def rescore() -> int:
+def rescore(slug="bs-en", direction="bs-en", tag=None) -> int:
     """Re-derive every number from the saved translations."""
-    saved = REPO_ROOT / "training" / "hypotheses.json"
+    saved, results_path = artifacts(slug)
     if not saved.exists():
         print(f"no saved translations at {saved} — run a full evaluation first",
               file=sys.stderr)
         return 1
     data = json.loads(saved.read_text())
-    in_house = load_test(len(data["in_house_refs"]))
+    in_house = load_test(len(data["in_house_refs"]), direction)
 
     # Only the sentences that were actually translated can be rescored, so the
     # test set is cut down to the saved half — but never quietly. Everything
@@ -369,7 +418,7 @@ def rescore() -> int:
     # set, and the report has to say which one it means.
     available = flores_on_disk()
     saved_pairs = len(data.get("flores_refs") or [])
-    flores = load_flores(saved_pairs) if saved_pairs else []
+    flores = load_flores(saved_pairs, direction) if saved_pairs else []
     if flores and saved_pairs < available:
         print(f"only {saved_pairs} of the {available} fetched FLORES pairs have "
               f"translations saved — {available - saved_pairs} were never translated. "
@@ -398,15 +447,28 @@ def rescore() -> int:
               + (f"  ({leaked} tagged)" if leaked else ""))
 
     write_results(in_house, flores, results, hyps, "tuned_fl" in hyps, leaks,
-                  available)
-    print("wrote training/RESULTS.md")
+                  available, direction, tag, results_path)
+    print(f"wrote {results_path.relative_to(REPO_ROOT)}")
     return 0
 
 
 def write_results(in_house, flores, results, hyps, tuned, leaks,
-                  flores_available=None) -> None:
-    lines = ["# Translation quality — Phase 2", "",
-             "## Headline", "",
+                  flores_available=None, direction="bs-en", tag=None,
+                  results_path=None) -> None:
+    if tag is None:
+        tag = DIRECTIONS[direction]["tag"]
+    heading = ("Translation quality — Phase 2" if direction == "bs-en"
+               else "Translation quality — English to Bosnian")
+    lines = [f"# {heading}", ""]
+    if direction == "en-bs":
+        # The label is the experiment. Without it in the report, a reader cannot
+        # tell whether these numbers describe Bosnian or the decoder's default.
+        lines += [f"Source label: **{tag or 'none'}**. The references are Bosnian "
+                  f"either way. This base decodes five South Slavic languages "
+                  f"from one decoder and chooses between them from the front of "
+                  f"the source sentence, so the label is a variable of the "
+                  f"measurement rather than a detail of it.", ""]
+    lines += ["## Headline", "",
              "| Model | Test set | Pairs | BLEU | chrF2 |",
              "|-------|----------|-------|------|-------|"]
     for (model, which), (bleu, chrf) in results.items():
@@ -586,7 +648,8 @@ def write_results(in_house, flores, results, hyps, tuned, leaks,
               "Generated by `training/evaluate.py`. Sentences are batched by length: "
               "padding short sentences out to the longest in their batch changes what the "
               "model produces, and measured on this set it costs 8.7 BLEU."]
-    (REPO_ROOT / "training" / "RESULTS.md").write_text("\n".join(lines) + "\n")
+    out = results_path or (REPO_ROOT / "training" / "RESULTS.md")
+    out.write_text("\n".join(lines) + "\n")
 
 
 if __name__ == "__main__":
