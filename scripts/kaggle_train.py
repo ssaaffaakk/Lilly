@@ -33,7 +33,13 @@ import state as repo_state
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 KAGGLE = str(REPO_ROOT / ".venv" / "bin" / "kaggle")
+# One base per direction. en-bs is a different upstream model, not the same
+# weights read backwards: opus-mt-tc-base-en-sh against opus-mt-tc-big-zls-en.
+# Uploading the wrong one does not fail -- the run trains to the end and returns
+# a model that translates the other way -- so each direction carries its own
+# folder and its own dataset slug, and the notebook checks the label on arrival.
 WEIGHTS = REPO_ROOT / "models" / "lilly" / "translate"
+WEIGHTS_EN_BS = REPO_ROOT / "models" / "lilly" / "translate-en-bs"
 READ_PASS1 = REPO_ROOT / "models" / "lilly" / "read" / "lilly.pth"
 OCR_CROPS = REPO_ROOT / "data" / "ocr" / "crops"
 OCR_SIGN_LETTERS = REPO_ROOT / "data" / "ocr" / "sign-letters"
@@ -60,7 +66,18 @@ ACCELERATOR = "NvidiaTeslaT4"
 JOBS = {
     "translation": {"notebook": "Lilly_Translation_Kaggle.ipynb",
                     "slug": "lilly-translation", "title": "Lilly translation",
-                    "needs_weights": True, "needs_corpus": True},
+                    "needs_weights": True, "needs_corpus": True,
+                    "direction": "bs-en"},
+    # Same notebook, other direction. Its own slug: sharing lilly-translation
+    # would push a reverse run over the forward run's kernel and its Output,
+    # and the two are not interchangeable in either place.
+    "translation-en-bs": {"notebook": "Lilly_Translation_Kaggle.ipynb",
+                    "slug": "lilly-translation-en-bs",
+                    "title": "Lilly translation en-bs",
+                    "needs_weights": True, "needs_corpus": True,
+                    "direction": "en-bs",
+                    "weights": WEIGHTS_EN_BS,
+                    "weights_slug": "lilly-translate-en-bs-base"},
     "speech":      {"notebook": "Lilly_Speech_Kaggle.ipynb",
                     "slug": "lilly-speech", "title": "Lilly speech",
                     "needs_weights": False, "needs_corpus": False},
@@ -93,18 +110,24 @@ def run(*args, **kw):
                           text=True, capture_output=kw.pop("quiet", False))
 
 
-def push_weights(user: str) -> str:
-    """The 457 MB base model, as a dataset the notebook can attach."""
-    slug = f"{user}/lilly-translate-base"
-    stage = STAGING / "dataset"
+def push_weights(user: str, weights=WEIGHTS, name="lilly-translate-base") -> str:
+    """One direction's base model, as a dataset the notebook can attach.
+
+    The staging directory is per-dataset. Sharing one would leave the previous
+    direction's .spm and config.json sitting beside this one -- the copy below
+    skips files that already exist -- and the notebook would attach a folder
+    holding two bases mixed together.
+    """
+    slug = f"{user}/{name}"
+    stage = STAGING / "dataset" / name
     stage.mkdir(parents=True, exist_ok=True)
-    for f in WEIGHTS.iterdir():
+    for f in weights.iterdir():
         if f.is_file():
             target = stage / f.name
             if not target.exists():
                 target.write_bytes(f.read_bytes())
     (stage / "dataset-metadata.json").write_text(json.dumps({
-        "title": "Lilly translate base", "id": slug,
+        "title": f"Lilly {name.replace('lilly-', '').replace('-', ' ')}", "id": slug,
         "licenses": [{"name": "other"}]}, indent=1))
 
     existing = subprocess.run([KAGGLE, "datasets", "status", slug],
@@ -575,11 +598,25 @@ def main() -> int:
 
     datasets = []
     if job["needs_weights"]:
-        if not WEIGHTS.exists():
-            print(f"no weights at {WEIGHTS} — run scripts/fetch_models.py first",
-                  file=sys.stderr)
+        weights = job.get("weights", WEIGHTS)
+        if not weights.exists():
+            hint = ("scripts/fetch_models.py" if weights == WEIGHTS else
+                    f'scripts/fetch_translate_base.py --direction {job["direction"]}')
+            print(f"no weights at {weights} — run {hint} first", file=sys.stderr)
             return 1
-        datasets.append(push_weights(user))
+        # The notebook carries the direction it trains, committed, and this
+        # launcher carries the base it uploads. If they disagree the run still
+        # completes and returns a model trained the wrong way round, so they are
+        # compared here rather than discovered in a benchmark afterwards.
+        want = f'DIRECTION = "{job["direction"]}"'
+        nb_text = (REPO_ROOT / "training" / job["notebook"]).read_text()
+        if want.replace('"', '\\"') not in nb_text and want not in nb_text:
+            print(f'{job["notebook"]} does not set {want}. The notebook trains '
+                  f'whichever direction is committed in it; edit cell 0 and '
+                  f'commit before launching {job["slug"]}.', file=sys.stderr)
+            return 1
+        datasets.append(push_weights(
+            user, weights, job.get("weights_slug", "lilly-translate-base")))
     if job["needs_corpus"]:
         datasets.append(push_corpus(user))
     if job.get("needs_read_pass1"):
