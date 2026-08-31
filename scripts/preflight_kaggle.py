@@ -93,10 +93,28 @@ def check_ocr(text: str) -> None:
         fail("OCR pass-7 must repeat real train crops ×2, not ×6")
     if "heavy-pass7c" not in text:
         fail("OCR notebook still labelled an older pass")
-    if "AUTO_MIN_CONF" not in text:
-        fail("OCR harvest auto-crops must filter by confidence (AUTO_MIN_CONF)")
-    if "AUTO_CAP_MULT" not in text:
-        fail("OCR harvest auto-crops must cap count vs human labels (AUTO_CAP_MULT)")
+    # Substring-only checks passed pass-7c even though the names were never
+    # assigned — Kaggle then NameError'd on AUTO_CAP_MULT in cell 5d.
+    # #region agent log
+    import json as _json, time as _time
+    _dbg = Path("/Users/safaksurmeli/Desktop/Lilly/.cursor/debug-6af128.log")
+    with _dbg.open("a") as _f:
+        _f.write(_json.dumps({
+            "sessionId": "6af128", "runId": "pre-launch", "hypothesisId": "H1",
+            "location": "preflight_kaggle.py:check_ocr",
+            "message": "AUTO_* assignment presence",
+            "data": {
+                "has_AUTO_MIN_CONF_assign": "AUTO_MIN_CONF =" in text,
+                "has_AUTO_CAP_MULT_assign": "AUTO_CAP_MULT =" in text,
+                "has_filter_print": "harvest filters defined" in text,
+            },
+            "timestamp": int(_time.time() * 1000),
+        }) + "\n")
+    # #endregion
+    if "AUTO_MIN_CONF =" not in text:
+        fail("OCR harvest must assign AUTO_MIN_CONF (mentioning the name is not enough)")
+    if "AUTO_CAP_MULT =" not in text:
+        fail("OCR harvest must assign AUTO_CAP_MULT (mentioning the name is not enough)")
     if '"-u"' not in text and "'-u'" not in text:
         fail("OCR train_ocr must run unbuffered (python -u) so Kaggle logs show loss")
     if "--weights" not in text:
