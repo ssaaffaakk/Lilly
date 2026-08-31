@@ -29,7 +29,9 @@ These were done on purpose so a kernel could COMPLETE. Do not do them again.
 9. Register a GPU notebook on CPU so it ERRORs immediately.
 10. Leave the real fix "local only." GitHub is the store (never tokens,
     `kaggle.json`, `.env`). Kaggle clones GitHub.
-11. OCR: skip `lilly-ocr-harvest` and train human crops + synthetic only.
+11. OCR: skip required data for this pass (pass-7c: harvest; pass-8: sign-letters
+    + human crops) and train a thinner mix. Do not relaunch pass-7c harvest
+    auto-crops — that recipe already lost on photographs.
 12. Treat CANCEL or ERROR as success because a zip was recovered. Recovery is
     not success.
 13. Photo eval: skip a failed read and still print a score. A hole is a failed
@@ -43,7 +45,7 @@ These were done on purpose so a kernel could COMPLETE. Do not do them again.
 | :--- | :--- | :--- |
 | Speech half 1 | Clone `/kaggle/temp`, 1 epoch, `--keep-adapter`, zip `lilly-listen-half1.zip` | BEFORE/AFTER WER, merge 3 GB, clone `/kaggle/working` |
 | Speech half 2 | `--resume`, `SPEECH_EPOCHS = 2`, AFTER WER **then** zip `lilly-listen.zip` | `--base` merged weights, zip before WER |
-| OCR | Harvest attached, `run(..., check=True)`, zip only after `train_ocr` exits 0 | `check=False`, synthetic-only fallback, zip refused `read-trained.pth` |
+| OCR | Attach what **this pass** requires, `run(..., check=True)`, zip `lilly-read.zip` only after the photograph gate | `check=False`, skip required data, zip refused `read-trained.pth` as the app package |
 
 Launch: `python3 scripts/kaggle_train.py speech` / `speech-half2` / `ocr`.
 Preflight: `python3 scripts/preflight_kaggle.py`.

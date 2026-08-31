@@ -262,62 +262,52 @@ python3 scripts/kaggle_train.py speech-half2    # only then
 
 | Hole (do not revive) | Now |
 | :--- | :--- |
-| `push_ocr_harvest` returns None → still launch | `kaggle_train.py`: `hv is None` → `SystemExit` |
-| `print("no harvest — synthetic only")` | `raise SystemExit` — harvest required for pass-7c |
+| `push_ocr_harvest` returns None → still launch | Harvest pass: `hv is None` → `SystemExit`. Pass-8 does **not** attach harvest |
+| `print("no harvest — synthetic only")` | Missing **required** data for this pass → `SystemExit` (pass-8: crops + sign-letters) |
 | `check=False`, zip refused weights, then assert 0 | `run(..., check=True)` only |
-| `--keep-trained` written, then gate `return 1` | Write keep-trained **only after** gate passes |
+| `--keep-trained` written, then gate `return 1` | Write keep-trained **only after** crop gate passes |
 | Too-short run exit 0 | `steps < MIN_STEPS` → return 1 |
 | CANCEL/ERROR + zip = success | poll: always crash |
 | Photo read fail → `continue`, still print % | `evaluate_ocr.py`: hole → stop |
-| Synthetic before real crops (prepare wipes syn*) | Real merge **first**, then generate |
-| Unfiltered EasyOCR auto-crops drown human labels | `AUTO_MIN_CONF`, `AUTO_CAP_MULT`; `auto*` train-only |
-| Buffered stdout hid gate refusal | `python -u` + `PYTHONUNBUFFERED` |
-| Markdown “attach harvest if present” while code requires it | Markdown must say **required** |
+| Synthetic before real crops (prepare wipes syn*) | Real merge **first**, then sign-letters |
+| EasyOCR auto-crops drown human labels (pass-7c) | Pass-8: **no** harvest auto-crops, **no** `generate_ocr_photos.py` |
+| Buffered stdout hid gate refusal | `python -u` + `PYTHONUNBUFFERED` + `run()` tee |
+| Crop gate pass, photographs worse, still ship | Photograph gate (40 photos) before `lilly-read.zip` |
+| Relaunch pass-7c unchanged | Change the mix first; 7c already lost on photographs |
 
-### OCR data order (wrong order already shipped a 2‑minute run)
+### OCR data order (pass-8)
 
 ```text
-1. Copy real crops from lilly-ocr-crops (skip paths containing "harvest")
+1. Copy real crops from lilly-ocr-crops (skip harvest, skip syn*, skip sign-letters)
 2. prepare_ocr_data.py --labels <human labels>     # MUST succeed
-3. generate_ocr_data.py --count 50000 --build-splits
-4. generate_ocr_photos.py --count 20000
-5. Harvest scenes → auto* train rows only (not valid)
-6. Oversample human rows REAL_REPEAT = 2
-7. train_ocr.py --quick-test
-8. train_ocr.py heavy (5 epochs, gate inside)
-9. Zip only if train exited 0 and files exist
+3. Copy sign-letter plates from lilly-ocr-sign-letters, prepare --labels
+4. Assert zero photo*.png and zero auto_* in train
+5. Oversample human rows REAL_REPEAT = 2
+6. train_ocr.py --quick-test
+7. train_ocr.py heavy (5 epochs, crop gate inside)
+8. restore_scored_photos.py + evaluate_ocr.py photograph gate
+9. Zip lilly-read.zip only if the photograph gate passed
 ```
 
-If step 2 fails → `SystemExit`. Never “continue with synthetic only.”
+If step 2 or 3 fails → `SystemExit`. Never “continue with synthetic only.”
+Never generate 50k on the box. Never EasyOCR-crop harvest.
 
-### Harvest cell (required for pass-7c)
+### Sign-letters cell (required for pass-8)
 
 ```python
 # GOOD — fail closed
-if n_hv >= 20:
-    # filter conf, cap at human_n * AUTO_CAP_MULT, append auto_* to train only
-    ...
-else:
+if labels_hit is None:
     raise SystemExit(
-        "Harvest photos are required for this pass (pass-7c). "
-        "Attach lilly-ocr-harvest or relaunch: python3 scripts/kaggle_train.py ocr")
+        "Sign-letter plates are required for this pass (pass-8). "
+        "Attach lilly-ocr-sign-letters or relaunch: python3 scripts/kaggle_train.py ocr")
 
-# BAD
-else:
-    print("no harvest photos attached — training on human crops + synthetic only")
+# BAD — pass-7c harvest drowning, already refused on photographs
+run("python3", "data/scripts/generate_ocr_data.py", "--count", "50000")
+run("python3", "data/scripts/generate_ocr_photos.py", "--count", "20000")
+# ... EasyOCR auto-crops from lilly-ocr-harvest ...
 ```
 
-Assign the filter knobs in the same cell (substring-only checks once shipped a
-notebook that NameError’d on `AUTO_CAP_MULT`):
-
-```python
-AUTO_MIN_CONF = 0.7
-AUTO_CAP_MULT = 2
-HARVEST_EXT = {".jpg", ".jpeg", ".png", ".webp"}  # Commons is mostly JPEG
-```
-
-Auto-crops must **not** enter valid. Valid gate would score EasyOCR against
-itself.
+If `lilly-ocr-harvest` is still attached, **ignore it**. Do not auto-crop.
 
 ### Heavy train + zip
 
@@ -328,12 +318,16 @@ run("python3", "-u", "training/train_ocr.py",
     "--weights", str(INIT), "--keep-trained", str(TRAINED))
 assert TRAINED.is_file() and TRAINED.stat().st_size > 100_000
 run("zip", "-j", "/kaggle/working/lilly-read-trained.zip", str(TRAINED))
-# app package only after gate installed lilly.pth
+# photograph gate (restore 40 photos, evaluate_ocr.py) MUST run here
+# app package only after that gate
 run("zip", "-qr", "/kaggle/working/lilly-read.zip",
     "models/lilly/read/lilly.pth",
     "models/lilly/read/user_network/lilly.yaml",
     "models/lilly/read/user_network/lilly.py")
 ```
+
+Photograph gate must beat shipped pass-6: **54.7%** per photo, **45.0%** pooled,
+**44%** diacritic, **≤180** invented. Worse → `SystemExit`, no `lilly-read.zip`.
 
 **Do not** copy starting `latin_g2.pth` into `lilly.pth` and call that trained.
 The app loads `recog_network="lilly"` → `lilly.pth`.
@@ -342,25 +336,22 @@ The app loads `recog_network="lilly"` → `lilly.pth`.
 
 | Where | What |
 | :--- | :--- |
-| Kaggle notebook | Install gate inside `train_ocr.py` (real words up, syn no-regression, min steps) |
-| Local / later | `evaluate_ocr.py` + `truth.json` + `data/ocr/real-photos/scored/` |
+| Kaggle notebook | Crop gate inside `train_ocr.py`, then 40-photo gate via `restore_scored_photos.py` + `evaluate_ocr.py` |
+| Local / later | Same `evaluate_ocr.py` if you need to re-score a fetched zip |
 
-Do **not** add `evaluate_ocr.py` to the Kaggle notebook unless those files are
-attached. It would false-fail every GPU run or tempt “skip failed photos.”
-
-Local eval: a failed photo read is a failed score — no `continue` that leaves
-holes.
+A failed photo read is a failed score — no `continue` that leaves holes.
 
 ### OCR anti-patterns
 
 ```text
-✗ Launch OCR when push_ocr_harvest returned None
+✗ Relaunch pass-7c (harvest auto-crop + 50k + photo-style)
+✗ Launch OCR when push_ocr_sign_letters has nothing to upload
 ✗ check=False on train_ocr “so we can still zip for debugging”
-✗ Zip then assert returncode
-✗ Write read-trained.pth before the gate, refuse, leave file looking shippable
-✗ Train without lilly-ocr-crops / without harvest on a harvest pass
-✗ Glob only *.png for harvest (Commons is JPEG)
-✗ Put auto* rows into valid
+✗ Zip lilly-read.zip then assert returncode / skip the photograph gate
+✗ Write read-trained.pth before the crop gate, refuse, leave file looking shippable
+✗ Train without lilly-ocr-crops / without lilly-ocr-sign-letters on pass-8
+✗ Copy syn* plates into data/ocr/crops while merging human labels
+✗ Put auto* rows into valid (or into train on pass-8)
 ✗ pip install torch from requirements (CPU wheels; breaks CUDA)
 ✗ Clone into /kaggle/working
 ✗ COMPLETE without lilly-read.zip → still “success” in the poller
@@ -372,14 +363,14 @@ Launch:
 python3 scripts/kaggle_train.py ocr
 ```
 
-Attaches: `lilly-read-pass1`, `lilly-ocr-crops`, `lilly-ocr-harvest` (all required
-for this pass).
+Attaches: `lilly-read-pass1`, `lilly-ocr-crops`, `lilly-ocr-sign-letters` (all
+required for pass-8). Does **not** attach `lilly-ocr-harvest`.
 
 Artifacts:
 
 - `lilly-read.zip` — **install this** into the app
-- `lilly-read-trained.zip` — weights after a **passed** gate; not a substitute
-  for the app zip layout
+- `lilly-read-trained.zip` — weights after a **passed crop gate**; not a substitute
+  for the app zip. Photograph-gate refusal leaves this zip and omits `lilly-read.zip`
 
 ---
 
@@ -389,11 +380,11 @@ Artifacts:
 | :--- | :--- | :--- |
 | Speech half 1 | `train_speech` exit 0 + `trainer_state.json` + zip &gt; 1 MB | `lilly-listen-half1.zip` |
 | Speech half 2 | train 0 + convert + `evaluate_speech` 0 | `lilly-listen.zip` |
-| OCR | `train_ocr` install gate pass + `lilly.pth` present | `lilly-read.zip` |
+| OCR | Crop gate + 40-photo gate (beat shipped 54.7 / 45.0 / 44% diacritic / ≤180 invented) | `lilly-read.zip` |
 
 Illegal “optimizations”:
 
-- Skip WER / gate / harvest to beat 12h
+- Skip WER / photograph gate / required data to beat 12h
 - Smaller corpus after a failed download
 - Warn-and-continue on 0-grad / NaN
 - Ship unmeasured weights because the wall is near
@@ -406,7 +397,7 @@ Agents read the header and “optimize” against it.
 
 | If code does this | Markdown must say |
 | :--- | :--- |
-| Harvest required | Attach `lilly-ocr-harvest` (**required**), not “if present” |
+| Sign-letters + crops required | Attach `lilly-ocr-sign-letters` and `lilly-ocr-crops` (**required**), not harvest |
 | Half 1 has no WER | No BEFORE/AFTER WER here; half 2 scores |
 | ERROR / non-zero train | Do not install Output; fix and relaunch |
 | Product is adapter zip | Not the app listener |
@@ -420,7 +411,8 @@ Fix doc drift in the **same** change as the code.
 ### `scripts/kaggle_train.py`
 
 - Clean tree; GitHub has HEAD SHA; preflight 0
-- OCR: `needs_ocr_harvest` → if `push_ocr_harvest` is None, **exit**, do not push notebook
+- OCR pass-8: `needs_ocr_sign_letters` → push the local 20k plates; do not attach harvest
+- A harvest pass (if revived): `needs_ocr_harvest` → if `push_ocr_harvest` is None, **exit**
 - `confirm_push`: stdout must contain “successfully pushed” (GPU limit returns 0 with a refusal message — that is not a launch)
 - `confirm_accelerator`: pull metadata; refuse wrong/missing GPU shape
 - Max **2** batch GPU sessions. Poll before launch. Do not queue a third.
@@ -433,6 +425,8 @@ crashed = status in (ERROR, CANCEL) or (COMPLETE and no zip)
 ```
 
 CANCEL + zip ⇒ crashed. COMPLETE + no zip ⇒ crashed.
+OCR: a fresh `lilly-read.zip` is the done artefact. `lilly-read-trained.zip`
+alone is not — it is written before the photograph gate.
 
 ---
 
@@ -446,8 +440,9 @@ Examples already enforced:
 - No `/kaggle/working/Lilly` clone
 - Speech half 1: `--keep-adapter`, no `evaluate_speech`
 - Speech half 2: `--resume`, WER before zip path
-- OCR: no `check=False`, no synthetic-only fallback string, harvest
-  `SystemExit`, `AUTO_* =` assignments, `hv is None` guard in launcher
+- OCR: no `check=False`, no 50k generate, no `generate_ocr_photos.py`, no harvest
+  `SystemExit`, `heavy-pass8`, `lilly-ocr-sign-letters`, photograph `diacritic`+`invented`;
+  poller done zip is `lilly-read.zip` only (not `lilly-read-trained.zip`)
 - `train_speech`: Encoder `SystemExit`, `FiniteLossCheck`
 
 If preflight cannot express a rule, put it here and in the Cursor rule anyway —
@@ -465,7 +460,7 @@ then add a check when possible.
 [ ] Measure/gate cell index < shippable zip cell index
 [ ] No zip of refused / unmeasured weights
 [ ] Speech: half role clear (adapter vs app)
-[ ] OCR: real before syn; harvest fail-closed; -u on heavy train
+[ ] OCR: real before syn; sign-letters fail-closed; no harvest auto-crop; -u on heavy train
 [ ] Committed and pushed (no secrets)
 [ ] GPU slots free before launch (≤1 other batch GPU running if you need one slot)
 ```
@@ -478,13 +473,13 @@ then add a check when possible.
 | :--- | :--- |
 | `training/Lilly_Speech_Kaggle.ipynb` | Speech half 1 |
 | `training/Lilly_Speech_Kaggle_Half2.ipynb` | Speech half 2 |
-| `training/Lilly_OCR_Kaggle.ipynb` | OCR pass-7c |
+| `training/Lilly_OCR_Kaggle.ipynb` | OCR pass-8 (sign letters) |
 | `scripts/preflight_kaggle.py` | Launch gate |
-| `scripts/kaggle_train.py` | Push + harvest required |
+| `scripts/kaggle_train.py` | Push + sign-letters required |
 | `scripts/kaggle_poll.py` | CANCEL/ERROR = crash |
 | `training/train_speech.py` | `--keep-adapter`, `--resume`, 0-grad / NaN stop |
-| `training/train_ocr.py` | Install gate; keep-trained after pass |
+| `training/train_ocr.py` | Crop install gate; keep-trained after pass |
 | `training/evaluate_speech.py` | AFTER WER (half 2 only on Kaggle) |
-| `training/evaluate_ocr.py` | Local photo score; no holes |
+| `training/evaluate_ocr.py` | 40-photo score on Kaggle (pass-8) and locally; no holes |
 | `docs/kaggle-fail-stop.md` | Short mistake list |
 | `.cursor/rules/kaggle-fail-stop.mdc` | Always-apply summary |

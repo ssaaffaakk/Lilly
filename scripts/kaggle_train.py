@@ -36,6 +36,7 @@ KAGGLE = str(REPO_ROOT / ".venv" / "bin" / "kaggle")
 WEIGHTS = REPO_ROOT / "models" / "lilly" / "translate"
 READ_PASS1 = REPO_ROOT / "models" / "lilly" / "read" / "lilly.pth"
 OCR_CROPS = REPO_ROOT / "data" / "ocr" / "crops"
+OCR_SIGN_LETTERS = REPO_ROOT / "data" / "ocr" / "sign-letters"
 # The extra corpus travels with the run instead of being re-harvested on Kaggle.
 # data/extra/ is gitignored, so the notebook used to rebuild it up there with
 # download_extra_data.py -- and a live web corpus does not come back
@@ -71,7 +72,7 @@ JOBS = {
                     "slug": "lilly-ocr", "title": "Lilly ocr",
                     "needs_weights": False, "needs_corpus": False,
                     "needs_read_pass1": True, "needs_ocr_crops": True,
-                    "needs_ocr_harvest": True},
+                    "needs_ocr_sign_letters": True},
 }
 STAGING = REPO_ROOT / "models" / "kaggle-staging"     # gitignored, under models/
 
@@ -292,8 +293,64 @@ def push_ocr_crops(user: str) -> str:
     return slug
 
 
+def push_ocr_sign_letters(user: str) -> str:
+    """Pass-8 sign-letter plates. Drawn locally; the notebook must not regenerate them.
+
+    One zip at the dataset root (same trap as crops: a nested folder packed with
+    `-r zip` becomes `sign-letters.zip` and the notebook never sees a PNG).
+    """
+    import zipfile
+
+    slug = f"{user}/lilly-ocr-sign-letters"
+    labels = OCR_SIGN_LETTERS / "labels.tsv"
+    pngs = sorted(OCR_SIGN_LETTERS.glob("syn*.png"))
+    if not labels.is_file():
+        raise SystemExit(f"no sign-letter labels at {labels}")
+    if len(pngs) < 5000:
+        raise SystemExit(
+            f"only {len(pngs)} sign-letter PNGs in {OCR_SIGN_LETTERS} — "
+            f"pass-8 needs the local dump (about 20,000). Run:\n"
+            f"  python3 data/scripts/generate_ocr_data.py --count 20000 "
+            f"--words-max 2 --seed 47 --out data/ocr/sign-letters "
+            f"--diacritic-share 0.70 --d-share 0.15 --no-build-splits")
+    stage = STAGING / "ocr-sign-letters"
+    if stage.exists():
+        shutil.rmtree(stage)
+    stage.mkdir(parents=True)
+    zip_path = stage / "sign-letters.zip"
+    with zipfile.ZipFile(zip_path, "w", compression=zipfile.ZIP_STORED) as zf:
+        zf.write(labels, "labels.tsv")
+        recipe = OCR_SIGN_LETTERS / "RECIPE.txt"
+        if recipe.is_file():
+            zf.write(recipe, "RECIPE.txt")
+        for png in pngs:
+            zf.write(png, png.name)
+    digest = hashlib.md5(zip_path.read_bytes()).hexdigest()
+    (stage / "dataset-metadata.json").write_text(json.dumps({
+        "title": "Lilly OCR sign letters", "id": slug,
+        "licenses": [{"name": "other"}]}, indent=1))
+    marker = STAGING / "ocr-sign-letters.md5"
+
+    state = subprocess.run([KAGGLE, "datasets", "status", slug],
+                           text=True, capture_output=True).stdout.lower()
+    if "ready" in state and marker.exists() and marker.read_text().strip() == digest:
+        print(f"sign-letters already there: {slug} ({len(pngs)} pngs, md5 {digest[:8]})")
+        return slug
+    mb = zip_path.stat().st_size / 1048576
+    if "ready" in state:
+        print(f"sign-letters changed — pushing a new version of {slug} ({mb:.0f} MB)")
+        run(KAGGLE, "datasets", "version", "-p", stage, "-r", "zip",
+            "-m", f"sign-letters.zip md5 {digest} n={len(pngs)}")
+    else:
+        print(f"uploading {mb:.0f} MB sign-letters ({len(pngs)} pngs) to {slug}")
+        run(KAGGLE, "datasets", "create", "-p", stage, "-r", "zip")
+    wait_until_ready(slug)
+    marker.write_text(digest)
+    return slug
+
+
 def push_ocr_harvest(user: str) -> "str | None":
-    """Pass-7 Commons photographs (full scenes + CREDITS). Required for OCR."""
+    """Pass-7 Commons photographs (full scenes + CREDITS). Not used by pass-8."""
     import zipfile
 
     harvested = REPO_ROOT / "data" / "ocr" / "real-photos" / "harvested"
@@ -522,6 +579,8 @@ def main() -> int:
         datasets.append(push_read_pass1(user))
     if job.get("needs_ocr_crops"):
         datasets.append(push_ocr_crops(user))
+    if job.get("needs_ocr_sign_letters"):
+        datasets.append(push_ocr_sign_letters(user))
     if job.get("needs_ocr_harvest"):
         hv = push_ocr_harvest(user)
         if hv is None:

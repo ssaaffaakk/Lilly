@@ -91,21 +91,21 @@ def check_ocr(text: str) -> None:
     if "--quick-test" not in text:
         fail("OCR notebook missing GPU training smoke (--quick-test) before long run")
     if '"--epochs", "5"' not in text:
-        fail("OCR notebook should train 5 epochs for pass-7b")
-    if '"--count", "50000"' not in text:
-        fail("OCR notebook should generate 50k synthetic crops")
-    if "generate_ocr_photos" not in text:
-        fail("OCR pass-7 must generate photo-style synthetic on Kaggle")
+        fail("OCR notebook should train 5 epochs")
+    if '"--count", "50000"' in text:
+        fail("OCR pass-8 must not regenerate 50k synthetic on Kaggle — "
+             "attach lilly-ocr-sign-letters (pass-7c mix already refused)")
+    if "data/scripts/generate_ocr_photos.py" in text:
+        fail("OCR pass-8 must not run generate_ocr_photos.py "
+             "(pass-7c photo-style + harvest already refused on photographs)")
     if "REAL_REPEAT = 2" not in text:
-        fail("OCR pass-7 must repeat real train crops ×2, not ×6")
-    if "heavy-pass7c" not in text:
-        fail("OCR notebook still labelled an older pass")
-    # Substring-only checks passed pass-7c even though the names were never
-    # assigned — Kaggle then NameError'd on AUTO_CAP_MULT in cell 5d.
-    if "AUTO_MIN_CONF =" not in text:
-        fail("OCR harvest must assign AUTO_MIN_CONF (mentioning the name is not enough)")
-    if "AUTO_CAP_MULT =" not in text:
-        fail("OCR harvest must assign AUTO_CAP_MULT (mentioning the name is not enough)")
+        fail("OCR must repeat real train crops ×2, not ×6")
+    if "heavy-pass8" not in text:
+        fail("OCR notebook still labelled an older pass (want heavy-pass8)")
+    if "heavy-pass7c" in text:
+        fail("OCR notebook still launches pass-7c — that recipe already lost on photographs")
+    if "AUTO_MIN_CONF =" in text or "AUTO_CAP_MULT =" in text:
+        fail("OCR pass-8 must not EasyOCR-crop harvest (AUTO_* knobs are pass-7c)")
     if '"-u"' not in text and "'-u'" not in text:
         fail("OCR train_ocr must run unbuffered (python -u) so Kaggle logs show loss")
     if "--weights" not in text:
@@ -114,18 +114,20 @@ def check_ocr(text: str) -> None:
         fail("OCR notebook must search /kaggle/input for lilly.pth (zip or nested)")
     if "lilly-ocr-crops" not in text:
         fail("OCR notebook must attach/copy real crops (lilly-ocr-crops)")
+    if "lilly-ocr-sign-letters" not in text:
+        fail("OCR pass-8 must attach sign-letter plates (lilly-ocr-sign-letters)")
+    if "Sign-letter plates are required" not in text:
+        fail("OCR pass-8 must SystemExit when sign-letters are missing")
     if "no real crop images in clone — synthetic only" in text:
         fail("OCR notebook must not silently fall back to synthetic-only on Kaggle")
-    if 'HARVEST_EXT' not in text or ".jpg" not in text:
-        fail("OCR harvest copy must include .jpg (Commons photos are JPEG, not PNG)")
-    if "ocr-harvest is attached but only" not in text:
-        fail("OCR notebook must refuse to train if harvest is attached but unused")
     if "training on human crops + synthetic only" in text:
-        fail("OCR notebook silently falls back to synthetic-only — "
-             "harvest is required for this pass; raise SystemExit instead")
-    if "raise SystemExit" not in text or "Harvest photos are required" not in text:
-        fail("OCR notebook harvest else-branch must raise SystemExit when no harvest "
-             "photos are present, not print and continue")
+        fail("OCR notebook still has the pass-7c synthetic-only fallback string")
+    if "Harvest photos are required" in text:
+        fail("OCR pass-8 must not require harvest — pass-7c already refused on photographs")
+    if '"diacritic"' not in text or "invented" not in text:
+        fail("OCR photograph gate must check diacritic % and invented count, not only pooled")
+    if "png.name.startswith(\"syn\")" not in text and "png.name.startswith('syn')" not in text:
+        fail("OCR crop copy must skip syn* so sign-letter plates do not land in crops/")
 
 
 def check_train_ocr() -> None:
@@ -151,6 +153,17 @@ def main() -> int:
     if "hv is None" not in kaggle_train:
         fail("kaggle_train.py must exit 1 when push_ocr_harvest returns None — "
              "currently it can skip harvest and still launch the notebook")
+    if '"needs_ocr_harvest": True' in kaggle_train:
+        fail("OCR job must not require harvest on pass-8 (pass-7c already refused)")
+    if "needs_ocr_sign_letters" not in kaggle_train or "push_ocr_sign_letters" not in kaggle_train:
+        fail("kaggle_train.py must push lilly-ocr-sign-letters for pass-8")
+    poller = (REPO / "scripts" / "kaggle_poll.py").read_text(encoding="utf-8")
+    ocr_job = poller.split('"ocr":', 1)[1][:400]
+    if "lilly-read.zip" not in ocr_job:
+        fail("OCR poller must treat lilly-read.zip as the done artefact")
+    if "lilly-read-trained.zip" in ocr_job:
+        fail("OCR poller must not treat lilly-read-trained.zip as done — "
+             "that zip lands before the photograph gate")
     speech_train = (REPO / "training" / "train_speech.py").read_text(encoding="utf-8")
     if "--keep-adapter" not in speech_train or "resume_from_checkpoint" not in speech_train:
         fail("train_speech.py must support --keep-adapter and resume_from_checkpoint")

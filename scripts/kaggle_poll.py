@@ -49,7 +49,7 @@ def jobs() -> dict:
         },
         "ocr": {
             "slug": f"{user}/lilly-ocr",
-            "done_names": ("lilly-read.zip", "lilly-read-trained.zip"),
+            "done_names": ("lilly-read.zip",),
             "min_bytes": 100_000,
         },
     }

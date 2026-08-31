@@ -9,6 +9,8 @@ each letter appears, and the label is right by construction.
     python3 data/scripts/generate_ocr_data.py                  # 5,000 images
     python3 data/scripts/generate_ocr_data.py --count 20000
     python3 data/scripts/generate_ocr_data.py --words 2        # short phrases
+    python3 data/scripts/generate_ocr_data.py --out data/ocr/sign-letters \\
+        --no-build-splits --d-share 0.15 --diacritic-share 0.70
 
 Writes data/ocr/synthetic/*.png and a labels.tsv, then the same splits the
 trainer reads. Words come from the cleaned corpus if it is there, otherwise from
@@ -161,9 +163,16 @@ def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--count", type=int, default=5000)
     ap.add_argument("--words", type=int, default=1, help="words per image")
+    ap.add_argument("--words-max", type=int, default=0,
+                    help="if >0, each image gets 1..N words (sign-length mix)")
     ap.add_argument("--seed", type=int, default=SEED,
                     help="RNG seed (default 41). Pass-3 uses a new seed so the "
                          "20k images are not the set 7 synthetic epochs overfit.")
+    ap.add_argument("--out", type=Path, default=OUT_DIR,
+                    help="image + labels.tsv directory (keep away from existing synthetic/)")
+    ap.add_argument("--diacritic-share", type=float, default=DIACRITIC_SHARE)
+    ap.add_argument("--d-share", type=float, default=0.0,
+                    help="fraction of images that must contain đ or Đ")
     ap.add_argument("--build-splits", action="store_true", default=True,
                     help="also run the split builder when done")
     ap.add_argument("--no-build-splits", dest="build_splits", action="store_false",
@@ -175,29 +184,47 @@ def main() -> int:
         print("no fonts with Bosnian letters found on this machine", file=sys.stderr)
         return 1
     with_letters, without = load_words()
+    with_d = [w for w in with_letters if "đ" in w.lower()]
     print(f"fonts: {len(fonts)}  words: {len(with_letters):,} with diacritics, "
-          f"{len(without):,} without")
+          f"{len(without):,} without, {len(with_d):,} with đ")
+    if args.d_share > 0 and not with_d:
+        print("no words containing đ in the corpus", file=sys.stderr)
+        return 1
 
     rng = random.Random(args.seed)
-    OUT_DIR.mkdir(parents=True, exist_ok=True)
+    out_dir = args.out
+    out_dir.mkdir(parents=True, exist_ok=True)
+    recipe = out_dir / "RECIPE.txt"
+    recipe.write_text(
+        f"count={args.count}\nwords={args.words}\nwords_max={args.words_max}\n"
+        f"seed={args.seed}\ndiacritic_share={args.diacritic_share}\n"
+        f"d_share={args.d_share}\nfonts={len(fonts)}\n"
+        f"purpose=Bosnian sign letters čćđšž, drawn as plates, not street harvest\n",
+        encoding="utf-8",
+    )
     letters = Counter()
-    with open(OUT_DIR / "labels.tsv", "w", encoding="utf-8") as f:
+    with open(out_dir / "labels.tsv", "w", encoding="utf-8") as f:
         for i in range(args.count):
-            pool = with_letters if rng.random() < DIACRITIC_SHARE else without
-            text = " ".join(rng.choice(pool) for _ in range(args.words))
+            n_words = (rng.randint(1, args.words_max)
+                       if args.words_max > 0 else args.words)
+            if args.d_share > 0 and rng.random() < args.d_share:
+                pool = with_d
+            else:
+                pool = with_letters if rng.random() < args.diacritic_share else without
+            text = " ".join(rng.choice(pool) for _ in range(n_words))
             roll = rng.random()
             if roll < UPPER_SHARE:
                 text = text.upper()
             elif roll < UPPER_SHARE + TITLE_SHARE:
                 text = text.title()
             name = f"syn{i:06d}.png"
-            render(text, rng.choice(fonts), rng).save(OUT_DIR / name)
+            render(text, rng.choice(fonts), rng).save(out_dir / name)
             f.write(f"{name}\t{text}\t1.00\n")
             letters.update(c for c in text if c in BOSNIAN_LETTERS)
             if (i + 1) % 1000 == 0:
                 print(f"  {i + 1:,}/{args.count:,}")
 
-    print(f"\n{args.count:,} images -> {OUT_DIR}")
+    print(f"\n{args.count:,} images -> {out_dir}")
     print("Bosnian letters in the set:")
     for letter in BOSNIAN_LETTERS:
         print(f"  {letter}: {letters.get(letter, 0):>6}")
@@ -205,7 +232,7 @@ def main() -> int:
     if args.build_splits:
         subprocess.run([sys.executable,
                         str(DATA_DIR.parent / "training" / "prepare_ocr_data.py"),
-                        "--labels", str(OUT_DIR / "labels.tsv")], check=True)
+                        "--labels", str(out_dir / "labels.tsv")], check=True)
     return 0
 
 

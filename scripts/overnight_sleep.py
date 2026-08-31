@@ -112,37 +112,9 @@ def fetch_speech(st: dict) -> None:
 
 
 def launch_ocr(st: dict) -> None:
-    log("harvest complete — push + launch OCR pass-7")
-    r = run([str(PY), "scripts/state.py"])
-    log((r.stdout or "")[:1500])
-    if r.returncode != 0:
-        # Commit remaining harvest/script files if the tree is only ours.
-        run(["git", "add",
-             "training/Lilly_OCR_Kaggle.ipynb",
-             "scripts/kaggle_train.py",
-             "scripts/preflight_kaggle.py",
-             "scripts/overnight_sleep.py",
-             "scripts/guard.py",
-             "scripts/harvest_report.py",
-             "scripts/harvest_watch.sh",
-             "scripts/harvest_pass7.sh",
-             "training/prepare_ocr_data.py",
-             "data/scripts/generate_ocr_data.py",
-             "data/ocr/HARVEST-MANIFEST.tsv"])
-        msg = "Launch OCR pass-7 after harvest; Kaggle clones this commit."
-        run(["git", "commit", "-m", msg])
-        r2 = run(["git", "push", "origin", "main"])
-        log((r2.stdout or "") + (r2.stderr or ""))
-        if r2.returncode != 0:
-            write_report("Overnight — git push failed", "Approve push while awake, or push in the morning.")
-            raise SystemExit(1)
-    r = run([str(PY), "scripts/kaggle_train.py", "ocr"])
-    log((r.stdout or "") + (r.stderr or ""))
-    if r.returncode != 0:
-        write_report("Overnight — OCR launch failed", r.stdout + r.stderr)
-        raise SystemExit(1)
-    st["ocr_launched"] = True
-    save_state(st)
+    raise SystemExit(
+        "OCR pass-8 is not auto-launched after harvest. Speech holds the GPU; "
+        "pass-7c already refused. Launch later with: python3 scripts/kaggle_train.py ocr")
 
 
 def fetch_ocr(st: dict) -> None:
