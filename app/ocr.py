@@ -23,6 +23,20 @@ MAX_WORKING_PIXELS = 2_000_000     # above this, shrink first
 # 18 s, at 2 MP 9 s — and all three misread the same diacritic, so the detail
 # was not buying accuracy. Half the wait is worth more than pixels nobody reads.
 
+
+def _easyocr_gpu() -> bool:
+    """CUDA only. The Mac has none, so the app stays on CPU. Kaggle T4 does.
+
+    Pass-7b harvest auto-crop ran EasyOCR on CPU for ~3.4 hours on a T4 box
+    because Reader was hardcoded gpu=False. EasyOCR's maintainers say GPU
+    mode is gpu=True when CUDA is present (JaidedAI/EasyOCR#426, docs).
+    """
+    try:
+        import torch
+        return bool(torch.cuda.is_available())
+    except Exception:
+        return False
+
 # easyocr's Bosnian character list is missing six of the language's own letters:
 # c, c and d with their diacritics, plus the capitals, are absent from lang_char
 # while s and z are present. That is not a cosmetic gap. easyocr turns the
@@ -115,7 +129,7 @@ def get_reader():
                     {"recog_network": "lilly",
                      "user_network_directory": str(network)}
                     if trained.exists() and (network / "lilly.yaml").exists() else {})
-                reader = easyocr.Reader(["bs", "en"], gpu=False,
+                reader = easyocr.Reader(["bs", "en"], gpu=_easyocr_gpu(),
                                         model_storage_directory=str(READ_DIR),
                                         download_enabled=False, **extra)
                 # Stop loudly rather than read Bosnian without its own letters.
@@ -185,7 +199,7 @@ def get_cyrillic_reader():
         with _reader_lock:
             if _cyrillic_reader is None:
                 import easyocr
-                reader = easyocr.Reader(["rs_cyrillic", "en"], gpu=False,
+                reader = easyocr.Reader(["rs_cyrillic", "en"], gpu=_easyocr_gpu(),
                                         model_storage_directory=str(READ_DIR),
                                         download_enabled=False)
                 symbols = {c for c in reader.character if not c.isalpha()}

@@ -61,8 +61,14 @@ def check_ocr(text: str) -> None:
         fail("OCR pass-7 must generate photo-style synthetic on Kaggle")
     if "REAL_REPEAT = 2" not in text:
         fail("OCR pass-7 must repeat real train crops ×2, not ×6")
-    if "heavy-pass7b" not in text:
+    if "heavy-pass7c" not in text:
         fail("OCR notebook still labelled an older pass")
+    if "AUTO_MIN_CONF" not in text:
+        fail("OCR harvest auto-crops must filter by confidence (AUTO_MIN_CONF)")
+    if "AUTO_CAP_MULT" not in text:
+        fail("OCR harvest auto-crops must cap count vs human labels (AUTO_CAP_MULT)")
+    if '"-u"' not in text and "'-u'" not in text:
+        fail("OCR train_ocr must run unbuffered (python -u) so Kaggle logs show loss")
     if "--weights" not in text:
         fail("OCR notebook missing --weights to continue from the installed reader")
     if "rglob(\"lilly.pth\")" not in text and "rglob('lilly.pth')" not in text:

@@ -54,6 +54,9 @@ def cut_out_text(photo_dir: Path, out_dir: Path) -> int:
         return 0
     out_dir.mkdir(parents=True, exist_ok=True)
 
+    import torch
+    print(f"harvest cropper: {'cuda' if torch.cuda.is_available() else 'cpu'}",
+          flush=True)
     rows = []
     for photo in photos:
         image = Image.open(photo).convert("RGB")
