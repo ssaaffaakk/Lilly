@@ -31,8 +31,8 @@ def check_speech(text: str) -> None:
         fail("speech pass-2 must pull voxpopuli_hr, not FLEURS hr alone")
     if "BOSNIAN_SHARE = 0.47" not in text:
         fail("speech mix share must be 0.47 once extra Croatian is in")
-    if "SPEECH_EPOCHS = 2" not in text:
-        fail("speech pass-2 must set SPEECH_EPOCHS = 2 (12h wall with large-v3)")
+    if "SPEECH_EPOCHS = 1" not in text:
+        fail("speech half-1 must set SPEECH_EPOCHS = 1 (two epochs miss the 12h wall)")
 
 
 def check_ocr(text: str) -> None:
