@@ -2,98 +2,53 @@
 
 ![Lilly — Bosnian first](docs/images/lilly-hero.jpg)
 
-<p align="center">
-  <strong>The only assistant that speaks Bosnian</strong> — 
-</p>
+<p align="center"><strong>A Bosnian → English translator you can type into, speak to, or point a camera at.</strong></p>
 
 <p align="center">
   <a href="https://www.python.org/downloads/"><img src="https://img.shields.io/badge/python-3.12+-blue.svg" alt="Python"></a>
   <a href="https://fastapi.tiangolo.com/"><img src="https://img.shields.io/badge/FastAPI-0.115+-009688.svg" alt="FastAPI"></a>
-  <a href="docs/V3-PLAN.md"><img src="https://img.shields.io/badge/status-v3%20Kaggle%20training-7ad3bd.svg" alt="Status"></a>
-  <a href="docs/kaggle-fail-stop.md"><img src="https://img.shields.io/badge/ops-fail--stop-critical.svg" alt="Fail-stop"></a>
+  <a href="docs/V3-PLAN.md"><img src="https://img.shields.io/badge/status-v3%20training-7ad3bd.svg" alt="Status"></a>
 </p>
 
-Everybody else ships one South Slavic model and calls it a day. Google does it.
-DeepL does it. The big labs do it. They dump you in the same bucket and hope you
-do not notice.
+---
 
-**We noticed. We built Lilly anyway.**
+## Why I built it
 
-Type Bosnian. Say Bosnian. Point your phone at a Bosnian sign. Get English back
-from a stack that was **trained, measured, and shipped for Bosnian** — not
-relabeled at the last minute.
+I applied to a lot of internships and kept getting turned down for the same
+reason: I did not know Bosnian.
+
+I could not fix that in a week, so I built the thing I needed instead. Lilly is
+a translator I made for myself. In class and at work I can press the microphone,
+say what I hear, and get it back in English right away. I can point the camera
+at a board or a sign and read it. I can type a sentence and have it spoken.
+
+I tried the tools that already existed first. Google Translate and the others
+kept getting my sentences wrong — close enough to look fine, wrong enough to
+leave me lost in the room. So I trained models on real Bosnian, measured them
+honestly, and published the numbers, including the ones that make me look bad.
+
+Lilly is how I prove that I can work in Bosnian, and that I can build something
+serious when I run into a wall.
+
+Longer version: [`docs/STORY.md`](docs/STORY.md).
 
 ---
 
-## Why I built this
-
-I applied for an internship. They didn’t take me.
-
-Not because my code was weak. The reason was shorter, colder: I didn’t know
-Bosnian.
-
-I had heard some version of that sentence before — during internships, job
-applications, and conversations that ended before they really began.
-
-Same sentence. Different room.
-
-At some point, language stopped feeling like a language and started feeling like
-a door. A door I was always standing on the wrong side of.
-
-The frustrating part was that Bosnian itself was never the problem. It was
-learnable. The problem was the technology around it.
-
-Most tools treated Bosnian as a rounding error: one more language inside a
-broader South Slavic category, perhaps a different flag on the interface. The
-technology could recognize the region. But recognizing South Slavic is not the
-same as understanding Bosnian.
-
-So I started asking myself a few simple questions:
-
-If someone is speaking Bosnian, why can’t I press a microphone and hear it in
-English?
-
-If someone writes something on a board, why can’t I take a photo and understand
-it?
-
-If I need to respond, why can’t I type what I mean and have it spoken out loud?
-
-These didn’t feel like impossible problems.
-
-They felt like problems nobody had bothered to solve properly.
-
-So I decided to build it myself.
-
-I trained on real Bosnian, deliberately. I measured it. I tested it. And I
-published the numbers — including the ones that didn’t flatter me.
-
-Type. Speak. Snap.
-
-That decision became Lilly.
-
-They told me I didn’t know Bosnian.
-
-So I built the thing that understands it.
-
-I build things because when I run into a problem, I’d rather solve it than accept
-that it can’t be solved.
-
-Full story: [`docs/STORY.md`](docs/STORY.md).
-
----
-
-## Three ways in
+## What it does
 
 ![Type, Speak, Snap](docs/images/lilly-modes.jpg)
 
-| | What you do | What Lilly does |
+| | You do | Lilly does |
 | --- | --- | --- |
-| **Type** | Write Bosnian | English that respects č, ć, đ, š, ž |
-| **Speak** | Talk into the mic | Hears **Bosnian speech**, answers in spoken English |
-| **Snap** | Photograph a sign, menu, monument | Reads **street Bosnian** and translates it |
+| **Type** | Write Bosnian | Returns English and keeps č, ć, đ, š, ž intact |
+| **Speak** | Talk into the microphone | Transcribes Bosnian speech, answers in spoken English |
+| **Snap** | Photograph a sign, menu, or board | Reads the Bosnian in the image and translates it |
 
-Most translators stop at the keyboard. Lilly lives where Bosnian actually lives:
-**voice and signage.**
+Everything runs locally. No network call at inference time.
+
+There is also a correction button. When a translation is wrong, you say what it
+should have been, the correction is verified, and it goes into the training
+pool. The model gets better on the sentences people actually hit.
 
 ---
 
@@ -101,11 +56,9 @@ Most translators stop at the keyboard. Lilly lives where Bosnian actually lives:
 
 ![Lilly offline architecture](docs/images/architecture.png)
 
-Four abilities, one folder, **zero network at inference**:
-
 ```text
 Phone / browser
-    → FastAPI glass UI (app/)
+    → FastAPI web UI (app/)
         → translate  (bs → en text)
         → listen     (speech → bs text)     Whisper large-v3
         → read       (photo → bs text)      EasyOCR + lilly.pth
@@ -121,63 +74,24 @@ lilly.speak("Good day", "out.wav")
 lilly.read("sign.jpg")
 ```
 
-Illustrated overview (same stack):
-
 ![Lilly stack illustration](docs/images/lilly-architecture.jpg)
 
-Training runs on **Kaggle GPU**. The Mac commits, launches, and fetches — it does
-not suffer multi-hour fine-tunes. Contract: [`docs/V2-BOUNDARIES.md`](docs/V2-BOUNDARIES.md).
+Training runs on Kaggle GPUs. The Mac commits, launches, and fetches results; it
+does not run multi-hour fine-tunes. The rules are in
+[`docs/V2-BOUNDARIES.md`](docs/V2-BOUNDARIES.md).
 
 ---
 
-## The feature nobody else has
+## Results
 
-**“This translation is wrong.”**
-
-Press it. Say what’s right. We verify it. It goes back into the training pool.
-That is Lilly getting **more Bosnian every time someone cares enough to correct it.**
-
----
-
-## Numbers that hold up
-
-| | Result |
+| Task | Result |
 | --- | --- |
-| **Translation** | chrF2 **67.47** on 2,009 FLORES pairs |
-| **Speech** | **34.9%** WER on held-out Bosnian — v3 trains **whisper-large-v3** in two Kaggle halves |
-| **Street photos** | **54.7%** words correct per photo (Commons signs, blind labels; was 36%) |
-| **Honesty** | BosnianBench does not flatter us. We publish that too. |
+| Translation | chrF2 **67.47** on 2,009 FLORES pairs |
+| Speech | **34.9%** WER on held-out Bosnian; v3 trains whisper-large-v3 in two Kaggle halves |
+| Photos | **54.7%** of words read correctly per photo on Commons signs with blind labels, up from 36% |
 
-We pre-register thresholds. We bind builds to hashes. We do not move the goalposts.
-
----
-
-## Training right now (v3)
-
-![Kaggle training flow](docs/images/kaggle-flow.png)
-
-| Lane | What | Gate before zip |
-| --- | --- | --- |
-| **Speech half 1** | 1 epoch → `lilly-listen-half1.zip` (Trainer adapter) | Train exit 0 — no WER here |
-| **Speech half 2** | `--resume` epoch 2 → AFTER **WER** → `lilly-listen.zip` | WER must pass |
-| **OCR pass-7c** | Harvest + real crops + syn → install gate → `lilly-read.zip` | Gate must pass |
-
-**Fail-stop:** a known failure stops the kernel. COMPLETE / a leftover zip / the
-12h wall must not override the gate.
-
-Live status and half-2 wait checklist: **[`docs/V3-PLAN.md`](docs/V3-PLAN.md)**  
-How to write notebooks: **[`docs/kaggle-notebooks.md`](docs/kaggle-notebooks.md)**  
-Mistake list: **[`docs/kaggle-fail-stop.md`](docs/kaggle-fail-stop.md)**  
-Docs map: **[`docs/README.md`](docs/README.md)**
-
-```bash
-python3 scripts/preflight_kaggle.py
-python3 scripts/kaggle_train.py speech          # half 1
-python3 scripts/kaggle_train.py ocr             # parallel if a GPU slot is free
-# after half 1 COMPLETE + fresh half1 zip:
-python3 scripts/kaggle_train.py speech-half2
-python3 scripts/kaggle_poll.py                  # CANCEL/ERROR = fail
-```
+Thresholds are set before a run, builds are pinned to commit hashes, and the
+numbers are published whether or not they improved.
 
 ---
 
@@ -191,43 +105,61 @@ uv pip install --python .venv/bin/python -r requirements.txt
 .venv/bin/uvicorn app.server:app --port 8000
 ```
 
-Open **http://localhost:8000**. Mic on. Photograph something with **đ** in it.
+Open http://localhost:8000, allow the microphone, and try a photo with a **đ** in it.
+
+---
+
+## Training (v3)
+
+![Kaggle training flow](docs/images/kaggle-flow.png)
+
+| Lane | What it does | Gate before it ships a zip |
+| --- | --- | --- |
+| Speech half 1 | 1 epoch → `lilly-listen-half1.zip` | Training exits 0; no WER check here |
+| Speech half 2 | `--resume` for epoch 2 → WER → `lilly-listen.zip` | WER must pass |
+| OCR pass-7c | Harvest + real crops + synthetic → install gate → `lilly-read.zip` | Gate must pass |
+
+A known failure stops the kernel. A COMPLETE status, a leftover zip, or the 12h
+wall does not override a gate.
+
+```bash
+python3 scripts/preflight_kaggle.py
+python3 scripts/kaggle_train.py speech          # half 1
+python3 scripts/kaggle_train.py ocr             # parallel if a GPU slot is free
+# after half 1 is COMPLETE with a fresh half1 zip:
+python3 scripts/kaggle_train.py speech-half2
+python3 scripts/kaggle_poll.py                  # CANCEL or ERROR counts as a failure
+```
+
+Live status: [`docs/V3-PLAN.md`](docs/V3-PLAN.md) ·
+Notebook rules: [`docs/kaggle-notebooks.md`](docs/kaggle-notebooks.md) ·
+Failure list: [`docs/kaggle-fail-stop.md`](docs/kaggle-fail-stop.md) ·
+Docs index: [`docs/README.md`](docs/README.md)
 
 ---
 
 ## Repo map
 
-| Path | What |
+| Path | What is in it |
 | --- | --- |
-| `app/` | FastAPI server + glass web UI |
-| `models/lilly/` | Offline weights (translate, listen, read, speak) |
-| `training/` | Kaggle notebooks + train/eval scripts |
+| `app/` | FastAPI server and web UI |
+| `models/lilly/` | Offline weights for translate, listen, read, speak |
+| `training/` | Kaggle notebooks, training and evaluation scripts |
 | `scripts/` | `kaggle_train.py`, preflight, poll, fetch |
-| `docs/` | Plans, fail-stop, notebook law, white paper |
-| `data/` | Corpora, OCR crops/harvest (large; often local) |
+| `docs/` | Plans, fail-stop rules, notebook rules, white paper |
+| `data/` | Corpora and OCR crops (large, usually local only) |
 | `space/` | Hugging Face Space packaging |
-
----
-
-## Who this is for
-
-- **Diaspora** tired of tools that butcher the language their parents speak  
-- **Visitors** in BiH who need a sign translated **now**  
-- **Learners** who want Bosnian, not “South Slavic (approx)”  
-- **Engineers** who want a reproducible offline stack with honest metrics  
 
 ---
 
 ## Status
 
-- [x] Ship-quality v1 — translate, listen, speak, read, web app, correction export  
-- [x] v3 ops — fail-stop, speech halves, OCR harvest required, docs on GitHub  
-- [ ] Hugging Face publish (owner gate)  
-- [ ] **Kaggle in flight** — speech half 1 + OCR; half 2 waiting on half 1 COMPLETE  
-- [ ] End measurement evening + white-paper fill  
+- [x] v1 — translate, listen, speak, read, web app, correction export
+- [x] v3 operations — fail-stop, split speech training, required OCR harvest
+- [ ] Hugging Face publish
+- [ ] Kaggle runs in flight — speech half 1 and OCR; half 2 waits on half 1
+- [ ] Final measurement pass and white paper
 
 ---
-
-**Lilly.** Real Bosnian. Not the excuse everyone else sells you.
 
 Built by [@ssaaffaakk](https://github.com/ssaaffaakk).
