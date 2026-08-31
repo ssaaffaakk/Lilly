@@ -215,6 +215,10 @@ def main() -> int:
     ap.add_argument("--photos", type=Path,
                     default=REPO_ROOT / "data/ocr/real-photos/scored")
     ap.add_argument("--out", type=Path, default=REPO_ROOT / "training/RESULTS-ocr.md")
+    # The prose report is for a person. A gate needs the same rates without
+    # parsing bold markdown out of a sentence.
+    ap.add_argument("--json", type=Path,
+                    help="also write the rates where a gate can read them")
     ap.add_argument("--limit", type=int)
     ap.add_argument("--cache", type=Path,
                     default=REPO_ROOT / "data/ocr/real-photos/reader-output.json")
@@ -346,6 +350,16 @@ def main() -> int:
     print(f"diacritic words  {pct(totals['dia']):.1f}%")
     print(f"  folded         {pct(totals['blind']):.1f}%")
     print(f"\nwrote {short(args.out)}")
+    if args.json:
+        args.json.write_text(json.dumps({
+            "pooled": pct(totals["plain"]),
+            "per_photo": macro,
+            "diacritic": pct(totals["dia"]),
+            "folded": pct(totals["blind"]),
+            "invented": spurious,
+            "photographs": len(rows),
+        }, indent=2) + "\n", encoding="utf-8")
+        print(f"wrote {short(args.json)}")
     return 0
 
 
