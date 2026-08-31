@@ -308,21 +308,22 @@ python3 scripts/kaggle_train.py speech-half2    # only then
 | Relaunch pass-7c unchanged | Change the mix first; 7c already lost on photographs |
 | Pass-8: 12% human + 18k plates, letters 64%→60% | Pass-9 capped plates but kept the letter-densest half — same 64%→60% |
 | Pass-9: 50% human + letter-dense plates | Pass-10: human-only train; plates stay in valid (syn floor) |
-| Pass-10: human-only, words 41.7%→39.4%, letters 16/25→14/25 | Stop. Same 1,294 crops cannot lift the crop gate. Label more real diacritic crops. |
+| Pass-10: human-only, words 41.7%→39.4%, letters 16/25→14/25 | Pass-11: plates train, then human train, never mixed |
 
-### OCR data order (pass-10)
+### OCR data order (pass-11)
 
 ```text
 1. Copy real crops from lilly-ocr-crops (skip harvest, skip syn*, skip sign-letters)
 2. prepare_ocr_data.py --labels <human labels>     # MUST succeed
 3. Copy sign-letter plates from lilly-ocr-sign-letters, prepare --labels
-   (needed so valid still has a syn floor — they do not go into train)
+   (valid keeps both; train is rewritten per stage)
 4. Assert zero photo*.png and zero auto_* in train
-5. Train = human ×4 only. Assert no syn* in train gt.
+5. Split plate_lines vs human_lines. Do not concatenate them.
 6. train_ocr.py --quick-test
-7. train_ocr.py heavy (5 epochs, crop gate inside; prints the 23 letter crops)
-8. restore_scored_photos.py + evaluate_ocr.py photograph gate
-9. Zip lilly-read.zip only if the photograph gate passed
+7. Stage 1: train_gt = plates only. train_ocr --no-install --checkpoint read-stage1.pth (2 epochs)
+8. Stage 2: train_gt = human only. train_ocr --weights read-stage1.pth (3 epochs, crop gate)
+9. restore_scored_photos.py + evaluate_ocr.py photograph gate
+10. Zip lilly-read.zip only if the photograph gate passed
 ```
 
 If step 2 or 3 fails → `SystemExit`. Never “continue with synthetic only.”
@@ -480,8 +481,7 @@ Examples already enforced:
 - Speech half 1: `--keep-adapter`, no `evaluate_speech`, tee + `check_trainproof`
 - Speech half 2: `--resume`, `require_wer` before zip path
 - OCR: no `check=False`, no 50k generate, no `generate_ocr_photos.py`, no harvest
-  `SystemExit`, `heavy-pass10`, human-only train, `lilly-ocr-sign-letters` on valid,
-  photograph `diacritic`+`invented`;
+  `SystemExit`, `heavy-pass11`, two sequential trains (not mixed), photograph `diacritic`+`invented`;
   poller done zip is `lilly-read.zip` only (not `lilly-read-trained.zip`);
   tee + `experiment_log.json`
 - `train_speech`: Encoder `SystemExit`, `FiniteLossCheck`
@@ -516,7 +516,7 @@ then add a check when possible.
 | :--- | :--- |
 | `training/Lilly_Speech_Kaggle.ipynb` | Speech half 1 |
 | `training/Lilly_Speech_Kaggle_Half2.ipynb` | Speech half 2 |
-| `training/Lilly_OCR_Kaggle.ipynb` | OCR pass-10 (human-only train) |
+| `training/Lilly_OCR_Kaggle.ipynb` | OCR pass-11 (plates then human) |
 | `scripts/preflight_kaggle.py` | Launch gate |
 | `scripts/kaggle_train.py` | Push + sign-letters required |
 | `scripts/kaggle_poll.py` | CANCEL/ERROR = crash |

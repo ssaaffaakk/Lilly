@@ -48,7 +48,7 @@ These were done on purpose so a kernel could COMPLETE. Do not do them again.
 | :--- | :--- | :--- |
 | Speech half 1 | Clone `/kaggle/temp`, 1 epoch, `--keep-adapter`, zip `lilly-listen-half1.zip`, tee + trainproof | BEFORE/AFTER WER, merge 3 GB, clone `/kaggle/working` |
 | Speech half 2 | `--resume`, `SPEECH_EPOCHS = 2`, AFTER WER **then** zip `lilly-listen.zip` | `--base` merged weights, zip before WER |
-| OCR | Attach what **this pass** requires, tee + photograph gate, zip `lilly-read.zip` only after the gate | `check=False`, skip required data, zip refused `read-trained.pth` as the app package, relaunch pass-8/9/10 on the same 1,294 crops |
+| OCR | Attach what **this pass** requires, tee + photograph gate, zip `lilly-read.zip` only after the gate | `check=False`, skip required data, zip refused `read-trained.pth` as the app package, relaunch pass-8/9/10 mix, skip crop gate after stage 1 by installing |
 
 Launch: `python3 scripts/kaggle_train.py speech` / `speech-half2` / `ocr`.
 Preflight: `python3 scripts/preflight_kaggle.py`.

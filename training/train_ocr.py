@@ -360,10 +360,20 @@ def main() -> int:
                     help="fraction of steps for linear LR warmup (default 0; "
                          "pass-7b uses 0.05)")
     ap.add_argument("--keep-trained", type=Path, metavar="PATH",
-                    help="always write the trained weights here, whatever the "
-                         "install gate decides — so a refused run can still be "
-                         "scored on the real photographs")
+                    help="write trained weights here only after the install gate "
+                         "passes — a refused run must not leave this file")
+    ap.add_argument("--checkpoint", type=Path, metavar="PATH",
+                    help="write weights here at the end of this stage, even if "
+                         "the crop gate would refuse. Does not write lilly.pth. "
+                         "The next stage loads this with --weights.")
+    ap.add_argument("--no-install", action="store_true",
+                    help="this is not the last stage: score, write --checkpoint, "
+                         "do not copy to lilly.pth, do not apply the install gate")
     args = ap.parse_args()
+    if args.no_install and not args.checkpoint:
+        raise SystemExit("--no-install needs --checkpoint so the next stage has weights")
+    if args.no_install and args.keep_trained:
+        raise SystemExit("--no-install cannot use --keep-trained (that name looks shippable)")
 
     train_dir, valid_dir = OCR_DATA / "train", OCR_DATA / "valid"
     if not (train_dir / "gt.txt").exists():
@@ -515,6 +525,23 @@ def main() -> int:
         print(f"\nonly {steps} steps — too short to mean anything")
         return 1
 
+    if before_real and after_real:
+        print(f"\nreal  words {before_real[0]:.1f}% -> {after_real[0]:.1f}%, "
+              f"letters {before_real[1]:.1f}% -> {after_real[1]:.1f}%")
+    if before_syn and after_syn:
+        print(f"syn   words {before_syn[0]:.1f}% -> {after_syn[0]:.1f}%, "
+              f"letters {before_syn[1]:.1f}% -> {after_syn[1]:.1f}%")
+
+    # Pass-11 stage 1 (plates only) is not an install. The crop gate is of
+    # real photographs; a plates-only half will usually drop those letters.
+    # Stopping here would never run the human half. Write the checkpoint and
+    # let stage 2 take the gate. Collapse / too-short already returned above.
+    if args.no_install:
+        args.checkpoint.parent.mkdir(parents=True, exist_ok=True)
+        save_weights(model.to("cpu"), args.checkpoint)
+        print(f"stage checkpoint {args.checkpoint} — not installing")
+        return 0
+
     # Pass-5 (Kaggle v10) trained to the end and was refused: pooled words
     # 88.8% -> 88.0% on a valid set that is mostly synthetic, which is already
     # at ceiling. The run was aimed at photographs. Judging it on the generator
@@ -536,10 +563,6 @@ def main() -> int:
     real_words_up = after_real[0] > before_real[0]
     real_letters_ok = after_real[1] >= before_real[1]
     syn_ok = after_syn[0] >= before_syn[0] and after_syn[1] >= before_syn[1]
-    print(f"\nreal  words {before_real[0]:.1f}% -> {after_real[0]:.1f}%, "
-          f"letters {before_real[1]:.1f}% -> {after_real[1]:.1f}%")
-    print(f"syn   words {before_syn[0]:.1f}% -> {after_syn[0]:.1f}%, "
-          f"letters {before_syn[1]:.1f}% -> {after_syn[1]:.1f}%")
     if not (real_words_up and real_letters_ok and syn_ok):
         if not real_words_up:
             print("real-crop words did not rise — not replacing the shipped reader")

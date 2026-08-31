@@ -117,33 +117,44 @@ def check_ocr(text: str) -> None:
              "floods Output and the weights zip never downloads")
     if "--quick-test" not in text:
         fail("OCR notebook missing GPU training smoke (--quick-test) before long run")
-    if '"--epochs", "5"' not in text:
-        fail("OCR notebook should train 5 epochs")
+    if '"--epochs", "5"' in text:
+        fail("OCR must not 5-epoch human-only (pass-10 overfit 41.7%→39.4%)")
+    if '"--epochs", "2"' not in text or '"--epochs", "3"' not in text:
+        fail("OCR pass-11 must train plates 2 epochs then human 3 epochs")
+    if text.count("training/train_ocr.py") < 3:
+        fail("OCR pass-11 needs quick-test + plates stage + human stage")
+    if "--no-install" not in text or "--checkpoint" not in text:
+        fail("OCR pass-11 stage 1 must --no-install --checkpoint (plates are not an install)")
+    if "read-stage1.pth" not in text:
+        fail("OCR pass-11 must write a stage-1 checkpoint for the human half to load")
+    if "plate_lines" not in text or "human_lines" not in text:
+        fail("OCR pass-11 must split plates and human into two train lists")
+    if "two stages, not mixed" not in text:
+        fail("OCR pass-11 must not mix plates and human in one train_ocr")
+    if "REAL_REPEAT = 4" in text:
+        fail("OCR still repeats human ×4 — pass-10 overfit that way")
+    if "share >= 0.45" in text:
+        fail("OCR still uses pass-9 45% human + letter-dense plates — that spent letters")
+    if "share >= 0.99" in text:
+        fail("OCR still uses pass-10 single-stage human-only")
+    if "letter_score" in text:
+        fail("OCR still sorts plates by diacritic count into train — pass-9 spent letters that way")
+    if "mixed_lines = human * REAL_REPEAT + other" in text:
+        fail("OCR still adds plates to train — pass-11 trains one part then the other")
+    if "heavy-pass11" not in text:
+        fail("OCR notebook still labelled an older pass (want heavy-pass11)")
+    if "pass-10 already refused on this 1,294-crop set" in text:
+        fail("OCR notebook still SystemExits pass-10 — pass-11 is two sequential trains")
+    if 'LILLY_RUN_ID"] = "heavy-pass10"' in text:
+        fail("OCR notebook still launches pass-10 — human-only already overfit")
+    if "heavy-pass9" in text:
+        fail("OCR notebook still launches pass-9 — crop gate already refused that mix")
     if '"--count", "50000"' in text:
         fail("OCR pass-8 must not regenerate 50k synthetic on Kaggle — "
              "attach lilly-ocr-sign-letters (pass-7c mix already refused)")
     if "data/scripts/generate_ocr_photos.py" in text:
         fail("OCR pass-8 must not run generate_ocr_photos.py "
              "(pass-7c photo-style + harvest already refused on photographs)")
-    if "REAL_REPEAT = 4" not in text:
-        fail("OCR pass-10 must repeat real train crops ×4")
-    if "REAL_REPEAT = 2" in text:
-        fail("OCR still uses pass-8 REAL_REPEAT = 2 — that mix spent Bosnian letters")
-    if "share >= 0.45" in text:
-        fail("OCR still uses pass-9 45% human + letter-dense plates — that spent letters")
-    if "share >= 0.99" not in text:
-        fail("OCR pass-10 train must be human-only (share ≥ 99%)")
-    if "letter_score" in text:
-        fail("OCR still sorts plates by diacritic count into train — pass-9 spent letters that way")
-    if "mixed_lines = human * REAL_REPEAT + other" in text:
-        fail("OCR still adds plates to train — pass-10 keeps plates in valid only")
-    if "mixed_lines = human * REAL_REPEAT" not in text:
-        fail("OCR pass-10 must set train to human crops only")
-    if "pass-10 already refused on this 1,294-crop set" not in text:
-        fail("OCR notebook must not train again on the 1,294-crop set "
-             "(pass-8/9/10 all refused the crop gate; next pass needs new labels)")
-    if "heavy-pass9" in text:
-        fail("OCR notebook still launches pass-9 — crop gate already refused that mix")
     if 'LILLY_RUN_ID"] = "heavy-pass8"' in text or "heavy-pass8" in text:
         fail("OCR notebook still launches pass-8 — crop gate already refused that mix")
     if "heavy-pass7c" in text:
@@ -184,6 +195,9 @@ def check_train_ocr() -> None:
     if "diacritic crops" not in text:
         fail("train_ocr must print the ~23 real crops that carry the 25 letters "
              "(64%→60% is 16/25→15/25; the aggregate hid which word moved)")
+    if "--no-install" not in text or "--checkpoint" not in text:
+        fail("train_ocr must support a non-install stage checkpoint "
+             "(pass-11 plates half is not an install)")
     min_idx = text.find("if steps < MIN_STEPS:")
     if min_idx < 0 or "return 0" in text[min_idx:min_idx + 220]:
         fail("a too-short OCR run must return 1, not 0 (exit 0 would package the old reader)")
