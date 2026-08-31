@@ -311,6 +311,39 @@ def accuracy(model, loader, converter, device):
             100 * dia_right / max(dia_total, 1), dia_total)
 
 
+def diacritic_cases(model, crops, converter, device):
+    """Every held-out real crop that carries a Bosnian letter.
+
+    The crop-gate letter number is 25 occurrences across about 23 images.
+    64% -> 60% is exactly 16/25 -> 15/25 — one letter on one crop. Pass-8
+    and pass-9 both printed only the aggregate, so the next mix had to guess
+    which word moved. This list is that word.
+    """
+    if not crops:
+        return []
+    model.eval()
+    rows = []
+    loader = DataLoader(crops, batch_size=16, collate_fn=collate, num_workers=0)
+    with torch.no_grad():
+        for images, texts in loader:
+            preds = decode(model(images.to(device), None), converter)
+            for pred, truth in zip(preds, texts):
+                right, want = surviving_diacritics(truth, pred)
+                if want == 0:
+                    continue
+                rows.append((truth, pred.strip(), right, want))
+    model.train()
+    return rows
+
+
+def print_diacritic_cases(label, rows):
+    letters = sum(want for _, _, _, want in rows)
+    print(f"{label} diacritic crops ({letters} letters / {len(rows)} crops):")
+    for truth, pred, right, want in rows:
+        flag = "ok" if right == want else f"{right}/{want}"
+        print(f"  [{flag}] {truth} -> {pred}")
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--epochs", type=float, default=3.0)
@@ -392,6 +425,8 @@ def main() -> int:
         print(f"before real:   {before_real[0]:.1f}% words, "
               f"{before_real[1]:.1f}% of {before_real[2]} Bosnian letters "
               f"({len(valid_real)} crops)")
+        print_diacritic_cases("before", diacritic_cases(
+            model, valid_real, converter, device))
     if before_syn:
         print(f"before syn:    {before_syn[0]:.1f}% words, "
               f"{before_syn[1]:.1f}% of {before_syn[2]} Bosnian letters "
@@ -451,6 +486,8 @@ def main() -> int:
     if after_real:
         print(f"after real:   {after_real[0]:.1f}% words, "
               f"{after_real[1]:.1f}% of {after_real[2]} Bosnian letters")
+        print_diacritic_cases("after", diacritic_cases(
+            model, valid_real, converter, device))
     if after_syn:
         print(f"after syn:    {after_syn[0]:.1f}% words, "
               f"{after_syn[1]:.1f}% of {after_syn[2]} Bosnian letters")

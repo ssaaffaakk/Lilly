@@ -126,15 +126,23 @@ def check_ocr(text: str) -> None:
         fail("OCR pass-8 must not run generate_ocr_photos.py "
              "(pass-7c photo-style + harvest already refused on photographs)")
     if "REAL_REPEAT = 4" not in text:
-        fail("OCR pass-9 must repeat real train crops ×4 (pass-8 ×2 drowned them in plates)")
+        fail("OCR pass-10 must repeat real train crops ×4")
     if "REAL_REPEAT = 2" in text:
         fail("OCR still uses pass-8 REAL_REPEAT = 2 — that mix spent Bosnian letters")
-    if "share >= 0.45" not in text:
-        fail("OCR pass-9 must assert human share ≥ 45% of train (pass-8 was ~12%)")
-    if "letter_score" not in text:
-        fail("OCR pass-9 must keep čćđšž plates first when capping sign-letters")
-    if "heavy-pass9" not in text:
-        fail("OCR notebook still labelled an older pass (want heavy-pass9)")
+    if "share >= 0.45" in text:
+        fail("OCR still uses pass-9 45% human + letter-dense plates — that spent letters")
+    if "share >= 0.99" not in text:
+        fail("OCR pass-10 train must be human-only (share ≥ 99%)")
+    if "letter_score" in text:
+        fail("OCR still sorts plates by diacritic count into train — pass-9 spent letters that way")
+    if "mixed_lines = human * REAL_REPEAT + other" in text:
+        fail("OCR still adds plates to train — pass-10 keeps plates in valid only")
+    if "mixed_lines = human * REAL_REPEAT" not in text:
+        fail("OCR pass-10 must set train to human crops only")
+    if "heavy-pass10" not in text:
+        fail("OCR notebook still labelled an older pass (want heavy-pass10)")
+    if "heavy-pass9" in text:
+        fail("OCR notebook still launches pass-9 — crop gate already refused that mix")
     if 'LILLY_RUN_ID"] = "heavy-pass8"' in text or "heavy-pass8" in text:
         fail("OCR notebook still launches pass-8 — crop gate already refused that mix")
     if "heavy-pass7c" in text:
@@ -172,6 +180,9 @@ def check_train_ocr() -> None:
              "Kaggle pass-1 shipped stock latin_g2 (md5 46986913)")
     if "valid_real" not in text or "after_syn" not in text:
         fail("train_ocr must split real vs synthetic valid (pass-5 pooled gate refused a photo run)")
+    if "diacritic crops" not in text:
+        fail("train_ocr must print the ~23 real crops that carry the 25 letters "
+             "(64%→60% is 16/25→15/25; the aggregate hid which word moved)")
     min_idx = text.find("if steps < MIN_STEPS:")
     if min_idx < 0 or "return 0" in text[min_idx:min_idx + 220]:
         fail("a too-short OCR run must return 1, not 0 (exit 0 would package the old reader)")
