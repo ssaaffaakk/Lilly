@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="color-scheme" content="dark">
 <meta name="theme-color" content="#08141a">
-<meta name="description" content="Lilly translates Bosnian into English — typed, spoken, or photographed.">
+<meta name="description" content="Lilly translates Bosnian and English — typed, spoken, or photographed.">
 <title>Lilly</title>
 <style>
   /* ---------------------------------------------------------------
@@ -90,11 +90,43 @@
   }
   .tagline {
     margin-top: 9px;
+    display: flex;
+    justify-content: center;
+  }
+  .swap {
+    font: inherit;
     font-size: 11.5px;
     font-weight: 500;
     letter-spacing: 0.16em;
     text-transform: uppercase;
     color: var(--ink-3);
+    background: transparent;
+    border: 1px solid transparent;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    min-height: 44px;
+    padding: 0 14px;
+    border-radius: 999px;
+    -webkit-tap-highlight-color: transparent;
+    transition:
+      color var(--t-base) var(--ease),
+      background var(--t-base) var(--ease),
+      border-color var(--t-base) var(--ease),
+      transform var(--t-fast) var(--ease);
+  }
+  .swap:hover {
+    color: var(--ink-2);
+    background: rgba(255, 255, 255, 0.07);
+    border-color: var(--hair);
+  }
+  .swap:active { transform: scale(0.965); }
+  .swap svg {
+    width: 14px; height: 14px;
+    fill: none; stroke: currentColor;
+    stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round;
   }
 
   main {
@@ -273,6 +305,12 @@
     gap: 16px;
     padding: 20px 22px 16px;
   }
+  .result-langs {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  body.en-bs .result-langs { flex-direction: column-reverse; }
   .result.visible { display: flex; animation: rise var(--t-slow) var(--ease) both; }
   @keyframes rise {
     from { opacity: 0; transform: translateY(10px) scale(0.985); }
@@ -314,6 +352,23 @@
     letter-spacing: -0.005em;
     text-wrap: pretty;
     overflow-wrap: anywhere;
+  }
+  /* Reverse: Bosnian is the answer, English is what was typed. */
+  body.en-bs .bosnian {
+    font-size: 21px;
+    line-height: 1.42;
+    font-weight: 500;
+    letter-spacing: -0.005em;
+    color: var(--ink);
+    text-wrap: pretty;
+    overflow-wrap: anywhere;
+  }
+  body.en-bs .english {
+    font-size: 15px;
+    line-height: 1.55;
+    font-weight: 400;
+    letter-spacing: 0;
+    color: var(--ink-2);
   }
 
   .result-actions {
@@ -471,6 +526,8 @@
   @media (max-width: 420px) {
     .result { padding: 18px 18px 14px; }
     .english { font-size: 19.5px; }
+    body.en-bs .bosnian { font-size: 19.5px; }
+    body.en-bs .english { font-size: 15px; }
     .result-actions .btn { flex: 1 1 auto; }
   }
 
@@ -568,7 +625,14 @@
 
 <header>
   <h1>Lilly</h1>
-  <p class="tagline">Bosnian &#8594; English</p>
+  <p class="tagline">
+    <button type="button" class="swap" id="swapBtn" aria-pressed="false"
+            aria-label="Swap to English then Bosnian">
+      <span id="fromLang">Bosnian</span>
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 8h11M15 5l3 3-3 3"/><path d="M17 16H6M9 13l-3 3 3 3"/></svg>
+      <span id="toLang">English</span>
+    </button>
+  </p>
 </header>
 
 <main>
@@ -595,16 +659,18 @@
   <p class="hint" id="hint">Type it, say it, or photograph a sign.</p>
 
   <section class="glass result" id="result" aria-live="polite">
-    <div class="block">
-      <div class="label">Bosnian</div>
-      <div class="source-row">
-        <img id="srcThumb" alt="" hidden>
-        <div class="bosnian" id="outBosnian" lang="bs"></div>
+    <div class="result-langs">
+      <div class="block">
+        <div class="label">Bosnian</div>
+        <div class="source-row">
+          <img id="srcThumb" alt="" hidden>
+          <div class="bosnian" id="outBosnian" lang="bs"></div>
+        </div>
       </div>
-    </div>
-    <div class="block">
-      <div class="label">English</div>
-      <div class="english" id="outEnglish"></div>
+      <div class="block">
+        <div class="label">English</div>
+        <div class="english" id="outEnglish"></div>
+      </div>
     </div>
     <div class="result-actions">
       <button type="button" class="btn" id="playBtn">
@@ -651,6 +717,28 @@
   const $ = id => document.getElementById(id);
   const state = { bosnian: "", english: "", audioUrl: null };
   const calm = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  function isReply() { return document.body.classList.contains("en-bs"); }
+
+  function applyDirection(reply) {
+    document.body.classList.toggle("en-bs", reply);
+    $("fromLang").textContent = reply ? "English" : "Bosnian";
+    $("toLang").textContent = reply ? "Bosnian" : "English";
+    $("swapBtn").setAttribute("aria-pressed", reply ? "true" : "false");
+    $("swapBtn").setAttribute("aria-label",
+      reply ? "Swap to Bosnian then English" : "Swap to English then Bosnian");
+    const input = $("input");
+    input.lang = reply ? "en" : "bs";
+    input.setAttribute("aria-label", (reply ? "English" : "Bosnian") + " text");
+    input.placeholder = reply ? "Type English\u2026" : "Upi\u0161ite bosanski tekst\u2026";
+    $("hint").textContent = reply
+      ? "Type English to get Bosnian back."
+      : "Type it, say it, or photograph a sign.";
+  }
+
+  function ensureBosnianIn() {
+    if (isReply()) applyDirection(false);
+  }
 
   /* ---- messages ---------------------------------------------------- */
   let toastTimer = 0;
@@ -733,6 +821,10 @@
           return "That note is longer than the box takes. Shorten it, then send it again.";
         if (err.tooLong) return TOO_MUCH_TEXT;
         return "Lilly could not read that request. Reload the page, then " + next + ".";
+
+      case 503:
+        return (text || "The English-to-Bosnian model is not on this machine")
+             + ". " + cap(next) + ".";
     }
 
     if (err && err.status >= 500)
@@ -798,7 +890,7 @@
     busy($("translateBtn"), true);
     setStatus("Translating…", true);
     try {
-      const data = await apiJson("/api/translate", {
+      const data = await apiJson(isReply() ? "/api/reply" : "/api/translate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ text })
@@ -809,6 +901,16 @@
     } finally {
       busy($("translateBtn"), false);
     }
+  });
+
+  $("swapBtn").addEventListener("click", () => {
+    const goingReply = !isReply();
+    if (state.bosnian || state.english) {
+      $("input").value = goingReply ? (state.english || "") : (state.bosnian || "");
+      document.body.classList.toggle("has-text", $("input").value.trim().length > 0);
+    }
+    applyDirection(goingReply);
+    if ($("input").value.trim()) $("translateBtn").click();
   });
 
   $("input").addEventListener("keydown", e => {
@@ -861,6 +963,7 @@
 
   $("micBtn").addEventListener("click", async () => {
     if (recorder && recorder.state === "recording") { recorder.stop(); return; }
+    ensureBosnianIn();
     // Browsers hand out getUserMedia only on a secure origin, and localhost
     // counts as one. Reached over plain http from a phone on the same wifi —
     // which is how the README says to try Lilly on a phone — the whole
@@ -931,6 +1034,7 @@
   /* ---- photo --------------------------------------------------------- */
   async function readPhoto(file) {
     if (!file) return;
+    ensureBosnianIn();
     busy($("photoBtn"), true);
     setStatus("Reading the photo…", true);
     const form = new FormData();
@@ -1023,10 +1127,11 @@
      English on the page rather than a hidden field: if the write silently does
      not take, the words are sitting there highlighted and the reader's own
      shortcut finishes the job. */
-  function selectEnglish() {
+  function selectAnswer() {
+    const node = isReply() ? $("outBosnian") : $("outEnglish");
     const sel = window.getSelection();
     const range = document.createRange();
-    range.selectNodeContents($("outEnglish"));
+    range.selectNodeContents(node);
     sel.removeAllRanges();
     sel.addRange(range);
     try { return document.execCommand("copy"); } catch (e) { return false; }
@@ -1035,12 +1140,13 @@
   const COPY_KEY = /Mac|iPhone|iPad/.test(navigator.platform || "") ? "\u2318C" : "Ctrl+C";
 
   $("copyBtn").addEventListener("click", async () => {
-    if (!state.english) return;
+    const text = isReply() ? state.bosnian : state.english;
+    if (!text) return;
     if (navigator.clipboard && navigator.clipboard.writeText) {
-      try { await navigator.clipboard.writeText(state.english); setStatus("Copied"); return; }
+      try { await navigator.clipboard.writeText(text); setStatus("Copied"); return; }
       catch (e) { /* denied — the selection below still gets them there */ }
     }
-    setStatus(selectEnglish() ? "Copied" : "Press " + COPY_KEY + " — the translation is selected.");
+    setStatus(selectAnswer() ? "Copied" : "Press " + COPY_KEY + " — the translation is selected.");
   });
 
   /* ---- correction loop ------------------------------------------------ */
@@ -1072,10 +1178,11 @@
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          source_text: state.bosnian,
-          model_output: state.english,
+          source_text: isReply() ? state.english : state.bosnian,
+          model_output: isReply() ? state.bosnian : state.english,
           user_complaint: $("fbWhat").value.trim(),
-          suggested_translation: $("fbSuggest").value.trim()
+          suggested_translation: $("fbSuggest").value.trim(),
+          direction: isReply() ? "en-bs" : "bs-en"
         })
       });
       closeFeedback();

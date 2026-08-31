@@ -7,6 +7,7 @@ Endpoints:
     GET  /                  the web app
     GET  /health            liveness, for whatever is watching the process
     POST /api/translate     {"text": "..."}            -> Bosnian text to English
+    POST /api/reply         {"text": "..."}            -> English text to Bosnian
     POST /api/speech        audio file upload           -> transcribe Bosnian + translate
     POST /api/speak         {"text": "..."}            -> English speech (WAV)
     POST /api/photo         image file upload           -> OCR Bosnian + translate
@@ -62,6 +63,7 @@ class FeedbackIn(BaseModel):
     model_output: str = Field(max_length=12_000, default="")
     user_complaint: str = Field(max_length=2_000, default="")
     suggested_translation: str = Field(max_length=12_000, default="")
+    direction: str = Field(default="bs-en", pattern="^(bs-en|en-bs)$")
 
 
 @app.middleware("http")
@@ -188,5 +190,5 @@ async def photo(file: UploadFile):
 async def report(body: FeedbackIn):
     row_id = await run_in_threadpool(
         feedback.add_correction, body.source_text, body.model_output,
-        body.user_complaint, body.suggested_translation)
+        body.user_complaint, body.suggested_translation, body.direction)
     return {"ok": True, "id": row_id}
