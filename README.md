@@ -32,8 +32,7 @@ I applied for an internship. They did not take me.
 
 Not because the code was weak. The reason came back shorter and colder than
 that: **you do not know Bosnian. You will not understand.** I had heard the same
-line trying to get the internet connected, applying for jobs, asking about
-classes.
+line trying to get internships, applying for jobs, etc...
 Same sentence, different room. The language stopped being a language and became a
 door I was always on the wrong side of.
 
