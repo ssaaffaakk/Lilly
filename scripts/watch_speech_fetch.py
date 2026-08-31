@@ -39,6 +39,7 @@ POLL = 300
 MIN_ZIP = 1_000_000
 ZIP_PATTERN = r"lilly-listen.*\.zip"
 END_TRIES = 8
+TICK_FAIL_MAX = 3
 WANT = ("lilly-listen.zip", "lilly-listen-trained.zip",
         "lilly-listen-half1.zip", "lilly-listen-half2.zip")
 BACKOFF_429 = 300
@@ -198,6 +199,7 @@ def main() -> int:
     log("will pull lilly-listen*.zip as soon as they exist; status RUNNING is not 'not done'")
     ended = 0
     grabbed = False
+    tick_fails = 0
     while True:
         try:
             line = status_line()
@@ -205,23 +207,28 @@ def main() -> int:
             log(f"api={api} {line}")
             zips = fetch_zips()
             have_listen = usable(zips, "lilly-listen.zip")
-            have_trained = usable(zips, "lilly-listen-trained.zip")
             have_half1 = usable(zips, "lilly-listen-half1.zip")
             have_any = any(usable(zips, name) for name in WANT)
             if have_any and not grabbed:
                 sizes = ", ".join(f"{n} {s:,}B" for n, s in zips.items() if s >= MIN_ZIP)
-                log(f"zip on disk ({sizes}) — zip-only copy to DEST, do not wait for COMPLETE")
+                log(f"zip on disk ({sizes}) — zip-only copy to DEST")
                 fetch_full()
                 alarm("Lilly speech zip downloaded")
                 grabbed = True
+            if api in ("ERROR", "CANCEL"):
+                sizes = ", ".join(f"{n} {s:,}B" for n, s in zips.items()) if zips else "none"
+                return finish(
+                    f"Speech fetch — kernel {api}",
+                    f"API `{api}`. A zip on disk is recovery, not a successful run.\n\n"
+                    f"Kept: {sizes}\nFiles in `{KEEP}`.\n",
+                    1, already_grabbed=grabbed)
             if have_listen:
                 sizes = ", ".join(f"{n} {s:,}B" for n, s in zips.items())
                 return finish(
                     "Speech fetch — packaged listener saved",
-                    f"API was `{api}` (may still say RUNNING).\n\nKept: {sizes}\n\n"
-                    f"Zips: `{KEEP}`\nFull output: `{DEST}`\n"
-                    "Install when you want: `python3 scripts/install_listen.py`\n"
-                    "(that command will use the local zip, not Kaggle).",
+                    f"API was `{api}`.\n\nKept: {sizes}\n\n"
+                    f"Zips: `{KEEP}`\n"
+                    "Install when you want: `python3 scripts/install_listen.py`\n",
                     0, already_grabbed=grabbed)
             if have_half1:
                 sizes = ", ".join(f"{n} {s:,}B" for n, s in zips.items())
@@ -229,33 +236,32 @@ def main() -> int:
                     "Speech fetch — half 1 adapter zip saved",
                     f"API was `{api}`.\n\nKept: {sizes}\n\n"
                     f"Zips: `{KEEP}`\n"
-                    "This is the Trainer checkpoint, not the app listener.\n"
-                    "After this kernel COMPLETEs, launch half 2:\n"
-                    "`python3 scripts/kaggle_train.py speech-half2`\n",
+                    "After COMPLETE, launch: `python3 scripts/kaggle_train.py speech-half2`\n",
                     0, already_grabbed=grabbed)
-            if api in ("ERROR", "CANCEL", "COMPLETE"):
+            if api == "COMPLETE":
                 ended += 1
-                if have_trained or grabbed:
-                    return finish(
-                        "Speech fetch — trained zip saved (no listen.zip yet)",
-                        f"API `{api}` after {ended} end-state polls.\n\n"
-                        f"Files in `{KEEP}` and `{DEST}`.\n",
-                        0, already_grabbed=grabbed)
                 if ended >= END_TRIES:
                     return finish(
-                        "Speech fetch — kernel ended, no zip",
-                        f"API `{api}` and no zip ≥ {MIN_ZIP} bytes after "
-                        f"{END_TRIES} pulls.\n\nLast status: {line}",
+                        "Speech fetch — kernel COMPLETE, no zip",
+                        f"no zip ≥ {MIN_ZIP} bytes after {END_TRIES} pulls.\n\n"
+                        f"Last status: {line}",
                         1, already_grabbed=grabbed)
-                log(f"end state {api} but no zip yet — retry {ended}/{END_TRIES}")
+                log(f"COMPLETE but no zip yet — retry {ended}/{END_TRIES}")
                 time.sleep(120)
                 continue
             ended = 0
+            tick_fails = 0
         except SystemExit:
             drop_lock()
             raise
         except Exception as exc:
-            log(f"tick error: {exc!r}")
+            tick_fails += 1
+            log(f"tick error {tick_fails}/{TICK_FAIL_MAX}: {exc!r}")
+            if tick_fails >= TICK_FAIL_MAX:
+                return finish(
+                    "Speech fetch — watcher tick failed",
+                    f"Same poll failed {TICK_FAIL_MAX} times: {exc!r}",
+                    1, already_grabbed=grabbed)
         time.sleep(POLL)
 
 

@@ -142,6 +142,7 @@ def main() -> int:
 
     SPEECH_DIR.mkdir(parents=True, exist_ok=True)
     grand = 0
+    failed = False
     for entry in files:
         split = entry["split"]
         print(f"  {split}:")
@@ -156,8 +157,13 @@ def main() -> int:
                                  f"{entry['size'] / 1048576:.0f} MB")
             grand += unpack(path, split, SPEECH_DIR)
             path.unlink(missing_ok=True)
-        except Exception as exc:  # noqa: BLE001 - report and carry on with the rest
+        except Exception as exc:
             print(f"    FAILED: {exc}", file=sys.stderr)
+            failed = True
+    if failed:
+        print("download failed — not handing a partial set to training",
+              file=sys.stderr)
+        return 1
     print(f"\n{grand:,} clips ready. Train with:\n"
           f"  python3 training/train_speech.py --data data/speech/train.tsv")
     return 0

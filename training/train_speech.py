@@ -24,6 +24,7 @@ proxy — the three are close enough acoustically that it helps.
 """
 import argparse
 import json
+import math
 import os
 import shutil
 import sys
@@ -177,7 +178,10 @@ def encoder_lora_gradient_report(model) -> str:
 
 
 class EncoderGradientCheck(TrainerCallback):
-    """Count the encoder's gradients once, on the first step that has any."""
+    """Count the encoder's gradients once, on the first step that has any.
+
+    A zero count used to print a warning and keep training. Fail the run instead.
+    """
 
     def __init__(self):
         self.reported = False
@@ -186,13 +190,30 @@ class EncoderGradientCheck(TrainerCallback):
         if self.reported or model is None:
             return
         line = encoder_lora_gradient_report(model)
-        if line:
-            self.reported = True
-            print(line, flush=True)
-            if line.startswith("encoder adapter tensors receiving a gradient: 0/"):
-                print("  the encoder is not learning — the run is only training the "
-                      "decoder, see require_grads_through_checkpointing()",
-                      file=sys.stderr, flush=True)
+        if not line:
+            return
+        self.reported = True
+        print(line, flush=True)
+        if line.startswith("encoder adapter tensors receiving a gradient: 0/"):
+            raise SystemExit(
+                "the encoder is not learning — the run would only train the "
+                "decoder. See require_grads_through_checkpointing(). Not "
+                "saving a listener that cannot hear.")
+
+    def on_train_end(self, args, state, control, **kwargs):
+        if not self.reported:
+            raise SystemExit(
+                "encoder gradient check never fired — training produced no "
+                "optimizer step. Not saving that run.")
+
+
+class FiniteLossCheck(TrainerCallback):
+    """Stop on NaN/Inf loss. HuggingFace's default filter hides it in the log."""
+
+    def on_log(self, args, state, control, logs=None, **kwargs):
+        loss = (logs or {}).get("loss")
+        if loss is not None and not math.isfinite(loss):
+            raise SystemExit(f"training loss is {loss} — not saving that run")
 
 
 def make_test_clips(out_dir: Path) -> Path:
@@ -431,6 +452,7 @@ def main() -> int:
         save_total_limit=2,
         report_to="none",
         seed=41,
+        logging_nan_inf_filter=False,
         max_steps=2 if args.quick_test else -1,
         # The adapter hides the model's real arguments, so the trainer cannot work
         # out by itself which input is the label — and then evaluation quietly
@@ -442,7 +464,7 @@ def main() -> int:
         train_dataset=ClipDataset(rows, processor, args.language),
         eval_dataset=ClipDataset(valid_rows, processor, args.language) if valid_rows else None,
         data_collator=Collator(processor),
-        callbacks=[EncoderGradientCheck()]).train(
+        callbacks=[EncoderGradientCheck(), FiniteLossCheck()]).train(
             resume_from_checkpoint=str(args.resume) if args.resume else None)
 
     if not args.full_finetune:

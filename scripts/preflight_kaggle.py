@@ -57,8 +57,12 @@ def check_speech_half2(text: str) -> None:
         fail("speech half-2 must read lilly-listen-half1.zip from /kaggle/input")
     if "lilly-listen.zip" not in text:
         fail("speech half-2 must zip lilly-listen.zip for the app")
-    if "evaluate_speech.py" in text:
-        fail("speech half-2 must skip AFTER WER on Kaggle so the version can COMPLETE")
+    if "evaluate_speech.py" not in text:
+        fail("speech half-2 must run AFTER WER — skipping it was how we shipped unmeasured weights")
+    eval_at = text.find("evaluate_speech.py")
+    zip_at = text.find("/kaggle/working/lilly-listen.zip")
+    if eval_at < 0 or zip_at < 0 or zip_at < eval_at:
+        fail("speech half-2 must score WER before zipping lilly-listen.zip")
     if "voxpopuli_hr" not in text:
         fail("speech half-2 must pull voxpopuli_hr, same mix as half-1")
     if "BOSNIAN_SHARE = 0.47" not in text:
@@ -74,8 +78,9 @@ def check_ocr(text: str) -> None:
         fail("OCR notebook missing early zip of read-trained.pth")
     if "NOT SHIPPABLE" in text:
         fail("OCR must not swallow a gate refusal as a complete kernel")
-    if "assert proc.returncode == 0" not in text:
-        fail("OCR must fail the kernel when train_ocr exits non-zero")
+    if "check=False" in text:
+        fail("OCR must not check=False — a failed train_ocr must stop the kernel, "
+             "not zip weights and continue")
     if "latin_g2.pth" not in text:
         fail("OCR notebook missing base weight check")
     if "user_network" not in text:
@@ -155,6 +160,11 @@ def main() -> int:
     speech_train = (REPO / "training" / "train_speech.py").read_text(encoding="utf-8")
     if "--keep-adapter" not in speech_train or "resume_from_checkpoint" not in speech_train:
         fail("train_speech.py must support --keep-adapter and resume_from_checkpoint")
+    enc = speech_train.find("the encoder is not learning")
+    if enc < 0 or "raise SystemExit" not in speech_train[max(0, enc - 80):enc + 80]:
+        fail("train_speech must stop when the encoder gets no gradient, not warn and continue")
+    if "FiniteLossCheck" not in speech_train or "logging_nan_inf_filter=False" not in speech_train:
+        fail("train_speech must stop on NaN/Inf loss, not filter it out of the log")
     print("preflight ok: speech half-1 + half-2 + OCR notebooks")
     return 0
 

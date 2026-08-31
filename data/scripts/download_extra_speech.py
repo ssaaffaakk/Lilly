@@ -641,6 +641,10 @@ def harvest(key: str, hours: float, min_sec: float, max_sec: float,
                 dialect_marked_lines=d["marked"])
     (out / "SOURCE.json").write_text(json.dumps(meta, indent=2) + "\n", encoding="utf-8")
     print(f"  dropped on the way: {dropped}")
+    if dropped["undecodable"] > n:
+        raise SystemExit(
+            f"{key}: {dropped['undecodable']} clips failed to decode, only {n} kept. "
+            "Not training on a source whose audio mostly would not open.")
     print(f"  wrote {n:,} clips / {secs / 3600:.2f} h / {size_mb:,.0f} MB on disk "
           f"(pulled {transferred / 1048576:,.0f} MB) -> {tsv}")
     print(f"  ijekavica: A {d['A']:.2f}%  B {d['B']:.1f}% "
@@ -648,43 +652,14 @@ def harvest(key: str, hours: float, min_sec: float, max_sec: float,
     return meta
 
 
-def reconcile_partial(key: str) -> dict | None:
-    """Make a source left behind by an interrupted run usable, or clear it.
-
-    A run that dies mid-source leaves clips and a train.tsv but no SOURCE.json.
-    The TSV is the source of truth -- every line in it was flushed after its wav
-    was written -- so any wav beyond the last TSV line is an orphan with no
-    transcript, and goes. What remains is a smaller but entirely valid corpus,
-    which matters when the bytes cost an hour to fetch and re-downloading them
-    buys nothing.
-    """
+def refuse_partial(key: str) -> None:
+    """An interrupted fetch is a crash, not a smaller corpus."""
     out = OUT_DIR / key
     tsv = out / "train.tsv"
-    if not tsv.exists() or (out / "SOURCE.json").exists():
-        return None
-
-    rows = [l for l in tsv.read_text(encoding="utf-8").splitlines()
-            if l.count("\t") == 1 and l.split("\t")[1].strip()]
-    keep = {r.split("\t")[0] for r in rows}
-    orphans = [p for p in (out / "train").glob("*.wav")
-               if f"train/{p.name}" not in keep]
-    for p in orphans:
-        p.unlink()
-    tsv.write_text("\n".join(rows) + "\n", encoding="utf-8")
-
-    secs = sum(sf.info(str(out / r.split("\t")[0])).duration for r in rows)
-    size_mb = sum(p.stat().st_size for p in (out / "train").glob("*.wav")) / 1048576
-    d = dialect_report([r.split("\t")[1] for r in rows])
-    meta = dict(source=key, repo=SOURCES[key]["repo"], config=SOURCES[key]["config"],
-                license=SOURCES[key]["license"], clips=len(rows),
-                hours=round(secs / 3600, 3), disk_mb=round(size_mb, 1),
-                transferred_mb=None, partial=True,
-                ijekavica_A=round(d["A"], 2), ijekavica_B=round(d["B"], 1),
-                dialect_marked_lines=d["marked"])
-    (out / "SOURCE.json").write_text(json.dumps(meta, indent=2) + "\n", encoding="utf-8")
-    print(f"  {key}: recovered an interrupted run -- {len(rows):,} clips / "
-          f"{secs / 3600:.2f} h kept, {len(orphans)} orphaned wav(s) removed")
-    return meta
+    if tsv.exists() and not (out / "SOURCE.json").exists():
+        raise SystemExit(
+            f"{key}: interrupted download (train.tsv but no SOURCE.json). "
+            f"Delete {out} or pass --force. Not treating a crash as data.")
 
 
 def write_aggregate(metas: list) -> Path:
@@ -860,11 +835,14 @@ def main() -> int:
     metas = []
     for key in args.source:
         if not args.force:
-            reconcile_partial(key)
+            refuse_partial(key)
         existing = OUT_DIR / key / "SOURCE.json"
         if existing.exists() and not args.force:
-            print(f"\n{key}: already downloaded, keeping it (use --force to redo)")
             meta = json.loads(existing.read_text(encoding="utf-8"))
+            if meta.get("partial"):
+                raise SystemExit(
+                    f"{key}: SOURCE.json is from a crash. Delete it or pass --force.")
+            print(f"\n{key}: already downloaded, keeping it (use --force to redo)")
             # keep the gate aware of it, so later sources don't duplicate it
             for line in (OUT_DIR / key / "train.tsv").open(encoding="utf-8"):
                 if "\t" in line:
@@ -875,7 +853,8 @@ def main() -> int:
         hours = args.hours if args.hours is not None else SOURCES[key]["default_hours"]
         meta = harvest(key, hours, args.min_sec, args.max_sec, gate, args.max_shards)
         if meta is None:
-            continue
+            raise SystemExit(
+                f"{key}: no usable clips — not continuing with the other sources")
         metas.append(meta)
 
     if not metas:
