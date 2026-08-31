@@ -308,6 +308,7 @@ python3 scripts/kaggle_train.py speech-half2    # only then
 | Relaunch pass-7c unchanged | Change the mix first; 7c already lost on photographs |
 | Pass-8: 12% human + 18k plates, letters 64%→60% | Pass-9 capped plates but kept the letter-densest half — same 64%→60% |
 | Pass-9: 50% human + letter-dense plates | Pass-10: human-only train; plates stay in valid (syn floor) |
+| Pass-10: human-only, words 41.7%→39.4%, letters 16/25→14/25 | Stop. Same 1,294 crops cannot lift the crop gate. Label more real diacritic crops. |
 
 ### OCR data order (pass-10)
 
@@ -382,6 +383,7 @@ A failed photo read is a failed score — no `continue` that leaves holes.
 ✗ Relaunch pass-7c (harvest auto-crop + 50k + photo-style)
 ✗ Relaunch pass-8 (human ×2 + all 18k plates — real-crop letters fell)
 ✗ Relaunch pass-9 (human ×4 + letter-dense plate half — same 16/25 → 15/25)
+✗ Relaunch pass-10 (human-only on the same 1,294 — words and letters both fell)
 ✗ Launch OCR when push_ocr_sign_letters has nothing to upload
 ✗ check=False on train_ocr “so we can still zip for debugging”
 ✗ Zip lilly-read.zip then assert returncode / skip the photograph gate

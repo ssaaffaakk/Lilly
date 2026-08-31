@@ -139,8 +139,9 @@ def check_ocr(text: str) -> None:
         fail("OCR still adds plates to train — pass-10 keeps plates in valid only")
     if "mixed_lines = human * REAL_REPEAT" not in text:
         fail("OCR pass-10 must set train to human crops only")
-    if "heavy-pass10" not in text:
-        fail("OCR notebook still labelled an older pass (want heavy-pass10)")
+    if "pass-10 already refused on this 1,294-crop set" not in text:
+        fail("OCR notebook must not train again on the 1,294-crop set "
+             "(pass-8/9/10 all refused the crop gate; next pass needs new labels)")
     if "heavy-pass9" in text:
         fail("OCR notebook still launches pass-9 — crop gate already refused that mix")
     if 'LILLY_RUN_ID"] = "heavy-pass8"' in text or "heavy-pass8" in text:
