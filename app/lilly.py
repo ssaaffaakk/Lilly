@@ -7,10 +7,17 @@
     lilly.listen("clip.m4a")                  # spoken Bosnian -> Bosnian text
     lilly.speak("Good day", "out.wav")        # English text  -> spoken English
     lilly.read("sign.jpg")                    # photo          -> Bosnian text
+    lilly.reply("Good morning")               # English text  -> Bosnian text
 
 Every weight Lilly needs lives under models/lilly/ and is read straight off
 this disk — nothing is fetched over the network. Each ability loads the first
 time it is used, so starting Lilly costs nothing and unused parts stay unread.
+
+reply() is the one ability that can be absent on a working install. Its weights
+are not in the published bundle — they are built locally from an upstream base
+(see OPTIONAL below) — so a fresh clone has the other four and not this one.
+That is a missing download, not a broken install, and the two are reported
+differently: missing() is fatal, missing_optional() is a sentence.
 """
 import sys
 from pathlib import Path
@@ -34,10 +41,33 @@ class BadInput(ValueError):
     """
 
 
+# What a working install must have, and what it may not. The reply direction is
+# in the second group because it is not in the published bundle: fetch_models.py
+# cannot bring it, and it is built here from an upstream base instead. Putting it
+# in the first group would make a perfectly good four-ability install exit 1.
+REQUIRED = (TRANSLATOR_DIR, LISTEN_DIR, SPEAK_DIR, READ_DIR)
+OPTIONAL = {
+    TRANSLATOR_EN_BS_DIR: (
+        "the reply direction (English -> Bosnian). Build it with:\n"
+        "    python3 scripts/fetch_translate_base.py --direction en-bs\n"
+        "    python3 scripts/build_translator.py --direction en-bs"),
+}
+
+
 def missing() -> list:
-    """Which parts of the model folder are not on this machine."""
-    return [d.name for d in (TRANSLATOR_DIR, LISTEN_DIR, SPEAK_DIR, READ_DIR)
-            if not d.is_dir()]
+    """Which required parts of the model folder are not on this machine."""
+    return [d.name for d in REQUIRED if not d.is_dir()]
+
+
+def missing_optional() -> dict:
+    """Absent parts that cost one ability rather than the install.
+
+    Kept apart from missing() on purpose. Without this, an install lacking the
+    reply model reports nothing wrong and then answers /api/reply with a 503,
+    which sends the reader looking at the server instead of at the download
+    they never made.
+    """
+    return {d.name: why for d, why in OPTIONAL.items() if not d.is_dir()}
 
 
 class Lilly:
@@ -95,9 +125,11 @@ def main() -> int:
         print(f"missing from {MODELS}: {', '.join(gaps)}", file=sys.stderr)
         return 1
     print(f"model folder: {MODELS}")
-    for part in ("translator", "listen", "speak", "read"):
+    for part in [d.name for d in REQUIRED] + [d.name for d in OPTIONAL if d.is_dir()]:
         size = sum(f.stat().st_size for f in (MODELS / part).rglob("*") if f.is_file())
-        print(f"  {part:<10} {size / 1048576:>6.0f} MB")
+        print(f"  {part:<18} {size / 1048576:>6.0f} MB")
+    for name, why in missing_optional().items():
+        print(f"  {name:<18} not installed — {why}")
     if len(sys.argv) > 1:
         print(lilly.translate(" ".join(sys.argv[1:])))
     return 0

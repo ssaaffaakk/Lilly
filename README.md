@@ -89,6 +89,19 @@ uv pip install --python .venv/bin/python -r requirements.txt
 Open http://localhost:8000. Allow the microphone, or photograph something with a
 **đ** in it.
 
+That gives you the four abilities in the published bundle. The reply direction —
+English in, Bosnian out, the swap button in the UI — is built locally from an
+upstream base instead of shipped in the bundle, so it takes two more commands:
+
+```bash
+.venv/bin/python scripts/fetch_translate_base.py --direction en-bs
+.venv/bin/python scripts/build_translator.py --direction en-bs
+```
+
+Without them the app runs fine and `/api/reply` answers 503. `python3 app/lilly.py`
+prints which parts are installed and says so rather than leaving you to find out
+from the swap button.
+
 Startup is instant because each model loads on first use, so an unused ability
 costs nothing. Once the weights are on disk, nothing reaches the network again.
 
