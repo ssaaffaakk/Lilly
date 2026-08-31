@@ -28,23 +28,30 @@ relabeled at the last minute.
 
 ## Why I built this
 
-I am a university student. I applied for an internship.
+I applied for an internship. They did not take me.
 
-They did not take me.
+Not because the code was weak. The reason came back shorter and colder than
+that: **you do not know Bosnian. You will not understand.** I had heard the same
+line applying for an internet password, applying for jobs, asking about classes.
+Same sentence, different room. The language stopped being a language and became a
+door I was always on the wrong side of.
 
-The reason was not a long technical debate. It was simpler, and colder:
-**you do not know Bosnian.** You will not understand. I had already heard that
-line for an internet password, for jobs, for classes — the language treated like
-a door I was standing on the wrong side of.
+The problem was never that Bosnian is unlearnable. The problem was that every
+tool I could reach treated Bosnian as a rounding error — one South Slavic bucket,
+a different flag on the label, and nobody in Sarajevo is supposed to notice.
+**Recognizing South Slavic is solved. Serving Bosnian is not.**
 
-So I asked different questions.
+So I asked the only questions that mattered to me in that room:
 
-If they speak — why can’t I press the mic and hear English?  
-If they write on the board — why can’t I photograph it and understand?  
-If I need to answer — why can’t I type it and have it spoken?
+If they are speaking — why can’t I press the mic and hear English?
+If they write on the board — why can’t I photograph it and understand?
+If I need to answer — why can’t I type it and have it spoken out loud?
 
-I stopped waiting for a generic “South Slavic” model to care. I trained **real
-Bosnian** on purpose. Type. Speak. Snap. That decision is Lilly.
+Nobody was going to build that for me. So I trained **real Bosnian** on purpose,
+measured it, and published the numbers even where they do not flatter me.
+Type. Speak. Snap. That decision is Lilly.
+
+They said I did not know Bosnian. So I built the thing that understands it.
 
 I build things because I run into problems and refuse to accept that they can’t
 be solved.
