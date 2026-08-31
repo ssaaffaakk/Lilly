@@ -565,6 +565,13 @@ def main() -> int:
     # be the same version of this project. See require_github_matches_notebook.
     require_github_matches_notebook()
     run(sys.executable, str(REPO_ROOT / "scripts" / "preflight_kaggle.py"))
+    if args.job == "ocr":
+        ocr_nb = (REPO_ROOT / "training" / job["notebook"]).read_text(encoding="utf-8")
+        if "heavy-pass11" in ocr_nb:
+            raise SystemExit(
+                "pass-11 already refused the crop gate "
+                "(human stage: real words 42.4%→41.7%, letters 64%→60%). "
+                "Do not relaunch. See training/RESULTS-ocr-pass11.md")
 
     datasets = []
     if job["needs_weights"]:

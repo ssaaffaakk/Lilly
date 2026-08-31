@@ -218,6 +218,10 @@ def main() -> int:
         fail("OCR job must not require harvest on pass-8 (pass-7c already refused)")
     if "needs_ocr_sign_letters" not in kaggle_train or "push_ocr_sign_letters" not in kaggle_train:
         fail("kaggle_train.py must push lilly-ocr-sign-letters for pass-8")
+    ocr_nb = read_nb(OCR)
+    if "heavy-pass11" in ocr_nb and "pass-11 already refused" not in kaggle_train:
+        fail("kaggle_train.py must refuse to launch pass-11 "
+             "(crop gate already refused; RESULTS-ocr-pass11.md)")
     poller = (REPO / "scripts" / "kaggle_poll.py").read_text(encoding="utf-8")
     ocr_job = poller.split('"ocr":', 1)[1][:400]
     if "lilly-read.zip" not in ocr_job:

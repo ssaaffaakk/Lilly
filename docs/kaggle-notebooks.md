@@ -385,6 +385,7 @@ A failed photo read is a failed score — no `continue` that leaves holes.
 ✗ Relaunch pass-8 (human ×2 + all 18k plates — real-crop letters fell)
 ✗ Relaunch pass-9 (human ×4 + letter-dense plate half — same 16/25 → 15/25)
 ✗ Relaunch pass-10 (human-only on the same 1,294 — words and letters both fell)
+✗ Relaunch pass-11 (plates then human — words 42.4%→41.7%, letters 16/25→15/25)
 ✗ Launch OCR when push_ocr_sign_letters has nothing to upload
 ✗ check=False on train_ocr “so we can still zip for debugging”
 ✗ Zip lilly-read.zip then assert returncode / skip the photograph gate
@@ -516,7 +517,8 @@ then add a check when possible.
 | :--- | :--- |
 | `training/Lilly_Speech_Kaggle.ipynb` | Speech half 1 |
 | `training/Lilly_Speech_Kaggle_Half2.ipynb` | Speech half 2 |
-| `training/Lilly_OCR_Kaggle.ipynb` | OCR pass-11 (plates then human) |
+| `training/Lilly_OCR_Kaggle.ipynb` | OCR pass-11 (refused; do not relaunch) |
+| `training/RESULTS-ocr-pass11.md` | Pass-11 crop-gate numbers |
 | `scripts/preflight_kaggle.py` | Launch gate |
 | `scripts/kaggle_train.py` | Push + sign-letters required |
 | `scripts/kaggle_poll.py` | CANCEL/ERROR = crash |

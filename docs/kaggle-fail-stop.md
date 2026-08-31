@@ -31,7 +31,9 @@ These were done on purpose so a kernel could COMPLETE. Do not do them again.
     `kaggle.json`, `.env`). Kaggle clones GitHub.
 11. OCR: skip required data for this pass (pass-7c: harvest; pass-8: sign-letters
     + human crops) and train a thinner mix. Do not relaunch pass-7c harvest
-    auto-crops — that recipe already lost on photographs.
+    auto-crops (photographs worse), pass-8/9 mixed plates+human, pass-10
+    human-only, or pass-11 plates-then-human — crop gate refused
+    (`RESULTS-ocr-pass11.md`: words back to 41.7%, letters 64%→60%).
 12. Treat CANCEL or ERROR as success because a zip was recovered. Recovery is
     not success.
 13. Photo eval: skip a failed read and still print a score. A hole is a failed
@@ -48,7 +50,7 @@ These were done on purpose so a kernel could COMPLETE. Do not do them again.
 | :--- | :--- | :--- |
 | Speech half 1 | Clone `/kaggle/temp`, 1 epoch, `--keep-adapter`, zip `lilly-listen-half1.zip`, tee + trainproof | BEFORE/AFTER WER, merge 3 GB, clone `/kaggle/working` |
 | Speech half 2 | `--resume`, `SPEECH_EPOCHS = 2`, AFTER WER **then** zip `lilly-listen.zip` | `--base` merged weights, zip before WER |
-| OCR | Attach what **this pass** requires, tee + photograph gate, zip `lilly-read.zip` only after the gate | `check=False`, skip required data, zip refused `read-trained.pth` as the app package, relaunch pass-8/9/10 mix, skip crop gate after stage 1 by installing |
+| OCR | Attach what **this pass** requires, tee + photograph gate, zip `lilly-read.zip` only after the gate | `check=False`, skip required data, zip refused `read-trained.pth` as the app package, relaunch pass-8/9/10/11, skip crop gate after stage 1 by installing |
 
 Launch: `python3 scripts/kaggle_train.py speech` / `speech-half2` / `ocr`.
 Preflight: `python3 scripts/preflight_kaggle.py`.
