@@ -2,6 +2,9 @@
 
 Every phase ends with a push to GitHub, so the repo always shows exactly where we are.
 
+**Current status (31 Aug 2026+):** use [`V3-PLAN.md`](V3-PLAN.md) and the root
+[`README.md`](../README.md). This roadmap is the early phase history.
+
 ## Phase 0 — Project setup ✅
 Repo connected, folder structure, this roadmap.
 

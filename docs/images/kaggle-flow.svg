@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="360" viewBox="0 0 1120 360" role="img" aria-label="Kaggle training flow">
+  <rect width="1120" height="360" rx="24" fill="#071219"/>
+  <text x="56" y="48" fill="#eef4f6" font-family="ui-sans-serif, system-ui, sans-serif" font-size="20" font-weight="700">Kaggle training flow (v3)</text>
+  <text x="56" y="72" fill="rgba(238,244,246,0.5)" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13">Fail-stop: gate before zip. CANCEL/ERROR is never success.</text>
+
+  <g font-family="ui-sans-serif, system-ui, sans-serif">
+    <rect x="40" y="110" width="200" height="70" rx="14" fill="rgba(122,211,189,0.12)" stroke="#7ad3bd"/>
+    <text x="140" y="140" text-anchor="middle" fill="#eef4f6" font-size="14" font-weight="600">Speech half 1</text>
+    <text x="140" y="162" text-anchor="middle" fill="rgba(238,244,246,0.55)" font-size="12">1 epoch · adapter zip</text>
+
+    <rect x="280" y="110" width="200" height="70" rx="14" fill="rgba(255,255,255,0.06)" stroke="rgba(255,255,255,0.14)"/>
+    <text x="380" y="140" text-anchor="middle" fill="#eef4f6" font-size="14" font-weight="600">Speech half 2</text>
+    <text x="380" y="162" text-anchor="middle" fill="rgba(238,244,246,0.55)" font-size="12">resume · WER · app zip</text>
+
+    <rect x="520" y="110" width="200" height="70" rx="14" fill="rgba(122,211,189,0.12)" stroke="#7ad3bd"/>
+    <text x="620" y="140" text-anchor="middle" fill="#eef4f6" font-size="14" font-weight="600">OCR pass-7c</text>
+    <text x="620" y="162" text-anchor="middle" fill="rgba(238,244,246,0.55)" font-size="12">harvest · gate · read zip</text>
+
+    <rect x="760" y="110" width="320" height="70" rx="14" fill="rgba(255,255,255,0.06)" stroke="rgba(255,255,255,0.14)"/>
+    <text x="920" y="140" text-anchor="middle" fill="#eef4f6" font-size="14" font-weight="600">Install + measure</text>
+    <text x="920" y="162" text-anchor="middle" fill="rgba(238,244,246,0.55)" font-size="12">Mac queue once · white paper</text>
+  </g>
+
+  <path d="M240 145 H280" stroke="#7ad3bd" stroke-width="2"/>
+  <path d="M480 145 H520" stroke="rgba(122,211,189,0.4)" stroke-width="2" stroke-dasharray="6 6"/>
+  <path d="M720 145 H760" stroke="#7ad3bd" stroke-width="2"/>
+
+  <text x="56" y="240" fill="#7ad3bd" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" font-weight="600">Rules</text>
+  <text x="56" y="268" fill="rgba(238,244,246,0.7)" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13">Clone /kaggle/temp · run(check=True) · measure before zip · GitHub is the store</text>
+  <text x="56" y="294" fill="rgba(238,244,246,0.7)" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13">Docs: kaggle-notebooks.md · kaggle-fail-stop.md · V3-PLAN.md</text>
+  <text x="56" y="330" fill="rgba(238,244,246,0.45)" font-family="ui-sans-serif, system-ui, sans-serif" font-size="12">Half 1 and OCR can run in parallel (2 GPU slots). Half 2 waits for half 1 COMPLETE.</text>
+</svg>
