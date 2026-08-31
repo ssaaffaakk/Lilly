@@ -8,6 +8,7 @@ from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[1]
 SPEECH = REPO / "training" / "Lilly_Speech_Kaggle.ipynb"
+SPEECH2 = REPO / "training" / "Lilly_Speech_Kaggle_Half2.ipynb"
 OCR = REPO / "training" / "Lilly_OCR_Kaggle.ipynb"
 
 
@@ -21,18 +22,47 @@ def fail(msg: str) -> None:
 
 
 def check_speech(text: str) -> None:
-    if 'model.safetensors").is_file(), "nothing was trained"' in text:
-        fail("speech notebook still asserts single model.safetensors")
-    if "model*.safetensors" not in text and "glob(" not in text:
-        fail("speech notebook missing sharded-weight check")
-    if "lilly-listen-trained.zip" not in text:
-        fail("speech notebook missing early zip of listen-trained")
+    if "/kaggle/working/Lilly" in text or 'os.chdir("/kaggle/working")' in text:
+        fail("speech half-1 must clone to /kaggle/temp — a clone in /kaggle/working "
+             "floods Output and the zip never downloads")
+    if "/kaggle/temp" not in text:
+        fail("speech half-1 must clone to /kaggle/temp")
+    if "--keep-adapter" not in text:
+        fail("speech half-1 must --keep-adapter (Trainer checkpoint, not merged 3 GB)")
+    if "lilly-listen-half1.zip" not in text:
+        fail("speech half-1 must zip lilly-listen-half1.zip into /kaggle/working")
+    if "evaluate_speech.py" in text:
+        fail("speech half-1 must skip BEFORE/AFTER WER — that is what missed the 12h wall")
+    if "listen-trained" in text:
+        fail("speech half-1 must not merge/zip listen-trained (3 GB merged large-v3)")
     if "voxpopuli_hr" not in text:
         fail("speech pass-2 must pull voxpopuli_hr, not FLEURS hr alone")
     if "BOSNIAN_SHARE = 0.47" not in text:
         fail("speech mix share must be 0.47 once extra Croatian is in")
     if "SPEECH_EPOCHS = 1" not in text:
         fail("speech half-1 must set SPEECH_EPOCHS = 1 (two epochs miss the 12h wall)")
+
+
+def check_speech_half2(text: str) -> None:
+    if "/kaggle/working/Lilly" in text or 'os.chdir("/kaggle/working")' in text:
+        fail("speech half-2 must clone to /kaggle/temp — a clone in /kaggle/working "
+             "floods Output and the zip never downloads")
+    if "/kaggle/temp" not in text:
+        fail("speech half-2 must clone to /kaggle/temp")
+    if "--resume" not in text:
+        fail("speech half-2 must --resume the Trainer checkpoint, not --base merged weights")
+    if "SPEECH_EPOCHS = 2" not in text:
+        fail("speech half-2 must set SPEECH_EPOCHS = 2 so Trainer continues epoch 2")
+    if "lilly-listen-half1.zip" not in text:
+        fail("speech half-2 must read lilly-listen-half1.zip from /kaggle/input")
+    if "lilly-listen.zip" not in text:
+        fail("speech half-2 must zip lilly-listen.zip for the app")
+    if "evaluate_speech.py" in text:
+        fail("speech half-2 must skip AFTER WER on Kaggle so the version can COMPLETE")
+    if "voxpopuli_hr" not in text:
+        fail("speech half-2 must pull voxpopuli_hr, same mix as half-1")
+    if "BOSNIAN_SHARE = 0.47" not in text:
+        fail("speech mix share must be 0.47 once extra Croatian is in")
 
 
 def check_ocr(text: str) -> None:
@@ -93,12 +123,16 @@ def check_train_ocr() -> None:
 
 
 def main() -> int:
-    for path, fn in ((SPEECH, check_speech), (OCR, check_ocr)):
+    for path, fn in ((SPEECH, check_speech), (SPEECH2, check_speech_half2),
+                     (OCR, check_ocr)):
         if not path.is_file():
             fail(f"missing {path}")
         fn(read_nb(path))
     check_train_ocr()
-    print("preflight ok: speech + OCR notebooks")
+    speech_train = (REPO / "training" / "train_speech.py").read_text(encoding="utf-8")
+    if "--keep-adapter" not in speech_train or "resume_from_checkpoint" not in speech_train:
+        fail("train_speech.py must support --keep-adapter and resume_from_checkpoint")
+    print("preflight ok: speech half-1 + half-2 + OCR notebooks")
     return 0
 
 

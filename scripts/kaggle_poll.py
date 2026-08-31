@@ -43,7 +43,8 @@ def jobs() -> dict:
     return {
         "speech": {
             "slug": f"{user}/lilly-speech",
-            "done_names": ("lilly-listen.zip", "lilly-listen-trained.zip"),
+            "done_names": ("lilly-listen.zip", "lilly-listen-trained.zip",
+                           "lilly-listen-half1.zip", "lilly-listen-half2.zip"),
             "min_bytes": 1_000_000,
         },
         "ocr": {

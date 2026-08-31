@@ -60,6 +60,8 @@ from scripts.guard import claim  # noqa: E402
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 LISTEN_DIR = REPO_ROOT / "models" / "lilly" / "listen"
+ADAPTER_DIR = REPO_ROOT / "models" / "lilly" / "listen-adapter"
+CHECKPOINT_DIR = REPO_ROOT / "models" / "checkpoints-speech"
 SAMPLE_RATE = 16_000
 # The trainable checkpoint. models/lilly/listen is a converted copy and cannot
 # be trained, so training starts from the original; override with --base.
@@ -209,6 +211,29 @@ def make_test_clips(out_dir: Path) -> Path:
     return tsv
 
 
+def latest_trainer_checkpoint(root: Path = CHECKPOINT_DIR) -> Path:
+    found = [p for p in root.glob("checkpoint-*") if p.is_dir()]
+    if not found:
+        raise SystemExit(f"no Trainer checkpoint under {root}")
+    return max(found, key=lambda p: int(p.name.split("-")[-1]))
+
+
+def copy_adapter_checkpoint(src: Path, dest: Path) -> Path:
+    """Copy a Trainer checkpoint so the next session can resume it.
+
+    Merged weights are not enough: half 2 needs trainer_state.json and the
+    optimizer, or it starts a new LoRA instead of epoch 2.
+    """
+    if not (src / "trainer_state.json").is_file():
+        raise SystemExit(
+            f"{src} is not a Trainer checkpoint (missing trainer_state.json). "
+            "Half 2 needs optimizer + trainer_state, not merged weights.")
+    if dest.exists():
+        shutil.rmtree(dest)
+    shutil.copytree(src, dest)
+    return dest
+
+
 def describe_checkpoint(path: Path) -> dict:
     """Which model a checkpoint holds, from its own config."""
     config = path / "config.json"
@@ -303,6 +328,13 @@ def main() -> int:
                          "with room for it")
     ap.add_argument("--no-convert", action="store_true",
                     help="stop after training, leave models/lilly/listen alone")
+    ap.add_argument("--keep-adapter", action="store_true",
+                    help="do not merge LoRA; copy the Trainer checkpoint to "
+                         "models/lilly/listen-adapter so a later run can --resume")
+    ap.add_argument("--resume", type=Path, default=None,
+                    help="Trainer checkpoint directory (must contain "
+                         "trainer_state.json). Continues the same run — not a "
+                         "new LoRA on merged weights")
     ap.add_argument("--force", action="store_true",
                     help="convert even if it would shrink the installed listener")
     ap.add_argument("--convert-only", type=Path, metavar="DIR",
@@ -317,6 +349,14 @@ def main() -> int:
         convert_for_app(Path(args.base), args.convert_only, args.force)
         print(f"converted, untrained: {args.convert_only}")
         return 0
+
+    if args.resume is not None:
+        args.resume = args.resume.resolve()
+        if not (args.resume / "trainer_state.json").is_file():
+            print(f"--resume {args.resume} has no trainer_state.json — that is "
+                  "a merged folder, not a Trainer checkpoint. Half 2 would "
+                  "start a new LoRA instead of epoch 2.", file=sys.stderr)
+            return 1
 
     if args.quick_test:
         args.data = make_test_clips(REPO_ROOT / "data" / "speech-quicktest")
@@ -352,6 +392,8 @@ def main() -> int:
         from peft import LoraConfig, get_peft_model
         # No task_type on purpose: the sequence-to-sequence wrapper assumes text
         # input and hands the model input_ids, while this one takes audio features.
+        # Resume loads adapter + optimizer onto this same config; do not wrap a
+        # second LoRA and do not point --base at merged weights.
         model = get_peft_model(model, LoraConfig(
             r=16, lora_alpha=32, lora_dropout=0.05, bias="none",
             target_modules=["q_proj", "k_proj", "v_proj", "out_proj", "fc1", "fc2"]))
@@ -366,7 +408,7 @@ def main() -> int:
           if valid_rows else "no validation clips found — training blind")
 
     train_args = Seq2SeqTrainingArguments(
-        output_dir=str(REPO_ROOT / "models" / "checkpoints-speech"),
+        output_dir=str(CHECKPOINT_DIR),
         num_train_epochs=args.epochs,
         per_device_train_batch_size=args.batch_size,
         per_device_eval_batch_size=args.batch_size,
@@ -400,7 +442,16 @@ def main() -> int:
         train_dataset=ClipDataset(rows, processor, args.language),
         eval_dataset=ClipDataset(valid_rows, processor, args.language) if valid_rows else None,
         data_collator=Collator(processor),
-        callbacks=[EncoderGradientCheck()]).train()
+        callbacks=[EncoderGradientCheck()]).train(
+            resume_from_checkpoint=str(args.resume) if args.resume else None)
+
+    if not args.full_finetune:
+        last = latest_trainer_checkpoint()
+        saved = copy_adapter_checkpoint(last, ADAPTER_DIR)
+        print(f"adapter checkpoint: {saved} (from {last.name})")
+        if args.keep_adapter:
+            print("skipped merge; zip models/lilly/listen-adapter to resume later")
+            return 0
 
     # The converter reads a plain model, and a quantised one cannot take an
     # adapter afterwards, so fold the training in before saving.

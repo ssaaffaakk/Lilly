@@ -7,7 +7,8 @@ result. This machine takes about fifteen hours for the same job; a Kaggle T4 tak
 two to three, and leaves the laptop alone.
 
     python3 scripts/kaggle_train.py translation   # the translation fine-tune
-    python3 scripts/kaggle_train.py speech        # the listening fine-tune
+    python3 scripts/kaggle_train.py speech        # listener half 1 (adapter zip)
+    python3 scripts/kaggle_train.py speech-half2  # listener half 2 (resume + convert)
     python3 scripts/kaggle_train.py ocr           # the photo reader fine-tune
     python3 scripts/kaggle_train.py speech --status
     python3 scripts/kaggle_train.py speech --fetch
@@ -62,6 +63,10 @@ JOBS = {
     "speech":      {"notebook": "Lilly_Speech_Kaggle.ipynb",
                     "slug": "lilly-speech", "title": "Lilly speech",
                     "needs_weights": False, "needs_corpus": False},
+    "speech-half2": {"notebook": "Lilly_Speech_Kaggle_Half2.ipynb",
+                    "slug": "lilly-speech-half2", "title": "Lilly speech half2",
+                    "needs_weights": False, "needs_corpus": False,
+                    "kernel_sources": ["lilly-speech"]},
     "ocr":         {"notebook": "Lilly_OCR_Kaggle.ipynb",
                     "slug": "lilly-ocr", "title": "Lilly ocr",
                     "needs_weights": False, "needs_corpus": False,
@@ -409,7 +414,10 @@ def push_notebook(user: str, job: dict, datasets: list) -> str:
         "enable_internet": True,
         "dataset_sources": list(datasets),
         "competition_sources": [],
-        "kernel_sources": [],
+        "kernel_sources": [
+            src if "/" in src else f"{user}/{src}"
+            for src in job.get("kernel_sources") or []
+        ],
     }, indent=1))
     confirm_push(run(KAGGLE, "kernels", "push", "-p", stage, quiet=True))
     confirm_accelerator(slug, stage)
@@ -487,7 +495,7 @@ def main() -> int:
         out.mkdir(parents=True, exist_ok=True)
         run(KAGGLE, "kernels", "output", slug, "-p", out)
         print(f"\nfetched to {out}")
-        if args.job == "speech":
+        if args.job in ("speech", "speech-half2"):
             print("  python3 scripts/install_listen.py")
         elif args.job == "ocr":
             print("  unzip lilly-read.zip into models/lilly/read/")
