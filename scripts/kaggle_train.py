@@ -42,6 +42,11 @@ WEIGHTS = REPO_ROOT / "models" / "lilly" / "translate"
 WEIGHTS_EN_BS = REPO_ROOT / "models" / "lilly" / "translate-en-bs"
 READ_PASS1 = REPO_ROOT / "models" / "lilly" / "read" / "lilly.pth"
 OCR_CROPS = REPO_ROOT / "data" / "ocr" / "crops"
+# Photographs to cut new crops from, with the 40 scored ones already removed.
+# Built by filtering harvested/ against real-photos/truth.json; the notebook
+# checks the same thing again on arrival, because a filter applied in one
+# place only is one that will eventually be skipped.
+OCR_PHOTOS = REPO_ROOT / "data" / "ocr" / "real-photos" / "harvested-trainable"
 OCR_SIGN_LETTERS = REPO_ROOT / "data" / "ocr" / "sign-letters"
 # The extra corpus travels with the run instead of being re-harvested on Kaggle.
 # data/extra/ is gitignored, so the notebook used to rebuild it up there with
@@ -85,6 +90,13 @@ JOBS = {
                     "slug": "lilly-speech-half2", "title": "Lilly speech half2",
                     "needs_weights": False, "needs_corpus": False,
                     "kernel_sources": ["lilly-speech"]},
+    # Data prep, not a training pass: it runs the detector over photographs and
+    # returns crops. It never loads lilly.pth and never reaches the crop gate,
+    # so the pass-11 refusal below does not apply to it.
+    "ocr-crops":   {"notebook": "Lilly_OCR_Crops_Kaggle.ipynb",
+                    "slug": "lilly-ocr-crops", "title": "Lilly ocr crops",
+                    "needs_weights": False, "needs_corpus": False,
+                    "needs_ocr_photos": True},
     "ocr":         {"notebook": "Lilly_OCR_Kaggle.ipynb",
                     "slug": "lilly-ocr", "title": "Lilly ocr",
                     "needs_weights": False, "needs_corpus": False,
@@ -137,6 +149,36 @@ def push_weights(user: str, weights=WEIGHTS, name="lilly-translate-base") -> str
         return slug
     print(f"uploading {sum(f.stat().st_size for f in stage.iterdir()) / 1048576:.0f} MB "
           f"to {slug} — this is the slow part, once")
+    run(KAGGLE, "datasets", "create", "-p", stage, "-r", "zip")
+    wait_until_ready(slug)
+    return slug
+
+
+def push_ocr_photos(user: str) -> str:
+    """The photographs to cut crops from, as a dataset the notebook can attach."""
+    slug = f"{user}/lilly-ocr-photos"
+    stage = STAGING / "ocr-photos"
+    stage.mkdir(parents=True, exist_ok=True)
+    # Symlinks in the source are resolved: Kaggle uploads bytes, and a dataset
+    # of dangling links is a dataset of nothing.
+    n = 0
+    for f in sorted(OCR_PHOTOS.glob("*.jpg")):
+        target = stage / f.name
+        if not target.exists():
+            target.write_bytes(f.resolve().read_bytes())
+        n += 1
+    (stage / "dataset-metadata.json").write_text(json.dumps({
+        "title": "Lilly ocr photos", "id": slug,
+        "licenses": [{"name": "other"}]}, indent=1))
+    print(f"{n} photographs staged")
+
+    existing = subprocess.run([KAGGLE, "datasets", "status", slug],
+                              text=True, capture_output=True)
+    if "ready" in existing.stdout.lower():
+        print(f"dataset already there: {slug}")
+        return slug
+    mb = sum(f.stat().st_size for f in stage.iterdir()) / 1048576
+    print(f"uploading {mb:.0f} MB to {slug} — the slow part, once")
     run(KAGGLE, "datasets", "create", "-p", stage, "-r", "zip")
     wait_until_ready(slug)
     return slug
@@ -577,6 +619,9 @@ def main() -> int:
         print(f"\nfetched to {out}")
         if args.job in ("speech", "speech-half2"):
             print("  python3 scripts/install_listen.py")
+        elif args.job == "ocr-crops":
+            print("  unzip lilly-crops.zip into data/ocr/crops2/, then:")
+            print("  python3 data/scripts/label_crops.py sheets --crops data/ocr/crops2")
         elif args.job == "ocr":
             print("  unzip lilly-read.zip into models/lilly/read/")
         else:
@@ -619,6 +664,13 @@ def main() -> int:
             user, weights, job.get("weights_slug", "lilly-translate-base")))
     if job["needs_corpus"]:
         datasets.append(push_corpus(user))
+    if job.get("needs_ocr_photos"):
+        if not OCR_PHOTOS.is_dir():
+            print(f"no photographs at {OCR_PHOTOS} — build it by filtering the "
+                  f"harvest against data/ocr/real-photos/truth.json first",
+                  file=sys.stderr)
+            return 1
+        datasets.append(push_ocr_photos(user))
     if job.get("needs_read_pass1"):
         datasets.append(push_read_pass1(user))
     if job.get("needs_ocr_crops"):
