@@ -42,6 +42,7 @@ WEIGHTS = REPO_ROOT / "models" / "lilly" / "translate"
 WEIGHTS_EN_BS = REPO_ROOT / "models" / "lilly" / "translate-en-bs"
 READ_PASS1 = REPO_ROOT / "models" / "lilly" / "read" / "lilly.pth"
 OCR_CROPS = REPO_ROOT / "data" / "ocr" / "crops"
+OCR_CROPS2 = REPO_ROOT / "data" / "ocr" / "crops2"
 # Photographs to cut new crops from, with the 40 scored ones already removed.
 # Built by filtering harvested/ against real-photos/truth.json; the notebook
 # checks the same thing again on arrival, because a filter applied in one
@@ -311,6 +312,10 @@ def push_read_pass1(user: str) -> str:
 def push_ocr_crops(user: str) -> str:
     """Hand-labelled real crop PNGs. They are not in git; the notebook copies them.
 
+    crops/*.png → zip root (as before)
+    crops2/*.png → zip under crops2/ prefix so the notebook can populate
+                   data/ocr/crops2/ and call prepare_ocr_data.py for both sets.
+
     One zip at the dataset root (same trap as pass-1: a nested `crops/` folder
     packed with `-r zip` becomes `crops.zip` and cell 5b never sees a PNG).
     """
@@ -319,6 +324,7 @@ def push_ocr_crops(user: str) -> str:
     slug = f"{user}/lilly-ocr-crops"
     labels = OCR_CROPS / "labels-human.tsv"
     pngs = sorted(OCR_CROPS.glob("*.png"))
+    pngs2 = sorted(OCR_CROPS2.glob("*.png")) if OCR_CROPS2.is_dir() else []
     if not labels.is_file():
         raise SystemExit(f"no real-crop labels at {labels}")
     if len(pngs) < 500:
@@ -334,6 +340,11 @@ def push_ocr_crops(user: str) -> str:
         zf.write(labels, "labels-human.tsv")
         for png in pngs:
             zf.write(png, png.name)
+        # crops2 PNGs go under a crops2/ prefix so the notebook knows which
+        # directory to copy them into for the second prepare_ocr_data.py call.
+        for png in pngs2:
+            zf.write(png, f"crops2/{png.name}")
+    total_pngs = len(pngs) + len(pngs2)
     digest = hashlib.md5(zip_path.read_bytes()).hexdigest()
     (stage / "dataset-metadata.json").write_text(json.dumps({
         "title": "Lilly OCR real crops", "id": slug,
@@ -343,15 +354,16 @@ def push_ocr_crops(user: str) -> str:
     state = subprocess.run([KAGGLE, "datasets", "status", slug],
                            text=True, capture_output=True).stdout.lower()
     if "ready" in state and marker.exists() and marker.read_text().strip() == digest:
-        print(f"real crops already there: {slug} ({len(pngs)} pngs, md5 {digest[:8]})")
+        print(f"real crops already there: {slug} ({total_pngs} pngs "
+              f"[{len(pngs)} crops + {len(pngs2)} crops2], md5 {digest[:8]})")
         return slug
     mb = zip_path.stat().st_size / 1048576
     if "ready" in state:
         print(f"real crops changed — pushing a new version of {slug} ({mb:.0f} MB)")
         run(KAGGLE, "datasets", "version", "-p", stage, "-r", "zip",
-            "-m", f"crops.zip md5 {digest} n={len(pngs)}")
+            "-m", f"crops.zip md5 {digest} n={total_pngs}")
     else:
-        print(f"uploading {mb:.0f} MB real crops ({len(pngs)} pngs) to {slug}")
+        print(f"uploading {mb:.0f} MB real crops ({total_pngs} pngs) to {slug}")
         run(KAGGLE, "datasets", "create", "-p", stage, "-r", "zip")
     wait_until_ready(slug)
     marker.write_text(digest)
@@ -635,7 +647,7 @@ def main() -> int:
     run(sys.executable, str(REPO_ROOT / "scripts" / "preflight_kaggle.py"))
     if args.job == "ocr":
         ocr_nb = (REPO_ROOT / "training" / job["notebook"]).read_text(encoding="utf-8")
-        if "heavy-pass11" in ocr_nb:
+        if "heavy-pass11" in ocr_nb and "heavy-pass12" not in ocr_nb:
             raise SystemExit(
                 "pass-11 already refused the crop gate "
                 "(human stage: real words 42.4%→41.7%, letters 64%→60%). "

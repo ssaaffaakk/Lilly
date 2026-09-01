@@ -191,7 +191,7 @@ def save_weights(model, path: Path) -> None:
     torch.save({f"module.{k}": v for k, v in model.state_dict().items()}, path)
 
 
-def prepare(image_path: Path) -> torch.Tensor:
+def prepare(image_path: Path, augment: bool = False) -> torch.Tensor:
     """What the app does to a crop before reading it — grayscale, 64 tall, scaled
     to [-1, 1]. Padding happens per batch, not here."""
     from torchvision import transforms
@@ -199,14 +199,29 @@ def prepare(image_path: Path) -> torch.Tensor:
     ratio = img.width / max(img.height, 1)
     width = min(max(int(IMG_HEIGHT * ratio), 8), MAX_WIDTH)
     img = img.resize((width, IMG_HEIGHT), Image.BICUBIC)
+    if augment:
+        # Pass-12: teach the reader to handle real-world variation.
+        # Applied only to real human crops (stage 2), never to synthetic plates or
+        # validation. fill=127 is mid-grey — the boundary colour after a warp.
+        aug = transforms.Compose([
+            transforms.RandomApply(
+                [transforms.RandomRotation(3, fill=127)], p=0.5),
+            transforms.RandomApply(
+                [transforms.RandomPerspective(distortion_scale=0.15, fill=127)], p=0.4),
+            transforms.ColorJitter(brightness=0.3, contrast=0.3),
+            transforms.RandomApply(
+                [transforms.GaussianBlur(kernel_size=3)], p=0.3),
+        ])
+        img = aug(img)
     return transforms.ToTensor()(img).sub_(0.5).div_(0.5)
 
 
 class Crops(Dataset):
     """A folder of word images plus a gt.txt of "image<TAB>text"."""
 
-    def __init__(self, folder: Path, limit=None):
+    def __init__(self, folder: Path, limit=None, augment: bool = False):
         self.folder = folder
+        self.augment = augment
         self.rows = []
         gt = folder / "gt.txt"
         if gt.exists():
@@ -231,13 +246,14 @@ class Crops(Dataset):
 
     def __getitem__(self, idx):
         name, text = self.rows[idx]
-        return prepare(self.folder / name), text
+        return prepare(self.folder / name, self.augment), text
 
     def subset(self, real: bool):
         """Real crops are every filename that is not syn*. Pass-5 was refused
         on a pooled valid set that is mostly synthetic — the easy half."""
         other = Crops.__new__(Crops)
         other.folder = self.folder
+        other.augment = False  # validation never augmented
         if real:
             other.rows = [(n, t) for n, t in self.rows if not n.startswith("syn")]
         else:
@@ -354,6 +370,9 @@ def main() -> int:
                          "to continue a previous fine-tune.")
     ap.add_argument("--limit", type=int, default=None)
     ap.add_argument("--quick-test", action="store_true")
+    ap.add_argument("--augment", action="store_true",
+                    help="apply random perspective/brightness/blur during training "
+                         "(pass-12: stage-2 real crops only)")
     ap.add_argument("--grad-clip", type=float, default=5.0,
                     help="max gradient norm (default 5; pass-7 uses 1)")
     ap.add_argument("--warmup-frac", type=float, default=0.0,
@@ -404,7 +423,7 @@ def main() -> int:
     model = model.to(device).train()
     print(f"device: {device}  |  vocabulary: {len(converter.character)} classes")
 
-    train = Crops(train_dir, args.limit)
+    train = Crops(train_dir, args.limit, augment=args.augment)
     # Full valid, not a 500-row cap: that cap, plus synthetic rows landing
     # first, is how a photograph-aimed run was judged on the easy half.
     valid = Crops(valid_dir, args.limit)

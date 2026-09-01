@@ -141,8 +141,8 @@ def check_ocr(text: str) -> None:
         fail("OCR still sorts plates by diacritic count into train — pass-9 spent letters that way")
     if "mixed_lines = human * REAL_REPEAT + other" in text:
         fail("OCR still adds plates to train — pass-11 trains one part then the other")
-    if "heavy-pass11" not in text:
-        fail("OCR notebook still labelled an older pass (want heavy-pass11)")
+    if "heavy-pass12" not in text:
+        fail("OCR notebook still labelled an older pass (want heavy-pass12)")
     if "pass-10 already refused on this 1,294-crop set" in text:
         fail("OCR notebook still SystemExits pass-10 — pass-11 is two sequential trains")
     if 'LILLY_RUN_ID"] = "heavy-pass10"' in text:
