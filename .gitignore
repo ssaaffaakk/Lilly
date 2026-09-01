@@ -88,6 +88,11 @@ data/signs/.osm-harvest.progress.json
 # Secrets
 .env
 .agents/
+# Named in the project rules beside .env and tokens. It normally lives in
+# ~/.kaggle/ and never inside the repo, but a copy dropped here to debug a
+# launch would be a live API credential in a public repository.
+kaggle.json
+**/kaggle.json
 
 # Legacy root log names (migrated to logs/<category>/ — keep ignored if recreated)
 training.log
