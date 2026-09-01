@@ -1,0 +1,18 @@
+---
+description: Mapillary OCR crops — what is usable and how to train on them
+alwaysApply: true
+---
+
+# Mapillary OCR train set (1 Sep 2026)
+
+20,240 Mapillary photos are not a train set. After Cyrillic-city drop, dashcam OSD, short pul crops, and conf < 0.85, **915** rows remain.
+
+- Keep list: `data/ocr/crops-kaggle/labels-train.tsv`
+- Images + `gt.txt`: `data/ocr/mapillary-train/`
+- Filter (quarantine, do not delete): `python3 data/scripts/filter_mapillary_train.py --crops data/ocr/crops-kaggle --write-train-dir data/ocr/mapillary-train`
+- Train without touching the shared split: `python3 training/train_ocr.py --train-dir data/ocr/mapillary-train --weights models/lilly/read/lilly.pth`
+- Valid stays `data/ocr/valid` so the crop gate still scores the human crops, not EasyOCR vs itself
+
+Do not copy `mly_*` into `data/ocr/train` or `data/ocr/valid`. Do not mix with sign-letter plates in one `train_ocr`. Do not relaunch pass-8/9/10/11. Do not dump 20,240 photos or 5,988 unfiltered Latin rows.
+
+Product bar: a folded reading that translates is enough (`kuca` → House). Hats falling off are not a drop reason for this set. The crop gate letter column is unchanged and can still refuse the run.
