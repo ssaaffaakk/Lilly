@@ -647,11 +647,16 @@ def main() -> int:
     run(sys.executable, str(REPO_ROOT / "scripts" / "preflight_kaggle.py"))
     if args.job == "ocr":
         ocr_nb = (REPO_ROOT / "training" / job["notebook"]).read_text(encoding="utf-8")
-        if "heavy-pass11" in ocr_nb and "heavy-pass12" not in ocr_nb:
+        if "heavy-pass11" in ocr_nb and "heavy-pass12" not in ocr_nb and "heavy-pass13" not in ocr_nb:
             raise SystemExit(
                 "pass-11 already refused the crop gate "
                 "(human stage: real words 42.4%→41.7%, letters 64%→60%). "
                 "Do not relaunch. See training/RESULTS-ocr-pass11.md")
+        if "heavy-pass12" in ocr_nb and "heavy-pass13" not in ocr_nb:
+            raise SystemExit(
+                "pass-12 already refused the crop gate "
+                "(stage-2 augment hurt: real words 43.2%→41.7%). "
+                "Do not relaunch. See training/RESULTS-ocr-pass12.md")
 
     datasets = []
     if job["needs_weights"]:

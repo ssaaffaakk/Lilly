@@ -119,8 +119,8 @@ def check_ocr(text: str) -> None:
         fail("OCR notebook missing GPU training smoke (--quick-test) before long run")
     if '"--epochs", "5"' in text:
         fail("OCR must not 5-epoch human-only (pass-10 overfit 41.7%→39.4%)")
-    if '"--epochs", "2"' not in text or '"--epochs", "3"' not in text:
-        fail("OCR pass-11 must train plates 2 epochs then human 3 epochs")
+    if '"--epochs", "2"' not in text or '"--epochs", "1"' not in text:
+        fail("OCR pass-13 must train plates 2 epochs then human 1 epoch")
     if text.count("training/train_ocr.py") < 3:
         fail("OCR pass-11 needs quick-test + plates stage + human stage")
     if "--no-install" not in text or "--checkpoint" not in text:
@@ -141,8 +141,8 @@ def check_ocr(text: str) -> None:
         fail("OCR still sorts plates by diacritic count into train — pass-9 spent letters that way")
     if "mixed_lines = human * REAL_REPEAT + other" in text:
         fail("OCR still adds plates to train — pass-11 trains one part then the other")
-    if "heavy-pass12" not in text:
-        fail("OCR notebook still labelled an older pass (want heavy-pass12)")
+    if "heavy-pass13" not in text:
+        fail("OCR notebook still labelled an older pass (want heavy-pass13)")
     if "pass-10 already refused on this 1,294-crop set" in text:
         fail("OCR notebook still SystemExits pass-10 — pass-11 is two sequential trains")
     if 'LILLY_RUN_ID"] = "heavy-pass10"' in text:
