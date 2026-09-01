@@ -87,7 +87,7 @@ log("setup ok")
 '''
 
 FIND_PHOTOS = '''\
-# 2. Locate the photos in the attached dataset
+# 2. Locate the photos, and drop the ones whose signage is Cyrillic
 INPUT = Path("/kaggle/input")
 assert INPUT.exists(), "No /kaggle/input. Attach the lilly-mapillary-photos dataset."
 
@@ -104,11 +104,50 @@ if not photos:
             zf.extractall(unpacked)
     photos = sorted(unpacked.rglob("mly_*.jpg"))
 
-log("%d photos found" % len(photos))
+log("%d photos in the dataset" % len(photos))
+
+# EasyOCR's latin_g2 recogniser cannot emit Cyrillic at all, so a Cyrillic
+# sign does not come back unread — it comes back transcribed into Latin
+# lookalikes at ordinary confidence, and that would enter training as ground
+# truth. v1 does not read Cyrillic, so these cities are dropped rather than
+# mislabelled.
+CYRILLIC_CITIES = {"beograd", "novi_sad", "nis", "banjaluka"}
+
+credits = list(INPUT.rglob("CREDITS.tsv"))
+if not credits:
+    raise SystemExit("No CREDITS.tsv in the dataset — cannot tell which city a photo came from.")
+
+city_of = {}
+with credits[0].open(encoding="utf-8") as fh:
+    header = fh.readline().rstrip("\\n").split("\\t")
+    icity = header.index("city")
+    ifile = header.index("file")
+    for row in fh:
+        parts = row.rstrip("\\n").split("\\t")
+        if len(parts) > max(icity, ifile):
+            city_of[Path(parts[ifile]).name] = parts[icity]
+
+kept, dropped = [], {}
+for photo in photos:
+    city = city_of.get(photo.name)
+    if city in CYRILLIC_CITIES:
+        dropped[city] = dropped.get(city, 0) + 1
+        continue
+    kept.append(photo)
+
+for city in sorted(dropped):
+    log("  dropped %d photos from %s (Cyrillic signage)" % (dropped[city], city))
+
+unknown = sum(1 for p in photos if p.name not in city_of)
+if unknown:
+    log("  %d photos absent from CREDITS.tsv, kept" % unknown)
+
+photos = kept
+log("%d photos to crop" % len(photos))
+
 if len(photos) < 1000:
     raise SystemExit(
-        "Only %d photos. Expected ~20000. Attach afaksrmeli/lilly-mapillary-photos."
-        % len(photos)
+        "Only %d photos after filtering. Expected ~13000." % len(photos)
     )
 '''
 
@@ -129,7 +168,10 @@ log("loading EasyOCR on GPU")
 reader = easyocr.Reader(["bs", "en"], gpu=True)
 log("reader ready")
 
-CROPS_DIR = WORKING / "crops-mapillary"
+# Crops are built in scratch, not in /kaggle/working. Tens of thousands of
+# loose PNGs in the Output directory is its own failure mode; only the zip
+# belongs there.
+CROPS_DIR = Path("/kaggle/temp/crops-mapillary")
 CROPS_DIR.mkdir(parents=True, exist_ok=True)
 LABELS = CROPS_DIR / "labels.tsv"
 
@@ -147,6 +189,16 @@ with LABELS.open("w", encoding="utf-8") as out:
         try:
             image = Image.open(photo).convert("RGB")
             regions = reader.readtext(str(photo), detail=1)
+        except (torch.cuda.OutOfMemoryError, MemoryError):
+            # The GPU dying is not a corrupt jpg. Swallowing it here would let
+            # the run ship a zip built from however much finished first.
+            raise
+        except RuntimeError as exc:
+            if "CUDA" in str(exc) or "cuDNN" in str(exc):
+                raise
+            n_failed += 1
+            log("  SKIP %s: %s" % (photo.name, exc))
+            continue
         except Exception as exc:
             n_failed += 1
             log("  SKIP %s: %s" % (photo.name, exc))
@@ -158,8 +210,14 @@ with LABELS.open("w", encoding="utf-8") as out:
                 continue
             xs = [int(p[0]) for p in box]
             ys = [int(p[1]) for p in box]
+            # Clamp both ends: a slanted box can report corners outside the
+            # frame, and PIL pads out-of-bounds crops with black instead of
+            # refusing them.
             x0, y0 = max(min(xs), 0), max(min(ys), 0)
-            x1, y1 = max(xs), max(ys)
+            x1 = min(max(xs), image.width)
+            y1 = min(max(ys), image.height)
+            if x1 <= x0 or y1 <= y0:
+                continue
             crop = image.crop((x0, y0, x1, y1))
             if crop.width < MIN_PX or crop.height < MIN_PX:
                 continue
@@ -177,6 +235,12 @@ with LABELS.open("w", encoding="utf-8") as out:
 
 log("%d crops from %d photos (%d unreadable)" % (n_crops, len(photos), n_failed))
 
+# A run that could not open one photo in twenty was not measuring the corpus
+# it claims to have measured.
+if n_failed > 0.05 * len(photos):
+    raise SystemExit("%d of %d photos failed to read (>5%%)."
+                     % (n_failed, len(photos)))
+
 # A thin harvest is a failure, not a result to zip up.
 if n_crops < 5000:
     raise SystemExit("Only %d crops from %d photos. Expected >= 5000."
@@ -190,12 +254,17 @@ PACK = '''\
 archive = shutil.make_archive(
     base_name=str(WORKING / "crops-mapillary"),
     format="zip",
-    root_dir=str(WORKING),
-    base_dir="crops-mapillary",
+    root_dir=str(CROPS_DIR.parent),
+    base_dir=CROPS_DIR.name,
 )
 
+# Trust the artifact, not the exit code.
 size_mb = Path(archive).stat().st_size / 1048576
-log("%s: %.0f MB" % (archive, size_mb))
+with zipfile.ZipFile(archive) as zf:
+    packed = sum(1 for n in zf.namelist() if n.endswith(".png"))
+if packed != n_crops:
+    raise SystemExit("Packed %d PNGs but cropped %d." % (packed, n_crops))
+log("%s: %.0f MB, %d crops verified inside" % (archive, size_mb, packed))
 log("CROPS: %d" % n_crops)
 log("PHOTOS: %d" % len(photos))
 log("done")
