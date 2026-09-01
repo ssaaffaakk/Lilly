@@ -1,72 +1,65 @@
-# Mapillary pseudo-labels are not training data
+# What the Mapillary pseudo-labels are worth
 
-Measured 2026-09-01, on `data/ocr/crops-kaggle/labels.tsv` (5,988 crops from
-20,240 Mapillary photos, cropped on a Kaggle T4).
+Measured 2026-09-01 on `data/ocr/crops-kaggle/labels.tsv` — 5,988 crops from
+20,240 Mapillary photos, cropped on a Kaggle T4.
 
-## How it was measured
+Two blind samples were read: crops were rendered to a contact sheet with no
+labels visible, transcribed, and only then compared against what EasyOCR had
+written.
 
-24 crops were sampled at random from the rows carrying at least three
-alphabetic characters — i.e. biased *towards* real signage and away from the
-digit-only junk, so this is the optimistic end of the corpus.
+## The answer depends entirely on confidence
 
-They were rendered to a contact sheet with no labels visible, transcribed
-blind, and only then compared against what EasyOCR had written. Reproduce
-with the snippet in the git history of this file's commit, seed 1234.
-
-## Result
-
-**7 of 24 pseudo-labels were exactly right — 29%.**
-
-The sample is small, so read that as "roughly a third", not as 29.0%. The
-diacritic result below is what actually settles the question.
-
-| crop | EasyOCR wrote | actually reads | conf |
+| sample | n | exact | ignoring diacritics |
 |---|---|---|---|
-| 12 | `KNJIZARA SVJETLOST` | KNJI**Ž**ARA SVJETLOST | 0.75 |
-| 13 | `UKRASNE KOPCE` | UKRASNE KOP**Č**E | 0.78 |
-| 16 | `BUREGDZINICA` | BUREG**DŽ**INICA | 0.94 |
-| 1 | `fecan` | jedan | 0.50 |
-| 5 | `Sabla` | Pablo | 0.53 |
-| 14 | `CA;INO` | CASINO | 0.85 |
-| 20 | `Anancial` | Financial | 0.82 |
-| 18 | `Znoš R` | Znaš li | 0.49 |
+| any confidence, ≥3 letters | 24 | 29% | 54% |
+| **conf ≥ 0.85, no dashcam OSD** | **30** | **77%** | **93%** |
 
-## Why this closes the question
+At 0.85 and above the labels are good. Two errors in thirty, both on crops
+whose edge was clipped: `Cen` read as `Cer`, `Cash` as `cast`.
 
-**Every Bosnian word in the sample lost its diacritic.** Three crops out of
-three: Ž → Z, Č → C, DŽ → DZ. High confidence on all of them — 0.94 on
-BUREGDŽINICA.
+Diacritics survive at that threshold. `ODJEĆE`, `BUREGDŽINICA`, `MUŠKA`,
+`Pošta` all came back correct.
 
-That explains the corpus-wide count directly. Only 62 of 5,988 rows (1%)
-contain a diacritic. In the blind sample the true rate was 4 in 24 — about
-17%. The reader is not failing to see the signs; it is reading them and
-dropping the diacritic on the way out.
+### Correcting an earlier reading of this
 
-So fine-tuning on these labels would train the reader to strip exactly the
-characters that distinguish Bosnian from its own errors. It would make the
-measured failure worse, not better, and it would do so while reporting a
-falling loss.
+An earlier version of this file concluded that the reader "strips every
+diacritic" and that the corpus was unusable. That was drawn from the
+first sample only, which spanned all confidences, and it was wrong. Ž → Z and
+Č → C do happen, but in the low-confidence tail, not at the threshold anyone
+would actually train on. The 1%-of-rows-carry-a-diacritic figure counts the
+whole corpus, most of which is junk, and does not describe the usable part.
 
-## Second problem: a third of it is not signage
+## How much usable data there is
 
-8 of the 24 were dashcam on-screen display, matching the 32% found by pattern
-match across the whole corpus:
+Rows with at least three letters, excluding dashcam on-screen display:
 
-`DR750S-2CH/FHD-FHD` · `MIC OFF/NV` · `HDR` · `047km/h` · `056km/h` · `MIC`
+| threshold | crops |
+|---|---|
+| ≥ 0.95 | 618 |
+| ≥ 0.90 | 795 |
+| ≥ 0.85 | 967 |
+| ≥ 0.80 | 1,109 |
+| ≥ 0.75 | 1,253 |
+| ≥ 0.70 | 1,438 |
 
-Mapillary carries dashcam frames with burned-in overlays. The crop pass reads
-them as text at high confidence. They are a different font, a different
-vocabulary and a different domain from street signage.
+Accuracy was measured at 0.85. The bands below it are unmeasured and should
+not be assumed to hold 93%.
 
-## What the photos are still good for
+## The part that is genuinely junk
 
-The 20,240 photos and 13,144 crops are real, kept, and credited
-(CC BY-SA 4.0, `data/ocr/real-photos/mapillary/CREDITS.tsv`). What is missing
-is a label source that is not the model under training.
+A third of the raw corpus is dashcam on-screen display, not signage.
+Mapillary carries dashcam frames with burned-in overlays and the crop pass
+reads them at high confidence: `DR750S-2CH/FHD-FHD`, `MIC OFF/NV`, `HDR`,
+`047km/h`. Different font, different vocabulary, different domain. These are
+excluded by pattern, not by confidence — confidence does not catch them.
 
-`data/signs/sign-text.tsv` holds 9,506 real sign strings from OSM with
-coordinates. Matching a photo's coordinates against a sign's would label the
-crop from OSM rather than from EasyOCR, which breaks the circularity. That is
-the path worth measuring next.
+Beograd and Banja Luka were dropped earlier for Cyrillic signage: 7,156 of
+the original 13,144 crops, quarantined in `crops-kaggle/dropped-cyrillic/`
+rather than deleted.
 
-Not the crops themselves. They are already cut and already kept.
+## Where that leaves training
+
+Roughly 1,000 new crops at a measured 93%, against the ~1,400 human crops
+that passes 12 and 13 both failed on. Whether ~1,000 more is enough to move
+the crop gate is not known and should not be assumed — the gate is the thing
+that decides, and it decides after the run, not before.
