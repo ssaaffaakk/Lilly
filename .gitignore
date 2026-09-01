@@ -56,12 +56,6 @@ data/ocr/real-photos/commons-cats/*
 data/ocr/real-photos/commons/*
 !data/ocr/real-photos/commons/CREDITS.txt
 !data/ocr/HARVEST-MANIFEST.tsv
-# Filtered Mapillary train list (EasyOCR pseudo-labels, not human). The PNGs
-# stay local; lose this TSV and the 915-row keep set has to be rebuilt from
-# the pre-filter backup and the script.
-!data/ocr/crops-kaggle/
-data/ocr/crops-kaggle/*
-!data/ocr/crops-kaggle/labels-train.tsv
 !data/signs/
 data/signs/*
 !data/signs/sign-text.tsv

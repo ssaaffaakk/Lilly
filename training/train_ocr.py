@@ -388,24 +388,16 @@ def main() -> int:
     ap.add_argument("--no-install", action="store_true",
                     help="this is not the last stage: score, write --checkpoint, "
                          "do not copy to lilly.pth, do not apply the install gate")
-    ap.add_argument("--train-dir", type=Path, default=None,
-                    help="folder with gt.txt (default: data/ocr/train). "
-                         "data/ocr/mapillary-train is the filtered Mapillary "
-                         "set; do not copy those rows into data/ocr/train — "
-                         "mly_* would look like human crops to the gate.")
     args = ap.parse_args()
     if args.no_install and not args.checkpoint:
         raise SystemExit("--no-install needs --checkpoint so the next stage has weights")
     if args.no_install and args.keep_trained:
         raise SystemExit("--no-install cannot use --keep-trained (that name looks shippable)")
 
-    train_dir = args.train_dir or (OCR_DATA / "train")
-    valid_dir = OCR_DATA / "valid"
+    train_dir, valid_dir = OCR_DATA / "train", OCR_DATA / "valid"
     if not (train_dir / "gt.txt").exists():
         print(f"no training images at {train_dir} — run "
-              f"data/scripts/generate_ocr_data.py first, or "
-              f"data/scripts/filter_mapillary_train.py --write-train-dir",
-              file=sys.stderr)
+              f"data/scripts/generate_ocr_data.py first", file=sys.stderr)
         return 1
 
     if args.quick_test:
@@ -437,7 +429,7 @@ def main() -> int:
     valid = Crops(valid_dir, args.limit)
     valid_real = valid.subset(real=True)
     valid_syn = valid.subset(real=False)
-    print(f"training crops: {len(train):,} from {train_dir}  |  held out: {len(valid):,} "
+    print(f"training crops: {len(train):,}  |  held out: {len(valid):,} "
           f"({len(valid_real)} real, {len(valid_syn)} synthetic)")
     if not train:
         print("nothing to train on", file=sys.stderr)

@@ -59,18 +59,7 @@ rather than deleted.
 
 ## Where that leaves training
 
-The keep list is 915 rows, written 2026-09-01 by
-`data/scripts/filter_mapillary_train.py` (conf ≥ 0.85, ≥3 letters, no dashcam
-OSD). Quarantine folders sit beside the keep PNGs; nothing was deleted.
-Train images are in `data/ocr/mapillary-train/`, loaded with
-`train_ocr.py --train-dir` so they never enter `data/ocr/train` or
-`data/ocr/valid`.
-
-The product bar for this set is meaning through the translator, not surviving
-hats: `kuca` → House is enough. Rows that EasyOCR folded (`kuća` labelled
-`kuca`) stay in. The crop gate still counts čćđšž and can refuse a run; that
-is the notebook, not a reason to drop the row.
-
-Do not mix these 915 with sign-letter plates in one `train_ocr`. Do not
-relaunch pass-8/9/10/11. Whether 915 shop-sign crops move the photograph
-score is not known until a run returns.
+Roughly 1,000 new crops at a measured 93%, against the ~1,400 human crops
+that passes 12 and 13 both failed on. Whether ~1,000 more is enough to move
+the crop gate is not known and should not be assumed — the gate is the thing
+that decides, and it decides after the run, not before.
