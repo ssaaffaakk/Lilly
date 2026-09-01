@@ -4,3 +4,5 @@ recorded_utc	source	script	count	credits_path	note
 2026-08-29T22:45:36Z	Synthetic OCR crops	generate_ocr_data.py	50000	data/ocr/synthetic/	labels by construction; đ oversampled; splits not built on Mac
 2026-08-30T17:21:49Z	Wikimedia Commons photos	harvest_sign_photos.py	486	data/ocr/real-photos/harvested/CREDITS.tsv	text-on-sign filter; scored set excluded
 2026-08-30T17:24:22Z	Photographic synthetic	generate_ocr_photos.py	20000	data/ocr/train/	degradation-matched to real failure modes
+2026-09-01T20:30:00Z	Mapillary street photos (Kaggle GPU crop)	Lilly_OCR_Crop_Kaggle.ipynb	13144	data/ocr/real-photos/mapillary/CREDITS.tsv	CC BY-SA 4.0; 20240 photos in; labels are EasyOCR pseudo-labels, NOT human
+2026-09-01T20:35:00Z	Mapillary crops after Cyrillic filter	filter_crops_by_city.py	5988	data/ocr/crops-kaggle/labels.tsv	beograd+banjaluka dropped (7156); 32% of remainder is dashcam OSD; only 62 rows carry diacritics
