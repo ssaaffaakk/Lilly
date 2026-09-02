@@ -237,6 +237,23 @@ def build():
         raise SystemExit("the photograph refusal is still in cell 6b")
     cells[13]["source"] = gate.splitlines(keepends=True)
 
+    # Score on the clean human crops on the GPU rather than on a laptop
+    # afterwards. The cell body lives in training/cells/ as a real .py file:
+    # embedding it as a string here would need three levels of escaping, and
+    # that is exactly how four earlier runs died on a newline inside a string
+    # literal.
+    body = (REPO_ROOT / "training" / "cells" / "clean_crop_eval.py").read_text(
+        encoding="utf-8")
+    ast.parse(body)
+    cells.insert(13, {
+        "cell_type": "code",
+        "execution_count": None,
+        "id": "cell-clean-crops",
+        "metadata": {},
+        "outputs": [],
+        "source": body.splitlines(keepends=True),
+    })
+
     for cell in cells:
         if cell["cell_type"] == "code":
             ast.parse("".join(cell["source"]))
