@@ -48,3 +48,47 @@ boards, plaques and street signs; the Mapillary crops are shop fascias.
 
 The next lever, if there is one, is a label source that is not the model:
 `data/signs/sign-text.tsv` holds 9,506 OSM sign strings with coordinates.
+
+## The actual mechanism, from the log
+
+The "circularity" reading above was a hypothesis. The log gives the specific
+version of it.
+
+**The loss never converges.** 750 steps, oscillating 0.5–2.4 with no trend:
+
+```
+ 50: 1.47   300: 2.14   550: 0.90
+100: 2.22   350: 2.01   600: 1.33
+150: 2.39   400: 1.21   650: 0.49
+200: 1.36   450: 0.60   700: 1.49
+250: 0.81   500: 1.33   750: 0.83
+```
+
+**Two held-out diacritic crops broke, none were fixed:**
+
+```
+PUTNIČKI      before: PUTNIČKI       after: PUTNICKI
+iznad česme   before: iznad časme    after: i/nad jasut
+```
+
+**And the reason is a distribution mismatch, not per-row label error:**
+
+| label source | rows carrying a diacritic |
+|---|---|
+| human gold (`crops/labels-human.tsv`) | 180 / 1,701 = **10.6%** |
+| pass-14 train (915) | 26 / 915 = **2.8%** |
+| pass-15 train (5,988) | 62 / 5,988 = **1.0%** |
+
+EasyOCR drops diacritics when it crops, so feeding its output back trains the
+reader on a world where Bosnian letters appear at a tenth of their real rate.
+It learns that they are rare. `PUTNIČKI` → `PUTNICKI` is that lesson applied.
+
+This also explains the dose response exactly: pass-15's set is both sparser
+in diacritics (1.0% vs 2.8%) and larger, so it taught the lesson harder.
+
+Note what this corrects. An earlier note measured diacritics inside the
+conf ≥ 0.85 subset, found them preserved, and concluded the stripping claim
+was wrong. Per-row accuracy in that subset was indeed fine. The operative
+variable was never per-row accuracy — it is the rate across the set, and no
+confidence threshold fixes a distribution that is missing nine tenths of its
+diacritics.
