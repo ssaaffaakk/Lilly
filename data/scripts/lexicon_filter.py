@@ -35,6 +35,15 @@ import unicodedata
 from collections import Counter, defaultdict
 from pathlib import Path
 
+from PIL import Image
+
+# EasyOCR resizes every crop to 64px tall, so a 16px crop is upscaled 4x and
+# an 8px one is mush. The human test set was cut at the same floor after
+# Coca-Cola came back empty from a 22x18 crop; whatever is unfair to score on
+# is not worth training on either.
+MIN_HEIGHT = 16
+MIN_WIDTH = 32
+
 WORD = re.compile(r"[A-Za-zÀ-ÿČčĆćĐđŠšŽž]+")
 DIACRITICS = re.compile("[čćđšžČĆĐŠŽ]")
 
@@ -142,6 +151,8 @@ def main() -> int:
     ap.add_argument("--in", dest="src", type=Path, required=True)
     ap.add_argument("--out", type=Path, required=True)
     ap.add_argument("--repo", type=Path, default=Path("."))
+    ap.add_argument("--min-height", type=int, default=MIN_HEIGHT)
+    ap.add_argument("--min-width", type=int, default=MIN_WIDTH)
     ap.add_argument("--dry-run", action="store_true")
     args = ap.parse_args()
 
@@ -177,8 +188,13 @@ def main() -> int:
         if not known:
             dropped["not-in-lexicon"] += 1
             continue
-        if not (args.src / name).is_file():
+        png = args.src / name
+        if not png.is_file():
             dropped["png-missing"] += 1
+            continue
+        w, h = Image.open(png).size
+        if h < args.min_height or w < args.min_width:
+            dropped["too-small"] += 1
             continue
         total_restored += n
         kept.append((name, fixed))
