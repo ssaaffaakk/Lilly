@@ -135,8 +135,17 @@ TRAIN = '''\
 # --train-dir replaces the training source outright, so the sign-letter
 # plates sitting in data/ocr/train are not read. The plates are still needed:
 # they are the synthetic floor the crop gate measures against.
-# Pass-10 overfit human-only at 5 epochs. 915 is smaller than that set, so
-# this is 2 epochs at the same low LR pass-13 used to continue from shipped.
+#
+# v1 of this pass asked for batch 16 and 2 epochs: 915/16 = 57 steps an epoch,
+# 114 in total, and train_ocr refused at MIN_STEPS=200 — "below this a run has
+# not trained, it has only run". The fix is a smaller batch, not more epochs.
+# batch 8 gives 115 steps an epoch, so 3 epochs clears 200 with room, and each
+# crop is still seen three times rather than the five that overfit pass-10.
+#
+# LR is 3e-6, not the 1e-6 pass-13 used for its human stage. That stage ran
+# thousands of steps; 345 steps at 1e-6 would move the weights so little that
+# the gate would read "words did not rise" and refuse a run that never really
+# happened.
 os.environ["LILLY_RUN_ID"] = "heavy-pass14"
 os.environ["PYTHONUNBUFFERED"] = "1"
 OFF.body["run_id"] = "heavy-pass14"
@@ -146,8 +155,8 @@ TRAINED = Path("models/lilly/read-trained.pth")
 try:
     run("python3", "-u", "training/train_ocr.py",
         "--train-dir", str(MLY_DIR),
-        "--epochs", "2", "--batch-size", "16",
-        "--lr", "1e-6", "--grad-clip", "1.0", "--warmup-frac", "0.05",
+        "--epochs", "3", "--batch-size", "8",
+        "--lr", "3e-6", "--grad-clip", "1.0", "--warmup-frac", "0.1",
         "--weights", str(INIT), "--keep-trained", str(TRAINED))
 except subprocess.CalledProcessError:
     # The crop gate refusing is this cell failing, and that is correct.
