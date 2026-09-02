@@ -37,6 +37,7 @@ import shutil
 import subprocess
 import sys
 import time
+import unicodedata
 from pathlib import Path
 
 # Apple's GPU backend has no CTC loss, which is the loss this model trains with.
@@ -308,10 +309,24 @@ def surviving_diacritics(truth: str, pred: str) -> tuple:
     return right, total
 
 
+def fold_diacritics(text: str) -> str:
+    """Bare-letter form of a word: kuća -> kuca, PUTNIČKI -> PUTNICKI.
+
+    The product bar is meaning through the translator, and `kuca` still
+    translates to House. `exact` below cannot see that: it is a string
+    compare, so a dropped hat costs a whole word and a run that only folded
+    diacritics reads as a run that lost words. This gives the number the
+    product actually cares about, reported beside the strict one.
+    """
+    text = text.replace("đ", "d").replace("Đ", "D")
+    stripped = unicodedata.normalize("NFD", text)
+    return "".join(c for c in stripped if unicodedata.category(c) != "Mn")
+
+
 def accuracy(model, loader, converter, device):
-    """Two numbers: whole words right, and how often a Bosnian letter survives."""
+    """Whole words right, the same ignoring diacritics, and letter survival."""
     model.eval()
-    exact = total = 0
+    exact = folded = total = 0
     dia_right = dia_total = 0
     with torch.no_grad():
         for images, texts in loader:
@@ -319,12 +334,15 @@ def accuracy(model, loader, converter, device):
             for pred, truth in zip(preds, texts):
                 total += 1
                 exact += pred.strip() == truth.strip()
+                folded += (fold_diacritics(pred.strip())
+                           == fold_diacritics(truth.strip()))
                 right, want = surviving_diacritics(truth, pred)
                 dia_right += right
                 dia_total += want
     model.train()
     return (100 * exact / max(total, 1),
-            100 * dia_right / max(dia_total, 1), dia_total)
+            100 * dia_right / max(dia_total, 1), dia_total,
+            100 * folded / max(total, 1))
 
 
 def diacritic_cases(model, crops, converter, device):
@@ -456,16 +474,19 @@ def main() -> int:
     before = score(valid)
     before_real = score(valid_real)
     before_syn = score(valid_syn)
-    print(f"before pooled: {before[0]:.1f}% words, "
+    print(f"before pooled: {before[0]:.1f}% words "
+          f"({before[3]:.1f}% ignoring diacritics), "
           f"{before[1]:.1f}% of {before[2]} Bosnian letters")
     if before_real:
-        print(f"before real:   {before_real[0]:.1f}% words, "
+        print(f"before real:   {before_real[0]:.1f}% words "
+              f"({before_real[3]:.1f}% ignoring diacritics), "
               f"{before_real[1]:.1f}% of {before_real[2]} Bosnian letters "
               f"({len(valid_real)} crops)")
         print_diacritic_cases("before", diacritic_cases(
             model, valid_real, converter, device))
     if before_syn:
-        print(f"before syn:    {before_syn[0]:.1f}% words, "
+        print(f"before syn:    {before_syn[0]:.1f}% words "
+              f"({before_syn[3]:.1f}% ignoring diacritics), "
               f"{before_syn[1]:.1f}% of {before_syn[2]} Bosnian letters "
               f"({len(valid_syn)} crops)")
 
@@ -518,15 +539,18 @@ def main() -> int:
     after = score(valid)
     after_real = score(valid_real)
     after_syn = score(valid_syn)
-    print(f"after pooled: {after[0]:.1f}% words, "
+    print(f"after pooled: {after[0]:.1f}% words "
+          f"({after[3]:.1f}% ignoring diacritics), "
           f"{after[1]:.1f}% of {after[2]} Bosnian letters")
     if after_real:
-        print(f"after real:   {after_real[0]:.1f}% words, "
+        print(f"after real:   {after_real[0]:.1f}% words "
+              f"({after_real[3]:.1f}% ignoring diacritics), "
               f"{after_real[1]:.1f}% of {after_real[2]} Bosnian letters")
         print_diacritic_cases("after", diacritic_cases(
             model, valid_real, converter, device))
     if after_syn:
-        print(f"after syn:    {after_syn[0]:.1f}% words, "
+        print(f"after syn:    {after_syn[0]:.1f}% words "
+              f"({after_syn[3]:.1f}% ignoring diacritics), "
               f"{after_syn[1]:.1f}% of {after_syn[2]} Bosnian letters")
 
     # The gate below decides whether to install. --keep-trained is written only
