@@ -37,6 +37,16 @@ data/ocr/real-photos/*
 !data/ocr/real-photos/scored-sample.txt
 !data/ocr/real-photos/scored-sources.tsv
 !data/ocr/real-photos/EXCLUDE-flat-artwork.txt
+# The second test set (docs/OCR-ROADMAP.md step 2): the pool it is drawn from,
+# the frozen draw, the attribution record and the answer key. The photographs
+# themselves are re-fetched by data/scripts/fetch_test_v2.py.
+!data/ocr/real-photos/test-v2/
+data/ocr/real-photos/test-v2/*
+!data/ocr/real-photos/test-v2/pool.tsv
+!data/ocr/real-photos/test-v2/sample.txt
+!data/ocr/real-photos/test-v2/CREDITS.tsv
+!data/ocr/real-photos/test-v2/fetch-log.tsv
+!data/ocr/real-photos/test-v2/truth-v2.json
 # The provenance of the harvest is the same shape of irreplaceable as the
 # transcriptions, and it was untracked too. CREDITS.tsv is the only mapping
 # from a local filename to the Commons page that licenses it: lose it and 286

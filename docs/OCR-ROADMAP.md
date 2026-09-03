@@ -134,23 +134,40 @@ the weights can arrive there.
 words cannot distinguish anything. Every decision downstream — engine, detector,
 fine-tune — needs this set first.
 
-**What.**
-- Same method as `truth.json`: two transcribers, blind to each other and to the
-  machine, only agreed words in the key, agreement rate recorded.
-- At least **1,500 agreed words across 150 or more photographs** (±2.5 points).
-  More if the owner's domain decision (below) adds shop signage.
-- Domain: what the product reads — Commons photographs of signs, plaques and
-  boards, like the 40. Pools already on the Mac: `fetch_commons_categories.py`
-  (343) and `harvest_sign_photos.py` (486, scored set excluded). Never
-  Mapillary for this: no labels, and the wrong domain unless decision 1 says
-  otherwise.
+**What — pool built and draw frozen 3 Sep 2026; pixels and people still to come.**
+- `training/build_test_v2.py` builds the pool from files in git — every
+  photograph the harvester screened (2,665), minus the 40, minus the 190
+  photographs any labelled crop was cut from, minus drawings and refused
+  licences — and draws **280** by the same filename hash `sample_photos.py`
+  used for the 40. `data/ocr/real-photos/test-v2/pool.tsv` (2,350 eligible,
+  every exclusion named) and `sample.txt` (the draw, frozen) are committed.
+- Not excluded, on purpose: the photographs the harvester dropped for zero or
+  one confident text region — 71% of the pool. A set that kept only what the
+  detector liked would be selected by the detector under test. 25 of the 40
+  were such drops and half of them carried text.
+- On the Mac: `python3 data/scripts/fetch_test_v2.py` fetches the 280 at
+  1280 px (the size the 40 were read at), re-checks licences, writes
+  `CREDITS.tsv` and `fetch-log.tsv`; commit both, not the photographs.
+- Transcription: same method as `truth.json` — two transcribers, blind to
+  each other and to the machine, `legibility: clear` lines only, then
+  `python3 training/build_truth.py --result <pair.json>
+  --out data/ocr/real-photos/test-v2/truth-v2.json`. Agreement rate recorded.
+  Expect roughly 1,500 agreed words over 150+ photographs with text; if it
+  lands short, draw the next in rank with `--count`, never by choosing.
+- Scoring, unchanged code:
+  `python3 training/evaluate_ocr.py --truth data/ocr/real-photos/test-v2/truth-v2.json
+  --photos data/ocr/real-photos/test-v2/photos --sample data/ocr/real-photos/test-v2/sample.txt
+  --cache data/ocr/real-photos/test-v2/reader-output.json --out training/RESULTS-ocr-test-v2.md`
+- Domain: Commons photographs of signs, plaques and boards, like the 40. If
+  the owner's decision 1 adds shop signage, that is a second pool with its
+  own draw, not a change to this one. Never Mapillary for this set.
 - Split by **source photograph**, never by crop or by label text (the 272
   Cyrillic crops come from 37 photographs and five of them hold 61% —
-  `HANDOFF.md`).
-- Freeze the file list in git before anything trains on the remainder. Name:
-  `data/ocr/real-photos/test-v2/`. It is never trained on. Ever.
+  `HANDOFF.md`). The rest of the pool is what a future training set may be
+  built from; `test-v2` is never trained on. Ever.
 
-**Cost.** Mostly human time: two people transcribing ~150 photographs.
+**Cost.** Mostly human time: two people transcribing 280 photographs, many of
+them quick blanks.
 
 ### 3. Detection recall R_d — as pre-registered, never run
 
@@ -247,7 +264,7 @@ not just the totals. A delta inside the interval is written as "no change".
 |---|---|---|
 | 0 freeze | done, 3 Sep 2026 | this commit |
 | 1 bake-off | pre-registered, code ready, **needs the Mac** | `scripts/bakeoff_ocr.py`, PREREGISTRATION "bake-off" |
-| 2 test-v2 | not started | — |
+| 2 test-v2 | pool built, 280 drawn and frozen; **fetch + transcribe on the Mac** | `test-v2/pool.tsv`, `sample.txt`, `fetch_test_v2.py` |
 | 3 R_d | not started | — |
 | 4 labels | blocked on 1–3 | — |
 | 5 Cyrillic | blocked on 1–3 | — |
