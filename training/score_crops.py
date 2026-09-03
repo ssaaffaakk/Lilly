@@ -44,7 +44,7 @@ def wilson(hit: int, n: int, z: float = 1.96) -> tuple:
     p = hit / n
     centre = (p + z * z / (2 * n)) / (1 + z * z / n)
     half = z * ((p * (1 - p) / n + z * z / (4 * n * n)) ** 0.5) / (1 + z * z / n)
-    return (100 * (centre - half), 100 * (centre + half))
+    return (max(0.0, 100 * (centre - half)), min(100.0, 100 * (centre + half)))
 
 
 def load_rows(labels: Path) -> list:
