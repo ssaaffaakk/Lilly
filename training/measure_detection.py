@@ -98,7 +98,17 @@ def main() -> int:
     # loads no model at all. listen found the same defect in two of its scripts,
     # where importing cost 2 GB and a controls-only run could not start.
     claim(1.4, "detector measurement")
-    from app.ocr import load_within_limits, read_regions
+    from app.ocr import load_within_limits, read_regions, reader_identity
+
+    # Two detectors are in the running now (docs/OCR-ROADMAP.md, steps 1 and
+    # 3). The default paths carry the reader's name so PaddleOCR's overlays
+    # cannot land on top of CRAFT's and be counted as the other's.
+    slug = reader_identity().replace(":", "-").replace("+", "_")
+    if args.overlays == ap.get_default("overlays"):
+        args.overlays = args.overlays / slug
+    if args.out == ap.get_default("out"):
+        args.out = args.out.with_name(f"detection-boxes-{slug}.json")
+    print(f"reader: {reader_identity()}")
 
     names = load_sample(args.sample)
     truth = truth_words(args.truth)
@@ -112,7 +122,7 @@ def main() -> int:
         return 1
 
     args.overlays.mkdir(parents=True, exist_ok=True)
-    record = {}
+    record = {"_reader": reader_identity()}
     for i, name in enumerate(names, 1):
         image = load_within_limits(str(args.photos / name))
         regions = read_regions(image, detail=1, paragraph=False)
@@ -133,8 +143,8 @@ def main() -> int:
               f"{len(regions)} boxes  {len(truth.get(name, []))} truth words",
               flush=True)
 
-    boxes = sum(len(v["boxes"]) for v in record.values())
-    words = sum(v["truth_words"] for v in record.values())
+    boxes = sum(len(v["boxes"]) for k, v in record.items() if not k.startswith("_"))
+    words = sum(v["truth_words"] for k, v in record.items() if not k.startswith("_"))
     print(f"\n{len(record)} photographs, {boxes} detected regions, "
           f"{words} words in the answer key.")
     print(f"overlays: {args.overlays}")

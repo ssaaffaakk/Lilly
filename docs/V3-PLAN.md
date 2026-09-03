@@ -1,5 +1,10 @@
 # Lilly v3 — live plan (fail-stop + speech halves + OCR pass-7c)
 
+> **Stale since 3 Sep 2026.** The status table below is from 31 Aug — OCR
+> pass-7c is long finished, and passes 8–19 came and went after it. For the
+> reader, `OCR-ROADMAP.md` is current. Nothing here about speech has been
+> re-checked.
+
 **Last updated:** 31 Aug 2026  
 **North star still:** [`V2-BOUNDARIES.md`](V2-BOUNDARIES.md) (Latin Bosnian, Kaggle not Mac, push everything except secrets)  
 **Notebook law:** [`kaggle-notebooks.md`](kaggle-notebooks.md)  

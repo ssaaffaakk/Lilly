@@ -7,6 +7,22 @@ update the status board at the bottom and push the same day.
 
 Owner: Safak. Decisions marked **owner** are theirs, not an agent's.
 
+## When you are next at the Mac — in this order
+
+```bash
+git fetch origin && git checkout claude/new-session-455uxc      # or merge it to main first
+.venv/bin/pip install paddleocr paddlepaddle                    # once; not in requirements.txt
+.venv/bin/python3 scripts/bakeoff_ocr.py --arms lilly paddle-v5 --limit 3   # smoke, minutes
+.venv/bin/python3 scripts/bakeoff_ocr.py                        # step 1, about an hour
+git add training/bakeoff training/RESULTS-ocr-bakeoff.md && git commit && git push
+.venv/bin/python3 data/scripts/fetch_test_v2.py                 # step 2 pixels, minutes
+git add data/ocr/real-photos/test-v2 && git commit && git push  # CREDITS + log, not photos
+.venv/bin/kaggle datasets status afaksrmeli/lilly-mapillary-photos   # just to know it is there
+```
+
+Then the two-person transcription of `test-v2` (step 2), and the box count
+(step 3). Neither needs a GPU or Kaggle.
+
 ---
 
 ## Why this file exists — the post-mortem in six lines
@@ -42,7 +58,7 @@ Owner: Safak. Decisions marked **owner** are theirs, not an agent's.
 | **54.7%** words per photograph, 45.0% pooled, 180 invented words | 40 Commons photographs, 373 agreed words, excluded from every training set (`training/RESULTS-ocr-restored.md`) | the product number. Small: the pooled figure carries a ±5-point interval, and 28 photographs is all it is |
 | 44.0% of diacritic words (11/25) | same set | ±19 points. Cannot move by design |
 | 43.2% folded on the crop gate | 132 held-out human crops | honest but ±8 points |
-| 45.0% folded on 737 crops | `labels-human-latin.tsv`, 666/737 training-side | **do not use to compare readers**. Report it only in a row labelled "training-side" |
+| 45.0% folded on 737 crops (GPU, bare `readtext`) or 47.9% (Mac, app door with allowlist) | `labels-human-latin.tsv`, 666/737 training-side | **do not use to compare readers**. Two numbers exist for one reader on one set because two code paths were used; `training/score_crops.py` uses the app's door and names the split |
 
 ### Verified on 3 Sep 2026, so nobody re-checks it
 
@@ -59,6 +75,13 @@ Owner: Safak. Decisions marked **owner** are theirs, not an agent's.
 - **36.0% → 54.7% is per-photograph on both ends** (`RESULTS-ocr.md`,
   `RESULTS-ocr-restored.md`). The 36.0% also happens to be the old diacritic
   rate (9/25); the coincidence has misled at least one reader of the docs.
+- **The shipped reader has two published numbers on the 737 crops: 47.9%
+  folded (`docs/human-crop-set.md`, on the Mac, through `app.ocr` with the
+  allowlist) and 45.0% (`RESULTS-ocr-pass19.md`, on the GPU, bare
+  `easyocr.readtext` with no allowlist).** 21 crops apart on the same weights.
+  Not the machine — the door. The allowlist keeps Cyrillic and Vietnamese
+  lookalikes out of the guesses, and the app has it. Score through the app's
+  door or say which door was used.
 - **`evaluate_ocr.py`'s reading cache is keyed on the weight files, not on
   which reader is loaded.** `LILLY_READER=stock` or `=paddle` with the default
   `--cache` would score the *trained* reader's cached readings under the other

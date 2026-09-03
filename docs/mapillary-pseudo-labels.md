@@ -3,6 +3,16 @@
 Measured 2026-09-01 on `data/ocr/crops-kaggle/labels.tsv` — 5,988 crops from
 20,240 Mapillary photos, cropped on a Kaggle T4.
 
+> **Corrected 3 Sep 2026.** The sentence below that "diacritics survive at that
+> threshold — `ODJEĆE`, `BUREGDŽINICA`, `MUŠKA`, `Pošta` all came back correct"
+> is wrong for č, ć and đ. The reader that wrote these labels could not emit
+> those three letters at all (`docs/crop-labels-were-crippled.md`); the label
+> for that crop is `ODJECE`, and across the 912 rows of `labels-train.tsv`
+> there is not one č, ć or đ — 18 rows carry š and 8 carry ž. The 77% / 93%
+> figures were therefore measured with those letters already folded away.
+> Whatever the transcriber compared against, it was not the file. The set is
+> closed anyway (`docs/OCR-ROADMAP.md`).
+
 Two blind samples were read: crops were rendered to a contact sheet with no
 labels visible, transcribed, and only then compared against what EasyOCR had
 written.
