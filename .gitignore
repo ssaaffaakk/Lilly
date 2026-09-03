@@ -26,6 +26,11 @@ data/ocr/crops/*
 data/ocr/crops2/*
 !data/ocr/crops2/labels-human.tsv
 !data/ocr/crops2-answers/
+# The 713-row list pass-19 trained on lived only on the Mac until 3 Sep 2026.
+# Labels are the artefact; the PNGs stay out.
+!data/ocr/mapillary-train-clean/
+data/ocr/mapillary-train-clean/*
+!data/ocr/mapillary-train-clean/gt.txt
 !data/ocr/real-photos/
 data/ocr/real-photos/*
 !data/ocr/real-photos/truth.json

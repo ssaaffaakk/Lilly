@@ -97,6 +97,11 @@ def check_speech_half2(text: str) -> None:
 
 def check_ocr(text: str) -> None:
     check_offload(text, "OCR")
+    # docs/OCR-ROADMAP.md, "The line that is closed": passes 14-19 trained on
+    # crops EasyOCR had labelled itself and none of them moved the reader.
+    if "mapillary-train" in text or "crops-kaggle" in text or "mly_" in text:
+        fail("OCR must not train on EasyOCR-labelled Mapillary crops — passes 14-19 "
+             "closed the line (docs/OCR-ROADMAP.md)")
     if "from data.scripts import" in text:
         fail("OCR notebook imports data.scripts as package — will break on Kaggle")
     if "--extra-index-url" in text or 'pip install"*, "torch"' in text:

@@ -1,0 +1,229 @@
+# OCR roadmap — what the reader does next, and what it will not repeat
+
+Written 3 September 2026. Read this before touching anything under `training/`
+or `data/ocr/`. It replaces the Mapillary guidance that used to sit in
+`.claude/CLAUDE.md` and `.cursor/rules/ocr-mapillary.mdc`. When a step lands,
+update the status board at the bottom and push the same day.
+
+Owner: Safak. Decisions marked **owner** are theirs, not an agent's.
+
+---
+
+## Why this file exists — the post-mortem in six lines
+
+1. Six passes (14–19) on five training sets, one answer: **no gain**. Cause: the
+   labels were written by EasyOCR, the reader being trained. A model fine-tuned
+   on its own confident output learns what it already knows. The pipeline
+   reported that faithfully; the experiment could not have succeeded.
+2. The training crops were shop fascias at 1.2 words a crop (`kuca`, `CITY`,
+   `BAZAR`). The test set is memorial plaques and notices (`KRIVIČNO JE
+   DJELO`). Commit `a12a2fb` diagnosed this — and then passes 18 and 19 ran on
+   the same data anyway.
+3. The gate's held-out set is **132 crops with 25 diacritic letters**. One
+   letter is 4 points. Every accept/refuse was decided on 1–3 crops, which is
+   noise. You cannot optimise what you cannot measure.
+4. The "737 clean human crops" used to compare passes 18 and 19 against the
+   shipped reader: **666 of the 737 are on the training side of the split**
+   (`training/ocr_split.is_valid_text` over `labels-human-latin.tsv`). The
+   shipped reader trained on them. Only 71 are held out. The 45.0% folded figure
+   is mostly memorisation, and the comparison favoured the reader that saw those
+   crops most recently.
+5. The `bs_char.txt` bug (labels could never contain č ć đ,
+   `docs/crop-labels-were-crippled.md`) is real and secondary: the folded score,
+   which ignores those letters, did not move either.
+6. Most of the hours went into Kaggle plumbing — literal newlines in string
+   literals, stale staging copies, `git clone` exit 128 — and into gate
+   refusals, not into the question of what would teach the reader something.
+
+## The numbers that stand, and how far to trust each
+
+| number | set | trust |
+|---|---|---|
+| **54.7%** words per photograph, 45.0% pooled, 180 invented words | 40 Commons photographs, 373 agreed words, excluded from every training set (`training/RESULTS-ocr-restored.md`) | the product number. Small: the pooled figure carries a ±5-point interval, and 28 photographs is all it is |
+| 44.0% of diacritic words (11/25) | same set | ±19 points. Cannot move by design |
+| 43.2% folded on the crop gate | 132 held-out human crops | honest but ±8 points |
+| 45.0% folded on 737 crops | `labels-human-latin.tsv`, 666/737 training-side | **do not use to compare readers**. Report it only in a row labelled "training-side" |
+
+## The line that is closed
+
+- Fine-tuning `latin_g2` on EasyOCR-labelled Mapillary crops — passes 14 through
+  19, `training/RESULTS-ocr-pass14.md` … `pass19.md`. Do not relaunch any of
+  them, in any configuration.
+- Do not relabel the 20,240 photographs with `recog_network="lilly"` and try
+  again. That fixes č ć đ in the labels and nothing else; it is still the model
+  labelling its own training data. The relabel pass proposed in
+  `docs/crop-labels-were-crippled.md` is **not scheduled**.
+- The photographs are not deleted. 20,240 `mly_*.jpg` sit in the Kaggle dataset
+  `afaksrmeli/lilly-mapillary-photos` and on the Mac under
+  `data/ocr/real-photos/mapillary/`. They become training data only when their
+  labels come from somewhere other than EasyOCR (step 4) — and only if the
+  owner says shop signs are in scope (open decision 1).
+- The 713-row list pass-19 trained on is now in git at
+  `data/ocr/mapillary-train-clean/gt.txt`, so the record is complete. The
+  915-row list is `data/ocr/mapillary-train/gt.txt`. Neither is a train set.
+
+## Steps, in order
+
+### 0. Freeze — done by the commit that adds this file
+
+No OCR pass launches until step 1 has a number and step 2 has a set. The
+`.claude/CLAUDE.md` OCR section, `.cursor/rules/ocr-roadmap.mdc`,
+`docs/kaggle-fail-stop.md` items 16–18 and `scripts/preflight_kaggle.py` say the
+same thing, so no agent can fall back into the old line by reading an old file.
+
+### 1. Engine bake-off: PaddleOCR PP-OCRv5, untrained, against the shipped reader
+
+**Why first.** It is the cheapest experiment left, it needs no GPU and no
+Kaggle, and it decides whether the next months go into EasyOCR or not.
+PP-OCRv5's `latin_PP-OCRv5_mobile_rec` names Bosnian, Croatian and Serbian
+(Latin) in its language list and its dictionary holds all of `čćđšžČĆĐŠŽ`
+(checked against the dict file, not assumed). `cyrillic_PP-OCRv5_mobile_rec`
+covers Serbian Cyrillic. The detector is a generation newer than CRAFT, and the
+detector has never been touched here.
+
+**How.**
+- Add `LILLY_READER=paddle` to `app/ocr.py` behind the same door as everything
+  else: `read_regions` returns the same `(box, text, confidence)` triples and the
+  same paragraph grouping, so `training/evaluate_ocr.py` and
+  `training/measure_detection.py` run unchanged. Same pattern as
+  `LILLY_READER=stock`.
+- Write the bar into `training/PREREGISTRATION.md` **before** running.
+  Suggested: adopt PaddleOCR if words-per-photograph is not below 54.7 and
+  invented words are not above 180; otherwise stay, and record the numbers.
+- Run `evaluate_ocr.py` on the 40 photographs → per-photo, pooled, invented,
+  diacritic and folded rows, for both readers, in one sitting.
+- Run both readers on the **71 held-out** crops of `labels-human-latin.tsv` and,
+  in a separate row labelled training-side, on the other 666.
+- Time both on the same 2 MP photograph on the Mac's CPU. The shipped reader
+  takes about 9 s; the app runs CPU-only in Docker, so this is a product number.
+
+**Where.** The Mac, or a Kaggle CPU notebook. Not a Claude Code cloud session:
+its network policy refuses `kaggle.com`, `upload.wikimedia.org`, both
+`bcebos.com` weight hosts and `huggingface.co`, so neither the photographs nor
+the weights can arrive there.
+
+**Cost.** Half a day. No training.
+
+### 2. A test set that can see a change
+
+**Why.** 373 words cannot distinguish a 3-point gain from noise; 25 diacritic
+words cannot distinguish anything. Every decision downstream — engine, detector,
+fine-tune — needs this set first.
+
+**What.**
+- Same method as `truth.json`: two transcribers, blind to each other and to the
+  machine, only agreed words in the key, agreement rate recorded.
+- At least **1,500 agreed words across 150 or more photographs** (±2.5 points).
+  More if the owner's domain decision (below) adds shop signage.
+- Domain: what the product reads — Commons photographs of signs, plaques and
+  boards, like the 40. Pools already on the Mac: `fetch_commons_categories.py`
+  (343) and `harvest_sign_photos.py` (486, scored set excluded). Never
+  Mapillary for this: no labels, and the wrong domain unless decision 1 says
+  otherwise.
+- Split by **source photograph**, never by crop or by label text (the 272
+  Cyrillic crops come from 37 photographs and five of them hold 61% —
+  `HANDOFF.md`).
+- Freeze the file list in git before anything trains on the remainder. Name:
+  `data/ocr/real-photos/test-v2/`. It is never trained on. Ever.
+
+**Cost.** Mostly human time: two people transcribing ~150 photographs.
+
+### 3. Detection recall R_d — as pre-registered, never run
+
+`training/PREREGISTRATION.md`, section "v2 — picture", defines it: draw every
+box `training/measure_detection.py` returns, count by hand which of the 373
+truth words are covered. `R_d` and `45.0% / R_d` say whether the ceiling is the
+detector or the recogniser — the one question no pass has answered, and the
+reason 180 invented words and 504 sub-16-px crops have stayed unexplained. Do it
+on the 40 now (an hour of counting), for both detectors if step 1 puts
+PaddleOCR in the running, and again on `test-v2` when it exists.
+
+### 4. Only if fine-tuning continues: labels from anything but the model
+
+- Allowed sources: humans; a strong vision model (Claude vision, as was done
+  for `crops2/`) with a **blind check** first — 100 or more crops transcribed by
+  a person before seeing the model's label, exact and folded agreement reported,
+  and the source used only if agreement is above what the reader already
+  scores.
+- Forbidden: any EasyOCR reader, stock or fine-tuned, writing labels that
+  EasyOCR then trains on.
+- The training photographs must be the same kind as the test set. Shop signs do
+  not teach plaques; that is the whole of passes 14–19.
+- Scoring a trained reader: both readers in one process, same crops, same
+  code, on the GPU that holds the weights (`training/cells/clean_crop_eval.py`
+  is the pattern), on held-out crops only, with counts and the interval.
+
+### 5. Cyrillic — after 1–3
+
+Route by script rather than arbitrate by confidence (the confidence race
+measured worse, `training/RESULTS-ocr-cyrillic.md`). Either PaddleOCR's
+Cyrillic model, or `cyrillic_g2` fine-tuned on the 276 Cyrillic crops split by
+source photograph. Not before the engine question is settled.
+
+## How to report a run — so the next agent can trust it
+
+Every RESULTS doc for the reader states, in this order: the set and its path;
+which split it is (held-out / training-side / mixed, with counts); n; counts
+beside every percentage (`329/737`, not `44.6%`); the 95% interval beside every
+delta; and for two readers on the same crops, how many crops flipped each way,
+not just the totals. A delta inside the interval is written as "no change".
+
+## Do not repeat — the small mistakes that cost days
+
+1. **Scoring on crops the model trained on.** `labels-human-latin.tsv` is
+   666/737 training-side. Name the split before quoting the number.
+2. **Deciding on a delta smaller than the noise.** 132 crops is ±8 points; 25
+   letters is ±19. Write the interval; inside it is "no change".
+3. **Labels from the model being trained.** Passes 14–19. See step 4.
+4. **A bare `easyocr.Reader([...])` writing labels.** The stock `bs` character
+   list cannot emit Č Ć Đ. Every reader goes through `app.ocr.read_regions`,
+   which checks the weights can produce them.
+5. **Training on a different domain than the test.** Shop signs versus plaques.
+6. **Running another pass after the cause is diagnosed.** When a RESULTS doc
+   says a line is dead, the next step is in this file, not in a notebook.
+7. **Comparing readers through different paths.** Different machines (laptop
+   CPU versus Kaggle GPU), different code, or a reading cache keyed on the
+   photograph's name alone. Same process, same crops, same code; the cache
+   carries the weights' fingerprint.
+8. **Hand-editing notebook JSON, or pushing a stale staging copy.** Four runs
+   died on one literal newline. Notebooks come from `training/build_*_notebook.py`,
+   every cell `ast.parse`d, the builder writing the staging copy too.
+9. **Treating transient infrastructure as a bug.** `git clone` exit 128, a
+   full GPU queue: relaunch once, change no code.
+10. **Counting impossible rows as failures.** Cyrillic through a Latin reader,
+    the 12 blank photographs, crops under 16 px. Say what is in the denominator.
+11. **Reading a percentage off 25 letters.** The gate's diacritic column moves
+    4 points per letter. Quote the letters.
+12. **Leaving the next step in a results doc.** The queue is this file. A
+    "later" written anywhere else is lost.
+13. **Leaving the real artefact on one machine.** The 713-row list lived only on
+    the Mac; the dataset push had no script. Labels, lists and manifests are
+    committed the day they are made.
+
+## Where things run
+
+| task | where | why |
+|---|---|---|
+| PaddleOCR bake-off (step 1) | Mac, or a Kaggle CPU notebook | needs the Commons photographs and the weight downloads; cloud sessions cannot reach either |
+| Kaggle pushes, polls, dataset uploads | Mac | the token lives in `~/.kaggle/kaggle.json` and nowhere else |
+| Transcription (step 2), box counting (step 3) | a person | by design — a machine counting its own boxes measures itself |
+| Code, filters, docs, analysis over committed files | any agent, any machine | |
+
+## Open decisions — owner
+
+1. **Does Lilly read shop signs, plaques and boards, or both?** Decides the
+   domain of `test-v2` and whether the 20,240 Mapillary photographs are ever
+   worth labelling. Pass-19 raised it; nobody answered.
+2. **The bar for switching engine** in step 1. The suggested one is above;
+   change it before the run, not after.
+
+## Status board
+
+| step | state | evidence |
+|---|---|---|
+| 0 freeze | done, 3 Sep 2026 | this commit |
+| 1 bake-off | not started | — |
+| 2 test-v2 | not started | — |
+| 3 R_d | not started | — |
+| 4 labels | blocked on 1–3 | — |
+| 5 Cyrillic | blocked on 1–3 | — |

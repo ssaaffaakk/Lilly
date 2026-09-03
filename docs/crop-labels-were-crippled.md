@@ -76,3 +76,8 @@ easyocr.Reader(["bs", "en"], gpu=True,
 
 The 20,240 photographs are still in `afaksrmeli/lilly-mapillary-photos`, so
 this is one GPU pass, about an hour.
+
+**Not scheduled (3 Sep 2026).** Relabelling with the app's reader fixes č ć đ
+in the labels and nothing else: it is still EasyOCR writing EasyOCR's training
+data, and the folded score never moved across passes 14–19. The photographs
+stay where they are. `docs/OCR-ROADMAP.md`, "The line that is closed".

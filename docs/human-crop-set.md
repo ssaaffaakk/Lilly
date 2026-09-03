@@ -2,6 +2,12 @@
 
 Measured 2026-09-02 on `data/ocr/crops/labels-human.tsv`, 1,701 crops.
 
+> **Read this first (3 Sep 2026).** `labels-human-latin.tsv` is fair to *score*
+> but not fair to *compare readers on*: 666 of its 737 crops are on the training
+> side of `training/ocr_split.is_valid_text`, so the shipped reader trained on
+> them. Only 71 are held out. The pass-18 and pass-19 comparisons below were
+> made on the full 737. `docs/OCR-ROADMAP.md`, mistake 1.
+
 | | crops | share |
 |---|---|---|
 | Cyrillic labels | 272 | 16.0% |

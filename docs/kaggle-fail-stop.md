@@ -43,6 +43,18 @@ These were done on purpose so a kernel could COMPLETE. Do not do them again.
 15. Let a child trainer print to its own stdout and treat the Kaggle log as
     enough. The log never sees that fd. Tee to `/kaggle/working/stdout.txt`
     and write `experiment_log.json`. COMPLETE + zip is still not install.
+16. OCR: compare a trained reader against the shipped one on crops the shipped
+    one trained on. `labels-human-latin.tsv` is 666 of 737 training-side
+    (passes 18–19 were scored on it). Held-out crops only, counts and interval
+    beside the delta. `docs/OCR-ROADMAP.md`.
+17. OCR: train on labels written by the reader being trained (passes 14–19,
+    five sets, no gain). Labels come from a human or a blind-checked
+    non-EasyOCR vision model, and any labelling reader goes through
+    `app.ocr.read_regions` — the stock `bs` list cannot emit Č Ć Đ.
+18. Launch another pass after the results doc has diagnosed the line as dead
+    (`a12a2fb` diagnosed passes 14–17; passes 18 and 19 ran anyway). The step
+    after a diagnosis is in `docs/OCR-ROADMAP.md`, not in a notebook. Do not
+    relaunch pass-8 through pass-19.
 
 ## Gates
 
@@ -50,7 +62,7 @@ These were done on purpose so a kernel could COMPLETE. Do not do them again.
 | :--- | :--- | :--- |
 | Speech half 1 | Clone `/kaggle/temp`, 1 epoch, `--keep-adapter`, zip `lilly-listen-half1.zip`, tee + trainproof | BEFORE/AFTER WER, merge 3 GB, clone `/kaggle/working` |
 | Speech half 2 | `--resume`, `SPEECH_EPOCHS = 2`, AFTER WER **then** zip `lilly-listen.zip` | `--base` merged weights, zip before WER |
-| OCR | Attach what **this pass** requires, tee + photograph gate, zip `lilly-read.zip` only after the gate | `check=False`, skip required data, zip refused `read-trained.pth` as the app package, relaunch pass-8/9/10/11, skip crop gate after stage 1 by installing |
+| OCR | Attach what **this pass** requires, tee + photograph gate, zip `lilly-read.zip` only after the gate | `check=False`, skip required data, zip refused `read-trained.pth` as the app package, relaunch pass-8 through pass-19, train on EasyOCR-written labels, skip crop gate after stage 1 by installing |
 
 Launch: `python3 scripts/kaggle_train.py speech` / `speech-half2` / `ocr`.
 Preflight: `python3 scripts/preflight_kaggle.py`.

@@ -259,7 +259,8 @@ python3 scripts/kaggle_train.py speech-half2    # only after half 1 is COMPLETE
 python3 scripts/kaggle_poll.py                  # CANCEL or ERROR counts as failure
 ```
 
-Live status is in [`docs/V3-PLAN.md`](docs/V3-PLAN.md). How to write a notebook
+Live status is in [`docs/V3-PLAN.md`](docs/V3-PLAN.md); the reader's queue and
+do-not-repeat list are in [`docs/OCR-ROADMAP.md`](docs/OCR-ROADMAP.md). How to write a notebook
 that fails loudly: [`docs/kaggle-notebooks.md`](docs/kaggle-notebooks.md). The
 list of failures already paid for: [`docs/kaggle-fail-stop.md`](docs/kaggle-fail-stop.md).
 

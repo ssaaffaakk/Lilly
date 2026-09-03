@@ -3,6 +3,10 @@
 Written so the next session does not have to rediscover any of this. Delete it
 when it stops being true; a stale handoff is worse than none.
 
+> **3 Sep 2026:** for the reader, `docs/OCR-ROADMAP.md` supersedes the OCR
+> items below. The Mapillary line (passes 14–19) is closed; the queue, the
+> numbers to trust and the do-not-repeat list are there.
+
 ## The three numbers
 
 | | measured | on what | means |
