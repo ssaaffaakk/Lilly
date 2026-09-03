@@ -47,6 +47,16 @@ data/ocr/real-photos/test-v2/*
 !data/ocr/real-photos/test-v2/CREDITS.tsv
 !data/ocr/real-photos/test-v2/fetch-log.tsv
 !data/ocr/real-photos/test-v2/truth-v2.json
+# The street-level test set (step 2b) and the Mapillary attribution record it
+# is drawn from — the only map from mly_<id>.jpg to city and licence.
+!data/ocr/real-photos/mapillary/
+data/ocr/real-photos/mapillary/*
+!data/ocr/real-photos/mapillary/CREDITS.tsv
+!data/ocr/real-photos/test-mly/
+data/ocr/real-photos/test-mly/*
+!data/ocr/real-photos/test-mly/sample.txt
+!data/ocr/real-photos/test-mly/CREDITS.tsv
+!data/ocr/real-photos/test-mly/truth-mly.json
 # The provenance of the harvest is the same shape of irreplaceable as the
 # transcriptions, and it was untracked too. CREDITS.tsv is the only mapping
 # from a local filename to the Commons page that licenses it: lose it and 286

@@ -135,6 +135,14 @@ def paired(arm: dict, shipped: dict, resamples: int = 10000, seed: int = 0) -> d
             "up": sum(d > 0 for d in deltas), "down": sum(d < 0 for d in deltas)}
 
 
+def class_recall(photos: dict, lo: int, hi: int) -> tuple:
+    """Mean per-photograph recall over photographs whose key holds lo..hi words."""
+    sub = [(h, n) for h, n in photos["per_photograph"].values() if n and lo <= n <= hi]
+    if not sub:
+        return (None, 0)
+    return (100 * sum(h / n for h, n in sub) / len(sub), len(sub))
+
+
 def dictionary_check(rec_model: str) -> str:
     """Can the recogniser write our ten letters? Read off its downloaded config.
 
@@ -207,6 +215,16 @@ def assemble(results: dict, limit: int) -> str:
         p = r["photos"]
         lines.append(f"| {arm} | `{r['crops'].get('reader', '?')}` | **{p['per_photo']:.1f}%** | "
                      f"{p['pooled']:.1f}% | {p['invented']} | {p['diacritic']:.1f}% | {p['folded']:.1f}% |")
+    lines += ["", "## Signs against boards", "",
+              "The product reads small signs and street names (docs/OCR-ROADMAP.md, decision 1). "
+              "Reported beside the bar, which stays the mean over every photograph.", "",
+              "| arm | signs, 1-5 words | short boards, 6-20 | long boards, 21+ |", "|---|---|---|---|"]
+    for arm, r in results.items():
+        cells = []
+        for lo, hi in ((1, 5), (6, 20), (21, 10 ** 9)):
+            v, n = class_recall(r["photos"], lo, hi)
+            cells.append(f"{v:.1f}% (n={n})" if v is not None else "—")
+        lines.append(f"| {arm} | " + " | ".join(cells) + " |")
     lines += ["", "## Paired against the shipped reader, photograph by photograph", "",
               "Reported; the bar is the table above.", "",
               "| arm | photographs | mean Δ points | better on | worse on | bootstrap p |",
@@ -306,6 +324,9 @@ def self_test() -> int:
     assert st["n"] == 20 and st["mean_delta"] > 0 and st["p"] < 0.05, st
     same = paired(s, s, resamples=200)
     assert same["mean_delta"] == 0 and same["up"] == 0 and same["down"] == 0
+    v, n = class_recall({"per_photograph": {"a": [1, 2], "b": [0, 4], "c": [3, 30]}}, 1, 5)
+    assert n == 2 and abs(v - 25.0) < 1e-9, (v, n)
+    assert class_recall({"per_photograph": {"c": [3, 30]}}, 1, 5) == (None, 0)
     print("self-test ok")
     return 0
 

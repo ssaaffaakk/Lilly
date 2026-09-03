@@ -971,6 +971,12 @@ fewer invented words, then PP-OCRv5, whose dictionary is the one verified.
   training-side crops in a row of their own, which compares nothing.
 - Seconds per two-megapixel photograph on the Mac's CPU. The app runs CPU-only
   in Docker, so this is a product number, but speed is not in the bar.
+- Words per photograph over the sign class alone (1–5 agreed words), beside
+  the short and long boards. The owner said on 3 September that the product
+  reads small signs and street names; the bar above is still the mean over
+  every photograph, because that is what 54.7% is, and 13 sign photographs
+  cannot carry a bar. Moving the bar to the sign row is the owner's call and
+  is made here, before the run, or not at all.
 - Whether the winning recogniser's dictionary can write all ten letters. If the
   arm that clears the bar cannot, the owner decides; this file does not
   pre-decide it and says so rather than inventing a rule after the number.

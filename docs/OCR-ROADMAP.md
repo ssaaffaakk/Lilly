@@ -17,6 +17,8 @@ git fetch origin && git checkout claude/new-session-455uxc      # or merge it to
 git add training/bakeoff training/RESULTS-ocr-bakeoff.md && git commit && git push
 .venv/bin/python3 data/scripts/fetch_test_v2.py                 # step 2 pixels, minutes
 git add data/ocr/real-photos/test-v2 && git commit && git push  # CREDITS + log, not photos
+git add -f data/ocr/real-photos/mapillary/CREDITS.tsv && git commit -m "Mapillary credits" && git push
+.venv/bin/python3 training/build_test_mly.py                    # step 2b draw; commit test-mly/
 .venv/bin/kaggle datasets status afaksrmeli/lilly-mapillary-photos   # just to know it is there
 ```
 
@@ -82,12 +84,44 @@ Then the two-person transcription of `test-v2` (step 2), and the box count
   Not the machine — the door. The allowlist keeps Cyrillic and Vietnamese
   lookalikes out of the guesses, and the app has it. Score through the app's
   door or say which door was used.
+- **`data/ocr/crops-kaggle/labels.tsv` is not the 5,988-row file the manifest
+  says it is.** Commit `ac2be14` overwrote it with the 915-row keep list; at
+  HEAD the two files are byte-identical. The 5,988-row record is restored from
+  `3e5fa6e` as `labels-latin-all.tsv`, and the manifest has a row saying so.
+- **`data/ocr/real-photos/mapillary/CREDITS.tsv` is not in git.** It is the
+  only map from `mly_<id>.jpg` to city and CC BY-SA attribution — the same
+  shape of irreplaceable the `.gitignore` comment describes for the Commons
+  credits. `.gitignore` now admits it; committing it is on the Mac checklist.
+- **The label TSVs bite Python's csv module.** A label such as `"LUCIJA"`
+  opens a quoted field and swallows every following line: the default reader
+  returns 2,970 of the 5,988 rows. Read them with `quoting=csv.QUOTE_NONE` or
+  split on tabs. The scripts in this repo that matter do; `screened.tsv` and
+  the Commons `CREDITS.tsv` parse correctly either way, so the `test-v2` draw
+  is sound.
+- **The Mapillary harvest is pre-screened by the reader under test** — see
+  step 2b.
 - **`evaluate_ocr.py`'s reading cache is keyed on the weight files, not on
   which reader is loaded.** `LILLY_READER=stock` or `=paddle` with the default
   `--cache` would score the *trained* reader's cached readings under the other
   name — the exact failure the cache stamp was added to prevent. Fixed the same
   day: the stamp now carries `app.ocr.reader_identity()`, and the bake-off
   runner gives every arm its own cache file anyway.
+
+## What the 28 already say about signs against boards
+
+From the shipped reader's per-photograph table in `RESULTS-ocr-restored.md`,
+split by agreed words in the key:
+
+| | photographs | words per photograph | read in full |
+|---|---|---|---|
+| signs, 1–5 words | 13 | **61.9%** | 5 |
+| short boards, 6–20 | 12 | 46.4% | 2 |
+| long boards, 21+ | 3 | 56.9% | 0 |
+
+Signs read better than boards, which is the owner's intuition — and 8 of the
+13 signs are still not read in full, four of them at zero (`Gospodska_ulica_27`
+0/2, `Sarajevo_Trebević_Sign` 0/6). Thirteen photographs is not a number to
+build on; it is the reason `test-v2` and `test-mly` exist.
 
 ## The line that is closed
 
@@ -189,8 +223,27 @@ fine-tune — needs this set first.
   `HANDOFF.md`). The rest of the pool is what a future training set may be
   built from; `test-v2` is never trained on. Ever.
 
-**Cost.** Mostly human time: two people transcribing 280 photographs, many of
-them quick blanks.
+**Cost.** Mostly transcription time: two blind passes over 280 photographs,
+many of them quick blanks.
+
+### 2b. `test-mly` — the street-level half, the product's domain
+
+- `training/build_test_mly.py` draws 240 of the 20,240 Mapillary photographs
+  (Latin-signage cities only) by the same filename hash, from
+  `data/ocr/real-photos/mapillary/CREDITS.tsv` — which exists only on the Mac
+  and must be committed first (Mac checklist). Photos are already on the Mac;
+  no fetch.
+- Same transcription, same `build_truth.py`, same `evaluate_ocr.py` with
+  `--photos data/ocr/real-photos/mapillary`. Output
+  `training/RESULTS-ocr-test-mly.md`.
+- **Stated bias:** the harvest kept a photograph only when Lilly's own reader
+  found two or more words in it (`harvest_mapillary.py`, `has_readable_text`).
+  This set is therefore "street photographs the shipped reader can find text
+  in"; its recall is an upper bound and the selection favoured EasyOCR's
+  detector. Both engines read the same photographs, so the comparison is
+  still informative; a future harvest without that screen is the real fix.
+- 1024px thumbnails, smaller than the 1280px Commons renderings. Say so
+  beside the number.
 
 ### 3. Detection recall R_d — as pre-registered, never run
 
@@ -204,11 +257,17 @@ PaddleOCR in the running, and again on `test-v2` when it exists.
 
 ### 4. Only if fine-tuning continues: labels from anything but the model
 
-- Allowed sources: humans; a strong vision model (Claude vision, as was done
-  for `crops2/`) with a **blind check** first — 100 or more crops transcribed by
-  a person before seeing the model's label, exact and folded agreement reported,
-  and the source used only if agreement is above what the reader already
-  scores.
+- Allowed sources: people, or vision-model passes that never see the reader's
+  output. Note what the record shows: the "hand-transcribed" crop labels in
+  `data/ocr/label-answers/` are files named `agent-01.tsv` … `agent-27.tsv`,
+  so the 1,701 "human" crops were, by the evidence in git, blind agent passes
+  over the sheets `data/scripts/label_crops.py` builds. That is fine — it is
+  the recipe — but the docs' word "human" should be read that way.
+- The tool exists: `label_crops.py sheets` → blind transcription → `collect`.
+  Run it on the 5,988 Latin Mapillary crops (`labels-latin-all.tsv` lists
+  them; the PNGs are on the Mac) with two independent passes and only agreed
+  labels kept, exactly as `build_truth.py` does for photographs. Report the
+  agreement rate before any training.
 - Forbidden: any EasyOCR reader, stock or fine-tuned, writing labels that
   EasyOCR then trains on.
 - The training photographs must be the same kind as the test set. Shop signs do
@@ -261,8 +320,17 @@ not just the totals. A delta inside the interval is written as "no change".
 12. **Leaving the next step in a results doc.** The queue is this file. A
     "later" written anywhere else is lost.
 13. **Leaving the real artefact on one machine.** The 713-row list lived only on
-    the Mac; the dataset push had no script. Labels, lists and manifests are
-    committed the day they are made.
+    the Mac; the dataset push had no script; the Mapillary credits still are.
+    Labels, lists and manifests are committed the day they are made.
+14. **Overwriting a record with a filtered copy under the same name.** The
+    5,988-row `labels.tsv` became the 915-row keep list and the manifest kept
+    pointing at it. A filtered file gets a new name; the record keeps its own.
+15. **Reading label TSVs with `csv`'s default quoting.** One `"LUCIJA"`
+    swallows three thousand rows in silence. `QUOTE_NONE`, or split on tabs.
+16. **Screening a pool with the reader under test.** The Mapillary harvest
+    kept only photographs Lilly's reader found two words in, so every number
+    on it is an upper bound and every engine comparison on it leans toward
+    EasyOCR's detector. Harvest without the reader; screen with people.
 
 ## Where things run
 
@@ -270,16 +338,22 @@ not just the totals. A delta inside the interval is written as "no change".
 |---|---|---|
 | PaddleOCR bake-off (step 1) | Mac, or a Kaggle CPU notebook | needs the Commons photographs and the weight downloads; cloud sessions cannot reach either |
 | Kaggle pushes, polls, dataset uploads | Mac | the token lives in `~/.kaggle/kaggle.json` and nowhere else |
-| Transcription (step 2), box counting (step 3) | a person | by design — a machine counting its own boxes measures itself |
+| Transcription (steps 2, 2b, 4) | a person, or a vision-agent pass that never sees the reader's output; two independent passes, agreed words only | the reader must not label its own test or training data |
+| Box counting (step 3) | a person | by design — a machine counting its own boxes measures itself |
 | Code, filters, docs, analysis over committed files | any agent, any machine | |
 
-## Open decisions — owner
+## Decisions — owner
 
-1. **Does Lilly read shop signs, plaques and boards, or both?** Decides the
-   domain of `test-v2` and whether the 20,240 Mapillary photographs are ever
-   worth labelling. Pass-19 raised it; nobody answered.
-2. **The bar for switching engine** in step 1. The suggested one is above;
-   change it before the run, not after.
+1. **Answered 3 Sep 2026: Lilly reads small signs and street names. Long
+   sentences are not the claim.** So the headline for the product is the
+   sign class (1–5 agreed words), boards are reported beside it, and the
+   street-level Mapillary photographs are the product's domain — as a *test*
+   set first (step 2b), and as training material only with blind labels
+   (step 4). Every RESULTS file for the reader now carries the split.
+2. **The bar for switching engine** in step 1 stays the mean over every
+   photograph, as pre-registered, with the sign row reported beside it. If the
+   owner wants the bar on the sign row instead, that is written into
+   `PREREGISTRATION.md` before the run, not after.
 
 ## Status board
 
@@ -288,6 +362,7 @@ not just the totals. A delta inside the interval is written as "no change".
 | 0 freeze | done, 3 Sep 2026 | this commit |
 | 1 bake-off | pre-registered, code ready, **needs the Mac** | `scripts/bakeoff_ocr.py`, PREREGISTRATION "bake-off" |
 | 2 test-v2 | pool built, 280 drawn and frozen; **fetch + transcribe on the Mac** | `test-v2/pool.tsv`, `sample.txt`, `fetch_test_v2.py` |
+| 2b test-mly | draw script ready; **needs the Mac** (credits file, then draw, then transcription) | `training/build_test_mly.py` |
 | 3 R_d | overlays per detector ready; **needs the Mac and a person counting** | `training/measure_detection.py` (runs for `LILLY_READER=paddle` too), PREREGISTRATION "picture" |
 | 4 labels | blocked on 1–3 | — |
 | 5 Cyrillic | blocked on 1–3 | — |

@@ -301,6 +301,20 @@ def main() -> int:
     macro = sum(h / n for _n_, h, n, *_r in rows) / len(rows) * 100 if rows else 0
     biggest = max(rows, key=lambda r: r[2]) if rows else None
 
+    # A street sign and a memorial slab are different tasks, and the product
+    # is the first (docs/OCR-ROADMAP.md, decision 1). Split by how many words
+    # the answer key holds for the photograph; the headline stays the mean over
+    # every photograph, so it remains comparable with 36.0% and 54.7%.
+    by_class = {}
+    for label, lo, hi in (("sign (1-5 words)", 1, 5), ("short board (6-20 words)", 6, 20),
+                          ("long board (21+ words)", 21, 10 ** 9)):
+        sub = [r for r in rows if lo <= r[2] <= hi]
+        by_class[label] = {
+            "photographs": len(sub),
+            "per_photo": (sum(h / n for _n_, h, n, *_r in sub) / len(sub) * 100) if sub else None,
+            "found": sum(r[1] for r in sub), "words": sum(r[2] for r in sub),
+            "fully_read": sum(r[1] == r[2] for r in sub)}
+
     lines = [
         "# What the reader reads off a real photograph",
         "",
@@ -337,6 +351,20 @@ def main() -> int:
         "invented out of brickwork and foliage, and it is not visible in a recall "
         "figure.",
         "",
+        "## Signs against boards",
+        "",
+        "The product reads small signs and street names; long text is reported, not "
+        "claimed. Split by how many agreed words the photograph carries.",
+        "",
+        "| | photographs | words per photograph | words found | read in full |",
+        "|---|---|---|---|---|",
+    ] + [
+        f"| {label} | {c['photographs']} | "
+        + (f"**{c['per_photo']:.1f}%**" if c["per_photo"] is not None else "—")
+        + f" | {c['found']}/{c['words']} | {c['fully_read']} |"
+        for label, c in by_class.items()
+    ] + [
+        "",
         "## Per photograph",
         "",
         "| Photograph | words | diacritic words |",
@@ -362,6 +390,7 @@ def main() -> int:
             "invented": spurious,
             "photographs": len(rows),
             "reader": reader_fingerprint(),
+            "by_class": by_class,
             # Per photograph, so two readers can be compared pair by pair
             # rather than mean against mean.
             "per_photograph": {name: [hit, need] for name, hit, need, *_r in rows},
