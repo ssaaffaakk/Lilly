@@ -86,6 +86,7 @@ data/ocr/real-photos/commons/*
 # the pre-filter backup and the script.
 !data/ocr/crops-kaggle/
 data/ocr/crops-kaggle/*
+!data/ocr/crops-kaggle/labels-latin-all.tsv
 !data/ocr/crops-kaggle/labels-train.tsv
 !data/signs/
 data/signs/*
