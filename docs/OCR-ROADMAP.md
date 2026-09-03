@@ -205,10 +205,14 @@ fine-tune — needs this set first.
 - On the Mac: `python3 data/scripts/fetch_test_v2.py` fetches the 280 at
   1280 px (the size the 40 were read at), re-checks licences, writes
   `CREDITS.tsv` and `fetch-log.tsv`; commit both, not the photographs.
-- Transcription: same method as `truth.json` — two transcribers, blind to
-  each other and to the machine, `legibility: clear` lines only, then
-  `python3 training/build_truth.py --result <pair.json>
-  --out data/ocr/real-photos/test-v2/truth-v2.json`. Agreement rate recorded.
+- Transcription: same method as `truth.json` — two passes, blind to each
+  other and to the machine, `legibility: clear` lines only. The harness is
+  `training/transcription_pass.py`: `sheet --set test-v2 --pass a` writes the
+  empty sheet, each pass fills its own copy (a person, or a vision agent that
+  never sees the reader's output), `check` refuses holes, copies and anything
+  that matches the reader's cached output, `pair` writes what
+  `build_truth.py --result … --out data/ocr/real-photos/test-v2/truth-v2.json`
+  reads. Agreement rate recorded. Same commands with `--set test-mly`.
   Expect roughly 1,500 agreed words over 150+ photographs with text; if it
   lands short, draw the next in rank with `--count`, never by choosing.
 - Scoring, unchanged code:
