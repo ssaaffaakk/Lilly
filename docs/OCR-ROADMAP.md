@@ -288,6 +288,6 @@ not just the totals. A delta inside the interval is written as "no change".
 | 0 freeze | done, 3 Sep 2026 | this commit |
 | 1 bake-off | pre-registered, code ready, **needs the Mac** | `scripts/bakeoff_ocr.py`, PREREGISTRATION "bake-off" |
 | 2 test-v2 | pool built, 280 drawn and frozen; **fetch + transcribe on the Mac** | `test-v2/pool.tsv`, `sample.txt`, `fetch_test_v2.py` |
-| 3 R_d | not started | — |
+| 3 R_d | overlays per detector ready; **needs the Mac and a person counting** | `training/measure_detection.py` (runs for `LILLY_READER=paddle` too), PREREGISTRATION "picture" |
 | 4 labels | blocked on 1–3 | — |
 | 5 Cyrillic | blocked on 1–3 | — |
