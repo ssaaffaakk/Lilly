@@ -115,6 +115,10 @@ def main() -> int:
 
     from harvest_sign_photos import Fetcher
     fetcher = Fetcher()
+    # Thumbnails first: upload.wikimedia.org limits requests for originals per
+    # address (Fetcher.download waits the window out); the 1280px renderings
+    # are exempt, so they come down before any original can hold them up.
+    missing.sort(key=lambda n: "/thumb/" not in sources.get(n, ""))
     got, failed = 0, []
     for i, name in enumerate(missing, 1):
         url = sources.get(name)                   # the rendering that was read

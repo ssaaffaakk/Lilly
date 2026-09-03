@@ -47,6 +47,10 @@ data/ocr/real-photos/test-v2/*
 !data/ocr/real-photos/test-v2/CREDITS.tsv
 !data/ocr/real-photos/test-v2/fetch-log.tsv
 !data/ocr/real-photos/test-v2/truth-v2.json
+# the two blind passes behind the key, and the pair build_truth.py read
+!data/ocr/real-photos/test-v2/pass-a.json
+!data/ocr/real-photos/test-v2/pass-b.json
+!data/ocr/real-photos/test-v2/pair.json
 # The street-level test set (step 2b) and the Mapillary attribution record it
 # is drawn from — the only map from mly_<id>.jpg to city and licence.
 !data/ocr/real-photos/mapillary/

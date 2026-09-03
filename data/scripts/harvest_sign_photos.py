@@ -148,7 +148,7 @@ DOWNLOAD_GAP_SECONDS = 1.2
 # exempt; a photograph narrower than 1280px has no thumbnail, so its rendering
 # is the original and meets the limit. Waiting the window out is what the
 # message asks for, and a wait does not spend one of the download attempts.
-MAX_429_WAITS = 12                                   # two hours per file at 600 s
+MAX_429_WAITS = 24                                   # four hours per file at 600 s
 MAX_429_WAIT_SECONDS = 900
 MAX_API_TRIES = 6
 

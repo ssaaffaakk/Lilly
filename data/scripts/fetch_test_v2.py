@@ -51,7 +51,7 @@ WIDTH = 1280
 # limit a few dozen times. Waiting out the window is the etiquette Wikimedia
 # asks for; logging those as "failed" would drop photographs from the set for
 # a reason that has nothing to do with the photograph.
-MAX_429_WAITS = 12                                   # up to two hours per file at 600 s
+MAX_429_WAITS = 24                                   # up to four hours per file at 600 s
 MAX_429_WAIT_SECONDS = 900
 
 
@@ -100,6 +100,10 @@ def strip_html(text: str) -> str:
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--check", action="store_true")
+    ap.add_argument("--thumbnails-only", action="store_true",
+                    help="fetch only the photographs whose 1280px rendering is a standard thumbnail "
+                         "and stop; the originals, which upload.wikimedia.org rate-limits, come in a "
+                         "later run of the same command without this flag")
     args = ap.parse_args()
 
     names = [ln.strip() for ln in (TEST / "sample.txt").read_text(encoding="utf-8").splitlines() if ln.strip()]
@@ -107,34 +111,61 @@ def main() -> int:
         pool = {r["file"]: r for r in csv.DictReader(fh, delimiter="\t")}
     missing = [n for n in names if not (PHOTOS / n).is_file()]
     print(f"{len(names)} drawn, {len(names) - len(missing)} on disk, {len(missing)} to fetch")
-    if args.check or not missing:
-        return 0
 
-    PHOTOS.mkdir(parents=True, exist_ok=True)
     credits_path, log_path = TEST / "CREDITS.tsv", TEST / "fetch-log.tsv"
     credits = {}
     if credits_path.exists():
         with credits_path.open(encoding="utf-8") as fh:
             credits = {r["file"]: r for r in csv.DictReader(fh, delimiter="\t")}
+    # CREDITS.tsv is written at the end of a run, so a run that was interrupted
+    # (the originals wait on the rate limit for hours) leaves photographs on
+    # disk with no attribution row. Their row is the same deterministic lookup
+    # as a fresh fetch, so they get it here rather than being fetched again.
+    unrecorded = [n for n in names if (PHOTOS / n).is_file() and n not in credits]
+    if unrecorded:
+        print(f"{len(unrecorded)} on disk without a CREDITS.tsv row; adding the rows")
+    if args.check or not (missing or unrecorded):
+        return 0
+
+    PHOTOS.mkdir(parents=True, exist_ok=True)
     log = []
 
     # Resolve by title, fifty at a time, for everything without a stored URL.
-    need_lookup = [n for n in missing if not pool[n]["screen_url"]]
+    need_lookup = [n for n in missing + unrecorded if not pool[n]["screen_url"]]
     info = {}
     for i in range(0, len(need_lookup), 50):
         batch = [pool[n]["key"] for n in need_lookup[i:i + 50]]
         info.update(imageinfo(batch))
         time.sleep(0.5)
 
-    fetched = 0
-    for n in missing:
+    def meta_for(n) -> tuple:
+        """(row, meta, url, licence, mime) — one lookup shared by fetching and crediting."""
         row = pool[n]
-        title = title_of(row["key"])
-        meta = info.get(title, {})
+        meta = info.get(title_of(row["key"]), {})
         url = row["screen_url"] or meta.get("thumburl", "")
         licence = licence_family(row["licence"] or strip_html(
             meta.get("extmetadata", {}).get("LicenseShortName", {}).get("value", "")))
         mime = meta.get("mime", "image/jpeg" if row["screen_url"] else "")
+        return row, meta, url, licence, mime
+
+    def credit_row(n, row, meta, url, licence) -> dict:
+        return {"file": n, "key": row["key"],
+                "page_url": row["page_url"] or f"https://commons.wikimedia.org/wiki/{urllib.parse.quote(row['key'].replace(' ', '_'))}",
+                "screen_url": url, "licence": licence,
+                "attribution": row["attribution"] or strip_html(
+                    meta.get("extmetadata", {}).get("Artist", {}).get("value", ""))}
+
+    # Thumbnails first: they are exempt from the limit on originals, so the
+    # bulk of the set lands in minutes and the originals queue behind it
+    # instead of each one holding up two hundred free downloads.
+    missing.sort(key=lambda n: "/thumb/" not in meta_for(n)[2])
+    if args.thumbnails_only:
+        missing = [n for n in missing if "/thumb/" in meta_for(n)[2]]
+        print(f"--thumbnails-only: {len(missing)} to fetch now")
+
+    fetched = 0
+    for n in missing:
+        row, meta, url, licence, mime = meta_for(n)
         reason = ("no imageinfo" if not url else
                   f"licence:{licence or 'none'}" if licence not in ALLOWED_LICENCES else
                   f"mime:{mime}" if not mime.startswith("image/") or mime == "image/svg+xml" else "")
@@ -149,13 +180,12 @@ def main() -> int:
             print(f"  failed  {n}: {exc}")
             continue
         fetched += 1
-        credits[n] = {"file": n, "key": row["key"],
-                      "page_url": row["page_url"] or f"https://commons.wikimedia.org/wiki/{urllib.parse.quote(row['key'].replace(' ', '_'))}",
-                      "screen_url": url, "licence": licence,
-                      "attribution": row["attribution"] or strip_html(
-                          meta.get("extmetadata", {}).get("Artist", {}).get("value", ""))}
+        credits[n] = credit_row(n, row, meta, url, licence)
         print(f"  {fetched:3d}/{len(missing)} {n}")
         time.sleep(0.3)
+    for n in unrecorded:
+        row, meta, url, licence, _mime = meta_for(n)
+        credits[n] = credit_row(n, row, meta, url, licence)
 
     with credits_path.open("w", encoding="utf-8", newline="") as fh:
         w = csv.DictWriter(fh, fieldnames=["file", "key", "page_url", "screen_url", "licence", "attribution"],

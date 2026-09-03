@@ -178,10 +178,21 @@ detector has never been touched here.
 - `pip install paddleocr paddlepaddle` on the Mac first; it is deliberately
   not in `requirements.txt` — a measurement path, not the app.
 
-**Where.** The Mac, or a Kaggle CPU notebook. Not a Claude Code cloud session:
-its network policy refuses `kaggle.com`, `upload.wikimedia.org`, both
-`bcebos.com` weight hosts and `huggingface.co`, so neither the photographs nor
-the weights can arrive there.
+**Where.** The Mac, a Kaggle CPU notebook, or — measured 3 Sep 2026, against
+what this paragraph used to say — a Claude Code cloud session for everything
+but the crop row. `huggingface.co` and both Commons hosts answer there, so
+`scripts/fetch_models.py` brings the weights and the photographs arrive. The
+`bcebos.com` hosts refuse (a 403 from Baidu itself), but PaddleX 3.7 fetches
+its official models from its Hugging Face mirror by default, so both Paddle
+arms load. `kaggle.com` refuses without the token, so the human crop PNGs (on
+the Mac and in Kaggle `lilly-ocr-crops`) cannot arrive:
+`scripts/bakeoff_ocr.py --photos-only` runs the 40 photographs and the timing
+without the crop row and says so in the report. Two things bite there:
+`upload.wikimedia.org` limits requests for *original* files per address (429,
+Retry-After 600 s; standard thumbnails are exempt, and a photograph narrower
+than 1280 px has no thumbnail), which both fetchers now wait out; and
+paddlepaddle 3.3.1's oneDNN executor dies on the detector, so the Paddle door
+runs with oneDNN off (`app/ocr.py`, `get_paddle_reader`).
 
 **Cost.** Half a day. No training.
 
@@ -340,7 +351,7 @@ not just the totals. A delta inside the interval is written as "no change".
 
 | task | where | why |
 |---|---|---|
-| PaddleOCR bake-off (step 1) | Mac, or a Kaggle CPU notebook | needs the Commons photographs and the weight downloads; cloud sessions cannot reach either |
+| PaddleOCR bake-off (step 1) | Mac, a Kaggle CPU notebook, or a cloud session with `--photos-only` | the crop PNGs are on the Mac and behind the Kaggle token; the photographs and the weights do reach a cloud session (measured 3 Sep 2026, step 1 "Where") |
 | Kaggle pushes, polls, dataset uploads | Mac | the token lives in `~/.kaggle/kaggle.json` and nowhere else |
 | Transcription (steps 2, 2b, 4) | a person, or a vision-agent pass that never sees the reader's output; two independent passes, agreed words only | the reader must not label its own test or training data |
 | Box counting (step 3) | a person | by design — a machine counting its own boxes measures itself |
