@@ -5,8 +5,9 @@
     python3 data/scripts/fetch_test_v2.py --check   # report only
 
 `training/build_test_v2.py` froze the draw in `test-v2/sample.txt` from files
-in git; this turns the names into pixels. Runs on the Mac (or anywhere that can
-reach Commons) — a Claude Code cloud session cannot.
+in git; this turns the names into pixels. Runs on the Mac, or anywhere that can
+reach Commons — a Claude Code cloud session can (measured 3 Sep 2026), within
+the rate limit on original files described at `get()`.
 
 Every photograph is fetched as the 1280px rendering, the same size
 `restore_scored_photos.py` restores the 40 at, so the two sets are read at one
@@ -26,6 +27,7 @@ import json
 import re
 import sys
 import time
+import urllib.error
 import urllib.parse
 import urllib.request
 from pathlib import Path
@@ -41,17 +43,41 @@ UA = "Lilly-OCR-eval/1.0 (https://github.com/ssaaffaakk/Lilly; test-v2 fetch)"
 WIDTH = 1280
 
 
+# upload.wikimedia.org rate-limits requests for *original* files per address
+# and answers 429 with Retry-After (600 s, measured 3 Sep 2026: "please ...
+# instead use thumbnail images in sizes listed"). The 1280px renderings are
+# standard thumbnails and flow freely; a photograph narrower than 1280px has
+# no thumbnail and its "rendering" is the original, so a draw of 280 meets the
+# limit a few dozen times. Waiting out the window is the etiquette Wikimedia
+# asks for; logging those as "failed" would drop photographs from the set for
+# a reason that has nothing to do with the photograph.
+MAX_429_WAITS = 12                                   # up to two hours per file at 600 s
+MAX_429_WAIT_SECONDS = 900
+
+
 def get(url: str, retries: int = 4) -> bytes:
-    for attempt in range(retries):
+    waits = 0
+    attempt = 0
+    while True:
         try:
             req = urllib.request.Request(url, headers={"User-Agent": UA})
             with urllib.request.urlopen(req, timeout=60) as resp:
                 return resp.read()
-        except Exception as exc:                      # noqa: BLE001
+        except urllib.error.HTTPError as exc:
+            if exc.code == 429 and waits < MAX_429_WAITS:
+                waits += 1
+                wait = min(int(float(exc.headers.get("Retry-After") or 60)), MAX_429_WAIT_SECONDS)
+                print(f"    429 from {urllib.parse.urlsplit(url).netloc}; waiting {wait}s "
+                      f"({waits}/{MAX_429_WAITS})", flush=True)
+                time.sleep(wait)
+                continue
             if attempt == retries - 1:
                 raise
-            time.sleep(2 ** attempt)
-    raise RuntimeError("unreachable")
+        except Exception:                             # noqa: BLE001
+            if attempt == retries - 1:
+                raise
+        time.sleep(2 ** attempt)
+        attempt += 1
 
 
 def imageinfo(titles: list) -> dict:

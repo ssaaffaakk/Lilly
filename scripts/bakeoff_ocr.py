@@ -24,8 +24,14 @@ re-read four times over.
     python3 scripts/bakeoff_ocr.py --arms lilly paddle-v5 --limit 3   # smoke
     python3 scripts/bakeoff_ocr.py --assemble-only                    # re-write the report
 
-Not runnable from a Claude Code cloud session: its network policy refuses the
-Commons photographs and the weight hosts. The Mac has both.
+From a Claude Code cloud session, measured 3 Sep 2026: huggingface.co and both
+Commons hosts answer, so the weights and the photographs arrive; the bcebos.com
+weight hosts refuse (a 403 from Baidu itself), but PaddleX 3.7 fetches its
+official models from its Hugging Face mirror by default, so the paddle arms
+load; kaggle.com refuses without the token, so the human crop PNGs (on the Mac
+and in the Kaggle dataset `lilly-ocr-crops`) cannot arrive. `--photos-only`
+runs the 40 photographs and the timing without the crop row, and the report
+says so in every place the row would have been.
 """
 import argparse
 import json
@@ -53,6 +59,28 @@ LETTERS = "čćđšžČĆĐŠŽ"
 # The shipped reader's numbers as published. The run must reproduce them; a
 # shipped arm that does not is a changed code path, not a new result.
 PUBLISHED = {"per_photo": 54.7, "invented": 180}
+CROPS = REPO_ROOT / "data" / "ocr" / "crops"
+# One timed read through app.ocr.scan for a machine without the crop PNGs: the
+# same two calls score_crops.py --time makes, in the arm's own process, so the
+# timing row is measured the same way whether or not the crop row ran.
+TIMING_CODE = r'''
+import json, sys, time
+from pathlib import Path
+sys.path.insert(0, sys.argv[3])
+from PIL import Image
+from app.ocr import scan, reader_identity
+photo, out = Path(sys.argv[1]), Path(sys.argv[2])
+scan(str(photo))                       # warm: model load, first-call costs
+t0 = time.time()
+scan(str(photo))
+seconds = time.time() - t0
+with Image.open(photo) as img:
+    w, h = img.size
+out.write_text(json.dumps({"reader": reader_identity(),
+                           "timing": {"photo": photo.name, "pixels": w * h, "seconds": seconds}},
+                          indent=1) + "\n", encoding="utf-8")
+print(f"{photo.name} ({w}x{h}): {seconds:.1f}s per read, second of two")
+'''
 
 
 def cache_for(arm: str) -> Path:
@@ -60,23 +88,26 @@ def cache_for(arm: str) -> Path:
     return base / ("reader-output.json" if arm == "lilly" else f"reader-output-{arm}.json")
 
 
-def commands(arm: str, limit: int, photo: Path) -> list:
+def commands(arm: str, limit: int, photo: Path, photos_only: bool = False) -> list:
     py = sys.executable
     limit_args = ["--limit", str(limit)] if limit else []
-    return [
-        [py, "training/evaluate_ocr.py", "--cache", str(cache_for(arm)),
-         "--out", str(OUT / f"{arm}-photos.md"), "--json", str(OUT / f"{arm}-photos.json")] + limit_args,
-        [py, "training/score_crops.py", "--json", str(OUT / f"{arm}-crops.json"),
-         "--time", str(photo)] + limit_args,
-    ]
+    cmds = [[py, "training/evaluate_ocr.py", "--cache", str(cache_for(arm)),
+             "--out", str(OUT / f"{arm}-photos.md"), "--json", str(OUT / f"{arm}-photos.json")] + limit_args]
+    if photos_only:
+        cmds.append([py, "-c", TIMING_CODE, str(photo), str(OUT / f"{arm}-timing.json"), str(REPO_ROOT)])
+    else:
+        cmds.append([py, "training/score_crops.py", "--json", str(OUT / f"{arm}-crops.json"),
+                     "--time", str(photo)] + limit_args)
+    return cmds
 
 
-def run_arm(arm: str, limit: int, photo: Path, dry: bool) -> None:
+def run_arm(arm: str, limit: int, photo: Path, dry: bool, photos_only: bool = False) -> None:
     env = dict(os.environ, **ARMS[arm])
-    for cmd in commands(arm, limit, photo):
+    for cmd in commands(arm, limit, photo, photos_only):
         shown = " ".join(f"{k}={v}" for k, v in ARMS[arm].items())
         prefix = f"{shown} " if shown else ""
-        print(f"\n$ {prefix}{' '.join(cmd)}", flush=True)
+        words = ["<one timed read through app.ocr.scan>" if c is TIMING_CODE else c for c in cmd]
+        print(f"\n$ {prefix}{' '.join(words)}", flush=True)
         if dry:
             continue
         subprocess.run(cmd, cwd=REPO_ROOT, env=env, check=True)
@@ -175,15 +206,28 @@ def dictionary_check(rec_model: str) -> str:
 # --------------------------------------------------------------- the report
 
 def load_results(arms: list) -> dict:
+    """Every arm with a photograph score. The crop row and the timing are
+    carried when their files exist; an arm without a crop row is reported as
+    unmeasured there, never dropped and never filled in."""
     results = {}
     for arm in arms:
         photos = OUT / f"{arm}-photos.json"
-        crops = OUT / f"{arm}-crops.json"
-        if not photos.is_file() or not crops.is_file():
+        if not photos.is_file():
             continue
+        crops, timing = OUT / f"{arm}-crops.json", OUT / f"{arm}-timing.json"
         results[arm] = {"photos": json.loads(photos.read_text(encoding="utf-8")),
-                        "crops": json.loads(crops.read_text(encoding="utf-8"))}
+                        "crops": json.loads(crops.read_text(encoding="utf-8")) if crops.is_file() else None,
+                        "timing": json.loads(timing.read_text(encoding="utf-8")) if timing.is_file() else None}
     return results
+
+
+def identity_of(r: dict) -> str:
+    """The reader string the arm's own process reported, from whichever file has it."""
+    return ((r.get("crops") or {}).get("reader") or (r.get("timing") or {}).get("reader") or "?")
+
+
+def timing_of(r: dict) -> dict:
+    return ((r.get("crops") or {}).get("timing") or (r.get("timing") or {}).get("timing") or {})
 
 
 def assemble(results: dict, limit: int) -> str:
@@ -195,10 +239,18 @@ def assemble(results: dict, limit: int) -> str:
     lines = ["# Engine bake-off — PaddleOCR untrained against the shipped reader", ""]
     if limit:
         lines += [f"**Smoke run with --limit {limit}. Not a result.**", ""]
+    unmeasured = [arm for arm, r in results.items() if not r.get("crops")]
     lines += [f"Run {time.strftime('%Y-%m-%d %H:%M')} by `scripts/bakeoff_ocr.py`, rule from "
               "`training/PREREGISTRATION.md`, \"v2 — read — bake-off\". Every arm through "
               "`app.ocr.scan` on the same 40 photographs and `app.ocr.read_regions` on the same "
               "crops; `training/bakeoff/<arm>-*.json` are the raw counts.", ""]
+    if unmeasured:
+        lines += [f"**The crop row was not measured for {', '.join(unmeasured)}.** The crop PNGs under "
+                  "`data/ocr/crops/` are not on the machine this ran on (they are on the Mac and in the "
+                  "Kaggle dataset `lilly-ocr-crops`, which needs the token). The bar below is the 40 "
+                  "photographs, as pre-registered; the crop row is reported beside it and is filled in by "
+                  "running `training/score_crops.py --json training/bakeoff/<arm>-crops.json` per arm "
+                  "where the crops are, then `scripts/bakeoff_ocr.py --assemble-only`.", ""]
 
     repro = (abs(shipped["per_photo"] - PUBLISHED["per_photo"]) <= 0.05
              and shipped["invented"] == PUBLISHED["invented"])
@@ -213,7 +265,7 @@ def assemble(results: dict, limit: int) -> str:
               "|---|---|---|---|---|---|---|"]
     for arm, r in results.items():
         p = r["photos"]
-        lines.append(f"| {arm} | `{r['crops'].get('reader', '?')}` | **{p['per_photo']:.1f}%** | "
+        lines.append(f"| {arm} | `{identity_of(r)}` | **{p['per_photo']:.1f}%** | "
                      f"{p['pooled']:.1f}% | {p['invented']} | {p['diacritic']:.1f}% | {p['folded']:.1f}% |")
     lines += ["", "## Signs against boards", "",
               "The product reads small signs and street names (docs/OCR-ROADMAP.md, decision 1). "
@@ -240,6 +292,9 @@ def assemble(results: dict, limit: int) -> str:
               "| arm | held out: exact | held out: folded | 95% (folded) | training-side: folded |",
               "|---|---|---|---|---|"]
     for arm, r in results.items():
+        if not r.get("crops"):
+            lines.append(f"| {arm} | not measured here | — | — | — |")
+            continue
         h = r["crops"]["halves"]
         ho, ts = h["held_out"], h["training_side"]
         lo, hi = ho["folded_ci"]
@@ -248,10 +303,10 @@ def assemble(results: dict, limit: int) -> str:
 
     lines += ["", "## Speed and letters", "", "| arm | seconds per photograph (CPU) | recogniser dictionary |", "|---|---|---|"]
     for arm, r in results.items():
-        t = r["crops"].get("timing", {})
+        t = timing_of(r)
         secs = f"{t['seconds']:.1f} ({t['photo']}, {t['pixels'] / 1e6:.1f} MP)" if t else "not timed"
         if arm.startswith("paddle"):
-            rec = r["crops"].get("reader", "").split("+")[-1].split(":")[0]
+            rec = identity_of(r).split("+")[-1].split(":")[0]
             dic = dictionary_check(rec) if rec else "unverified"
         else:
             dic = "all ten letters present (allowlist, checked at load)"
@@ -327,6 +382,16 @@ def self_test() -> int:
     v, n = class_recall({"per_photograph": {"a": [1, 2], "b": [0, 4], "c": [3, 30]}}, 1, 5)
     assert n == 2 and abs(v - 25.0) < 1e-9, (v, n)
     assert class_recall({"per_photograph": {"c": [3, 30]}}, 1, 5) == (None, 0)
+    # An arm without a crop row still assembles, and the report says so where the row would be.
+    ph = {"per_photo": 54.7, "pooled": 45.0, "invented": 180, "diacritic": 44.0, "folded": 60.0,
+          "per_photograph": {"a": [1, 2], "b": [3, 10]}}
+    only = {"lilly": {"photos": ph, "crops": None,
+                      "timing": {"reader": "easyocr:lilly",
+                                 "timing": {"photo": "x.jpg", "pixels": 1_000_000, "seconds": 2.0}}}}
+    text = assemble(only, 0)
+    assert "not measured here" in text and "`easyocr:lilly`" in text and "2.0 (x.jpg, 1.0 MP)" in text, text
+    assert identity_of({"crops": {"reader": "a"}, "timing": {"reader": "b"}}) == "a"
+    assert timing_of({"crops": {"halves": {}}, "timing": {"timing": {"seconds": 1}}}) == {"seconds": 1}
     print("self-test ok")
     return 0
 
@@ -337,15 +402,22 @@ def main() -> int:
     ap.add_argument("--limit", type=int, help="first N photographs and crops per half — a smoke test")
     ap.add_argument("--dry-run", action="store_true", help="print the commands and stop")
     ap.add_argument("--assemble-only", action="store_true", help="rebuild the report from training/bakeoff/")
+    ap.add_argument("--photos-only", action="store_true",
+                    help="the 40 photographs and the timing, no crop row: for a machine without the "
+                         "crop PNGs; the report says so")
     ap.add_argument("--self-test", action="store_true")
     args = ap.parse_args()
     if args.self_test:
         return self_test()
     OUT.mkdir(parents=True, exist_ok=True)
     if not args.assemble_only:
+        if not args.photos_only and not args.dry_run and not any(CROPS.glob("*.png")):
+            raise SystemExit(f"no crop PNGs under {CROPS.relative_to(REPO_ROOT)} — they are on the Mac and in "
+                             "the Kaggle dataset lilly-ocr-crops. --photos-only runs the 40 photographs and "
+                             "the timing without the crop row, and the report says so.")
         photo = timing_photo() if not args.dry_run else Path("<first scored photograph>")
         for arm in args.arms:
-            run_arm(arm, args.limit or 0, photo, args.dry_run)
+            run_arm(arm, args.limit or 0, photo, args.dry_run, args.photos_only)
         if args.dry_run:
             return 0
     results = load_results(args.arms)

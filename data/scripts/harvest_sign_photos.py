@@ -142,6 +142,14 @@ OPENVERSE_API = "https://api.openverse.org/v1/images/"
 # 429. 1.2 s is the floor, and Fetcher.download widens from there the same way.
 API_GAP_SECONDS = 6.0
 DOWNLOAD_GAP_SECONDS = 1.2
+# upload.wikimedia.org rate-limits requests for *original* files per address
+# and says so with a 429 and Retry-After (600 s, measured 3 Sep 2026: "please
+# ... instead use thumbnail images in sizes listed"). Standard thumbnails are
+# exempt; a photograph narrower than 1280px has no thumbnail, so its rendering
+# is the original and meets the limit. Waiting the window out is what the
+# message asks for, and a wait does not spend one of the download attempts.
+MAX_429_WAITS = 12                                   # two hours per file at 600 s
+MAX_429_WAIT_SECONDS = 900
 MAX_API_TRIES = 6
 
 # ---------------------------------------------------------------- discovery
@@ -416,9 +424,11 @@ class Fetcher:
         Same adaptive gap as the API, separate number, because the two limits
         are separate.
         """
-        for attempt in range(4):
+        attempt, waits = 0, 0
+        while attempt < 4:
             self._wait(self.download_gap)
             delay = 5 * 2 ** attempt
+            throttled = False
             try:
                 response = self.session.get(url, timeout=120, stream=True)
                 if response.status_code == 200:
@@ -433,12 +443,23 @@ class Fetcher:
                 if response.status_code == 429:
                     self.throttled += 1
                     self.download_gap = min(self.download_gap * 1.5, 8.0)
+                    throttled = waits < MAX_429_WAITS
             except Exception:
                 pass
             # A connection that dies mid-stream leaves a truncated file behind.
             # Left there it would be screened, half-read, and possibly kept.
             dest.unlink(missing_ok=True)
-            if attempt < 3:
+            if throttled:
+                # Told to wait: wait, and come back with all four attempts.
+                waits += 1
+                delay = min(delay, MAX_429_WAIT_SECONDS)
+                if self.verbose:
+                    print(f"    429 on download; waiting {delay:.0f}s "
+                          f"({waits}/{MAX_429_WAITS})", flush=True)
+                time.sleep(delay)
+                continue
+            attempt += 1
+            if attempt < 4:
                 time.sleep(delay)
         return False
 

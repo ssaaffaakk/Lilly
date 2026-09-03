@@ -128,12 +128,21 @@ def get_paddle_reader():
             if _paddle_reader is None:
                 from paddleocr import PaddleOCR
                 det, rec = paddle_models()
+                # oneDNN off. PaddleX turns it on by default on x86 CPUs, and
+                # with paddlepaddle 3.3.1 the detector's first run then dies in
+                # the executor ("ConvertPirAttribute2RuntimeAttribute not
+                # support pir::ArrayAttribute<pir::DoubleAttribute>",
+                # onednn_instruction.cc) -- both PP-OCRv5 and PP-OCRv6, measured
+                # 3 Sep 2026. The plain CPU kernels read the same weights and
+                # are slower, so the timing row of the bake-off says which
+                # kernels it timed. The Mac has no oneDNN and is unaffected.
                 _paddle_reader = PaddleOCR(
                     text_detection_model_name=det,
                     text_recognition_model_name=rec,
                     use_doc_orientation_classify=False,
                     use_doc_unwarping=False,
-                    use_textline_orientation=False)
+                    use_textline_orientation=False,
+                    enable_mkldnn=False)
     return _paddle_reader
 
 
