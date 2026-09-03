@@ -62,9 +62,9 @@ Owner: Safak. Decisions marked **owner** are theirs, not an agent's.
 - **`evaluate_ocr.py`'s reading cache is keyed on the weight files, not on
   which reader is loaded.** `LILLY_READER=stock` or `=paddle` with the default
   `--cache` would score the *trained* reader's cached readings under the other
-  name — the exact failure the cache stamp was added to prevent. Step 1 fixes
-  this by stamping the cache with the reader's identity; until then, every
-  reader gets its own `--cache` file.
+  name — the exact failure the cache stamp was added to prevent. Fixed the same
+  day: the stamp now carries `app.ocr.reader_identity()`, and the bake-off
+  runner gives every arm its own cache file anyway.
 
 ## The line that is closed
 
@@ -103,21 +103,23 @@ PP-OCRv5's `latin_PP-OCRv5_mobile_rec` names Bosnian, Croatian and Serbian
 covers Serbian Cyrillic. The detector is a generation newer than CRAFT, and the
 detector has never been touched here.
 
-**How.**
-- Add `LILLY_READER=paddle` to `app/ocr.py` behind the same door as everything
+**How — built 3 Sep 2026, waiting for the Mac.**
+- `LILLY_READER=paddle` in `app/ocr.py`, behind the same door as everything
   else: `read_regions` returns the same `(box, text, confidence)` triples and the
   same paragraph grouping, so `training/evaluate_ocr.py` and
-  `training/measure_detection.py` run unchanged. Same pattern as
-  `LILLY_READER=stock`.
-- Write the bar into `training/PREREGISTRATION.md` **before** running.
-  Suggested: adopt PaddleOCR if words-per-photograph is not below 54.7 and
-  invented words are not above 180; otherwise stay, and record the numbers.
-- Run `evaluate_ocr.py` on the 40 photographs → per-photo, pooled, invented,
-  diacritic and folded rows, for both readers, in one sitting.
-- Run both readers on the **71 held-out** crops of `labels-human-latin.tsv` and,
-  in a separate row labelled training-side, on the other 666.
-- Time both on the same 2 MP photograph on the Mac's CPU. The shipped reader
-  takes about 9 s; the app runs CPU-only in Docker, so this is a product number.
+  `training/measure_detection.py` run unchanged. `LILLY_PADDLE_VERSION`
+  chooses PP-OCRv6 (default) or PP-OCRv5.
+- The bar is written: `training/PREREGISTRATION.md`, "v2 — read — bake-off".
+  Not worse on words-per-photograph or invented words, better on at least one;
+  the shipped arm is re-run and must reproduce 54.7 / 180.
+- One command runs all four arms — shipped, stock, PP-OCRv6, PP-OCRv5 — on the
+  40 photographs, on the 71 held-out crops (the 666 training-side in a row of
+  their own), and times one 2 MP read, then applies the rule:
+  `python3 scripts/bakeoff_ocr.py` (`--dry-run` shows the commands,
+  `--arms lilly paddle-v5 --limit 3` smokes it). Report:
+  `training/RESULTS-ocr-bakeoff.md`, raw counts in `training/bakeoff/`.
+- `pip install paddleocr paddlepaddle` on the Mac first; it is deliberately
+  not in `requirements.txt` — a measurement path, not the app.
 
 **Where.** The Mac, or a Kaggle CPU notebook. Not a Claude Code cloud session:
 its network policy refuses `kaggle.com`, `upload.wikimedia.org`, both
@@ -244,7 +246,7 @@ not just the totals. A delta inside the interval is written as "no change".
 | step | state | evidence |
 |---|---|---|
 | 0 freeze | done, 3 Sep 2026 | this commit |
-| 1 bake-off | not started | — |
+| 1 bake-off | pre-registered, code ready, **needs the Mac** | `scripts/bakeoff_ocr.py`, PREREGISTRATION "bake-off" |
 | 2 test-v2 | not started | — |
 | 3 R_d | not started | — |
 | 4 labels | blocked on 1–3 | — |

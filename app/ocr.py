@@ -54,8 +54,145 @@ _reader = None
 _allowlist = None
 _cyrillic_reader = None
 _cyrillic_allowlist = None
+_paddle_reader = None
 _reader_lock = threading.Lock()
 _read_lock = threading.Lock()
+
+# A second engine, for measurement. LILLY_READER=paddle routes every read
+# through PaddleOCR instead of EasyOCR -- same door (read_regions), same
+# paragraph grouping, same triples out -- so training/evaluate_ocr.py scores it
+# on the same 40 photographs by the same code, which is the only comparison
+# worth anything (docs/OCR-ROADMAP.md, step 1; the bar is pre-registered in
+# training/PREREGISTRATION.md). Untrained: the point is whether a newer
+# detector and recogniser, out of the box, already read these photographs
+# better than the reader six fine-tuning passes could not improve.
+#
+# The model pair is written down rather than left to the library's default, so
+# the cache stamp and the results file name exactly what read the photographs.
+# PP-OCRv6 medium is what paddleocr 3.7 picks for lang="bs"; PP-OCRv5 is the
+# Latin model whose dictionary was checked to hold all of čćđšžČĆĐŠŽ. Document
+# preprocessing (orientation, unwarping, textline rotation) is off: these are
+# photographs of signs, not scans, and the app's EasyOCR path has none of it.
+PADDLE_MODELS = {
+    "PP-OCRv6": ("PP-OCRv6_medium_det", "PP-OCRv6_medium_rec"),
+    "PP-OCRv5": ("PP-OCRv5_server_det", "latin_PP-OCRv5_mobile_rec"),
+}
+
+
+def _paddle_enabled() -> bool:
+    return os.environ.get("LILLY_READER", "").lower() == "paddle"
+
+
+def paddle_models() -> tuple:
+    """(detector, recogniser) names the paddle path loads, from the environment."""
+    version = os.environ.get("LILLY_PADDLE_VERSION", "PP-OCRv6")
+    if version not in PADDLE_MODELS:
+        raise RuntimeError(f"LILLY_PADDLE_VERSION={version!r}; known: {sorted(PADDLE_MODELS)}")
+    det, rec = PADDLE_MODELS[version]
+    return (os.environ.get("LILLY_PADDLE_DET", det),
+            os.environ.get("LILLY_PADDLE_REC", rec))
+
+
+def reader_identity() -> str:
+    """Which reader a read goes through, as a string a cache can be stamped with.
+
+    evaluate_ocr.py stamps its reading cache with the weight files on disk.
+    That stamp does not change when LILLY_READER switches engines or falls back
+    to the stock weights, so without this the first stock or paddle score after
+    a trained run would read the trained reader's answers back out of the cache
+    and print them under the other name -- the exact failure the stamp exists
+    to prevent.
+    """
+    if _paddle_enabled():
+        det, rec = paddle_models()
+        try:
+            import paddleocr
+            version = getattr(paddleocr, "__version__", "?")
+        except Exception:
+            version = "?"
+        return f"paddle:{det}+{rec}:{version}"
+    if _cyrillic_enabled():
+        return "easyocr:lilly+cyrillic"
+    trained = READ_DIR / "lilly.pth"
+    network = READ_DIR / "user_network"
+    stock = os.environ.get("LILLY_READER", "").lower() == "stock"
+    if not stock and trained.exists() and (network / "lilly.yaml").exists():
+        return "easyocr:lilly"
+    return "easyocr:stock"
+
+
+def get_paddle_reader():
+    global _paddle_reader
+    if _paddle_reader is None:
+        with _reader_lock:
+            if _paddle_reader is None:
+                from paddleocr import PaddleOCR
+                det, rec = paddle_models()
+                _paddle_reader = PaddleOCR(
+                    text_detection_model_name=det,
+                    text_recognition_model_name=rec,
+                    use_doc_orientation_classify=False,
+                    use_doc_unwarping=False,
+                    use_textline_orientation=False)
+    return _paddle_reader
+
+
+def _field(result, key):
+    """A key off a PaddleX result, which is a dict that may lack the key."""
+    try:
+        return result[key]
+    except (KeyError, TypeError, IndexError):
+        return None
+
+
+def _paddle_results_to_regions(results) -> list:
+    """PaddleOCR's per-image results as EasyOCR's (box, text, confidence) triples.
+
+    A box is four [x, y] corners, the way readtext returns them, so
+    easyocr.utils.get_paragraph and measure_detection.py take them unchanged.
+    Paddle's polygons can carry more than four points; the axis-aligned bounds
+    are what grouping and overlays need, so that is what is kept.
+    """
+    import numpy as np
+
+    regions = []
+    for result in results:
+        texts = _field(result, "rec_texts") or []
+        scores = _field(result, "rec_scores")
+        scores = list(scores) if scores is not None else [1.0] * len(texts)
+        polys = _field(result, "rec_polys")
+        if polys is None or len(polys) == 0:
+            polys = _field(result, "dt_polys") or []
+        for poly, text, score in zip(polys, texts, scores):
+            text = str(text)
+            if not text.strip():
+                continue
+            pts = np.asarray(poly, dtype=float).reshape(-1, 2)
+            x0, y0 = pts.min(axis=0)
+            x1, y1 = pts.max(axis=0)
+            box = [[int(round(x0)), int(round(y0))], [int(round(x1)), int(round(y0))],
+                   [int(round(x1)), int(round(y1))], [int(round(x0)), int(round(y1))]]
+            regions.append([box, text, float(score)])
+    return regions
+
+
+def _read_regions_paddle(image, detail: int, paragraph: bool) -> list:
+    import numpy as np
+
+    array = np.asarray(image)
+    if array.ndim == 2:
+        array = np.stack([array] * 3, axis=-1)
+    # The app hands over RGB (PIL); Paddle, like OpenCV, expects BGR.
+    bgr = np.ascontiguousarray(array[:, :, :3][:, :, ::-1])
+    reader = get_paddle_reader()
+    with _read_lock:
+        regions = _paddle_results_to_regions(list(reader.predict(bgr)))
+    if paragraph:
+        from easyocr.utils import get_paragraph
+        regions = get_paragraph(regions, x_ths=1.0, y_ths=0.5, mode="ltr")
+    if detail == 0:
+        return [r[1] for r in regions]
+    return regions
 
 # Bosnian is written in both alphabets and the recogniser only knows one.
 # latin_g2 has 351 output classes and not one is Cyrillic, so a Cyrillic sign
@@ -241,9 +378,11 @@ def read_regions(image, **kwargs):
     """
     import numpy as np
 
-    get_reader()
     detail = kwargs.pop("detail", 1)
     paragraph = kwargs.pop("paragraph", False)
+    if _paddle_enabled():
+        return _read_regions_paddle(image, detail, paragraph)
+    get_reader()
 
     with _read_lock:
         if not _cyrillic_enabled():

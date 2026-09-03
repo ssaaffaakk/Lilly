@@ -139,8 +139,11 @@ def reader_fingerprint() -> str:
     reading a hundred megabytes to find that out.
     """
     import hashlib
+    from app.ocr import reader_identity
     read_dir = REPO_ROOT / "models" / "lilly" / "read"
-    parts = []
+    # The files alone cannot tell LILLY_READER=stock or =paddle from the trained
+    # reader: same directory, same sizes. The identity string can.
+    parts = ["reader=" + reader_identity()]
     for f in sorted(read_dir.rglob("*")):
         if f.is_file() and f.suffix in {".pth", ".pt", ".yaml", ".py"}:
             stat = f.stat()
@@ -358,6 +361,10 @@ def main() -> int:
             "folded": pct(totals["blind"]),
             "invented": spurious,
             "photographs": len(rows),
+            "reader": reader_fingerprint(),
+            # Per photograph, so two readers can be compared pair by pair
+            # rather than mean against mean.
+            "per_photograph": {name: [hit, need] for name, hit, need, *_r in rows},
         }, indent=2) + "\n", encoding="utf-8")
         print(f"wrote {short(args.json)}")
     return 0

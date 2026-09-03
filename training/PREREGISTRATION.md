@@ -893,3 +893,100 @@ this fine-tune does not change that. A good result here is a good result for
 Nothing in the write-up may imply that English → Bosnian and Bosnian → English
 are of comparable quality; on the evidence available they are not, and the
 README already says so.
+
+## v2 — read — bake-off — the engine question, written before any number exists
+
+Written 3 September 2026, before `LILLY_READER=paddle` has read a single
+photograph. `docs/OCR-ROADMAP.md`, step 1. Nothing below is reinterpreted
+afterwards.
+
+### The question
+
+Six fine-tuning passes on EasyOCR's `latin_g2` (14–19) did not move the
+reader, and the reason was the labels, not the recipe. The question that is
+still open is not "more training" but whether a newer engine, **untrained**,
+already reads these photographs better than the reader those passes could not
+improve — in which case the next months go there, and if not, the engine
+question is closed with a number instead of an opinion. The detector has never
+been measured or changed here; a different detector is half of what a new
+engine brings.
+
+### The arms
+
+- **Shipped** — `app.ocr` as installed: EasyOCR's CRAFT detector and the
+  fine-tuned `lilly` recogniser. Its numbers exist (54.7% words per
+  photograph, 180 invented words) and are **re-run, not quoted**, so that both
+  sides of every comparison come from the same code on the same day.
+- **Stock** — `LILLY_READER=stock`: EasyOCR's own `latin_g2`. The control,
+  so the fine-tune's gain stands beside the engine gap.
+- **PaddleOCR PP-OCRv6** — `LILLY_READER=paddle`: `PP-OCRv6_medium_det` and
+  `PP-OCRv6_medium_rec`, what paddleocr 3.7 selects for `lang="bs"`.
+- **PaddleOCR PP-OCRv5** — `LILLY_PADDLE_VERSION=PP-OCRv5`:
+  `PP-OCRv5_server_det` and `latin_PP-OCRv5_mobile_rec`, the Latin model whose
+  dictionary was checked to hold all of čćđšžČĆĐŠŽ.
+
+Both PaddleOCR arms are the published weights with document preprocessing off
+and nothing tuned: no threshold sweep, no resolution sweep, no allowlist. The
+app's own two-megapixel path, through `app.ocr.scan`. Tuning a threshold on
+the scored photographs would make the score a fit, and the 40 photographs are
+the only test set there is.
+
+### The measurement that decides
+
+    python3 scripts/bakeoff_ocr.py
+
+`training/evaluate_ocr.py` for every arm, in its own process with its own
+reading cache, on the same 40 photographs and the same `truth.json`. The
+reading cache is stamped with the reader's identity now, so an arm cannot be
+scored on another arm's cached readings.
+
+### The threshold
+
+The bar is the **shipped arm as re-measured in this run**. It must reproduce
+54.7% / 180; if it does not, the run is invalid and the reason is found before
+anything is compared.
+
+A PaddleOCR arm replaces the shipped reader if, on the 40 photographs, it is
+**not worse on either row and better on at least one**:
+
+| | shipped | a PaddleOCR arm must be |
+|---|---|---|
+| words per photograph | 54.7% | ≥ 54.7 |
+| words invented that are on no sign | 180 | ≤ 180 |
+| and | | > on at least one of the two |
+
+A tie on both leaves the installed reader in place. The second row is in the
+bar because recall can always be bought by guessing more, and for an app that
+translates what it reads an invented word becomes an invented sentence.
+
+If both PaddleOCR arms clear it: the higher words-per-photograph, then the
+fewer invented words, then PP-OCRv5, whose dictionary is the one verified.
+
+### Reported, and unable to change the decision
+
+- Paired per-photograph deltas against the shipped arm, with a paired
+  bootstrap p. Significance is reported and does not move the bar, as
+  everywhere else in this file.
+- The 71 held-out human crops, exact and folded, with the interval. The 666
+  training-side crops in a row of their own, which compares nothing.
+- Seconds per two-megapixel photograph on the Mac's CPU. The app runs CPU-only
+  in Docker, so this is a product number, but speed is not in the bar.
+- Whether the winning recogniser's dictionary can write all ten letters. If the
+  arm that clears the bar cannot, the owner decides; this file does not
+  pre-decide it and says so rather than inventing a rule after the number.
+
+### What failure looks like
+
+- **No PaddleOCR arm clears the bar.** The shipped reader stays; the engine
+  question is closed with numbers; the next step is the roadmap's test set.
+- **Recall rises, invented words rise with it.** Not adopted. The invented
+  count becomes the thing to fix — a detector threshold, a size floor — as a
+  new pre-registration, not a re-run of this one.
+- **The shipped arm does not reproduce 54.7% / 180.** No comparison is made.
+  The code path changed, and finding where comes first.
+
+### What this run cannot settle
+
+Whether fine-tuning PaddleOCR would help; anything about Cyrillic; and the
+detector question on its own — `R_d` in the "picture" section above is still
+the measurement for that, and it has still not been run.
