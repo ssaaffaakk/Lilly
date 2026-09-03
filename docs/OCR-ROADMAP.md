@@ -44,6 +44,28 @@ Owner: Safak. Decisions marked **owner** are theirs, not an agent's.
 | 43.2% folded on the crop gate | 132 held-out human crops | honest but ±8 points |
 | 45.0% folded on 737 crops | `labels-human-latin.tsv`, 666/737 training-side | **do not use to compare readers**. Report it only in a row labelled "training-side" |
 
+### Verified on 3 Sep 2026, so nobody re-checks it
+
+- **The 54.7% is clean.** No crop in `crops/labels-human.tsv`, `crops2/` or
+  `label-answers/` was cut from any of the 40 scored photographs — checked by
+  crop filename and by Commons page URL through `harvested/CREDITS.tsv`. The
+  harvester did *download* 15 of the 40 (they are in `CREDITS.tsv` and
+  `screened.tsv`), but none of them reached a labelled file. The exclusion in
+  `RESULTS-ocr-realcrops.md` holds at the crop level, which is the level that
+  matters.
+- **The shipped reader trained on 1,294 human crops and held out 132**
+  (`RESULTS-ocr-realcrops.md`), 1,426 usable Latin crops in all — which is why
+  666 of the 737 clean crops are training-side.
+- **36.0% → 54.7% is per-photograph on both ends** (`RESULTS-ocr.md`,
+  `RESULTS-ocr-restored.md`). The 36.0% also happens to be the old diacritic
+  rate (9/25); the coincidence has misled at least one reader of the docs.
+- **`evaluate_ocr.py`'s reading cache is keyed on the weight files, not on
+  which reader is loaded.** `LILLY_READER=stock` or `=paddle` with the default
+  `--cache` would score the *trained* reader's cached readings under the other
+  name — the exact failure the cache stamp was added to prevent. Step 1 fixes
+  this by stamping the cache with the reader's identity; until then, every
+  reader gets its own `--cache` file.
+
 ## The line that is closed
 
 - Fine-tuning `latin_g2` on EasyOCR-labelled Mapillary crops — passes 14 through
