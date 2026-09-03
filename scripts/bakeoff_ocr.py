@@ -230,7 +230,7 @@ def timing_of(r: dict) -> dict:
     return ((r.get("crops") or {}).get("timing") or (r.get("timing") or {}).get("timing") or {})
 
 
-def assemble(results: dict, limit: int) -> str:
+def assemble(results: dict, limit: int, notes: tuple = ()) -> str:
     from training.score_crops import wilson
 
     if "lilly" not in results:
@@ -258,7 +258,11 @@ def assemble(results: dict, limit: int) -> str:
         lines += [("The shipped arm reproduces its published 54.7% / 180." if repro else
                    f"**The shipped arm does not reproduce its published numbers** "
                    f"({shipped['per_photo']:.1f}% / {shipped['invented']} against 54.7% / 180). "
-                   "Something in the code path changed; find it before comparing."), ""]
+                   "By the pre-registration no comparison is made: the run is invalid as a "
+                   "bake-off until the reason is found, and the tables below stand only as "
+                   "the record of what was measured."), ""]
+    if notes:
+        lines += ["## Notes from this run", ""] + [f"- {n}" for n in notes] + [""]
 
     lines += ["## The 40 photographs", "",
               "| arm | reader | words per photograph | pooled | invented words | diacritic words | folded |",
@@ -315,6 +319,10 @@ def assemble(results: dict, limit: int) -> str:
     lines += ["", "## Verdict, by the pre-registered rule", ""]
     if limit:
         lines.append("Smoke run: no verdict.")
+    elif not repro:
+        lines.append("**No verdict.** The shipped arm did not reproduce 54.7% / 180, so the bar "
+                     "this run was to be measured against is not in it. Nothing is adopted and "
+                     "nothing is closed; fix the shipped arm and re-run.")
     else:
         rows = []
         for arm in ("paddle-v6", "paddle-v5"):
@@ -390,6 +398,13 @@ def self_test() -> int:
                                  "timing": {"photo": "x.jpg", "pixels": 1_000_000, "seconds": 2.0}}}}
     text = assemble(only, 0)
     assert "not measured here" in text and "`easyocr:lilly`" in text and "2.0 (x.jpg, 1.0 MP)" in text, text
+    assert "No PaddleOCR arm clears the bar" in text and "No verdict" not in text
+    # A shipped arm that does not reproduce: no verdict, whatever the other arms did.
+    off = {"lilly": {"photos": dict(ph, per_photo=35.9, invented=225), "crops": None, "timing": None},
+           "paddle-v5": {"photos": dict(ph, per_photo=60.0, invented=100), "crops": None, "timing": None}}
+    text = assemble(off, 0, ("the weights are the wrong ones",))
+    assert "No verdict" in text and "Adopt" not in text and "does not reproduce" in text, text
+    assert "- the weights are the wrong ones" in text
     assert identity_of({"crops": {"reader": "a"}, "timing": {"reader": "b"}}) == "a"
     assert timing_of({"crops": {"halves": {}}, "timing": {"timing": {"seconds": 1}}}) == {"seconds": 1}
     print("self-test ok")
@@ -405,6 +420,9 @@ def main() -> int:
     ap.add_argument("--photos-only", action="store_true",
                     help="the 40 photographs and the timing, no crop row: for a machine without the "
                          "crop PNGs; the report says so")
+    ap.add_argument("--note", action="append", default=[],
+                    help="a line for the report's notes section (repeatable): what this run "
+                         "found that the numbers alone do not say")
     ap.add_argument("--self-test", action="store_true")
     args = ap.parse_args()
     if args.self_test:
@@ -421,7 +439,7 @@ def main() -> int:
         if args.dry_run:
             return 0
     results = load_results(args.arms)
-    report = assemble(results, args.limit or 0)
+    report = assemble(results, args.limit or 0, tuple(args.note))
     REPORT.write_text(report, encoding="utf-8")
     print(f"\nwrote {REPORT.relative_to(REPO_ROOT)}")
     print(report)

@@ -11,6 +11,8 @@ Owner: Safak. Decisions marked **owner** are theirs, not an agent's.
 
 ```bash
 git fetch origin && git checkout claude/new-session-455uxc      # or merge it to main first
+export HF_TOKEN=...                                             # never in a file
+.venv/bin/python3 scripts/publish_to_hf.py Safak11/lilly --upload   # the 54.7% reader; HF still holds the 27 Aug one
 .venv/bin/pip install paddleocr paddlepaddle                    # once; not in requirements.txt
 .venv/bin/python3 scripts/bakeoff_ocr.py --arms lilly paddle-v5 --limit 3   # smoke, minutes
 .venv/bin/python3 scripts/bakeoff_ocr.py                        # step 1, about an hour
@@ -100,6 +102,16 @@ Then the two-person transcription of `test-v2` (step 2), and the box count
   is sound.
 - **The Mapillary harvest is pre-screened by the reader under test** — see
   step 2b.
+- **The Hugging Face bundle `Safak11/lilly` holds the 27 August reader, not
+  the 54.7% one.** Its last commit is 27 Aug 2026, before the real-crop
+  training; re-measured 3 Sep from a fresh `scripts/fetch_models.py` on the
+  40 photographs, the bundle's `read/lilly.pth` scores 35.9% per photograph,
+  9/25 diacritic words, 225 invented — the 36.0% report's per-photograph rows
+  on 25 of 28 photographs (`training/RESULTS-ocr-bakeoff.md`). The weights
+  that scored 54.7% exist on the Mac and in the Kaggle `lilly-ocr` output
+  only. Until `scripts/publish_to_hf.py --upload` runs from the Mac, a fresh
+  clone, the Space and any cloud session read with the old reader, and the
+  bake-off's shipped arm cannot reproduce its bar anywhere but the Mac.
 - **`evaluate_ocr.py`'s reading cache is keyed on the weight files, not on
   which reader is loaded.** `LILLY_READER=stock` or `=paddle` with the default
   `--cache` would score the *trained* reader's cached readings under the other
