@@ -16,13 +16,27 @@ n: **132 photographs carry agreed text** of 280 drawn; **2,908 agreed word token
 
 Diacritic words are **214**, not 25. On the 40 that column moved 4 points per letter and the roadmap wrote it off as unable to move by design; here its 95% interval is about ±6.7 points and the gap between the arms is far outside it.
 
-**The invented column is not comparable to the 40's 180.** 148 of the 280 photographs carry no agreed text, and every word a reader returns on those counts as invented, as does every word on a sign only one transcriber could read. Compare this column between arms on this set; never against another set.
+**The invented column counts extra words on the 132 photographs with agreed text, and nothing on the 148 without** — `evaluate_ocr.py` skips a photograph whose key is empty before it counts. (An earlier version of this file said the blanks were counted; they are not.) It is also not comparable to the 40's 180: a bigger set, and a key built to a different coverage — see "What the invented column counts here" below before reading it at all.
 
 ## The two numbers that matter most here
 
 **The shipped reader reads 34.6% of a photograph's words on 132 held-out photographs, against the 54.7% published on 28.** Same weights, same code, same door; a bigger and entirely held-out set. 54.7% rests on 28 photographs with a ±5-point interval on its pooled figure; 34.6% rests on 132. The published figure is not wrong — it is the number for that set — but it is the optimistic end of what this reader does on unseen Bosnian signage, and the product claim should be built on this one.
 
-**PP-OCRv6 wins on recall and loses on invented words.** On the 40 it was ahead on both rows (67.7% against 54.5%, 106 invented against 182). Here it takes +25.4 points of recall and returns **302 more** invented words than the shipped reader (2,373 against 2,071). The pre-registered bake-off rule — better on at least one row, worse on neither — is written against the 40 and is not applied here; but had it been applied to this set, PP-OCRv6 would **fail** it on the invented row. That reversal is the single most decision-relevant fact in this file, and it is why the engine question should not be closed on the 40 alone.
+**PP-OCRv6 takes +25.4 points of recall and returns 302 more "invented" words than the shipped reader (2,373 against 2,071) — and the second number is mostly one photograph.** On the 40 it was ahead on both rows (67.7% against 54.5%, 106 invented against 182); here the invented row reverses, and the next section says what that row is made of before anyone reads it as a verdict.
+
+## What the invented column counts here
+
+`training/invented_words.py`, over the same readings the table above was scored from, the same count three ways:
+
+| arm | vs the agreed key (the table's number) | vs anything either pass marked clear | vs anything either pass wrote at all |
+|---|---|---|---|
+| stock | 2,201 | 2,178 | 2,126 |
+| paddle-v6 | 2,373 | 2,281 | **2,084** |
+| lilly (real reader) | 2,071 | — | — |
+
+**1,120 of paddle-v6's 2,373 — 47% — are on `Зеница_20190821_174244.jpg`**, a museum panel of typed NDH-era decrees. Its key holds 28 agreed words because both transcribers wrote that the body paragraphs were below the resolution of the 1280 px rendering and declined to guess them; PP-OCRv6 read them. Its top ten photographs — that panel, a second museum board, the 1436 charter panel, the trilingual Ljubuški board, the 1927 poster — carry 81% of its invented words; 66 of the 132 photographs have two or fewer. Counted against everything either transcriber wrote, clear or unclear, paddle-v6's 2,373 becomes 2,084 and stock's 2,201 becomes 2,126: 289 of paddle-v6's "invented" words are text a person saw and wrote down.
+
+So on this set the column measures where the transcription stopped, not where the reader invented. The 40 were transcribed to exhaustion; test-v2's dense boards were not, on purpose and on the record in `pass-a.json` and `pass-b.json`. The reversal on the invented row is real as a number and unsafe as a decision in either direction: **the definition of an invented word on test-v2 — against the union of both passes, or with dense boards handled explicitly — goes into `PREREGISTRATION.md` before this set decides the engine question.** The real shipped reader's readings are on the Mac and not in git; the same script run there against `reader-output-lilly.json` says how much of its 2,071 sits on the same panel, which is the missing cell above.
 
 ## Signs against boards
 
@@ -49,7 +63,7 @@ The fine-tune is worth 4.6 points over stock EasyOCR on held-out photographs —
 
 ## What this does and does not settle
 
-- **It does not settle the engine question.** The pre-registered rule (`training/PREREGISTRATION.md`, "v2 — read — bake-off") is written against the 40 and against the shipped reader reproducing 54.7% / 180. `training/RESULTS-ocr-bakeoff.md` prints no verdict because the cv2 the paddle arms need moves the shipped arm to 54.5% / 182. This set is not the pre-registered one and decides nothing on its own — but it shows the rule applied to a bigger set would answer differently on the invented row, which is a reason to re-pre-register rather than to close.
+- **It does not settle the engine question.** The pre-registered rule (`training/PREREGISTRATION.md`, "v2 — read — bake-off") is written against the 40 and against the shipped reader reproducing 54.7% / 180. `training/RESULTS-ocr-bakeoff.md` prints no verdict because the cv2 the paddle arms need moves the shipped arm to 54.5% / 182. This set is not the pre-registered one and decides nothing on its own. The rule applied to it would answer differently on the invented row — but that row here is dominated by transcription coverage on a few dense boards ("What the invented column counts here"), so the different answer is not yet the reader's. Pre-register the definition first; then this set can decide, either way.
 - **It does settle that the set works.** A 16-point correction to one sign row, a 29-point correction to another, and a diacritic column that is a measurement instead of noise, is what 2,907 words buy over 373.
 - **PP-OCRv5 was not run here.** 76.1 s a photograph on this Mac is about five hours for 280 photographs; it is in the 40-photograph bake-off and can be added when there is a machine to spare.
 - **628 Cyrillic words sit in the key.** A Latin-only recogniser cannot produce them, so they are guaranteed misses in every row above. Any future Cyrillic work (roadmap step 5) has a real test set now; any Latin claim should say this denominator includes them.
