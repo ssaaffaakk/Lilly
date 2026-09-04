@@ -113,3 +113,70 @@ thing that produced it: `truth.json` untracked, the harvester deleting the
 ruler, the trainer writing to a file the app does not open, and now a headline
 figure with no record of its weights. The first three were each fixed where they
 happened. This one is fixed by naming the hash every time a score is published.
+
+---
+
+## Answered, 4 September 2026, on the Mac — the weights are `2010a2d4`
+
+The question this file was opened with — *which weights produced 54.7%* — is
+closed, not forensically but by measurement, which is what the last section
+said would have to happen.
+
+**The reader installed on the Mac was the wrong one.** `models/lilly/read/lilly.pth`
+as found on 4 September was md5 `ada99ec73bf0d8014ec7cc319b9c9b9a`,
+15,406,489 bytes, mtime 2 Sep 13:53 — restored that day from
+`lilly-before-pass18.pth`, which is byte-identical to it. Scored through
+`scripts/bakeoff_ocr.py --arms lilly`, all 40 photographs re-read (the cache
+correctly refused itself, `6ce3850b8003ab44` → `07388530ae1a8c1d`):
+
+| | measured | published |
+|---|---|---|
+| words per photograph | **50.8%** (28 photographs) | 54.7% |
+| all words, pooled | 39.1% | 45.0% |
+| words invented | **206** | 180 |
+| words with č ć đ š ž | 40.0% (10/25) | 44.0% (11/25) |
+
+By the pre-registration that is an invalid bake-off, and nothing was compared.
+
+**What it actually was.** `afaksrmeli/lilly-read-pass1`, the Kaggle dataset
+pushed 29 August, holds a `lilly.pth` of md5 `ada99ec73bf0d8014ec7cc319b9c9b9a`
+— byte-identical. The Kaggle pass-1 reader had replaced the 28 August
+real-crop reader as the app's weights, and the 2 September "restore" restored
+that pass-1 reader, because by then it *was* the pre-pass-18 state.
+`~/Downloads/read-trained.pth` is a third copy of the same 15,406,489 bytes.
+
+**Where 54.7% survived.** `models/lilly/read/latin_g2-realcrops.pth`, md5
+`2010a2d417e6c253195fa3d95ff11d33`, 15,406,789 bytes, untouched since
+2026-08-28 06:57:29 — the row in the table above that has not moved. Installed
+as `lilly.pth` and re-scored through the same `app.ocr.scan` path on the same
+40 photographs and the same `truth.json`:
+
+| | value | published in `RESULTS-ocr-realcrops.md` |
+|---|---|---|
+| words per photograph | **54.7%** | 54.7% |
+| all words, pooled | **45.0%** (168/373) | 45.0% |
+| words invented | **180** | 180 |
+| words with č ć đ š ž | **44.0%** (11/25) | 44.0% |
+
+Every published figure, exactly. **The 54.7% reader is
+`2010a2d417e6c253195fa3d95ff11d33`.** That md5 is the one to quote from here on.
+
+**Why the old `lilly.pth` was a different file with the same tensors.** The 28
+August table records `lilly.pth` at `512343be80e0290955b0c7e0deeb5430`,
+15,406,289 bytes — 500 bytes smaller than the `latin_g2-realcrops.pth` written
+three minutes earlier. `train_ocr.py` installs by
+`save_weights(model.cpu(), app_weights)` when there is no `--keep-trained` file
+to copy, so the two files are two serialisations of one model in memory rather
+than a copy. That also explains the failure this file records above: no subset
+of weight files reproduces `c59897bd3963c7ac`, because the directory then held
+a file that no longer exists.
+
+`512343be80e0290955b0c7e0deeb5430` is gone — not in `models/lilly/read/`, not
+in `~/Downloads`, not in `~/.EasyOCR`, searched by size across the home
+directory. It does not need to be recovered: the tensors are in
+`latin_g2-realcrops.pth`, and the score is the proof.
+
+**The rule this file set, applied:** the shipped reader is
+`2010a2d417e6c253195fa3d95ff11d33`. A copy under the name `lilly.pth` is a
+serialisation detail; the md5 that gets quoted is the one whose score was
+measured.
