@@ -45,11 +45,14 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO_ROOT))
 
+# Every arm named in full: since step 6 the app's default is paddle with a
+# confidence floor, and the bake-off measures the untuned arms as pre-registered
+# (floor 0), with the fine-tuned EasyOCR reader as the shipped-then arm.
 ARMS = {
-    "lilly": {},
+    "lilly": {"LILLY_READER": "easyocr"},
     "stock": {"LILLY_READER": "stock"},
-    "paddle-v6": {"LILLY_READER": "paddle", "LILLY_PADDLE_VERSION": "PP-OCRv6"},
-    "paddle-v5": {"LILLY_READER": "paddle", "LILLY_PADDLE_VERSION": "PP-OCRv5"},
+    "paddle-v6": {"LILLY_READER": "paddle", "LILLY_PADDLE_VERSION": "PP-OCRv6", "LILLY_PADDLE_REC_THRESH": "0"},
+    "paddle-v5": {"LILLY_READER": "paddle", "LILLY_PADDLE_VERSION": "PP-OCRv5", "LILLY_PADDLE_REC_THRESH": "0"},
 }
 OUT = REPO_ROOT / "training" / "bakeoff"
 REPORT = REPO_ROOT / "training" / "RESULTS-ocr-bakeoff.md"

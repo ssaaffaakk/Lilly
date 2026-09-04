@@ -1,8 +1,11 @@
 #!/usr/bin/env python3
 """Photo scan: image of Bosnian text -> text.
 
-Bosnian ("bs") is supported directly and phone photos are handled well
-(neural text detector). Weights are read from models/lilly/read/.
+The reader is PaddleOCR PP-OCRv6, untrained, with a confidence floor
+(docs/OCR-ROADMAP.md step 6, owner decision 5; the floor from
+training/RESULTS-ocr-paddle-floor.md). EasyOCR with the fine-tuned Lilly
+recogniser is the way back -- LILLY_READER=easyocr -- and the "before" every
+OCR number is compared against; its weights are read from models/lilly/read/.
 
 Usage:
     python3 app/ocr.py photo.jpg
@@ -58,14 +61,23 @@ _paddle_reader = None
 _reader_lock = threading.Lock()
 _read_lock = threading.Lock()
 
-# A second engine, for measurement. LILLY_READER=paddle routes every read
-# through PaddleOCR instead of EasyOCR -- same door (read_regions), same
-# paragraph grouping, same triples out -- so training/evaluate_ocr.py scores it
-# on the same 40 photographs by the same code, which is the only comparison
-# worth anything (docs/OCR-ROADMAP.md, step 1; the bar is pre-registered in
-# training/PREREGISTRATION.md). Untrained: the point is whether a newer
-# detector and recogniser, out of the box, already read these photographs
-# better than the reader six fine-tuning passes could not improve.
+# Two engines behind one door (read_regions): same paragraph grouping, same
+# triples out, so training/evaluate_ocr.py scores either on the same
+# photographs by the same code. PaddleOCR is the app's reader since 4 Sep 2026
+# (docs/OCR-ROADMAP.md, step 6): untrained, it read 67.7% of a photograph's
+# words against the fine-tuned EasyOCR reader's 54.5% on the 40, and 60.0%
+# against 34.6% on the 132 held-out photographs of test-v2
+# (training/RESULTS-ocr-bakeoff.md, RESULTS-ocr-test-v2.md). EasyOCR stays as
+# LILLY_READER=easyocr: the way back, and the "before" build.
+#
+# LILLY_READER names the engine; unset means the app's reader:
+#   paddle    PaddleOCR PP-OCRv6 (LILLY_PADDLE_VERSION=PP-OCRv5 for the other)
+#   easyocr   EasyOCR with the fine-tuned Lilly recogniser (alias: lilly)
+#   stock     EasyOCR's own latin_g2, the control
+#   cyrillic  EasyOCR with the Cyrillic second pass (measured worse; kept)
+# Anything else stops the process rather than quietly picking one.
+DEFAULT_READER = "paddle"
+READERS = ("paddle", "easyocr", "lilly", "stock", "cyrillic")
 #
 # The model pair is written down rather than left to the library's default, so
 # the cache stamp and the results file name exactly what read the photographs.
@@ -79,26 +91,41 @@ PADDLE_MODELS = {
 }
 
 
+def reader_choice() -> str:
+    """The engine LILLY_READER names, or the app's default."""
+    choice = os.environ.get("LILLY_READER", "").strip().lower() or DEFAULT_READER
+    if choice not in READERS:
+        raise RuntimeError(f"LILLY_READER={choice!r}; known: {', '.join(READERS)}")
+    return "easyocr" if choice == "lilly" else choice
+
+
 def _paddle_enabled() -> bool:
-    return os.environ.get("LILLY_READER", "").lower() == "paddle"
+    return reader_choice() == "paddle"
 
 
 def paddle_rec_floor():
     """The recogniser confidence below which a Paddle region is dropped, or None.
 
-    LILLY_PADDLE_REC_THRESH, unset by default: the library returns every
-    recognition whatever its confidence, and that is what the bake-off measured.
-    training/PREREGISTRATION.md, "PP-OCRv6 confidence floor", is the one run
-    that sets it; the value is part of reader_identity() so a reading cache
-    written at one floor is never scored under another.
+    LILLY_PADDLE_REC_THRESH unset means DEFAULT_REC_FLOOR, the value
+    training/RESULTS-ocr-paddle-floor.md chose on the 40 and decided on test-v2
+    (training/PREREGISTRATION.md, "PP-OCRv6 confidence floor"). "0" means no
+    floor: every recognition whatever its confidence, which is what the bake-off
+    measured and what scripts/bakeoff_ocr.py still asks for. The value is part
+    of reader_identity(), so a reading cache written at one floor is never
+    scored under another.
     """
     raw = os.environ.get("LILLY_PADDLE_REC_THRESH", "").strip()
-    if not raw:
+    floor = DEFAULT_REC_FLOOR if not raw else float(raw)
+    if floor is None or floor <= 0.0:
         return None
-    floor = float(raw)
-    if not 0.0 <= floor <= 1.0:
+    if floor > 1.0:
         raise RuntimeError(f"LILLY_PADDLE_REC_THRESH={raw!r}; want a confidence in [0, 1]")
     return floor
+
+
+# Chosen on the 40 (the highest floor that kept the shipped arm's 54.5%) and
+# decided once on test-v2: training/RESULTS-ocr-paddle-floor.md.
+DEFAULT_REC_FLOOR = 0.9
 
 
 def paddle_models() -> tuple:
@@ -134,7 +161,7 @@ def reader_identity() -> str:
         return "easyocr:lilly+cyrillic"
     trained = READ_DIR / "lilly.pth"
     network = READ_DIR / "user_network"
-    stock = os.environ.get("LILLY_READER", "").lower() == "stock"
+    stock = reader_choice() == "stock"
     if not stock and trained.exists() and (network / "lilly.yaml").exists():
         return "easyocr:lilly"
     return "easyocr:stock"
@@ -292,7 +319,7 @@ def get_reader():
                 # worth anything if both sides go through the same code.
                 trained = READ_DIR / "lilly.pth"
                 network = READ_DIR / "user_network"
-                stock = os.environ.get("LILLY_READER", "").lower() == "stock"
+                stock = reader_choice() == "stock"
                 extra = {} if stock else (
                     {"recog_network": "lilly",
                      "user_network_directory": str(network)}
@@ -466,7 +493,7 @@ def _cyrillic_enabled() -> bool:
     transcribed, the same move that took the Latin reader from 36.0% to 54.7%.
     An untrained second model arbitrated at read time is not that.
     """
-    return os.environ.get("LILLY_READER", "").lower() == "cyrillic"
+    return reader_choice() == "cyrillic"
 
 
 def _reader_module_reformat(image):
