@@ -112,6 +112,19 @@ Then the two-person transcription of `test-v2` (step 2), and the box count
   only. Until `scripts/publish_to_hf.py --upload` runs from the Mac, a fresh
   clone, the Space and any cloud session read with the old reader, and the
   bake-off's shipped arm cannot reproduce its bar anywhere but the Mac.
+- **Corrected 4 Sep 2026: the 54.7% reader is
+  `latin_g2-realcrops.pth`, md5 `2010a2d417e6c253195fa3d95ff11d33`** — and
+  until that day the Mac was *not* reading with it. `models/lilly/read/lilly.pth`
+  held `ada99ec73bf0d8014ec7cc319b9c9b9a`, byte-identical to the Kaggle
+  dataset `afaksrmeli/lilly-read-pass1` and to `lilly-before-pass18.pth`,
+  which the 2 Sep restore took it from; it scores **50.8% per photograph and
+  206 invented**. `latin_g2-realcrops.pth` installed in its place reproduces
+  54.7% / 45.0% pooled (168/373) / 180 / 44.0% exactly. The 28 Aug
+  `lilly.pth` (`512343be`, 15,406,289 bytes) was a second serialisation of the
+  same model and no longer exists on this Mac — 15 candidate `.pth` files
+  searched by size across the home directory, none of them it. Full account
+  in `training/RESULTS-ocr-weights.md`. `models/lilly/keep-read-pass6/lilly.pth`
+  is also `ada99ec7`, so that backup's name does not mean what it says.
 - **`evaluate_ocr.py`'s reading cache is keyed on the weight files, not on
   which reader is loaded.** `LILLY_READER=stock` or `=paddle` with the default
   `--cache` would score the *trained* reader's cached readings under the other
@@ -358,6 +371,31 @@ not just the totals. A delta inside the interval is written as "no change".
     kept only photographs Lilly's reader found two words in, so every number
     on it is an upper bound and every engine comparison on it leans toward
     EasyOCR's detector. Harvest without the reader; screen with people.
+17. **Installing the other engine to compare it, and scoring the shipped one
+    afterwards.** `pip install paddleocr` pulls
+    `opencv-contrib-python 4.10.0.84`, which unpacks into the *same*
+    `site-packages/cv2/` as the `opencv-python-headless 5.0.0.93` EasyOCR
+    reads through. The shipped reader silently drops from OpenCV 5.0.0 to
+    4.10.0 and scores **54.5% / 182** instead of **54.7% / 180** — measured
+    4 Sep 2026 with the weights fixed at `2010a2d4`, numpy ruled out by
+    restoring it alone (still 182) and cv2 confirmed by restoring it alone
+    (back to 180). paddlex needs the `opencv-contrib-python` *distribution*
+    present or it refuses to build a pipeline, so the working configuration
+    is both installed with headless reinstalled **last**:
+
+        uv pip install opencv-contrib-python==4.10.0.84
+        uv pip install --reinstall-package opencv-python-headless \
+            opencv-python-headless==5.0.0.93   # cv2 files must end at 5.0.0
+
+    Check `python -c "import cv2; print(cv2.__version__)"` says 5.0.0 before
+    quoting any EasyOCR number.
+18. **Trusting the reading cache across an environment change.**
+    `evaluate_ocr.py:reader_fingerprint()` hashes the weight files and
+    `reader_identity()` — not cv2, not numpy, not torch. Both cv2 builds above
+    fingerprint identically as `7355ded5a4905fcf`, so a cache written under
+    4.10.0 is silently accepted under 5.0.0 and its readings are reported as
+    the new run's. Delete the arm caches after touching the environment. This
+    is item 7 with a new cause, and nothing in the repository catches it yet.
 
 ## Where things run
 
