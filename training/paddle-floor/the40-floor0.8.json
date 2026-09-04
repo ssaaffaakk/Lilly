@@ -1,0 +1,146 @@
+{
+  "pooled": 70.50938337801608,
+  "per_photo": 67.27017701019803,
+  "diacritic": 68.0,
+  "folded": 92.0,
+  "invented": 79,
+  "photographs": 28,
+  "reader": "0acb6166de435fdf",
+  "by_class": {
+    "sign (1-5 words)": {
+      "photographs": 13,
+      "per_photo": 72.56410256410255,
+      "found": 27,
+      "words": 37,
+      "fully_read": 6
+    },
+    "short board (6-20 words)": {
+      "photographs": 12,
+      "per_photo": 56.737278244631185,
+      "found": 76,
+      "words": 136,
+      "fully_read": 2
+    },
+    "long board (21+ words)": {
+      "photographs": 3,
+      "per_photo": 86.46142800554566,
+      "found": 160,
+      "words": 200,
+      "fully_read": 0
+    }
+  },
+  "per_photograph": {
+    "Assasination_Plaque.JPG": [
+      21,
+      22
+    ],
+    "Banjaluka_streetmap.jpg": [
+      30,
+      34
+    ],
+    "Direction_sign_to_Old_city_of_Kljuc.jpg": [
+      3,
+      3
+    ],
+    "Editing_Wikipedia_Workshop_in_Visegrad_-_76.JPG": [
+      5,
+      8
+    ],
+    "Entrance_to_Bosnia_and_Herzegovina_at_Brod.jpg": [
+      13,
+      20
+    ],
+    "GiPS_Bus_Lion_s_City_03.jpg": [
+      3,
+      3
+    ],
+    "Gospodska_ulica_27.JPG": [
+      1,
+      2
+    ],
+    "Jewish_Street_Tuzla_Bosnia.jpg": [
+      2,
+      7
+    ],
+    "Mis_Irbina_Street_in_Sarajevo_03.jpg": [
+      2,
+      6
+    ],
+    "Mostar_signs.JPG": [
+      2,
+      4
+    ],
+    "Narrow-Gauge-Railway_Spalatobahn_Station-Travnik.jpg": [
+      9,
+      9
+    ],
+    "Plaque_at_the_Battle_of_the_Sutjeska_memorial.jpg": [
+      4,
+      5
+    ],
+    "Putokaz2.jpg": [
+      4,
+      14
+    ],
+    "Putokaz_za_manastir_Krupu.jpg": [
+      6,
+      10
+    ],
+    "Road_to_Baljevac_-_panoramio.jpg": [
+      4,
+      4
+    ],
+    "Sarajevo_EP-Gas-Station_Bulevar-Mese-Selimovica_2011-11-04_2_.jpg": [
+      2,
+      4
+    ],
+    "Sarajevo_Trebevi\u0107_Sign.jpg": [
+      2,
+      6
+    ],
+    "Sarajevo_Trolleybus-4416_Line-102_2011-11-05.jpg": [
+      1,
+      1
+    ],
+    "Sarajevo_road_M-a8_IMG_1166.JPG": [
+      12,
+      12
+    ],
+    "Spanish_square_08034.JPG": [
+      109,
+      144
+    ],
+    "Street_in_Me\u0111ugorje.jpg": [
+      5,
+      20
+    ],
+    "Trg-kralja-tomislav-livno00658.JPG": [
+      1,
+      1
+    ],
+    "Trg-\u017ertava-\u0160B03078.JPG": [
+      1,
+      3
+    ],
+    "Trg_Krajine_\u010dajav\u010dev_i_ulaz_u_gospodsku.jpg": [
+      4,
+      5
+    ],
+    "Tuzla_-_INA_petrol_station_2019_.jpg": [
+      10,
+      17
+    ],
+    "Tuzla_-_Ulica_Turalibegova_-_n18_2019_.jpg": [
+      1,
+      1
+    ],
+    "WV_banner_NE_Bosnia_Tuzla_old_town.jpg": [
+      0,
+      1
+    ],
+    "War_Memorial_in_Ku\u010dine_BiH_2024.jpg": [
+      6,
+      7
+    ]
+  }
+}
