@@ -1,15 +1,15 @@
 {
   "pooled": 66.47180192572215,
-  "per_photo": 59.97977837747192,
+  "per_photo": 59.97977837747194,
   "diacritic": 64.01869158878505,
   "folded": 85.98130841121495,
   "invented": 2373,
   "photographs": 132,
-  "reader": "e5bd3e5412168e48",
+  "reader": "afa719f3435ca2fe",
   "by_class": {
     "sign (1-5 words)": {
       "photographs": 76,
-      "per_photo": 56.64473684210528,
+      "per_photo": 56.64473684210526,
       "found": 121,
       "words": 212,
       "fully_read": 27

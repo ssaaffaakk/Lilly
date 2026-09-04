@@ -1,30 +1,30 @@
 {
-  "pooled": 11.966987620357633,
-  "per_photo": 17.461262621990226,
-  "diacritic": 12.616822429906541,
-  "folded": 15.88785046728972,
-  "invented": 1843,
+  "pooled": 41.334250343878956,
+  "per_photo": 34.62976877850752,
+  "diacritic": 44.85981308411215,
+  "folded": 57.47663551401869,
+  "invented": 2071,
   "photographs": 132,
-  "reader": "f986be4725b6d01b",
+  "reader": "7355ded5a4905fcf",
   "by_class": {
     "sign (1-5 words)": {
       "photographs": 76,
-      "per_photo": 18.070175438596493,
-      "found": 38,
+      "per_photo": 33.1140350877193,
+      "found": 81,
       "words": 212,
-      "fully_read": 6
+      "fully_read": 12
     },
     "short board (6-20 words)": {
       "photographs": 38,
-      "per_photo": 16.29471655614315,
-      "found": 70,
+      "per_photo": 34.42758406431618,
+      "found": 153,
       "words": 389,
-      "fully_read": 0
+      "fully_read": 1
     },
     "long board (21+ words)": {
       "photographs": 18,
-      "per_photo": 17.353005757552076,
-      "found": 240,
+      "per_photo": 41.4563676473506,
+      "found": 968,
       "words": 2307,
       "fully_read": 0
     }
@@ -59,7 +59,7 @@
       20
     ],
     "Beschossenes_Spital_Mostar_1996.jpg": [
-      0,
+      1,
       3
     ],
     "Bihac_postcard_1899.jpg": [
@@ -67,7 +67,7 @@
       4
     ],
     "Blizanci_vinohrady.jpg": [
-      1,
+      4,
       5
     ],
     "Bosnia_RS_Trnovo_IMG_0970.JPG": [
@@ -75,27 +75,27 @@
       1
     ],
     "Catholique_Serbe_-_A1604.jpg": [
-      1,
+      2,
       5
     ],
     "Cultural_Center_Mostar_1.jpg": [
-      0,
+      2,
       3
     ],
     "Dom_penzionera_Tuzla.jpg": [
-      1,
+      5,
       7
     ],
     "F.T.B.L._21.jpg": [
-      0,
+      1,
       8
     ],
     "Feeding_the_birds_-_Flickr_-_spiderman_Frank_.jpg": [
-      0,
+      1,
       9
     ],
     "Femmes_des_environs_de_Mostar_-_A1578.jpg": [
-      1,
+      0,
       1
     ],
     "Gospodska_ulica_09.JPG": [
@@ -107,7 +107,7 @@
       1
     ],
     "Horse_carriage_at_Vrelo_Bosne.JPG": [
-      0,
+      1,
       1
     ],
     "Hotel_Sarajevo_Skopje.jpg": [
@@ -119,15 +119,15 @@
       8
     ],
     "Ignaz_Konigsberger_s_Verlag_Sarajewo_-_73._T\u00fcrke.jpg": [
-      1,
+      5,
       6
     ],
     "Info_Atik_d\u017eamija.jpg": [
-      46,
+      375,
       1091
     ],
     "Izlo\u017ebeni_salon_kompanije_Duga_Wood.jpg": [
-      4,
+      5,
       9
     ],
     "Kazandziluk.PNG": [
@@ -135,19 +135,19 @@
       1
     ],
     "Kazandziluk_09.jpg": [
-      5,
+      7,
       10
     ],
     "Kosa\u010da-fort-Ljubu\u0161ki02210.JPG": [
-      32,
+      125,
       206
     ],
     "Kujundziluk_-_panoramio.jpg": [
-      1,
+      2,
       4
     ],
     "Life_scupture_Banja_Luka_01.jpg": [
-      17,
+      152,
       290
     ],
     "Mostar14BIH22.JPG": [
@@ -155,11 +155,11 @@
       4
     ],
     "Mostar14BIH26.JPG": [
-      2,
+      15,
       20
     ],
     "Mostar14BIH80.JPG": [
-      0,
+      1,
       1
     ],
     "Mostar_-_Kujund\u017eiluk_49033904782_.jpg": [
@@ -195,7 +195,7 @@
       8
     ],
     "Mzpjesme.jpg": [
-      3,
+      13,
       19
     ],
     "NKD015_\u0413\u043e\u0441\u043f\u043e\u0434\u0441\u043a\u0430_\u0443\u043b\u0438\u0446\u04301.jpg": [
@@ -203,11 +203,11 @@
       1
     ],
     "NKD015_\u0413\u043e\u0441\u043f\u043e\u0434\u0441\u043a\u0430_\u0443\u043b\u0438\u0446\u04307.jpg": [
-      0,
+      4,
       4
     ],
     "Nasiha_Kapid\u017ei\u0107-Had\u017ei\u0107_Kaptol_Sarajevo.jpg": [
-      1,
+      3,
       32
     ],
     "OSCE_Mostar_Office.jpg": [
@@ -215,7 +215,7 @@
       2
     ],
     "Objekat_u_ulici_brace_Mazar_i_majke_Marije_50_i_52_nkd_090.JPG": [
-      10,
+      26,
       49
     ],
     "Old_Town_Mostar_2014.jpg": [
@@ -223,11 +223,11 @@
       2
     ],
     "Old_Town_Visoko_2.jpg": [
-      1,
+      0,
       2
     ],
     "Old_driver_s_license_of_Yugoslavia_-_page_26-27.jpg": [
-      7,
+      9,
       11
     ],
     "Old_town_of_Jajce.jpg": [
@@ -235,7 +235,7 @@
       2
     ],
     "ParkRavne6.jpg": [
-      9,
+      33,
       39
     ],
     "Photo-tour_Vi\u0161egrad_07.jpg": [
@@ -243,11 +243,11 @@
       8
     ],
     "Prvo_pominanje_imena_Zenice.jpg": [
-      12,
+      40,
       103
     ],
     "Rafting-Start_slalom_staza.jpg": [
-      0,
+      7,
       12
     ],
     "Sanski_Most5.JPG": [
@@ -255,27 +255,27 @@
       2
     ],
     "Sarajevo_-Zgrada_Zemaljskog_vakufa.jpg": [
-      1,
+      3,
       5
     ],
     "Sarajevo_-_Azize_\u0160a\u0107irbegovi\u0107.jpg": [
-      1,
+      4,
       4
     ],
     "Sarajevo_-_Radi\u0107eva_10.jpg": [
-      0,
+      1,
       14
     ],
     "Sarajevo_20170717_C.jpg": [
-      1,
+      0,
       26
     ],
     "Sarajevo_49090408181_.jpg": [
-      0,
+      4,
       17
     ],
     "Sarajevo_Cathedral_01.jpg": [
-      9,
+      21,
       35
     ],
     "Sarajevo_Cengic-Vila_2011-11-06_3_.jpg": [
@@ -291,7 +291,7 @@
       5
     ],
     "Sarajevo_Lozionicka_2011-11-04.jpg": [
-      4,
+      7,
       9
     ],
     "Sarajevo_Saraci_2011-11-08_4_.jpg": [
@@ -299,7 +299,7 @@
       3
     ],
     "Sarajevo_Stadion.JPG": [
-      0,
+      2,
       6
     ],
     "Sarajevo_memorial_plaque_1930s.jpg": [
@@ -307,11 +307,11 @@
       8
     ],
     "Seattle_-_Catholic_Seafarers_Center_and_Sarajevo_Lounge_02.jpg": [
-      0,
+      2,
       4
     ],
     "Skretanje_za_Tihaljinu_i_Drinovce_u_Sovi\u0107ima02271.JPG": [
-      2,
+      3,
       9
     ],
     "Sportska_dvorana_Obilicevo.jpg": [
@@ -327,11 +327,11 @@
       4
     ],
     "Tourist_Info_Center_-_panoramio_-_lienyuan_lee_1_.jpg": [
-      1,
+      4,
       5
     ],
     "Trg-kralja-tomislav-livno00662.JPG": [
-      0,
+      4,
       13
     ],
     "Trg_Espana.jpg": [
@@ -363,15 +363,15 @@
       1
     ],
     "Visoko_\u010dar\u0161ijska.jpg": [
-      0,
+      2,
       3
     ],
     "West_Mostar04998.JPG": [
-      1,
+      2,
       6
     ],
     "West_Mostar05010.JPG": [
-      0,
+      1,
       2
     ],
     "West_side_of_Saint_Joseph_church_in_Sarajevo.jpg": [
@@ -379,11 +379,11 @@
       2
     ],
     "Willkommen_in_Gora\u017ede_5786864938_.jpg": [
-      1,
+      4,
       4
     ],
     "Ze\u010dija_Glava_124147.jpg": [
-      0,
+      1,
       4
     ],
     "Zgrada_u_Ulici_Tina_Ujevi\u0107a_1_3_5_Banja_Luka.jpg": [
@@ -395,7 +395,7 @@
       1
     ],
     "\u0411\u0430\u045a\u0430_\u0414\u0432\u043e\u0440\u043e\u0432\u0438_13_.jpg": [
-      6,
+      19,
       19
     ],
     "\u0411\u0430\u045a\u0430\u043b\u0443\u043a\u04300068.jpg": [
@@ -403,11 +403,11 @@
       30
     ],
     "\u0411\u0430\u045a\u0430\u043b\u0443\u043a\u0430_20190605_145053.jpg": [
-      1,
+      3,
       5
     ],
     "\u0411\u0440\u043e\u0458_\u0443\u043c\u0440\u043b\u0438\u0445_\u0438_\u0440\u043e\u0452\u0435\u043d\u0438\u0445_\u0443_\u0411\u0430\u045a\u0430\u043b\u0443\u0446\u0438_2005-2009_.jpg": [
-      0,
+      4,
       4
     ],
     "\u0415\u043b\u0435\u043a\u0442\u0440\u043e\u043a\u0440\u0430\u0458\u0438\u043d\u0430.jpg": [
@@ -415,7 +415,7 @@
       2
     ],
     "\u0417\u0435\u043d\u0438\u0446\u0430_-_1884_-_\u0440\u0435\u0434_\u0432\u043e\u0436\u045a\u0435.jpg": [
-      43,
+      80,
       147
     ],
     "\u0417\u0435\u043d\u0438\u0446\u0430_-_1931_-_\u0436\u0435\u0459\u0435\u0437\u043d\u0438\u0447\u0430\u0440\u0438_\u0443\u0441\u043a\u043e\u0442\u0440\u0430\u0447\u043d\u0435_\u043f\u0440\u0443\u0433\u0435.jpg": [
@@ -427,15 +427,15 @@
       3
     ],
     "\u0417\u0435\u043d\u0438\u0446\u0430_20180620_063545.jpg": [
-      1,
+      0,
       2
     ],
     "\u0417\u0435\u043d\u0438\u0446\u0430_20180621_084447.jpg": [
-      10,
+      31,
       43
     ],
     "\u0417\u0435\u043d\u0438\u0446\u0430_20180623_174019.jpg": [
-      9,
+      14,
       18
     ],
     "\u0417\u0435\u043d\u0438\u0446\u0430_20180626_151901.jpg": [
@@ -443,7 +443,7 @@
       3
     ],
     "\u0417\u0435\u043d\u0438\u0446\u0430_20180806_181640.jpg": [
-      3,
+      5,
       5
     ],
     "\u0417\u0435\u043d\u0438\u0446\u0430_20190501_103636.jpg": [
@@ -459,7 +459,7 @@
       1
     ],
     "\u0417\u0435\u043d\u0438\u0446\u0430_20190810_164834.jpg": [
-      2,
+      3,
       7
     ],
     "\u0417\u0435\u043d\u0438\u0446\u0430_20190810_164954.jpg": [
@@ -467,31 +467,31 @@
       3
     ],
     "\u0417\u0435\u043d\u0438\u0446\u0430_20190812_132409.jpg": [
-      2,
+      1,
       2
     ],
     "\u0417\u0435\u043d\u0438\u0446\u0430_20190815_144714.jpg": [
-      1,
+      4,
       4
     ],
     "\u0417\u0435\u043d\u0438\u0446\u0430_20190815_144938.jpg": [
-      0,
+      1,
       2
     ],
     "\u0417\u0435\u043d\u0438\u0446\u0430_20190821_173001.jpg": [
-      0,
+      1,
       4
     ],
     "\u0417\u0435\u043d\u0438\u0446\u0430_20190821_173653.jpg": [
-      1,
+      2,
       23
     ],
     "\u0417\u0435\u043d\u0438\u0446\u0430_20190821_173742.jpg": [
-      1,
+      5,
       36
     ],
     "\u0417\u0435\u043d\u0438\u0446\u0430_20190821_173935.jpg": [
-      8,
+      17,
       58
     ],
     "\u0417\u0435\u043d\u0438\u0446\u0430_20190821_174244.jpg": [
@@ -499,11 +499,11 @@
       28
     ],
     "\u0417\u0435\u043d\u0438\u0446\u0430_20190821_174400.jpg": [
-      4,
+      17,
       39
     ],
     "\u0417\u0435\u043d\u0438\u0446\u0430_20190821_181738.jpg": [
-      1,
+      3,
       6
     ],
     "\u0417\u0435\u043d\u0438\u0446\u0430_20200725_145456.jpg": [
@@ -511,11 +511,11 @@
       14
     ],
     "\u0417\u0435\u043d\u0438\u0446\u0430_20230201_122031_cropped.jpg": [
-      3,
+      2,
       3
     ],
     "\u0417\u0435\u043d\u0438\u0446\u0430_20230219_151100.jpg": [
-      0,
+      1,
       6
     ],
     "\u0417\u0435\u043d\u0438\u0446\u0430_20230219_154651.jpg": [
@@ -535,7 +535,7 @@
       5
     ],
     "\u041f\u0430\u0440\u043a_\u043f\u0440\u0438\u0440\u043e\u0434\u0435_\u0411\u043e\u0440\u0458\u0430_2_.JPG": [
-      24,
+      29,
       32
     ],
     "\u041f\u043b\u0430\u043d\u0438\u043d\u0430_\u041e\u0437\u0440\u0435\u043d_58_.jpg": [
@@ -547,11 +547,11 @@
       4
     ],
     "\u041f\u0440\u0430\u0448\u043d\u0438\u0446\u0435_\u0417\u0435\u043d\u0438\u0446\u0430_20180625_182600.jpg": [
-      0,
+      2,
       2
     ],
     "\u041f\u0440\u0430\u0448\u043d\u0438\u0446\u0435_\u0417\u0435\u043d\u0438\u0446\u0430_20180625_182912.jpg": [
-      0,
+      2,
       4
     ],
     "\u0422\u0435\u0440\u0438\u0442\u043e\u0440\u0438\u0458\u0430_\u0413\u0440\u0430\u0434\u0430_\u0411\u0430\u045a\u0430_\u041b\u0443\u043a\u0430.jpg": [

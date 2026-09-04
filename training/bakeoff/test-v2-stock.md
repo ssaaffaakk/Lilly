@@ -4,15 +4,15 @@
 
 | | words found | of | rate |
 |---|---|---|---|
-| All words | 1011 | 2908 | **34.8%** |
+| All words | 1007 | 2908 | **34.6%** |
 | Words with č ć đ š ž | 41 | 214 | **19.2%** |
 | The same words, diacritics folded away | 89 | 214 | **41.6%** |
 
-Weighting every photograph equally instead of every word, the reader finds **30.5%** of the words on a photograph. The two differ because the text is not spread evenly: `Info_Atik_džamija.jpg` alone holds 1091 of the 2908 words in the answer key. The per-photograph figure is the one that describes pointing a camera at a sign; the pooled figure describes reading a wall of text.
+Weighting every photograph equally instead of every word, the reader finds **30.0%** of the words on a photograph. The two differ because the text is not spread evenly: `Info_Atik_džamija.jpg` alone holds 1091 of the 2908 words in the answer key. The per-photograph figure is the one that describes pointing a camera at a sign; the pooled figure describes reading a wall of text.
 
 Two independent readers transcribed these photographs without seeing each other's work or the machine's, and agreed on 88.2% of the words either of them saw. Only the words both saw are in the answer key, so that agreement is also the ceiling on how precise anything here can be.
 
-The reader also returned 2201 words that are not on any sign in these photographs. That is the cost a user pays for text the detector invented out of brickwork and foliage, and it is not visible in a recall figure.
+The reader also returned 2205 words that are not on any sign in these photographs. That is the cost a user pays for text the detector invented out of brickwork and foliage, and it is not visible in a recall figure.
 
 ## Signs against boards
 
@@ -20,9 +20,9 @@ The product reads small signs and street names; long text is reported, not claim
 
 | | photographs | words per photograph | words found | read in full |
 |---|---|---|---|---|
-| sign (1-5 words) | 76 | **27.6%** | 66/212 | 6 |
-| short board (6-20 words) | 38 | **34.5%** | 154/389 | 1 |
-| long board (21+ words) | 18 | **34.2%** | 791/2307 | 0 |
+| sign (1-5 words) | 76 | **27.4%** | 65/212 | 6 |
+| short board (6-20 words) | 38 | **33.6%** | 151/389 | 1 |
+| long board (21+ words) | 18 | **33.7%** | 791/2307 | 0 |
 
 ## Per photograph
 
@@ -81,17 +81,18 @@ The product reads small signs and street names; long text is reported, not claim
 | Планина_Озрен_58_.jpg | 0/2 | — |
 | Територија_Града_Бања_Лука.jpg | 0/4 | — |
 | 20130606_Mostar_178.jpg | 1/16 | — |
-| Nasiha_Kapidžić-Hadžić_Kaptol_Sarajevo.jpg | 2/32 | 1/11 |
 | Зеница_20190821_174244.jpg | 2/28 | 0/7 |
+| Nasiha_Kapidžić-Hadžić_Kaptol_Sarajevo.jpg | 3/32 | 1/11 |
 | Зеница_20190821_173742.jpg | 4/36 | — |
 | F.T.B.L._21.jpg | 1/8 | — |
 | Mostar_Bosnia_and_Herzegovina_31_July_2022_-_05.jpg | 1/8 | — |
 | Dom_penzionera_Tuzla.jpg | 1/7 | 0/1 |
 | Sarajevo_Dzemala-Bijedica_2011-11-04_41_.jpg | 1/7 | — |
 | West_Mostar04998.JPG | 1/6 | — |
+| Catholique_Serbe_-_A1604.jpg | 1/5 | — |
 | Sarajevo_EP-Gas-Station_Bulevar-Mese-Selimovica_2011-11-04.jpg | 1/5 | — |
-| Зеница_20190821_173935.jpg | 12/58 | 0/15 |
 | Feeding_the_birds_-_Flickr_-_spiderman_Frank_.jpg | 2/9 | — |
+| Зеница_20190821_173935.jpg | 13/58 | 0/15 |
 | Prvo_pominanje_imena_Zenice.jpg | 25/103 | 0/1 |
 | Bihac_postcard_1899.jpg | 1/4 | 0/1 |
 | Ignaz_Konigsberger_s_Verlag_Sarajewo_-_113._Bosnischer_Bettler_Sonntagsstaat_.jpg | 2/8 | — |
@@ -99,24 +100,24 @@ The product reads small signs and street names; long text is reported, not claim
 | Zečija_Glava_124147.jpg | 1/4 | 0/1 |
 | Прашнице_Зеница_20180625_182108.jpg | 1/4 | — |
 | Зеница_20190821_174400.jpg | 10/39 | 0/2 |
-| Info_Atik_džamija.jpg | 292/1091 | 6/60 |
+| Info_Atik_džamija.jpg | 293/1091 | 6/60 |
 | Mostar_49033679656_.jpg | 2/7 | 0/1 |
+| Бањалука0068.jpg | 9/30 | 0/2 |
 | Trg-kralja-tomislav-livno00662.JPG | 4/13 | 0/1 |
 | Sarajevo_Stadion.JPG | 2/6 | 0/2 |
 | Tuzla_-_Ulica_Turalibegova_2_2019_.jpg | 2/6 | — |
 | Зеница_20190810_164954.jpg | 1/3 | — |
 | Banja_Luka_April_2011_5645905076_.jpg | 7/20 | 0/1 |
 | Sarajevo_49090408181_.jpg | 6/17 | 0/1 |
-| Catholique_Serbe_-_A1604.jpg | 2/5 | — |
-| Бањалука0068.jpg | 12/30 | 0/2 |
 | Бањалука_20190605_145053.jpg | 2/5 | — |
 | Зеница_20180806_181640.jpg | 2/5 | — |
+| Objekat_u_ulici_brace_Mazar_i_majke_Marije_50_i_52_nkd_090.JPG | 20/49 | 1/5 |
 | Rafting-Start_slalom_staza.jpg | 5/12 | — |
-| Objekat_u_ulici_brace_Mazar_i_majke_Marije_50_i_52_nkd_090.JPG | 21/49 | 1/5 |
+| Izložbeni_salon_kompanije_Duga_Wood.jpg | 4/9 | 1/1 |
 | Skretanje_za_Tihaljinu_i_Drinovce_u_Sovićima02271.JPG | 4/9 | 0/3 |
 | Life_scupture_Banja_Luka_01.jpg | 129/290 | — |
 | Парк_природе_Борја_2_.JPG | 15/32 | 3/7 |
-| Зеница_-_1884_-_ред_вожње.jpg | 71/147 | 5/11 |
+| Зеница_-_1884_-_ред_вожње.jpg | 72/147 | 5/11 |
 | Kujundziluk_-_panoramio.jpg | 2/4 | — |
 | Mostar_-_panoramio_12_.jpg | 1/2 | — |
 | Mostar_49032844576_.jpg | 1/2 | — |
@@ -125,12 +126,12 @@ The product reads small signs and street names; long text is reported, not claim
 | Зеница_20180620_063545.jpg | 1/2 | — |
 | Зеница_20190810_163940.jpg | 1/2 | — |
 | Зеница_20190812_132409.jpg | 1/2 | — |
+| Зеница_20190821_181738.jpg | 3/6 | — |
 | Зеница_20200725_145456.jpg | 7/14 | — |
 | Прашнице_Зеница_20180625_182600.jpg | 1/2 | — |
-| Kosača-fort-Ljubuški02210.JPG | 111/206 | 4/33 |
-| Izložbeni_salon_kompanije_Duga_Wood.jpg | 5/9 | 1/1 |
+| Mzpjesme.jpg | 10/19 | 1/3 |
+| Kosača-fort-Ljubuški02210.JPG | 113/206 | 4/33 |
 | Зеница_20190810_164834.jpg | 4/7 | — |
-| Mzpjesme.jpg | 11/19 | 1/3 |
 | Kazandziluk_09.jpg | 6/10 | 2/4 |
 | Sarajevo_-Zgrada_Zemaljskog_vakufa.jpg | 3/5 | — |
 | Tourist_Info_Center_-_panoramio_-_lienyuan_lee_1_.jpg | 3/5 | — |
@@ -138,16 +139,15 @@ The product reads small signs and street names; long text is reported, not claim
 | Gospodska_ulica_09.JPG | 2/3 | — |
 | Visoko_čaršijska.jpg | 2/3 | — |
 | Зеница_-_1933_-_дјеца-стипендисти_1933._ш.г._запосленика_Рудника_мрког_угља_у_Зеници.jpg | 2/3 | — |
-| Зеница_20190821_181738.jpg | 4/6 | — |
 | Зеница_20230201_122031_cropped.jpg | 2/3 | — |
-| Зеница_20180621_084447.jpg | 30/43 | 2/4 |
+| Зеница_20180621_084447.jpg | 29/43 | 2/4 |
 | Sarajevo_Cathedral_01.jpg | 25/35 | — |
+| ParkRavne6.jpg | 29/39 | 6/8 |
 | Mostar14BIH26.JPG | 15/20 | — |
 | NKD015_Господска_улица7.jpg | 3/4 | — |
 | Willkommen_in_Goražde_5786864938_.jpg | 3/4 | 1/2 |
 | Број_умрлих_и_рођених_у_Бањалуци_2005-2009_.jpg | 3/4 | 0/1 |
 | Зеница_20190815_144714.jpg | 3/4 | — |
-| ParkRavne6.jpg | 30/39 | 6/8 |
 | Sarajevo_Lozionicka_2011-11-04.jpg | 7/9 | — |
 | Blizanci_vinohrady.jpg | 4/5 | — |
 | Old_driver_s_license_of_Yugoslavia_-_page_26-27.jpg | 9/11 | 5/7 |

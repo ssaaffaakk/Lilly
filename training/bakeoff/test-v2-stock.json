@@ -1,29 +1,29 @@
 {
-  "pooled": 34.76616231086658,
-  "per_photo": 30.5044591427214,
+  "pooled": 34.628610729023386,
+  "per_photo": 30.024311467692645,
   "diacritic": 19.1588785046729,
   "folded": 41.58878504672897,
-  "invented": 2201,
+  "invented": 2205,
   "photographs": 132,
-  "reader": "f4bea4be0342b1a1",
+  "reader": "ead4cce932792915",
   "by_class": {
     "sign (1-5 words)": {
       "photographs": 76,
-      "per_photo": 27.631578947368425,
-      "found": 66,
+      "per_photo": 27.368421052631582,
+      "found": 65,
       "words": 212,
       "fully_read": 6
     },
     "short board (6-20 words)": {
       "photographs": 38,
-      "per_photo": 34.4789702697679,
-      "found": 154,
+      "per_photo": 33.60947196259645,
+      "found": 151,
       "words": 389,
       "fully_read": 1
     },
     "long board (21+ words)": {
       "photographs": 18,
-      "per_photo": 34.2437631437803,
+      "per_photo": 33.66939884204241,
       "found": 791,
       "words": 2307,
       "fully_read": 0
@@ -75,7 +75,7 @@
       1
     ],
     "Catholique_Serbe_-_A1604.jpg": [
-      2,
+      1,
       5
     ],
     "Cultural_Center_Mostar_1.jpg": [
@@ -123,11 +123,11 @@
       6
     ],
     "Info_Atik_d\u017eamija.jpg": [
-      292,
+      293,
       1091
     ],
     "Izlo\u017ebeni_salon_kompanije_Duga_Wood.jpg": [
-      5,
+      4,
       9
     ],
     "Kazandziluk.PNG": [
@@ -139,7 +139,7 @@
       10
     ],
     "Kosa\u010da-fort-Ljubu\u0161ki02210.JPG": [
-      111,
+      113,
       206
     ],
     "Kujundziluk_-_panoramio.jpg": [
@@ -195,7 +195,7 @@
       8
     ],
     "Mzpjesme.jpg": [
-      11,
+      10,
       19
     ],
     "NKD015_\u0413\u043e\u0441\u043f\u043e\u0434\u0441\u043a\u0430_\u0443\u043b\u0438\u0446\u04301.jpg": [
@@ -207,7 +207,7 @@
       4
     ],
     "Nasiha_Kapid\u017ei\u0107-Had\u017ei\u0107_Kaptol_Sarajevo.jpg": [
-      2,
+      3,
       32
     ],
     "OSCE_Mostar_Office.jpg": [
@@ -215,7 +215,7 @@
       2
     ],
     "Objekat_u_ulici_brace_Mazar_i_majke_Marije_50_i_52_nkd_090.JPG": [
-      21,
+      20,
       49
     ],
     "Old_Town_Mostar_2014.jpg": [
@@ -235,7 +235,7 @@
       2
     ],
     "ParkRavne6.jpg": [
-      30,
+      29,
       39
     ],
     "Photo-tour_Vi\u0161egrad_07.jpg": [
@@ -399,7 +399,7 @@
       19
     ],
     "\u0411\u0430\u045a\u0430\u043b\u0443\u043a\u04300068.jpg": [
-      12,
+      9,
       30
     ],
     "\u0411\u0430\u045a\u0430\u043b\u0443\u043a\u0430_20190605_145053.jpg": [
@@ -415,7 +415,7 @@
       2
     ],
     "\u0417\u0435\u043d\u0438\u0446\u0430_-_1884_-_\u0440\u0435\u0434_\u0432\u043e\u0436\u045a\u0435.jpg": [
-      71,
+      72,
       147
     ],
     "\u0417\u0435\u043d\u0438\u0446\u0430_-_1931_-_\u0436\u0435\u0459\u0435\u0437\u043d\u0438\u0447\u0430\u0440\u0438_\u0443\u0441\u043a\u043e\u0442\u0440\u0430\u0447\u043d\u0435_\u043f\u0440\u0443\u0433\u0435.jpg": [
@@ -431,7 +431,7 @@
       2
     ],
     "\u0417\u0435\u043d\u0438\u0446\u0430_20180621_084447.jpg": [
-      30,
+      29,
       43
     ],
     "\u0417\u0435\u043d\u0438\u0446\u0430_20180623_174019.jpg": [
@@ -491,7 +491,7 @@
       36
     ],
     "\u0417\u0435\u043d\u0438\u0446\u0430_20190821_173935.jpg": [
-      12,
+      13,
       58
     ],
     "\u0417\u0435\u043d\u0438\u0446\u0430_20190821_174244.jpg": [
@@ -503,7 +503,7 @@
       39
     ],
     "\u0417\u0435\u043d\u0438\u0446\u0430_20190821_181738.jpg": [
-      4,
+      3,
       6
     ],
     "\u0417\u0435\u043d\u0438\u0446\u0430_20200725_145456.jpg": [
