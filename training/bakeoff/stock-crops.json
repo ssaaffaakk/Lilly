@@ -1,0 +1,2987 @@
+{
+ "reader": "easyocr:stock",
+ "labels": "data/ocr/crops/labels-human-latin.tsv",
+ "halves": {
+  "held_out": {
+   "n": 71,
+   "exact": 23,
+   "folded": 33,
+   "exact_ci": [
+    22.657056384385278,
+    43.939061282794476
+   ],
+   "folded_ci": [
+    35.358257090400144,
+    57.96096644303581
+   ]
+  },
+  "training_side": {
+   "n": 666,
+   "exact": 184,
+   "folded": 230,
+   "exact_ci": [
+    24.36718351399029,
+    31.144686755040475
+   ],
+   "folded_ci": [
+    31.02130538887217,
+    38.225155266900764
+   ]
+  }
+ },
+ "outcomes": {
+  "Andrzej_Tyszkiewicz_-_tablica_002.png": [
+   1,
+   1
+  ],
+  "Asassination_memorial_008.png": [
+   0,
+   0
+  ],
+  "Caritas_Mostar_Street_Sign_003.png": [
+   1,
+   1
+  ],
+  "Caritas_Mostar_Street_Sign_004.png": [
+   1,
+   1
+  ],
+  "Cyrillic_scratched_out_on_a_road_sign_in_Bosnia_003.png": [
+   1,
+   1
+  ],
+  "Despot_supermarket_in_Rogatica_Bosnia_and_Herzegovina_000.png": [
+   1,
+   1
+  ],
+  "Earthquake_memorial_broken_clock_and_Dragicevic_heart_Trg_Kraijna_Banja_Luka_001.png": [
+   0,
+   0
+  ],
+  "Earthquake_memorial_broken_clock_and_Dragicevic_heart_Trg_Kraijna_Banja_Luka_002.png": [
+   0,
+   0
+  ],
+  "Earthquake_memorial_broken_clock_and_Dragicevic_heart_Trg_Kraijna_Banja_Luka_015.png": [
+   0,
+   0
+  ],
+  "Editing_Wikipedia_Workshop_in_Visegrad_-_78_004.png": [
+   0,
+   0
+  ],
+  "Entrance_in_Bosnia_and_Herzegovina_from_Croatia_005.png": [
+   0,
+   1
+  ],
+  "Eyof_2019_sign_014.png": [
+   1,
+   1
+  ],
+  "Eyof_2019_sign_019.png": [
+   0,
+   0
+  ],
+  "Eyof_2019_sign_030.png": [
+   0,
+   0
+  ],
+  "Gas_Station_Nešković_Нешковић_001.png": [
+   0,
+   1
+  ],
+  "Gavrilo_princip_memorial_plaque_2009_edit1_009.png": [
+   1,
+   1
+  ],
+  "Gospodska_ulica_17_008.png": [
+   0,
+   0
+  ],
+  "Gospodskaa_ulica_000.png": [
+   0,
+   0
+  ],
+  "Gospodskaa_ulica_007.png": [
+   0,
+   0
+  ],
+  "Gospodskaa_ulica_009.png": [
+   0,
+   0
+  ],
+  "Gospodskaa_ulica_010.png": [
+   0,
+   0
+  ],
+  "Gospodskaa_ulica_011.png": [
+   0,
+   0
+  ],
+  "Inat_kuca_-_natpis_000.png": [
+   1,
+   1
+  ],
+  "Information_board_in_Jajce_005.png": [
+   1,
+   1
+  ],
+  "Information_board_in_Jajce_011.png": [
+   0,
+   0
+  ],
+  "Information_board_in_Jajce_042.png": [
+   0,
+   0
+  ],
+  "Information_board_in_Jajce_354.png": [
+   0,
+   0
+  ],
+  "Landmine_warning_sign_in_BiH_005.png": [
+   0,
+   1
+  ],
+  "Mate-Boban-street01276_002.png": [
+   1,
+   1
+  ],
+  "Minefield_sign_3886691367__006.png": [
+   1,
+   1
+  ],
+  "Mis_Irbina_Street_in_Sarajevo_01_001.png": [
+   1,
+   1
+  ],
+  "Mis_Irbina_Street_in_Sarajevo_01_002.png": [
+   1,
+   1
+  ],
+  "Mis_Irbina_Street_in_Sarajevo_04_004.png": [
+   0,
+   0
+  ],
+  "NKD_013_gospodska_ulica_banja_luka_2__000.png": [
+   0,
+   0
+  ],
+  "Narrow-Gauge-Railway_Spalatobahn_Station-Travnik_3__000.png": [
+   0,
+   0
+  ],
+  "Neum_road_001.png": [
+   1,
+   1
+  ],
+  "Plaque_on_the_summit_of_Maglič_3887464262__003.png": [
+   0,
+   0
+  ],
+  "Putokaz_ka_Banj_brdu_001.png": [
+   1,
+   1
+  ],
+  "Razglednica_puta_Banjaluka-Jajce_000.png": [
+   0,
+   0
+  ],
+  "Sarajevo_Bascarsija_2011-10-28_13__001.png": [
+   0,
+   0
+  ],
+  "Sarajevo_Bascarsija_2011-10-28_2__006.png": [
+   0,
+   0
+  ],
+  "Sarajevo_Bascarsija_Shop_2011-11-08_001.png": [
+   0,
+   0
+  ],
+  "Sarajevo_Bistrik_station_2018_1_010.png": [
+   1,
+   1
+  ],
+  "Sarajevo_Tram-231_Line-5_2011-10-20_007.png": [
+   0,
+   0
+  ],
+  "Sarajevo_Tram-511_Line-3_2011-10-27_006.png": [
+   0,
+   0
+  ],
+  "Spomen-ploča_u_Fojnici_008.png": [
+   1,
+   1
+  ],
+  "Spomen_ploča-zavjetni_križ-utvrda-ŠB_000.png": [
+   1,
+   1
+  ],
+  "Spomen_ploča-zavjetni_križ-utvrda-ŠB_003.png": [
+   0,
+   0
+  ],
+  "Spomen_ploča_samostan_Guča_Gora4_101536_018.png": [
+   0,
+   0
+  ],
+  "Street_in_Bihać_000.png": [
+   1,
+   1
+  ],
+  "Street_in_Bihać_012.png": [
+   0,
+   0
+  ],
+  "Streets_in_Mostar_001_000.png": [
+   0,
+   0
+  ],
+  "Streets_in_Mostar_004_011.png": [
+   0,
+   0
+  ],
+  "Streets_in_Mostar_007_000.png": [
+   0,
+   1
+  ],
+  "Streets_in_Mostar_007_004.png": [
+   0,
+   0
+  ],
+  "Tabla222_028.png": [
+   1,
+   1
+  ],
+  "Tenues_traditionnelles_bosniaques_vendues_dans_le_quartier_de_Baščaršija_001.png": [
+   0,
+   0
+  ],
+  "Tihovići_plate_000.png": [
+   0,
+   1
+  ],
+  "Tourist_road_sign_in_Sarajevo_003.png": [
+   1,
+   1
+  ],
+  "Tourist_road_sign_in_Sarajevo_010.png": [
+   0,
+   1
+  ],
+  "Trg-žrtava01872_001.png": [
+   0,
+   0
+  ],
+  "Trg_hrvatskih_vitezova01795_000.png": [
+   1,
+   1
+  ],
+  "Trg_hrvatskih_vitezova01795_002.png": [
+   0,
+   1
+  ],
+  "Tuzla_-_Train_station_13_2019__018.png": [
+   0,
+   1
+  ],
+  "Tuzla_-_Train_station_13_2019__024.png": [
+   0,
+   1
+  ],
+  "Tuzla_-_Train_station_13_2019__029.png": [
+   1,
+   1
+  ],
+  "Tuzla_-_Train_station_13_2019__048.png": [
+   0,
+   1
+  ],
+  "Tuzla_-_Ulica_Bosne_Srebrene_1_2019__004.png": [
+   0,
+   0
+  ],
+  "Tuzla_-_Ulica_Tabašnice_sign_2019__000.png": [
+   0,
+   0
+  ],
+  "Tuzla_-_Ulica_Trgovačka_2019__000.png": [
+   0,
+   0
+  ],
+  "Znak_322_003.png": [
+   0,
+   0
+  ],
+  "A_plaque_dedicated_to_British_and_Serbian_cooperation_Banja_Luka_007.png": [
+   0,
+   0
+  ],
+  "A_plaque_dedicated_to_British_and_Serbian_cooperation_Banja_Luka_008.png": [
+   1,
+   1
+  ],
+  "A_plaque_dedicated_to_British_and_Serbian_cooperation_Banja_Luka_009.png": [
+   0,
+   0
+  ],
+  "A_plaque_dedicated_to_British_and_Serbian_cooperation_Banja_Luka_010.png": [
+   0,
+   1
+  ],
+  "A_plaque_dedicated_to_British_and_Serbian_cooperation_Banja_Luka_011.png": [
+   0,
+   1
+  ],
+  "A_plaque_dedicated_to_British_and_Serbian_cooperation_Banja_Luka_012.png": [
+   0,
+   0
+  ],
+  "A_plaque_dedicated_to_British_and_Serbian_cooperation_Banja_Luka_013.png": [
+   0,
+   1
+  ],
+  "A_plaque_dedicated_to_British_and_Serbian_cooperation_Banja_Luka_015.png": [
+   0,
+   0
+  ],
+  "A_plaque_dedicated_to_British_and_Serbian_cooperation_Banja_Luka_016.png": [
+   0,
+   0
+  ],
+  "A_plaque_dedicated_to_British_and_Serbian_cooperation_Banja_Luka_017.png": [
+   0,
+   0
+  ],
+  "A_plaque_dedicated_to_British_and_Serbian_cooperation_Banja_Luka_018.png": [
+   0,
+   0
+  ],
+  "A_plaque_dedicated_to_British_and_Serbian_cooperation_Banja_Luka_019.png": [
+   0,
+   0
+  ],
+  "A_plaque_dedicated_to_British_and_Serbian_cooperation_Banja_Luka_020.png": [
+   0,
+   0
+  ],
+  "Andrzej_Krawczyk_-_tablica_000.png": [
+   1,
+   1
+  ],
+  "Andrzej_Krawczyk_-_tablica_001.png": [
+   0,
+   0
+  ],
+  "Andrzej_Krawczyk_-_tablica_002.png": [
+   1,
+   1
+  ],
+  "Andrzej_Tyszkiewicz_-_tablica_000.png": [
+   0,
+   0
+  ],
+  "Andrzej_Tyszkiewicz_-_tablica_001.png": [
+   1,
+   1
+  ],
+  "Andrzej_Tyszkiewicz_-_tablica_003.png": [
+   0,
+   0
+  ],
+  "Andrzej_Tyszkiewicz_-_tablica_004.png": [
+   1,
+   1
+  ],
+  "Asassination_memorial_000.png": [
+   0,
+   0
+  ],
+  "Asassination_memorial_001.png": [
+   0,
+   0
+  ],
+  "Asassination_memorial_002.png": [
+   0,
+   0
+  ],
+  "Asassination_memorial_003.png": [
+   0,
+   0
+  ],
+  "Asassination_memorial_004.png": [
+   0,
+   0
+  ],
+  "Asassination_memorial_005.png": [
+   1,
+   1
+  ],
+  "Asassination_memorial_006.png": [
+   0,
+   0
+  ],
+  "Asassination_memorial_007.png": [
+   0,
+   0
+  ],
+  "Asassination_memorial_009.png": [
+   0,
+   0
+  ],
+  "BanjalukaPartneriTabla_001.png": [
+   1,
+   1
+  ],
+  "BanjalukaPartneriTabla_003.png": [
+   1,
+   1
+  ],
+  "BanjalukaPartneriTabla_005.png": [
+   0,
+   0
+  ],
+  "BanjalukaPartneriTabla_007.png": [
+   1,
+   1
+  ],
+  "BanjalukaPartneriTabla_009.png": [
+   1,
+   1
+  ],
+  "BanjalukaPartneriTabla_011.png": [
+   1,
+   1
+  ],
+  "BanjalukaPartneriTabla_013.png": [
+   1,
+   1
+  ],
+  "BanjalukaPartneriTabla_015.png": [
+   1,
+   1
+  ],
+  "BaščaršijaSarajevo_2__000.png": [
+   0,
+   0
+  ],
+  "BaščaršijaSarajevo_2__001.png": [
+   0,
+   0
+  ],
+  "BaščaršijaSarajevo_2__002.png": [
+   0,
+   0
+  ],
+  "BaščaršijaSarajevo_2__004.png": [
+   0,
+   0
+  ],
+  "BaščaršijaSarajevo_2__006.png": [
+   0,
+   0
+  ],
+  "BaščaršijaSarajevo_2__007.png": [
+   0,
+   0
+  ],
+  "BaščaršijaSarajevo_2__008.png": [
+   0,
+   0
+  ],
+  "Bingo_supermarket_Trebinje_2024_000.png": [
+   0,
+   0
+  ],
+  "Bingo_supermarket_Trebinje_2024_001.png": [
+   0,
+   0
+  ],
+  "Bingo_supermarket_Trebinje_2024_005.png": [
+   0,
+   0
+  ],
+  "Bistrik_kula_observatory_information_board_000.png": [
+   0,
+   0
+  ],
+  "Bistrik_kula_observatory_information_board_001.png": [
+   1,
+   1
+  ],
+  "Bistrik_kula_observatory_information_board_012.png": [
+   0,
+   0
+  ],
+  "Bistrik_kula_observatory_information_board_028.png": [
+   0,
+   0
+  ],
+  "Bistrik_kula_observatory_information_board_083.png": [
+   1,
+   1
+  ],
+  "Bistrik_kula_observatory_information_board_127.png": [
+   0,
+   0
+  ],
+  "Bistrik_kula_observatory_information_board_147.png": [
+   0,
+   0
+  ],
+  "Bistrik_kula_observatory_information_board_152.png": [
+   0,
+   0
+  ],
+  "Board_of_Republika_Srpska_002.png": [
+   1,
+   1
+  ],
+  "Board_of_Republika_Srpska_003.png": [
+   0,
+   0
+  ],
+  "Bosnia_Huskovici_Sign_Trajkovski_Memorial_001.png": [
+   1,
+   1
+  ],
+  "Bosnia_Huskovici_Sign_Trajkovski_Memorial_003.png": [
+   1,
+   1
+  ],
+  "Bosnia_Huskovici_Sign_Trajkovski_Memorial_004.png": [
+   1,
+   1
+  ],
+  "Bosnia_Huskovici_Sign_Trajkovski_Memorial_005.png": [
+   0,
+   0
+  ],
+  "Bosnia_Huskovici_Sign_Trajkovski_Memorial_006.png": [
+   0,
+   0
+  ],
+  "Bosnia_Huskovici_Sign_Trajkovski_Memorial_007.png": [
+   0,
+   0
+  ],
+  "Bosnia_Huskovici_Sign_Trajkovski_Memorial_008.png": [
+   1,
+   1
+  ],
+  "Bosnia_Huskovici_Sign_Trajkovski_Memorial_009.png": [
+   0,
+   0
+  ],
+  "Bosnian_Road_Sign_000.png": [
+   1,
+   1
+  ],
+  "Bosnian_Road_Sign_001.png": [
+   1,
+   1
+  ],
+  "Bosnian_Road_Sign_003.png": [
+   1,
+   1
+  ],
+  "Caritas_Mostar_Street_Sign_000.png": [
+   0,
+   0
+  ],
+  "Caritas_Mostar_Street_Sign_001.png": [
+   1,
+   1
+  ],
+  "Caritas_Mostar_Street_Sign_002.png": [
+   0,
+   0
+  ],
+  "Cyrillic_scratched_out_on_a_road_sign_in_Bosnia_000.png": [
+   1,
+   1
+  ],
+  "Cyrillic_scratched_out_on_a_road_sign_in_Bosnia_001.png": [
+   1,
+   1
+  ],
+  "Cyrillic_scratched_out_on_a_road_sign_in_Bosnia_002.png": [
+   1,
+   1
+  ],
+  "Despot_supermarket_in_Rogatica_Bosnia_and_Herzegovina_001.png": [
+   0,
+   0
+  ],
+  "Despot_supermarket_in_Rogatica_Bosnia_and_Herzegovina_002.png": [
+   1,
+   1
+  ],
+  "Despot_supermarket_in_Rogatica_Bosnia_and_Herzegovina_003.png": [
+   0,
+   0
+  ],
+  "Despot_supermarket_in_Rogatica_Bosnia_and_Herzegovina_005.png": [
+   1,
+   1
+  ],
+  "Despot_supermarket_in_Rogatica_Bosnia_and_Herzegovina_006.png": [
+   0,
+   0
+  ],
+  "Despot_supermarket_in_Rogatica_Bosnia_and_Herzegovina_007.png": [
+   0,
+   0
+  ],
+  "Despot_supermarket_in_Rogatica_Bosnia_and_Herzegovina_008.png": [
+   0,
+   0
+  ],
+  "Donji_Svilaj_village_sign_000.png": [
+   0,
+   0
+  ],
+  "Earthquake_memorial_broken_clock_and_Dragicevic_heart_Trg_Kraijna_Banja_Luka_000.png": [
+   0,
+   0
+  ],
+  "Earthquake_memorial_broken_clock_and_Dragicevic_heart_Trg_Kraijna_Banja_Luka_004.png": [
+   0,
+   0
+  ],
+  "Earthquake_memorial_broken_clock_and_Dragicevic_heart_Trg_Kraijna_Banja_Luka_012.png": [
+   1,
+   1
+  ],
+  "Earthquake_memorial_broken_clock_and_Dragicevic_heart_Trg_Kraijna_Banja_Luka_014.png": [
+   0,
+   0
+  ],
+  "Earthquake_memorial_broken_clock_and_Dragicevic_heart_Trg_Kraijna_Banja_Luka_018.png": [
+   0,
+   0
+  ],
+  "Earthquake_memorial_broken_clock_and_Dragicevic_heart_Trg_Kraijna_Banja_Luka_021.png": [
+   0,
+   0
+  ],
+  "Earthquake_memorial_broken_clock_and_Dragicevic_heart_Trg_Kraijna_Banja_Luka_022.png": [
+   0,
+   0
+  ],
+  "Earthquake_memorial_broken_clock_and_Dragicevic_heart_Trg_Kraijna_Banja_Luka_023.png": [
+   0,
+   0
+  ],
+  "Earthquake_memorial_broken_clock_and_Dragicevic_heart_Trg_Kraijna_Banja_Luka_024.png": [
+   0,
+   0
+  ],
+  "Earthquake_memorial_broken_clock_and_Dragicevic_heart_Trg_Kraijna_Banja_Luka_025.png": [
+   0,
+   0
+  ],
+  "Earthquake_memorial_broken_clock_and_Dragicevic_heart_Trg_Kraijna_Banja_Luka_026.png": [
+   0,
+   0
+  ],
+  "Earthquake_memorial_broken_clock_and_Dragicevic_heart_Trg_Kraijna_Banja_Luka_029.png": [
+   0,
+   0
+  ],
+  "Earthquake_memorial_broken_clock_and_Dragicevic_heart_Trg_Kraijna_Banja_Luka_032.png": [
+   0,
+   0
+  ],
+  "Earthquake_memorial_broken_clock_and_Dragicevic_heart_Trg_Kraijna_Banja_Luka_033.png": [
+   0,
+   0
+  ],
+  "Earthquake_memorial_broken_clock_and_Dragicevic_heart_Trg_Kraijna_Banja_Luka_034.png": [
+   0,
+   0
+  ],
+  "Editing_Wikipedia_Workshop_in_Visegrad_-_78_001.png": [
+   1,
+   1
+  ],
+  "Editing_Wikipedia_Workshop_in_Visegrad_-_78_002.png": [
+   0,
+   0
+  ],
+  "Editing_Wikipedia_Workshop_in_Visegrad_-_78_003.png": [
+   1,
+   1
+  ],
+  "Editing_Wikipedia_Workshop_in_Visegrad_-_78_005.png": [
+   1,
+   1
+  ],
+  "Editing_Wikipedia_Workshop_in_Visegrad_-_78_006.png": [
+   0,
+   0
+  ],
+  "Editing_Wikipedia_Workshop_in_Visegrad_-_78_007.png": [
+   0,
+   0
+  ],
+  "Editing_Wikipedia_Workshop_in_Visegrad_-_78_008.png": [
+   1,
+   1
+  ],
+  "Editing_Wikipedia_Workshop_in_Visegrad_-_78_009.png": [
+   1,
+   1
+  ],
+  "Editing_Wikipedia_Workshop_in_Visegrad_-_78_010.png": [
+   0,
+   0
+  ],
+  "Editing_Wikipedia_Workshop_in_Visegrad_-_78_011.png": [
+   0,
+   0
+  ],
+  "Editing_Wikipedia_Workshop_in_Visegrad_-_78_012.png": [
+   0,
+   0
+  ],
+  "Editing_Wikipedia_Workshop_in_Visegrad_-_78_013.png": [
+   0,
+   1
+  ],
+  "Editing_Wikipedia_Workshop_in_Visegrad_-_78_014.png": [
+   1,
+   1
+  ],
+  "Editing_Wikipedia_Workshop_in_Visegrad_-_78_015.png": [
+   1,
+   1
+  ],
+  "Empty_shelves_in_store_004.png": [
+   0,
+   0
+  ],
+  "Empty_shelves_in_store_008.png": [
+   0,
+   0
+  ],
+  "Empty_shelves_in_store_018.png": [
+   0,
+   0
+  ],
+  "Empty_shelves_in_store_019.png": [
+   0,
+   0
+  ],
+  "Empty_shelves_in_store_022.png": [
+   0,
+   0
+  ],
+  "Empty_shelves_in_store_023.png": [
+   0,
+   0
+  ],
+  "Empty_shelves_in_store_024.png": [
+   0,
+   0
+  ],
+  "Empty_shelves_in_store_025.png": [
+   0,
+   0
+  ],
+  "Empty_shelves_in_store_030.png": [
+   0,
+   0
+  ],
+  "Entrance_in_Bosnia_and_Herzegovina_from_Croatia_000.png": [
+   0,
+   1
+  ],
+  "Entrance_in_Bosnia_and_Herzegovina_from_Croatia_001.png": [
+   1,
+   1
+  ],
+  "Entrance_in_Bosnia_and_Herzegovina_from_Croatia_002.png": [
+   1,
+   1
+  ],
+  "Entrance_in_Bosnia_and_Herzegovina_from_Croatia_006.png": [
+   1,
+   1
+  ],
+  "Entrance_to_Zenica_000.png": [
+   0,
+   0
+  ],
+  "Entrance_to_Zenica_003.png": [
+   0,
+   0
+  ],
+  "Eyof_2019_sign_000.png": [
+   1,
+   1
+  ],
+  "Eyof_2019_sign_001.png": [
+   0,
+   0
+  ],
+  "Eyof_2019_sign_004.png": [
+   1,
+   1
+  ],
+  "Eyof_2019_sign_005.png": [
+   1,
+   1
+  ],
+  "Eyof_2019_sign_008.png": [
+   0,
+   0
+  ],
+  "Eyof_2019_sign_009.png": [
+   0,
+   0
+  ],
+  "Eyof_2019_sign_010.png": [
+   1,
+   1
+  ],
+  "Eyof_2019_sign_015.png": [
+   1,
+   1
+  ],
+  "Eyof_2019_sign_024.png": [
+   0,
+   0
+  ],
+  "Eyof_2019_sign_027.png": [
+   1,
+   1
+  ],
+  "Eyof_2019_sign_028.png": [
+   0,
+   0
+  ],
+  "Eyof_2019_sign_032.png": [
+   0,
+   0
+  ],
+  "Gas_Station_Nešković_Нешковић_000.png": [
+   0,
+   1
+  ],
+  "Gas_Station_Nešković_Нешковић_002.png": [
+   1,
+   1
+  ],
+  "Gas_Station_Nešković_Нешковић_003.png": [
+   0,
+   0
+  ],
+  "Gas_Station_Nešković_Нешковић_005.png": [
+   0,
+   1
+  ],
+  "Gavrilo_princip_memorial_plaque_2009_edit1_000.png": [
+   1,
+   1
+  ],
+  "Gavrilo_princip_memorial_plaque_2009_edit1_001.png": [
+   0,
+   0
+  ],
+  "Gavrilo_princip_memorial_plaque_2009_edit1_002.png": [
+   1,
+   1
+  ],
+  "Gavrilo_princip_memorial_plaque_2009_edit1_003.png": [
+   1,
+   1
+  ],
+  "Gavrilo_princip_memorial_plaque_2009_edit1_004.png": [
+   1,
+   1
+  ],
+  "Gavrilo_princip_memorial_plaque_2009_edit1_005.png": [
+   1,
+   1
+  ],
+  "Gavrilo_princip_memorial_plaque_2009_edit1_006.png": [
+   1,
+   1
+  ],
+  "Gavrilo_princip_memorial_plaque_2009_edit1_007.png": [
+   1,
+   1
+  ],
+  "Gavrilo_princip_memorial_plaque_2009_edit1_008.png": [
+   1,
+   1
+  ],
+  "Gavrilo_princip_memorial_plaque_2009_edit1_010.png": [
+   1,
+   1
+  ],
+  "Golubić_ulica_000.png": [
+   0,
+   0
+  ],
+  "Golubić_ulica_001.png": [
+   0,
+   1
+  ],
+  "Gospodska_ulica_03_001.png": [
+   0,
+   0
+  ],
+  "Gospodska_ulica_03_002.png": [
+   0,
+   0
+  ],
+  "Gospodska_ulica_03_003.png": [
+   0,
+   0
+  ],
+  "Gospodska_ulica_04_001.png": [
+   0,
+   0
+  ],
+  "Gospodska_ulica_04_002.png": [
+   0,
+   0
+  ],
+  "Gospodska_ulica_08_000.png": [
+   1,
+   1
+  ],
+  "Gospodska_ulica_10_001.png": [
+   0,
+   0
+  ],
+  "Gospodska_ulica_10_005.png": [
+   0,
+   0
+  ],
+  "Gospodska_ulica_13_001.png": [
+   1,
+   1
+  ],
+  "Gospodska_ulica_13_004.png": [
+   1,
+   1
+  ],
+  "Gospodska_ulica_13_005.png": [
+   1,
+   1
+  ],
+  "Gospodska_ulica_17_000.png": [
+   0,
+   0
+  ],
+  "Gospodska_ulica_17_005.png": [
+   0,
+   0
+  ],
+  "Gospodska_ulica_17_006.png": [
+   0,
+   0
+  ],
+  "Gospodska_ulica_17_009.png": [
+   0,
+   0
+  ],
+  "Gospodska_ulica_18_000.png": [
+   0,
+   0
+  ],
+  "Gospodska_ulica_18_001.png": [
+   0,
+   0
+  ],
+  "Gospodska_ulica_20_000.png": [
+   0,
+   0
+  ],
+  "Gospodska_ulica_20_001.png": [
+   0,
+   0
+  ],
+  "Gospodska_ulica_20_002.png": [
+   0,
+   0
+  ],
+  "Gospodska_ulica_20_003.png": [
+   0,
+   0
+  ],
+  "Gospodska_ulica_20_004.png": [
+   0,
+   1
+  ],
+  "Gospodska_ulica_20_005.png": [
+   0,
+   0
+  ],
+  "Gospodska_ulica_22_000.png": [
+   0,
+   0
+  ],
+  "Gospodska_ulica_26_001.png": [
+   0,
+   0
+  ],
+  "Gospodska_ulica_2__000.png": [
+   1,
+   1
+  ],
+  "Gospodska_ulica_2__001.png": [
+   0,
+   0
+  ],
+  "Gospodska_ulica_2__003.png": [
+   0,
+   0
+  ],
+  "Gospodska_ulica_2__004.png": [
+   1,
+   1
+  ],
+  "Gospodska_ulica_2__005.png": [
+   0,
+   0
+  ],
+  "Gospodska_ulica_2__006.png": [
+   1,
+   1
+  ],
+  "Gospodska_ulica_2__007.png": [
+   0,
+   0
+  ],
+  "Gospodska_ulica_2__008.png": [
+   0,
+   0
+  ],
+  "Gospodska_ulica_2__009.png": [
+   0,
+   0
+  ],
+  "Gospodska_ulica_banja_luka_000.png": [
+   0,
+   0
+  ],
+  "Gospodska_ulica_banja_luka_004.png": [
+   0,
+   0
+  ],
+  "Gospodska_ulica_banja_luka_005.png": [
+   0,
+   0
+  ],
+  "Gospodskaa_ulica_001.png": [
+   0,
+   0
+  ],
+  "Gospodskaa_ulica_003.png": [
+   0,
+   0
+  ],
+  "Hamam_Museum_Mostar_29771886881__000.png": [
+   0,
+   0
+  ],
+  "Hotel_Prijedor_2_000.png": [
+   0,
+   0
+  ],
+  "Hotel_Prijedor_2_001.png": [
+   1,
+   1
+  ],
+  "Hotel_Prijedor_2_002.png": [
+   0,
+   1
+  ],
+  "Inat_kuca_-_natpis_001.png": [
+   1,
+   1
+  ],
+  "Inat_kuca_-_natpis_002.png": [
+   0,
+   0
+  ],
+  "Inat_kuca_-_natpis_004.png": [
+   0,
+   0
+  ],
+  "Inat_kuca_-_natpis_005.png": [
+   0,
+   0
+  ],
+  "Inat_kuca_-_natpis_006.png": [
+   0,
+   0
+  ],
+  "Inat_kuca_-_natpis_007.png": [
+   0,
+   0
+  ],
+  "Information_board_in_Jajce_000.png": [
+   0,
+   1
+  ],
+  "Information_board_in_Jajce_002.png": [
+   1,
+   1
+  ],
+  "Information_board_in_Jajce_003.png": [
+   1,
+   1
+  ],
+  "Information_board_in_Jajce_006.png": [
+   0,
+   0
+  ],
+  "Information_board_in_Jajce_010.png": [
+   0,
+   0
+  ],
+  "Information_board_in_Jajce_013.png": [
+   1,
+   1
+  ],
+  "Information_board_in_Jajce_014.png": [
+   0,
+   0
+  ],
+  "Information_board_in_Jajce_023.png": [
+   0,
+   0
+  ],
+  "Information_board_in_Jajce_052.png": [
+   0,
+   0
+  ],
+  "Information_board_in_Jajce_054.png": [
+   0,
+   0
+  ],
+  "Information_board_in_Jajce_069.png": [
+   0,
+   0
+  ],
+  "Information_board_in_Jajce_075.png": [
+   0,
+   0
+  ],
+  "Information_board_in_Jajce_077.png": [
+   0,
+   0
+  ],
+  "Information_board_in_Jajce_099.png": [
+   0,
+   0
+  ],
+  "Information_board_in_Jajce_132.png": [
+   0,
+   0
+  ],
+  "Information_board_in_Jajce_161.png": [
+   0,
+   0
+  ],
+  "Information_board_in_Jajce_180.png": [
+   0,
+   0
+  ],
+  "Information_board_in_Jajce_187.png": [
+   0,
+   0
+  ],
+  "Information_board_in_Jajce_203.png": [
+   0,
+   0
+  ],
+  "Information_board_in_Jajce_211.png": [
+   0,
+   0
+  ],
+  "Information_board_in_Jajce_241.png": [
+   0,
+   0
+  ],
+  "Information_board_in_Jajce_327.png": [
+   0,
+   0
+  ],
+  "Information_board_in_Jajce_352.png": [
+   0,
+   0
+  ],
+  "Jarosław_Lindenberg_-_tablica_000.png": [
+   1,
+   1
+  ],
+  "Jarosław_Lindenberg_-_tablica_001.png": [
+   0,
+   1
+  ],
+  "Jarosław_Lindenberg_-_tablica_002.png": [
+   1,
+   1
+  ],
+  "Jarosław_Lindenberg_-_tablica_003.png": [
+   1,
+   1
+  ],
+  "Jarosław_Lindenberg_-_tablica_004.png": [
+   1,
+   1
+  ],
+  "Konzum_Croation_word_for_Supermarket_3802582748__000.png": [
+   1,
+   1
+  ],
+  "Konzum_Croation_word_for_Supermarket_3802582748__001.png": [
+   1,
+   1
+  ],
+  "Konzum_Croation_word_for_Supermarket_3802582748__002.png": [
+   1,
+   1
+  ],
+  "Konzum_Croation_word_for_Supermarket_3802582748__003.png": [
+   1,
+   1
+  ],
+  "Kraljeva_Sutjeska_banner_000.png": [
+   0,
+   0
+  ],
+  "Kraljeva_Sutjeska_banner_001.png": [
+   0,
+   0
+  ],
+  "Landmine_warning_sign_in_BiH_000.png": [
+   0,
+   0
+  ],
+  "Landmine_warning_sign_in_BiH_009.png": [
+   1,
+   1
+  ],
+  "Leszek_Hensel_-_tablica_000.png": [
+   0,
+   0
+  ],
+  "Leszek_Hensel_-_tablica_001.png": [
+   1,
+   1
+  ],
+  "Leszek_Hensel_-_tablica_002.png": [
+   1,
+   1
+  ],
+  "Market_street_in_Mostar_old_town_8_29226494924__000.png": [
+   0,
+   0
+  ],
+  "Market_street_in_Mostar_old_town_8_29226494924__001.png": [
+   0,
+   0
+  ],
+  "Market_street_in_Mostar_old_town_8_29226494924__002.png": [
+   0,
+   0
+  ],
+  "Martin_Brod_Street_Sign_000.png": [
+   1,
+   1
+  ],
+  "Martin_Brod_Street_Sign_001.png": [
+   1,
+   1
+  ],
+  "Martin_Brod_Street_Sign_002.png": [
+   0,
+   0
+  ],
+  "Martin_Brod_Street_Sign_003.png": [
+   1,
+   1
+  ],
+  "Mate-Boban-street01276_000.png": [
+   1,
+   1
+  ],
+  "Mate-Boban-street01276_001.png": [
+   1,
+   1
+  ],
+  "Mate-Boban-street01276_004.png": [
+   0,
+   0
+  ],
+  "Mate-Boban-street01276_005.png": [
+   0,
+   1
+  ],
+  "Mate-Boban-street01276_006.png": [
+   0,
+   0
+  ],
+  "Minefield_sign_3886691367__000.png": [
+   0,
+   0
+  ],
+  "Minefield_sign_3886691367__002.png": [
+   0,
+   1
+  ],
+  "Minefield_sign_3886691367__005.png": [
+   1,
+   1
+  ],
+  "Minefield_sign_3886691367__008.png": [
+   0,
+   0
+  ],
+  "Mis_Irbina_Street_in_Sarajevo_01_000.png": [
+   1,
+   1
+  ],
+  "Mis_Irbina_Street_in_Sarajevo_01_008.png": [
+   0,
+   0
+  ],
+  "Mis_Irbina_Street_in_Sarajevo_01_011.png": [
+   0,
+   0
+  ],
+  "Mis_Irbina_Street_in_Sarajevo_02_000.png": [
+   0,
+   0
+  ],
+  "Mis_Irbina_Street_in_Sarajevo_02_001.png": [
+   0,
+   0
+  ],
+  "Mis_Irbina_Street_in_Sarajevo_02_002.png": [
+   0,
+   0
+  ],
+  "Mis_Irbina_Street_in_Sarajevo_02_003.png": [
+   0,
+   0
+  ],
+  "Mis_Irbina_Street_in_Sarajevo_02_007.png": [
+   0,
+   0
+  ],
+  "Mis_Irbina_Street_in_Sarajevo_02_008.png": [
+   1,
+   1
+  ],
+  "Mis_Irbina_Street_in_Sarajevo_02_014.png": [
+   0,
+   0
+  ],
+  "Mis_Irbina_Street_in_Sarajevo_02_021.png": [
+   0,
+   0
+  ],
+  "Moritz_Schiller_Sarajevo_street_view_1916_000.png": [
+   0,
+   0
+  ],
+  "Moritz_Schiller_Sarajevo_street_view_1916_001.png": [
+   1,
+   1
+  ],
+  "Moritz_Schiller_Sarajevo_street_view_1916_005.png": [
+   0,
+   0
+  ],
+  "Moritz_Schiller_Sarajevo_street_view_1916_006.png": [
+   0,
+   0
+  ],
+  "Moritz_Schiller_Sarajevo_street_view_1916_007.png": [
+   0,
+   0
+  ],
+  "Mostar_Old_Town_Street_000.png": [
+   0,
+   0
+  ],
+  "Mostar_Street_5_001.png": [
+   0,
+   0
+  ],
+  "Mostar_Street_in_the_Old_Town_45296246321__000.png": [
+   0,
+   0
+  ],
+  "Mostar_shops_001.png": [
+   0,
+   0
+  ],
+  "Museum_of_the_Old_Bridge_001.png": [
+   0,
+   0
+  ],
+  "Museum_of_the_Old_Bridge_002.png": [
+   0,
+   0
+  ],
+  "Museum_of_the_Old_Bridge_003.png": [
+   0,
+   0
+  ],
+  "Museum_of_the_Old_Bridge_011.png": [
+   0,
+   0
+  ],
+  "NKD_013_gospodska_ulica_001.png": [
+   0,
+   0
+  ],
+  "NKD_013_gospodska_ulica_banja_luka_3__001.png": [
+   0,
+   0
+  ],
+  "NKD_013_gospodska_ulica_banja_luka_3__002.png": [
+   0,
+   0
+  ],
+  "Narrow-Gauge-Railway_Spalatobahn_Station-Travnik_3__001.png": [
+   1,
+   1
+  ],
+  "Narrow-Gauge-Railway_Spalatobahn_Station-Travnik_3__002.png": [
+   1,
+   1
+  ],
+  "Narrow-Gauge-Railway_Spalatobahn_Station-Travnik_3__003.png": [
+   1,
+   1
+  ],
+  "Narrow-Gauge-Railway_Spalatobahn_Station-Travnik_3__004.png": [
+   1,
+   1
+  ],
+  "Narrow-Gauge-Railway_Spalatobahn_Station-Travnik_3__005.png": [
+   1,
+   1
+  ],
+  "Narrow-Gauge-Railway_Spalatobahn_Station-Travnik_3__006.png": [
+   1,
+   1
+  ],
+  "Nestro_Petrol_station_Kaonik_001.png": [
+   0,
+   0
+  ],
+  "Nestro_Petrol_station_Kaonik_002.png": [
+   0,
+   0
+  ],
+  "Nestro_Petrol_station_Kaonik_003.png": [
+   0,
+   0
+  ],
+  "Nestro_Petrol_station_Kaonik_006.png": [
+   0,
+   0
+  ],
+  "Nestro_Petrol_station_Kaonik_007.png": [
+   0,
+   0
+  ],
+  "Nestro_Petrol_station_Kaonik_008.png": [
+   0,
+   0
+  ],
+  "Neum_road_000.png": [
+   1,
+   1
+  ],
+  "Neum_road_002.png": [
+   1,
+   1
+  ],
+  "Neum_road_006.png": [
+   1,
+   1
+  ],
+  "Neum_road_007.png": [
+   1,
+   1
+  ],
+  "Neum_road_008.png": [
+   0,
+   0
+  ],
+  "Neum_road_011.png": [
+   1,
+   1
+  ],
+  "Neum_road_012.png": [
+   0,
+   0
+  ],
+  "Neum_road_016.png": [
+   0,
+   0
+  ],
+  "Old_shops_on_Baščaršija_-_panoramio_008.png": [
+   0,
+   0
+  ],
+  "Only_foreign_butter_in_Bosnian_supermarkets_023.png": [
+   0,
+   0
+  ],
+  "Only_foreign_butter_in_Bosnian_supermarkets_027.png": [
+   1,
+   1
+  ],
+  "Only_foreign_butter_in_Bosnian_supermarkets_029.png": [
+   0,
+   0
+  ],
+  "Only_foreign_butter_in_Bosnian_supermarkets_030.png": [
+   1,
+   1
+  ],
+  "Only_foreign_butter_in_Bosnian_supermarkets_031.png": [
+   0,
+   0
+  ],
+  "Only_foreign_butter_in_Bosnian_supermarkets_033.png": [
+   0,
+   0
+  ],
+  "Only_foreign_butter_in_Bosnian_supermarkets_035.png": [
+   0,
+   0
+  ],
+  "Only_foreign_butter_in_Bosnian_supermarkets_036.png": [
+   0,
+   0
+  ],
+  "Only_foreign_butter_in_Bosnian_supermarkets_039.png": [
+   0,
+   0
+  ],
+  "Only_foreign_butter_in_Bosnian_supermarkets_040.png": [
+   0,
+   0
+  ],
+  "Only_foreign_butter_in_Bosnian_supermarkets_043.png": [
+   0,
+   0
+  ],
+  "Only_foreign_butter_in_Bosnian_supermarkets_044.png": [
+   1,
+   1
+  ],
+  "Only_foreign_butter_in_Bosnian_supermarkets_046.png": [
+   0,
+   0
+  ],
+  "Only_foreign_butter_in_Bosnian_supermarkets_047.png": [
+   0,
+   0
+  ],
+  "Only_foreign_butter_in_Bosnian_supermarkets_048.png": [
+   0,
+   0
+  ],
+  "Only_foreign_butter_in_Bosnian_supermarkets_052.png": [
+   0,
+   0
+  ],
+  "Only_foreign_butter_in_Bosnian_supermarkets_054.png": [
+   0,
+   0
+  ],
+  "Only_foreign_butter_in_Bosnian_supermarkets_061.png": [
+   0,
+   0
+  ],
+  "Only_foreign_butter_in_Bosnian_supermarkets_065.png": [
+   0,
+   0
+  ],
+  "Only_foreign_butter_in_Bosnian_supermarkets_067.png": [
+   0,
+   0
+  ],
+  "Only_foreign_butter_in_Bosnian_supermarkets_068.png": [
+   0,
+   0
+  ],
+  "Only_foreign_butter_in_Bosnian_supermarkets_069.png": [
+   0,
+   0
+  ],
+  "Only_foreign_butter_in_Bosnian_supermarkets_073.png": [
+   0,
+   0
+  ],
+  "Only_foreign_butter_in_Bosnian_supermarkets_075.png": [
+   0,
+   0
+  ],
+  "Plaque_en_émail_000.png": [
+   0,
+   0
+  ],
+  "Plaque_en_émail_001.png": [
+   1,
+   1
+  ],
+  "Plaque_en_émail_002.png": [
+   0,
+   0
+  ],
+  "Plaque_on_the_summit_of_Maglič_3887464262__000.png": [
+   0,
+   0
+  ],
+  "Plaque_on_the_summit_of_Maglič_3887464262__001.png": [
+   0,
+   0
+  ],
+  "Plaque_on_the_summit_of_Maglič_3887464262__004.png": [
+   0,
+   0
+  ],
+  "Plaque_on_the_summit_of_Maglič_3887464262__005.png": [
+   0,
+   0
+  ],
+  "Plaque_on_the_summit_of_Maglič_3887464262__006.png": [
+   0,
+   0
+  ],
+  "Plaque_on_the_summit_of_Maglič_3887464262__007.png": [
+   0,
+   0
+  ],
+  "Plaque_on_the_summit_of_Maglič_3887464262__008.png": [
+   0,
+   0
+  ],
+  "Ploča_Most_FT_Čapljina_2056_001.png": [
+   0,
+   0
+  ],
+  "Ploča_Most_FT_Čapljina_2056_003.png": [
+   1,
+   1
+  ],
+  "Ploča_Most_FT_Čapljina_2056_004.png": [
+   1,
+   1
+  ],
+  "Ploča_Most_FT_Čapljina_2056_005.png": [
+   1,
+   1
+  ],
+  "Ploča_Most_FT_Čapljina_2056_006.png": [
+   0,
+   0
+  ],
+  "Prijedorska_street_Sanski_Most_001.png": [
+   0,
+   0
+  ],
+  "Putakaz_BL_001.png": [
+   1,
+   1
+  ],
+  "Putakaz_BL_003.png": [
+   0,
+   0
+  ],
+  "Putakaz_BL_009.png": [
+   0,
+   0
+  ],
+  "Putokaz_001.png": [
+   1,
+   1
+  ],
+  "Putokaz_004.png": [
+   0,
+   0
+  ],
+  "Putokaz_005.png": [
+   0,
+   0
+  ],
+  "Putokaz21_002.png": [
+   0,
+   0
+  ],
+  "Putokaz21_003.png": [
+   1,
+   1
+  ],
+  "Putokaz21_004.png": [
+   0,
+   1
+  ],
+  "Putokaz21_007.png": [
+   1,
+   1
+  ],
+  "Putokaz212_003.png": [
+   0,
+   0
+  ],
+  "Putokaz212_005.png": [
+   1,
+   1
+  ],
+  "Putokaz212_007.png": [
+   1,
+   1
+  ],
+  "Putokaz212_009.png": [
+   0,
+   0
+  ],
+  "Putokaz212_010.png": [
+   1,
+   1
+  ],
+  "Putokaz212_012.png": [
+   0,
+   0
+  ],
+  "Putokaz212_014.png": [
+   0,
+   0
+  ],
+  "Putokaz212_015.png": [
+   0,
+   0
+  ],
+  "Putokaz212_016.png": [
+   0,
+   0
+  ],
+  "Putokaz_za_Kastel_001.png": [
+   1,
+   1
+  ],
+  "Putokaz_za_Kastel_005.png": [
+   0,
+   0
+  ],
+  "Razglednica_puta_Banjaluka-Jajce_001.png": [
+   0,
+   0
+  ],
+  "Red_Cross_center_in_Tuzla_-_Plaques_2019__000.png": [
+   0,
+   0
+  ],
+  "Red_Cross_center_in_Tuzla_-_Plaques_2019__001.png": [
+   1,
+   1
+  ],
+  "Red_Cross_center_in_Tuzla_-_Plaques_2019__002.png": [
+   1,
+   1
+  ],
+  "Red_Cross_center_in_Tuzla_-_Plaques_2019__003.png": [
+   0,
+   0
+  ],
+  "Red_Cross_center_in_Tuzla_-_Plaques_2019__004.png": [
+   1,
+   1
+  ],
+  "Red_Cross_center_in_Tuzla_-_Plaques_2019__005.png": [
+   1,
+   1
+  ],
+  "Red_Cross_center_in_Tuzla_-_Plaques_2019__006.png": [
+   1,
+   1
+  ],
+  "Red_Cross_center_in_Tuzla_-_Plaques_2019__007.png": [
+   1,
+   1
+  ],
+  "Red_Cross_center_in_Tuzla_-_Plaques_2019__008.png": [
+   1,
+   1
+  ],
+  "Red_Cross_center_in_Tuzla_-_Plaques_2019__009.png": [
+   1,
+   1
+  ],
+  "Red_Cross_center_in_Tuzla_-_Plaques_2019__010.png": [
+   0,
+   0
+  ],
+  "Red_Cross_center_in_Tuzla_-_Plaques_2019__011.png": [
+   1,
+   1
+  ],
+  "Red_Cross_center_in_Tuzla_-_Plaques_2019__012.png": [
+   0,
+   0
+  ],
+  "Road_Sign_Mostar_Entry_001.png": [
+   1,
+   1
+  ],
+  "Road_Sign_Mostar_Entry_003.png": [
+   0,
+   0
+  ],
+  "Road_Sign_Mostar_Entry_005.png": [
+   0,
+   0
+  ],
+  "Road_sign_before_a_roundabout_in_Dubrave_Gornje_Živinice_BIH_2019__000.png": [
+   1,
+   1
+  ],
+  "Road_sign_before_a_roundabout_in_Dubrave_Gornje_Živinice_BIH_2019__002.png": [
+   1,
+   1
+  ],
+  "Road_sign_before_a_roundabout_in_Dubrave_Gornje_Živinice_BIH_2019__004.png": [
+   1,
+   1
+  ],
+  "Robna_kuca_u_Boriku_supermarket_Banja_Luka_000.png": [
+   0,
+   0
+  ],
+  "Sarajevo-Street-Juice-Vendor_15548440052__000.png": [
+   0,
+   0
+  ],
+  "Sarajevo-Street-Juice-Vendor_15548440052__001.png": [
+   0,
+   0
+  ],
+  "Sarajevo_84_-_Cafe_in_Piran_Scene_-_Piran_-_Adriatic_Coast_-_Slovenia_54567195518__001.png": [
+   0,
+   0
+  ],
+  "Sarajevo_84_-_Cafe_in_Piran_Scene_-_Piran_-_Adriatic_Coast_-_Slovenia_54567195518__003.png": [
+   0,
+   0
+  ],
+  "Sarajevo_84_-_Cafe_in_Piran_Scene_-_Piran_-_Adriatic_Coast_-_Slovenia_54567195518__004.png": [
+   0,
+   0
+  ],
+  "Sarajevo_84_-_Cafe_in_Piran_Scene_-_Piran_-_Adriatic_Coast_-_Slovenia_54567195518__005.png": [
+   0,
+   0
+  ],
+  "Sarajevo_84_-_Cafe_in_Piran_Scene_-_Piran_-_Adriatic_Coast_-_Slovenia_54567195518__007.png": [
+   0,
+   0
+  ],
+  "Sarajevo_84_-_Cafe_in_Piran_Scene_-_Piran_-_Adriatic_Coast_-_Slovenia_54567195518__008.png": [
+   0,
+   0
+  ],
+  "Sarajevo_Bascarsija_2011-10-28_2__000.png": [
+   1,
+   1
+  ],
+  "Sarajevo_Bascarsija_2011-10-28_2__002.png": [
+   1,
+   1
+  ],
+  "Sarajevo_Bascarsija_2011-10-28_2__004.png": [
+   1,
+   1
+  ],
+  "Sarajevo_Bascarsija_2011-10-28_2__007.png": [
+   0,
+   1
+  ],
+  "Sarajevo_Bascarsija_Shop_2011-11-08_002.png": [
+   1,
+   1
+  ],
+  "Sarajevo_Bascarsija_Shop_2011-11-08_003.png": [
+   1,
+   1
+  ],
+  "Sarajevo_Bascarsija_Shop_2011-11-08_004.png": [
+   0,
+   0
+  ],
+  "Sarajevo_Bascarsija_Shop_2011-11-08_005.png": [
+   0,
+   0
+  ],
+  "Sarajevo_Bascarsija_Shop_2011-11-08_006.png": [
+   0,
+   0
+  ],
+  "Sarajevo_Bistrik_station_2018_1_015.png": [
+   0,
+   1
+  ],
+  "Sarajevo_EP-Gas-Station_Bulevar-Mese-Selimovica_2011-11-04_3__001.png": [
+   0,
+   0
+  ],
+  "Sarajevo_Gas-Station_EP_2011-11-06_001.png": [
+   0,
+   1
+  ],
+  "Sarajevo_Gas-Station_EP_2011-11-06_002.png": [
+   0,
+   1
+  ],
+  "Sarajevo_Jugoslavija_Poster_000.png": [
+   0,
+   0
+  ],
+  "Sarajevo_Jugoslavija_Poster_001.png": [
+   1,
+   1
+  ],
+  "Sarajevo_Jugoslavija_Poster_002.png": [
+   1,
+   1
+  ],
+  "Sarajevo_Jugoslavija_Poster_003.png": [
+   0,
+   0
+  ],
+  "Sarajevo_Jugoslavija_Poster_009.png": [
+   1,
+   1
+  ],
+  "Sarajevo_Jugoslavija_Poster_010.png": [
+   0,
+   1
+  ],
+  "Sarajevo_Jugoslavija_Poster_011.png": [
+   0,
+   1
+  ],
+  "Sarajevo_Street_1900_000.png": [
+   0,
+   0
+  ],
+  "Sarajevo_Street_1900_001.png": [
+   0,
+   0
+  ],
+  "Sarajevo_Tram-231_Line-5_2011-10-20_004.png": [
+   0,
+   0
+  ],
+  "Sarajevo_Tram-231_Line-5_2011-10-20_005.png": [
+   0,
+   0
+  ],
+  "Sarajevo_Tram-231_Line-5_2011-10-20_006.png": [
+   0,
+   0
+  ],
+  "Sarajevo_Tram-240_Line-5_2011-10-20_8__006.png": [
+   0,
+   0
+  ],
+  "Sarajevo_Tram-511_Line-3_2011-10-27_003.png": [
+   0,
+   0
+  ],
+  "Sarajevo_Tram-511_Line-3_2011-10-27_004.png": [
+   0,
+   0
+  ],
+  "Sarajevo_Trolleybus-4418_Line-108_2011-11-05_2__003.png": [
+   0,
+   0
+  ],
+  "Sarajevo_Trolleybus-4418_Line-108_2011-11-05_2__004.png": [
+   0,
+   0
+  ],
+  "Sarajevo_bus_station_000.png": [
+   0,
+   0
+  ],
+  "Sarajevo_bus_station_001.png": [
+   0,
+   0
+  ],
+  "Sarajevo_bus_station_002.png": [
+   0,
+   0
+  ],
+  "Sarajevo_bus_station_005.png": [
+   1,
+   1
+  ],
+  "Sarajevo_west_IMG_1171_hwy_M-19_Braca_Mujic_gas_station_003.png": [
+   0,
+   0
+  ],
+  "Sarajevo_west_IMG_1171_hwy_M-19_Braca_Mujic_gas_station_006.png": [
+   0,
+   0
+  ],
+  "Sarajevo_west_IMG_1171_hwy_M-19_Braca_Mujic_gas_station_007.png": [
+   0,
+   0
+  ],
+  "Sarajevo_west_IMG_1171_hwy_M-19_Braca_Mujic_gas_station_009.png": [
+   0,
+   0
+  ],
+  "Shop_in_old_Sarajevo_9461919674__000.png": [
+   0,
+   1
+  ],
+  "Shopping_centre_in_Konjic_town_004.png": [
+   0,
+   0
+  ],
+  "Shopping_centre_in_Konjic_town_009.png": [
+   0,
+   1
+  ],
+  "Shopping_centre_in_Konjic_town_014.png": [
+   1,
+   1
+  ],
+  "Shopping_centre_in_Konjic_town_016.png": [
+   0,
+   0
+  ],
+  "Shopping_centre_in_Konjic_town_017.png": [
+   0,
+   0
+  ],
+  "Shopping_centre_in_Konjic_town_018.png": [
+   0,
+   0
+  ],
+  "Shopping_centre_in_Konjic_town_019.png": [
+   0,
+   0
+  ],
+  "Shopping_centre_in_Konjic_town_021.png": [
+   0,
+   0
+  ],
+  "Shopping_centre_in_Konjic_town_022.png": [
+   0,
+   0
+  ],
+  "Shopping_centre_in_Konjic_town_023.png": [
+   0,
+   0
+  ],
+  "Shopping_centre_in_Konjic_town_024.png": [
+   0,
+   0
+  ],
+  "Shopping_centre_in_Konjic_town_025.png": [
+   0,
+   0
+  ],
+  "Shopping_centre_in_Konjic_town_026.png": [
+   0,
+   0
+  ],
+  "Shopping_centre_in_Konjic_town_027.png": [
+   1,
+   1
+  ],
+  "Shopping_mall_Tuzlanka_000.png": [
+   0,
+   0
+  ],
+  "Shopping_mall_Tuzlanka_001.png": [
+   0,
+   0
+  ],
+  "Shopping_mall_Tuzlanka_002.png": [
+   0,
+   0
+  ],
+  "Slovenian_Consulate_General_in_Banja_Luka_plaque_000.png": [
+   0,
+   0
+  ],
+  "Slovenian_Consulate_General_in_Banja_Luka_plaque_001.png": [
+   0,
+   0
+  ],
+  "Slovenian_Consulate_General_in_Banja_Luka_plaque_002.png": [
+   0,
+   0
+  ],
+  "Slovenian_Consulate_General_in_Banja_Luka_plaque_003.png": [
+   0,
+   0
+  ],
+  "Slovenian_Consulate_General_in_Banja_Luka_plaque_004.png": [
+   0,
+   0
+  ],
+  "Slovenian_Consulate_General_in_Banja_Luka_plaque_005.png": [
+   1,
+   1
+  ],
+  "Slovenian_Consulate_General_in_Banja_Luka_plaque_006.png": [
+   0,
+   0
+  ],
+  "Slovenian_Consulate_General_in_Banja_Luka_plaque_007.png": [
+   0,
+   0
+  ],
+  "Spanish_Square_000.png": [
+   0,
+   0
+  ],
+  "Spanish_Square_001.png": [
+   0,
+   0
+  ],
+  "Spanish_square_08028_002.png": [
+   0,
+   0
+  ],
+  "Spanish_square_08028_003.png": [
+   0,
+   0
+  ],
+  "Spanish_square_08028_004.png": [
+   0,
+   0
+  ],
+  "Spanish_square_08029_000.png": [
+   0,
+   0
+  ],
+  "Spanish_square_08035_000.png": [
+   0,
+   0
+  ],
+  "Spanish_square_08035_001.png": [
+   0,
+   0
+  ],
+  "Spanish_square_08036_005.png": [
+   0,
+   0
+  ],
+  "Spanish_square_08036_006.png": [
+   0,
+   0
+  ],
+  "Spanish_square_08036_007.png": [
+   0,
+   0
+  ],
+  "Spanish_square_08036_008.png": [
+   0,
+   0
+  ],
+  "Spomen-ploča_samostan_Guča_Gora_101312_006.png": [
+   0,
+   0
+  ],
+  "Spomen-ploča_samostan_Guča_Gora_101312_007.png": [
+   0,
+   0
+  ],
+  "Spomen-ploča_samostan_Guča_Gora_101312_010.png": [
+   0,
+   0
+  ],
+  "Spomen-ploča_samostan_Guča_Gora_101312_011.png": [
+   0,
+   0
+  ],
+  "Spomen-ploča_samostan_Guča_Gora_101312_013.png": [
+   0,
+   0
+  ],
+  "Spomen-ploča_u_Fojnici_000.png": [
+   0,
+   0
+  ],
+  "Spomen-ploča_u_Fojnici_001.png": [
+   0,
+   0
+  ],
+  "Spomen-ploča_u_Fojnici_002.png": [
+   0,
+   0
+  ],
+  "Spomen-ploča_u_Fojnici_003.png": [
+   0,
+   0
+  ],
+  "Spomen-ploča_u_Fojnici_004.png": [
+   0,
+   0
+  ],
+  "Spomen-ploča_u_Fojnici_005.png": [
+   0,
+   0
+  ],
+  "Spomen-ploča_u_Fojnici_006.png": [
+   0,
+   0
+  ],
+  "Spomen-ploča_u_Fojnici_007.png": [
+   0,
+   0
+  ],
+  "Spomen_ploča-zavjetni_križ-utvrda-ŠB_001.png": [
+   1,
+   1
+  ],
+  "Spomen_ploča-zavjetni_križ-utvrda-ŠB_002.png": [
+   0,
+   1
+  ],
+  "Spomen_ploča-zavjetni_križ-utvrda-ŠB_004.png": [
+   1,
+   1
+  ],
+  "Spomen_ploča-zavjetni_križ-utvrda-ŠB_005.png": [
+   1,
+   1
+  ],
+  "Spomen_ploča-zavjetni_križ-utvrda-ŠB_006.png": [
+   0,
+   0
+  ],
+  "Spomen_ploča-zavjetni_križ-utvrda-ŠB_007.png": [
+   1,
+   1
+  ],
+  "Spomen_ploča_samostan_Guča_Gora4_101536_002.png": [
+   0,
+   0
+  ],
+  "Spomen_ploča_samostan_Guča_Gora4_101536_003.png": [
+   0,
+   0
+  ],
+  "Spomen_ploča_samostan_Guča_Gora4_101536_004.png": [
+   0,
+   0
+  ],
+  "Spomen_ploča_samostan_Guča_Gora4_101536_005.png": [
+   0,
+   0
+  ],
+  "Spomen_ploča_samostan_Guča_Gora4_101536_007.png": [
+   0,
+   0
+  ],
+  "Spomen_ploča_samostan_Guča_Gora4_101536_009.png": [
+   0,
+   0
+  ],
+  "Spomen_ploča_samostan_Guča_Gora4_101536_010.png": [
+   0,
+   0
+  ],
+  "Spomen_ploča_samostan_Guča_Gora4_101536_012.png": [
+   0,
+   0
+  ],
+  "Spomen_ploča_samostan_Guča_Gora4_101536_013.png": [
+   0,
+   0
+  ],
+  "Spomen_ploča_samostan_Guča_Gora4_101536_014.png": [
+   0,
+   0
+  ],
+  "Spomen_ploča_samostan_Guča_Gora4_101536_015.png": [
+   0,
+   0
+  ],
+  "Spomen_ploča_samostan_Guča_Gora4_101536_016.png": [
+   0,
+   0
+  ],
+  "Spomen_ploča_samostan_Guča_Gora4_101536_019.png": [
+   0,
+   0
+  ],
+  "Spomen_ploča_samostan_Guča_Gora4_101536_020.png": [
+   0,
+   0
+  ],
+  "Spomen_ploča_samostan_Guča_Gora4_101536_021.png": [
+   0,
+   0
+  ],
+  "Spomen_ploča_samostan_Guča_Gora4_101536_022.png": [
+   0,
+   0
+  ],
+  "Spomen_ploča_samostan_Guča_Gora4_101536_023.png": [
+   0,
+   1
+  ],
+  "Street_in_Bihać_001.png": [
+   0,
+   0
+  ],
+  "Street_in_Bihać_008.png": [
+   0,
+   0
+  ],
+  "Street_in_Bihać_011.png": [
+   0,
+   0
+  ],
+  "Street_in_Bihać_013.png": [
+   0,
+   0
+  ],
+  "Street_in_Mostar_01_000.png": [
+   0,
+   0
+  ],
+  "Street_in_Mostar_01_003.png": [
+   0,
+   0
+  ],
+  "Street_in_Mostar_01_004.png": [
+   0,
+   0
+  ],
+  "Street_in_Mostar_02_000.png": [
+   0,
+   0
+  ],
+  "Street_in_Mostar_02_001.png": [
+   1,
+   1
+  ],
+  "Street_with_bullet_holes_in_Sarajevo_02_000.png": [
+   0,
+   0
+  ],
+  "Street_with_bullet_holes_in_Sarajevo_02_004.png": [
+   0,
+   0
+  ],
+  "Streets_in_Jajce_002_000.png": [
+   0,
+   0
+  ],
+  "Streets_in_Jajce_002_002.png": [
+   0,
+   0
+  ],
+  "Streets_in_Mostar_001_002.png": [
+   1,
+   1
+  ],
+  "Streets_in_Mostar_001_003.png": [
+   1,
+   1
+  ],
+  "Streets_in_Mostar_001_005.png": [
+   0,
+   0
+  ],
+  "Streets_in_Mostar_002_001.png": [
+   0,
+   0
+  ],
+  "Streets_in_Mostar_002_002.png": [
+   0,
+   0
+  ],
+  "Streets_in_Mostar_004_001.png": [
+   0,
+   0
+  ],
+  "Streets_in_Mostar_004_003.png": [
+   0,
+   1
+  ],
+  "Streets_in_Mostar_004_007.png": [
+   0,
+   0
+  ],
+  "Streets_in_Mostar_004_008.png": [
+   0,
+   0
+  ],
+  "Streets_in_Mostar_004_009.png": [
+   0,
+   0
+  ],
+  "Streets_in_Mostar_004_010.png": [
+   0,
+   0
+  ],
+  "Streets_in_Mostar_007_001.png": [
+   1,
+   1
+  ],
+  "Streets_in_Mostar_007_003.png": [
+   1,
+   1
+  ],
+  "Streets_in_Mostar_007_005.png": [
+   0,
+   0
+  ],
+  "Tabla222_004.png": [
+   0,
+   0
+  ],
+  "Tabla222_006.png": [
+   0,
+   0
+  ],
+  "Tabla222_008.png": [
+   0,
+   0
+  ],
+  "Tabla222_011.png": [
+   0,
+   0
+  ],
+  "Tabla222_012.png": [
+   0,
+   0
+  ],
+  "Tabla222_014.png": [
+   1,
+   1
+  ],
+  "Tabla222_017.png": [
+   0,
+   0
+  ],
+  "Tabla222_018.png": [
+   0,
+   0
+  ],
+  "Tabla222_021.png": [
+   0,
+   0
+  ],
+  "Tabla222_023.png": [
+   0,
+   0
+  ],
+  "Tabla222_024.png": [
+   0,
+   0
+  ],
+  "Tabla222_027.png": [
+   0,
+   0
+  ],
+  "Tabla222_029.png": [
+   0,
+   0
+  ],
+  "Tabla222_030.png": [
+   0,
+   0
+  ],
+  "Tenues_traditionnelles_bosniaques_vendues_dans_le_quartier_de_Baščaršija_000.png": [
+   0,
+   1
+  ],
+  "Tjentište_sign_000.png": [
+   0,
+   0
+  ],
+  "Tjentište_sign_001.png": [
+   1,
+   1
+  ],
+  "Tourist_road_sign_in_Sarajevo_000.png": [
+   0,
+   1
+  ],
+  "Tourist_road_sign_in_Sarajevo_001.png": [
+   1,
+   1
+  ],
+  "Tourist_road_sign_in_Sarajevo_005.png": [
+   1,
+   1
+  ],
+  "Tourist_road_sign_in_Sarajevo_006.png": [
+   1,
+   1
+  ],
+  "Tourist_road_sign_in_Sarajevo_007.png": [
+   0,
+   0
+  ],
+  "Tourist_road_sign_in_Sarajevo_009.png": [
+   0,
+   0
+  ],
+  "Tourist_road_sign_in_Sarajevo_014.png": [
+   0,
+   0
+  ],
+  "Travnik_graffiti_000.png": [
+   1,
+   1
+  ],
+  "Travnik_graffiti_001.png": [
+   0,
+   0
+  ],
+  "Travnik_graffiti_002.png": [
+   0,
+   0
+  ],
+  "Trg-kralja-tomislav-livno00660_000.png": [
+   0,
+   0
+  ],
+  "Trg-kralja-tomislav-livno00660_001.png": [
+   0,
+   0
+  ],
+  "Trg-kralja-tomislav-livno00660_003.png": [
+   0,
+   0
+  ],
+  "Trg-kralja-tomislav-livno00665_000.png": [
+   0,
+   0
+  ],
+  "Trg-kralja-tomislav-livno00665_001.png": [
+   0,
+   0
+  ],
+  "Trg-kralja-tomislav-livno00665_003.png": [
+   0,
+   0
+  ],
+  "Trg-kralja-tomislav-livno00686_000.png": [
+   0,
+   0
+  ],
+  "Trg-kralja-tomislav-livno00686_001.png": [
+   1,
+   1
+  ],
+  "Trg-žrtava-ŠB03100_000.png": [
+   0,
+   0
+  ],
+  "Trg-žrtava-ŠB03101_000.png": [
+   0,
+   0
+  ],
+  "Trg-žrtava-ŠB03101_002.png": [
+   0,
+   0
+  ],
+  "Trg-žrtava-ŠB03101_003.png": [
+   0,
+   0
+  ],
+  "Trg-žrtava-ŠB03101_004.png": [
+   0,
+   0
+  ],
+  "Trg-žrtava-ŠB03101_006.png": [
+   0,
+   0
+  ],
+  "Trg_hrvatskih_vitezova01795_001.png": [
+   1,
+   1
+  ],
+  "Trg_hrvatskih_vitezova01795_003.png": [
+   0,
+   1
+  ],
+  "Trg_hrvatskih_vitezova01795_004.png": [
+   1,
+   1
+  ],
+  "Tuzla_-_Blue_fire_hydrant_Maršala_Tita_street_2019__004.png": [
+   0,
+   0
+  ],
+  "Tuzla_-_Pannonian_Lakes_-_Geology_Museum_2019__002.png": [
+   0,
+   0
+  ],
+  "Tuzla_-_Pannonian_Lakes_-_Geology_Museum_2019__003.png": [
+   0,
+   0
+  ],
+  "Tuzla_-_Pannonian_Lakes_-_Geology_Museum_2019__004.png": [
+   0,
+   1
+  ],
+  "Tuzla_-_Pannonian_Lakes_-_Geology_Museum_2019__005.png": [
+   0,
+   0
+  ],
+  "Tuzla_-_SDA_Party_building_plaques_2019__000.png": [
+   1,
+   1
+  ],
+  "Tuzla_-_SDA_Party_building_plaques_2019__001.png": [
+   1,
+   1
+  ],
+  "Tuzla_-_SDA_Party_building_plaques_2019__002.png": [
+   1,
+   1
+  ],
+  "Tuzla_-_SDA_Party_building_plaques_2019__003.png": [
+   1,
+   1
+  ],
+  "Tuzla_-_SDA_Party_building_plaques_2019__004.png": [
+   1,
+   1
+  ],
+  "Tuzla_-_Train_station_13_2019__000.png": [
+   0,
+   1
+  ],
+  "Tuzla_-_Train_station_13_2019__004.png": [
+   0,
+   0
+  ],
+  "Tuzla_-_Train_station_13_2019__008.png": [
+   0,
+   1
+  ],
+  "Tuzla_-_Train_station_13_2019__009.png": [
+   0,
+   0
+  ],
+  "Tuzla_-_Train_station_13_2019__010.png": [
+   0,
+   0
+  ],
+  "Tuzla_-_Train_station_13_2019__012.png": [
+   0,
+   0
+  ],
+  "Tuzla_-_Train_station_13_2019__013.png": [
+   0,
+   0
+  ],
+  "Tuzla_-_Train_station_13_2019__014.png": [
+   0,
+   1
+  ],
+  "Tuzla_-_Train_station_13_2019__015.png": [
+   1,
+   1
+  ],
+  "Tuzla_-_Train_station_13_2019__019.png": [
+   0,
+   1
+  ],
+  "Tuzla_-_Train_station_13_2019__020.png": [
+   1,
+   1
+  ],
+  "Tuzla_-_Train_station_13_2019__021.png": [
+   1,
+   1
+  ],
+  "Tuzla_-_Train_station_13_2019__025.png": [
+   0,
+   1
+  ],
+  "Tuzla_-_Train_station_13_2019__026.png": [
+   1,
+   1
+  ],
+  "Tuzla_-_Train_station_13_2019__027.png": [
+   1,
+   1
+  ],
+  "Tuzla_-_Train_station_13_2019__030.png": [
+   1,
+   1
+  ],
+  "Tuzla_-_Train_station_13_2019__031.png": [
+   1,
+   1
+  ],
+  "Tuzla_-_Train_station_13_2019__032.png": [
+   0,
+   1
+  ],
+  "Tuzla_-_Train_station_13_2019__033.png": [
+   0,
+   0
+  ],
+  "Tuzla_-_Train_station_13_2019__034.png": [
+   0,
+   0
+  ],
+  "Tuzla_-_Train_station_13_2019__035.png": [
+   0,
+   0
+  ],
+  "Tuzla_-_Train_station_13_2019__036.png": [
+   0,
+   0
+  ],
+  "Tuzla_-_Train_station_13_2019__037.png": [
+   0,
+   0
+  ],
+  "Tuzla_-_Train_station_13_2019__039.png": [
+   0,
+   1
+  ],
+  "Tuzla_-_Train_station_13_2019__040.png": [
+   0,
+   0
+  ],
+  "Tuzla_-_Train_station_13_2019__042.png": [
+   0,
+   1
+  ],
+  "Tuzla_-_Train_station_13_2019__044.png": [
+   0,
+   1
+  ],
+  "Tuzla_-_Train_station_13_2019__045.png": [
+   0,
+   0
+  ],
+  "Tuzla_-_Train_station_13_2019__046.png": [
+   0,
+   1
+  ],
+  "Tuzla_-_Train_station_13_2019__047.png": [
+   0,
+   1
+  ],
+  "Tuzla_-_Train_station_13_2019__049.png": [
+   0,
+   1
+  ],
+  "Tuzla_-_Train_station_13_2019__050.png": [
+   0,
+   1
+  ],
+  "Tuzla_-_Trg_slobode_000.png": [
+   0,
+   0
+  ],
+  "Tuzla_-_Trg_slobode_002.png": [
+   0,
+   0
+  ],
+  "Tuzla_-_Trg_slobode_-_Fire_hydrant_2019__000.png": [
+   0,
+   0
+  ],
+  "Tuzla_-_Ulica_Bosne_Srebrene_1_2019__000.png": [
+   1,
+   1
+  ],
+  "Tuzla_-_Ulica_Bosne_Srebrene_1_2019__001.png": [
+   1,
+   1
+  ],
+  "Tuzla_-_Ulica_Bosne_Srebrene_1_2019__002.png": [
+   1,
+   1
+  ],
+  "Tuzla_-_Ulica_Bosne_Srebrene_1_2019__003.png": [
+   1,
+   1
+  ],
+  "Tuzla_-_Ulica_Bosne_Srebrene_1_2019__005.png": [
+   1,
+   1
+  ],
+  "Tuzla_-_Ulica_Tabašnice_2019__008.png": [
+   0,
+   0
+  ],
+  "Tuzla_-_Ulica_Tabašnice_2019__010.png": [
+   1,
+   1
+  ],
+  "Tuzla_-_Ulica_Tabašnice_2019__011.png": [
+   1,
+   1
+  ],
+  "Tuzla_-_Ulica_Tabašnice_sign_2019__001.png": [
+   1,
+   1
+  ],
+  "Tuzla_-_Ulica_Trgovačka_2019__008.png": [
+   0,
+   0
+  ],
+  "Tuzla_-_Ulica_Trgovačka_2019__009.png": [
+   0,
+   0
+  ],
+  "Tuzla_-_Ulica_Trgovačka_2019__010.png": [
+   0,
+   0
+  ],
+  "Tuzla_-_Ulica_Trgovačka_2019__011.png": [
+   0,
+   0
+  ],
+  "Tuzla_-_Ulica_Trgovačka_2019__012.png": [
+   0,
+   0
+  ],
+  "Tuzla_-_Ulica_Trgovačka_2019__013.png": [
+   0,
+   0
+  ],
+  "Tuzla_-_Ulica_Trgovačka_2019__014.png": [
+   0,
+   0
+  ],
+  "Tuzla_Street_Bosnia_001.png": [
+   0,
+   0
+  ],
+  "Tuzla_Street_Bosnia_003.png": [
+   0,
+   0
+  ],
+  "Ulica-Stjepana_Radića-ŠB03108_000.png": [
+   0,
+   0
+  ],
+  "Ulica-Stjepana_Radića-ŠB03108_001.png": [
+   1,
+   1
+  ],
+  "Ulica-Stjepana_Radića-ŠB03108_003.png": [
+   0,
+   0
+  ],
+  "Ulica-Stjepana_Radića-ŠB03108_004.png": [
+   0,
+   0
+  ],
+  "Ulica-Stjepana_Radića-ŠB03108_005.png": [
+   0,
+   0
+  ],
+  "Ulica-Stjepana_Radića-ŠB03108_006.png": [
+   0,
+   0
+  ],
+  "Ulica-Stjepana_Radića-ŠB03110_000.png": [
+   0,
+   0
+  ],
+  "Ulica_S._Radića-Vitez09343_001.png": [
+   1,
+   1
+  ],
+  "Ulica_Stjepana_Radića-Vitez09339_000.png": [
+   0,
+   0
+  ],
+  "Ulica_Stjepana_Radića-Vitez09339_001.png": [
+   1,
+   1
+  ],
+  "Ulica_Stjepana_Radića-Vitez09339_002.png": [
+   0,
+   1
+  ],
+  "View_over_Mostar_from_Old_Bridge_Museum_-_Mostar_-_Bosnia_and_Herzegovina_000.png": [
+   0,
+   0
+  ],
+  "Welcomesign_in_Brod_Republika_Srpska_002.png": [
+   1,
+   1
+  ],
+  "Welcomesign_in_Brod_Republika_Srpska_003.png": [
+   1,
+   1
+  ],
+  "Wv_Sarajevo_Airport_banner_000.png": [
+   0,
+   0
+  ],
+  "Wv_Sarajevo_Airport_banner_001.png": [
+   0,
+   0
+  ],
+  "Wv_Sarajevo_Airport_banner_002.png": [
+   0,
+   0
+  ],
+  "Znak_322_001.png": [
+   0,
+   0
+  ],
+  "Znak_322_006.png": [
+   0,
+   0
+  ],
+  "Znak_322_011.png": [
+   1,
+   1
+  ],
+  "Čaprazlije-Granići-ploča_000.png": [
+   1,
+   1
+  ],
+  "Čaprazlije-Granići-ploča_001.png": [
+   0,
+   1
+  ],
+  "Đurić_Supermarket_Istočno_Sarajevo_000.png": [
+   0,
+   0
+  ],
+  "Đurić_Supermarket_Istočno_Sarajevo_001.png": [
+   0,
+   1
+  ]
+ },
+ "timing": {
+  "photo": "War_Memorial_in_Kučine_BiH_2024.jpg",
+  "pixels": 1228800,
+  "seconds": 4.955609083175659
+ }
+}

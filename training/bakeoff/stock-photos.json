@@ -1,30 +1,30 @@
 {
-  "pooled": 35.388739946380696,
-  "per_photo": 46.129281257957715,
-  "diacritic": 12.0,
-  "folded": 52.0,
+  "pooled": 36.46112600536193,
+  "per_photo": 48.04483914778032,
+  "diacritic": 16.0,
+  "folded": 56.0,
   "invented": 188,
   "photographs": 28,
-  "reader": "f4bea4be0342b1a1",
+  "reader": "ead4cce932792915",
   "by_class": {
     "sign (1-5 words)": {
       "photographs": 13,
-      "per_photo": 52.94871794871795,
-      "found": 22,
+      "per_photo": 55.51282051282052,
+      "found": 23,
       "words": 37,
-      "fully_read": 3
+      "fully_read": 4
     },
     "short board (6-20 words)": {
       "photographs": 12,
-      "per_photo": 38.555283224400874,
-      "found": 54,
+      "per_photo": 39.94417211328976,
+      "found": 55,
       "words": 136,
       "fully_read": 0
     },
     "long board (21+ words)": {
       "photographs": 3,
-      "per_photo": 46.87438106555754,
-      "found": 56,
+      "per_photo": 48.08625470390176,
+      "found": 58,
       "words": 200,
       "fully_read": 0
     }
@@ -35,7 +35,7 @@
       22
     ],
     "Banjaluka_streetmap.jpg": [
-      11,
+      12,
       34
     ],
     "Direction_sign_to_Old_city_of_Kljuc.jpg": [
@@ -51,7 +51,7 @@
       20
     ],
     "GiPS_Bus_Lion_s_City_03.jpg": [
-      2,
+      3,
       3
     ],
     "Gospodska_ulica_27.JPG": [
@@ -63,7 +63,7 @@
       7
     ],
     "Mis_Irbina_Street_in_Sarajevo_03.jpg": [
-      1,
+      2,
       6
     ],
     "Mostar_signs.JPG": [
@@ -107,7 +107,7 @@
       12
     ],
     "Spanish_square_08034.JPG": [
-      25,
+      26,
       144
     ],
     "Street_in_Me\u0111ugorje.jpg": [

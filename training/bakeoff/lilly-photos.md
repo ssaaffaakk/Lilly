@@ -4,15 +4,15 @@
 
 | | words found | of | rate |
 |---|---|---|---|
-| All words | 60 | 373 | **16.1%** |
-| Words with č ć đ š ž | 9 | 25 | **36.0%** |
-| The same words, diacritics folded away | 13 | 25 | **52.0%** |
+| All words | 166 | 373 | **44.5%** |
+| Words with č ć đ š ž | 11 | 25 | **44.0%** |
+| The same words, diacritics folded away | 15 | 25 | **60.0%** |
 
-Weighting every photograph equally instead of every word, the reader finds **35.9%** of the words on a photograph. The two differ because the text is not spread evenly: `Spanish_square_08034.JPG` alone holds 144 of the 373 words in the answer key. The per-photograph figure is the one that describes pointing a camera at a sign; the pooled figure describes reading a wall of text.
+Weighting every photograph equally instead of every word, the reader finds **54.5%** of the words on a photograph. The two differ because the text is not spread evenly: `Spanish_square_08034.JPG` alone holds 144 of the 373 words in the answer key. The per-photograph figure is the one that describes pointing a camera at a sign; the pooled figure describes reading a wall of text.
 
 Two independent readers transcribed these photographs without seeing each other's work or the machine's, and agreed on 91.2% of the words either of them saw. Only the words both saw are in the answer key, so that agreement is also the ceiling on how precise anything here can be.
 
-The reader also returned 225 words that are not on any sign in these photographs. That is the cost a user pays for text the detector invented out of brickwork and foliage, and it is not visible in a recall figure.
+The reader also returned 182 words that are not on any sign in these photographs. That is the cost a user pays for text the detector invented out of brickwork and foliage, and it is not visible in a recall figure.
 
 ## Signs against boards
 
@@ -20,9 +20,9 @@ The product reads small signs and street names; long text is reported, not claim
 
 | | photographs | words per photograph | words found | read in full |
 |---|---|---|---|---|
-| sign (1-5 words) | 13 | **53.8%** | 19/37 | 3 |
-| short board (6-20 words) | 12 | **23.0%** | 28/136 | 0 |
-| long board (21+ words) | 3 | **9.5%** | 13/200 | 0 |
+| sign (1-5 words) | 13 | **61.9%** | 22/37 | 5 |
+| short board (6-20 words) | 12 | **45.9%** | 63/136 | 2 |
+| long board (21+ words) | 3 | **56.6%** | 81/200 | 0 |
 
 ## Per photograph
 
@@ -30,30 +30,30 @@ The product reads small signs and street names; long text is reported, not claim
 |---|---|---|
 | Gospodska_ulica_27.JPG | 0/2 | 0/1 |
 | Jewish_Street_Tuzla_Bosnia.jpg | 0/7 | — |
-| Putokaz2.jpg | 0/14 | 0/2 |
+| Sarajevo_Trebević_Sign.jpg | 0/6 | 0/1 |
 | WV_banner_NE_Bosnia_Tuzla_old_town.jpg | 0/1 | — |
-| Spanish_square_08034.JPG | 5/144 | — |
-| Assasination_Plaque.JPG | 1/22 | — |
-| Street_in_Međugorje.jpg | 1/20 | — |
-| Entrance_to_Bosnia_and_Herzegovina_at_Brod.jpg | 2/20 | 0/1 |
-| Narrow-Gauge-Railway_Spalatobahn_Station-Travnik.jpg | 1/9 | — |
-| Sarajevo_Trebević_Sign.jpg | 1/6 | 0/1 |
+| Putokaz2.jpg | 1/14 | 0/2 |
+| Street_in_Međugorje.jpg | 2/20 | — |
+| Mis_Irbina_Street_in_Sarajevo_03.jpg | 1/6 | — |
 | Trg_Krajine_čajavčev_i_ulaz_u_gospodsku.jpg | 1/5 | 0/1 |
-| Banjaluka_streetmap.jpg | 7/34 | 3/11 |
-| Tuzla_-_INA_petrol_station_2019_.jpg | 4/17 | — |
-| Editing_Wikipedia_Workshop_in_Visegrad_-_76.JPG | 2/8 | — |
-| Direction_sign_to_Old_city_of_Kljuc.jpg | 1/3 | 1/1 |
-| GiPS_Bus_Lion_s_City_03.jpg | 1/3 | — |
-| Mis_Irbina_Street_in_Sarajevo_03.jpg | 2/6 | — |
+| Spanish_square_08034.JPG | 44/144 | — |
 | Trg-žrtava-ŠB03078.JPG | 1/3 | — |
-| War_Memorial_in_Kučine_BiH_2024.jpg | 3/7 | 3/5 |
 | Mostar_signs.JPG | 2/4 | — |
-| Putokaz_za_manastir_Krupu.jpg | 5/10 | — |
-| Sarajevo_road_M-a8_IMG_1166.JPG | 7/12 | 1/1 |
-| Road_to_Baljevac_-_panoramio.jpg | 3/4 | — |
+| Banjaluka_streetmap.jpg | 18/34 | 5/11 |
+| Tuzla_-_INA_petrol_station_2019_.jpg | 9/17 | — |
+| Entrance_to_Bosnia_and_Herzegovina_at_Brod.jpg | 12/20 | 1/1 |
+| Plaque_at_the_Battle_of_the_Sutjeska_memorial.jpg | 3/5 | 0/1 |
+| Editing_Wikipedia_Workshop_in_Visegrad_-_76.JPG | 5/8 | — |
+| GiPS_Bus_Lion_s_City_03.jpg | 2/3 | — |
+| Putokaz_za_manastir_Krupu.jpg | 7/10 | — |
+| War_Memorial_in_Kučine_BiH_2024.jpg | 5/7 | 3/5 |
 | Sarajevo_EP-Gas-Station_Bulevar-Mese-Selimovica_2011-11-04_2_.jpg | 3/4 | — |
-| Plaque_at_the_Battle_of_the_Sutjeska_memorial.jpg | 4/5 | 1/1 |
+| Assasination_Plaque.JPG | 19/22 | — |
+| Direction_sign_to_Old_city_of_Kljuc.jpg | 3/3 | 1/1 |
+| Narrow-Gauge-Railway_Spalatobahn_Station-Travnik.jpg | 9/9 | — |
+| Road_to_Baljevac_-_panoramio.jpg | 4/4 | — |
 | Sarajevo_Trolleybus-4416_Line-102_2011-11-05.jpg | 1/1 | — |
+| Sarajevo_road_M-a8_IMG_1166.JPG | 12/12 | 1/1 |
 | Trg-kralja-tomislav-livno00658.JPG | 1/1 | — |
 | Tuzla_-_Ulica_Turalibegova_-_n18_2019_.jpg | 1/1 | — |
 

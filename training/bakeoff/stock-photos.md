@@ -4,11 +4,11 @@
 
 | | words found | of | rate |
 |---|---|---|---|
-| All words | 132 | 373 | **35.4%** |
-| Words with č ć đ š ž | 3 | 25 | **12.0%** |
-| The same words, diacritics folded away | 13 | 25 | **52.0%** |
+| All words | 136 | 373 | **36.5%** |
+| Words with č ć đ š ž | 4 | 25 | **16.0%** |
+| The same words, diacritics folded away | 14 | 25 | **56.0%** |
 
-Weighting every photograph equally instead of every word, the reader finds **46.1%** of the words on a photograph. The two differ because the text is not spread evenly: `Spanish_square_08034.JPG` alone holds 144 of the 373 words in the answer key. The per-photograph figure is the one that describes pointing a camera at a sign; the pooled figure describes reading a wall of text.
+Weighting every photograph equally instead of every word, the reader finds **48.0%** of the words on a photograph. The two differ because the text is not spread evenly: `Spanish_square_08034.JPG` alone holds 144 of the 373 words in the answer key. The per-photograph figure is the one that describes pointing a camera at a sign; the pooled figure describes reading a wall of text.
 
 Two independent readers transcribed these photographs without seeing each other's work or the machine's, and agreed on 91.2% of the words either of them saw. Only the words both saw are in the answer key, so that agreement is also the ceiling on how precise anything here can be.
 
@@ -20,9 +20,9 @@ The product reads small signs and street names; long text is reported, not claim
 
 | | photographs | words per photograph | words found | read in full |
 |---|---|---|---|---|
-| sign (1-5 words) | 13 | **52.9%** | 22/37 | 3 |
-| short board (6-20 words) | 12 | **38.6%** | 54/136 | 0 |
-| long board (21+ words) | 3 | **46.9%** | 56/200 | 0 |
+| sign (1-5 words) | 13 | **55.5%** | 23/37 | 4 |
+| short board (6-20 words) | 12 | **39.9%** | 55/136 | 0 |
+| long board (21+ words) | 3 | **48.1%** | 58/200 | 0 |
 
 ## Per photograph
 
@@ -35,10 +35,10 @@ The product reads small signs and street names; long text is reported, not claim
 | WV_banner_NE_Bosnia_Tuzla_old_town.jpg | 0/1 | — |
 | Putokaz2.jpg | 1/14 | 0/2 |
 | Street_in_Međugorje.jpg | 2/20 | — |
-| Mis_Irbina_Street_in_Sarajevo_03.jpg | 1/6 | — |
-| Spanish_square_08034.JPG | 25/144 | — |
+| Spanish_square_08034.JPG | 26/144 | — |
 | Trg_Krajine_čajavčev_i_ulaz_u_gospodsku.jpg | 1/5 | 0/1 |
-| Banjaluka_streetmap.jpg | 11/34 | 0/11 |
+| Mis_Irbina_Street_in_Sarajevo_03.jpg | 2/6 | — |
+| Banjaluka_streetmap.jpg | 12/34 | 1/11 |
 | War_Memorial_in_Kučine_BiH_2024.jpg | 3/7 | 1/5 |
 | Gospodska_ulica_27.JPG | 1/2 | 0/1 |
 | Mostar_signs.JPG | 2/4 | — |
@@ -47,13 +47,13 @@ The product reads small signs and street names; long text is reported, not claim
 | Plaque_at_the_Battle_of_the_Sutjeska_memorial.jpg | 3/5 | 0/1 |
 | Putokaz_za_manastir_Krupu.jpg | 6/10 | — |
 | Editing_Wikipedia_Workshop_in_Visegrad_-_76.JPG | 5/8 | — |
-| GiPS_Bus_Lion_s_City_03.jpg | 2/3 | — |
 | Sarajevo_road_M-a8_IMG_1166.JPG | 8/12 | 1/1 |
 | Trg-žrtava-ŠB03078.JPG | 2/3 | — |
 | Sarajevo_EP-Gas-Station_Bulevar-Mese-Selimovica_2011-11-04_2_.jpg | 3/4 | — |
 | Narrow-Gauge-Railway_Spalatobahn_Station-Travnik.jpg | 8/9 | — |
 | Assasination_Plaque.JPG | 20/22 | — |
 | Direction_sign_to_Old_city_of_Kljuc.jpg | 3/3 | 1/1 |
+| GiPS_Bus_Lion_s_City_03.jpg | 3/3 | — |
 | Road_to_Baljevac_-_panoramio.jpg | 4/4 | — |
 | Tuzla_-_Ulica_Turalibegova_-_n18_2019_.jpg | 1/1 | — |
 
