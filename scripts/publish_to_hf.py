@@ -47,13 +47,29 @@ PUBLISH_DIRS = {
     },
     "read": {
         "what": "photo of Bosnian text -> text (EasyOCR)",
-        "needs": ("craft_mlt_25k.pth", "latin_g2.pth"),
+        "needs": ("craft_mlt_25k.pth", "latin_g2.pth", "lilly.pth",
+                  "user_network/lilly.py", "user_network/lilly.yaml"),
+        # Only the files the app loads go up. read/ also holds the reader's
+        # backups and evaluation copies -- latin_g2-realcrops.pth,
+        # lilly-previous.pth, lilly-before-pass18.pth, cyrillic_g2.pth -- and
+        # sweeping the directory would publish several files called
+        # something-lilly under a card that describes one reader. The one
+        # that scored 54.7% is named by md5 below and checked before upload.
+        "only": True,
     },
     "speak": {
         "what": "English text -> spoken English (Kokoro)",
         "needs": ("config.json", "model.pth", "voices/default.pt"),
     },
 }
+
+# The reader the model card's numbers were measured on:
+# training/RESULTS-ocr-weights.md, 4 Sep 2026 -- 54.7% per photograph / 180
+# invented, reproduced exactly from this file and from no other. Update it in
+# the same commit as that RESULTS doc when the reader is retrained. Publishing
+# any other lilly.pth is what left the 27 Aug reader on Hugging Face for a
+# week while every document quoted 54.7%.
+READER_MD5 = "2010a2d417e6c253195fa3d95ff11d33"
 
 # Documentation that must go up with the weights. NOTICE.md is not optional:
 # CC-BY-4.0 on the translation weights and Apache-2.0 on two of the others
@@ -82,6 +98,18 @@ EXCLUDE_RULES = (
                   "upstream at Helsinki-NLP/opus-mt-tc-big-zls-en"),
     ("translator-base", "int8 base built by build_translator.py --no-adapter, "
                         "an evaluation comparison rather than a served model"),
+    # The speech retraining kept both sides of its comparison next to the
+    # served listener (training/RESULTS-speech.md, training/README.md).
+    ("listen-candidate", "the speech retraining candidate, kept to score against listen/"),
+    ("listen-previous", "the listener listen/ replaced, kept as the baseline to measure against"),
+    # The reply direction. app/lilly.py lists it as OPTIONAL and says why: it
+    # is not in the published bundle and is built locally from an upstream
+    # base (scripts/fetch_translate_base.py --direction en-bs). Putting it in
+    # the release is the owner's call and needs its own model-card entry.
+    ("translate-en-bs", "untuned float32 English -> Bosnian base, read only by training "
+                        "(training/train_translation.py)"),
+    ("translator-en-bs", "English -> Bosnian reply build; OPTIONAL in app/lilly.py, built locally, "
+                         "not in this release"),
 )
 
 # Never interesting, at any depth.
@@ -113,6 +141,14 @@ def files_under(directory: Path) -> list:
 
 def size_of(rels) -> int:
     return sum((BUNDLE / r).stat().st_size for r in rels)
+
+
+def md5_of(path: Path) -> str:
+    digest = hashlib.md5()
+    with open(path, "rb") as f:
+        for chunk in iter(lambda: f.read(1 << 20), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
 
 
 def excuse(name: str):
@@ -152,10 +188,24 @@ def preflight() -> tuple:
         for needed in spec["needs"]:
             if not (directory / needed).is_file():
                 problems.append(f"missing {name}/{needed}")
-        found = files_under(directory)
+        if spec.get("only"):
+            found = [Path(name) / n for n in spec["needs"] if (directory / n).is_file()]
+        else:
+            found = files_under(directory)
         if not found:
             problems.append(f"{name}/ is empty")
         publish[name] = found
+        # The reader is the one file here whose wrong version loads, reads and
+        # scores without a single error -- just a different number. Refuse any
+        # lilly.pth but the one the published figures were measured on.
+        reader = directory / "lilly.pth"
+        if name == "read" and reader.is_file():
+            actual = md5_of(reader)
+            if actual != READER_MD5:
+                problems.append(f"read/lilly.pth is md5 {actual}, not {READER_MD5}, the reader that "
+                                "scored 54.7% / 180 (training/RESULTS-ocr-weights.md). Install that "
+                                "one before publishing; a different reader under the same name is "
+                                "exactly what this check exists to stop")
 
     return problems, publish
 
@@ -189,6 +239,19 @@ def report_left_behind() -> list:
             unrecognised.append(name)
         size = size_of(files_under(entry)) if entry.is_dir() else entry.stat().st_size
         rows.append((name, size, reason))
+
+    # Inside a directory published by list, name what stays, so a backup that
+    # was never meant to go up is visibly not going up rather than forgotten.
+    for name, spec in PUBLISH_DIRS.items():
+        if not spec.get("only") or not (BUNDLE / name).is_dir():
+            continue
+        wanted = {Path(name) / n for n in spec["needs"]}
+        extra = [p for p in files_under(BUNDLE / name) if p not in wanted]
+        if extra:
+            print(f"\n{name}/: {len(extra)} other file(s) stay here -- backups and evaluation "
+                  "copies, not in the release")
+            for p in extra:
+                print(f"  {str(p):40} {human((BUNDLE / p).stat().st_size):>9}")
 
     if not rows:
         print("\nnothing left behind: the bundle holds only what is published")
