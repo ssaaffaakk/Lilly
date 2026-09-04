@@ -6,10 +6,10 @@
 # survive the next deploy.
 FROM python:3.12-slim
 
-# easyocr pulls in opencv (libGL, glib) and soundfile needs libsndfile;
-# the voice needs espeak-ng for words its dictionary does not carry.
+# opencv needs libGL and glib, paddlepaddle's CPU build needs libgomp, soundfile
+# needs libsndfile; the voice needs espeak-ng for words its dictionary lacks.
 RUN apt-get update && apt-get install -y --no-install-recommends \
-        libgl1 libglib2.0-0 libsndfile1 espeak-ng \
+        libgl1 libglib2.0-0 libgomp1 libsndfile1 espeak-ng \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
@@ -28,6 +28,14 @@ RUN LILLY_MODELS_REPO=${LILLY_MODELS_REPO} python3 scripts/fetch_models.py
 RUN python3 scripts/build_translator.py && rm -rf models/lilly/translate
 
 COPY app/ app/
+
+# The reader is PaddleOCR PP-OCRv6 (docs/OCR-ROADMAP.md, step 6). PaddleX fetches
+# its official weights on first use, from its Hugging Face mirror here rather
+# than the bcebos.com hosts, which refuse some networks. First use must be this
+# build step, not a request inside a container that may have no network at all.
+ENV PADDLE_PDX_MODEL_SOURCE=huggingface
+RUN python3 -c "from app.ocr import get_paddle_reader; get_paddle_reader()" \
+    && python3 -c "import cv2; assert cv2.__version__ == '4.10.0', cv2.__version__"
 
 # Corrections belong on a mounted volume: anywhere inside the image is wiped by
 # the next deploy, taking every correction anyone submitted with it.

@@ -22,7 +22,21 @@ faster-whisper
 kokoro
 soundfile
 
-# Photo scan
+# Photo scan. The app reads with PaddleOCR PP-OCRv6 (docs/OCR-ROADMAP.md,
+# decision 5); EasyOCR stays installed as the way back (LILLY_READER=easyocr)
+# and as the "before" build every OCR number is compared against.
+#
+# cv2 is pinned on purpose. paddleocr pulls opencv-contrib-python and easyocr
+# pulls opencv-python-headless, and the two unpack into the same cv2/ directory,
+# so whichever pip installs last decides the version the whole app reads
+# through. PaddleX segfaults under cv2 5.0.0 and runs under 4.10.0; EasyOCR
+# under 4.10.0 reads 54.5% / 182 on the 40 instead of 54.7% / 180 (do-not-repeat
+# 17). Both distributions at 4.10.0.84 makes the outcome the same whichever
+# wins, and it is the stack every bake-off number was measured under.
+paddleocr==3.7.0
+paddlepaddle==3.3.1
+opencv-contrib-python==4.10.0.84
+opencv-python-headless==4.10.0.84
 easyocr
 pillow
 
