@@ -102,6 +102,11 @@ Then the two-person transcription of `test-v2` (step 2), and the box count
   is sound.
 - **The Mapillary harvest is pre-screened by the reader under test** — see
   step 2b.
+- **The 40's class rows rest on 13, 12 and 3 photographs, and the sign row does
+  not survive a bigger sample.** PP-OCRv6 reads 72.6% of the sign class on the
+  40 and 56.6% on `test-v2`'s 76 sign photographs (`RESULTS-ocr-test-v2.md`).
+  The shipped reader's published 61.9% sign row rests on the same 13. Quote the
+  n beside any class figure taken from the 40.
 - **The Hugging Face bundle `Safak11/lilly` holds the 27 August reader, not
   the 54.7% one.** Its last commit is 27 Aug 2026, before the real-crop
   training; re-measured 3 Sep from a fresh `scripts/fetch_models.py` on the
@@ -388,7 +393,7 @@ not just the totals. A delta inside the interval is written as "no change".
 |---|---|---|
 | 0 freeze | done, 3 Sep 2026 | this commit |
 | 1 bake-off | run 3–4 Sep 2026 from a cloud session, `--photos-only`: **no verdict** — the shipped arm as fetched from Hugging Face is the 27 Aug reader (35.9% / 225 invented, not 54.7% / 180), so by the pre-registration nothing is compared. For the record, same code, same day: paddle-v6 **67.7%** / 106 invented, paddle-v5 66.6% / 125, stock 46.1% / 188; on the sign row paddle-v6 72.6% against 53.8%. **Next: publish the 54.7% weights from the Mac, re-run on the Mac (crop row included), then the rule decides.** | `training/RESULTS-ocr-bakeoff.md`, `training/bakeoff/` |
-| 2 test-v2 | pool built, 280 drawn and frozen; **280 fetched, credits committed (3 Sep)**; blind transcription pass a in progress, pass b next, then `truth-v2.json` and the score | `test-v2/CREDITS.tsv`, `fetch-log.tsv`, `transcription_pass.py` |
+| 2 test-v2 | **done, 4 Sep 2026.** 280 fetched, both blind passes read all 280, `check` passes, key built: **2,907 agreed words at 88.2%**, 132 photographs with text, **214 diacritic words** (was 25), 628 Cyrillic, 76 in the sign class (was 13). First scores on it recorded — and its first act was to cut PP-OCRv6's sign row from 72.6% (n=13, on the 40) to 56.6% (n=76). **Remaining: re-run on the Mac with the real shipped reader** | `test-v2/truth-v2.json`, `pass-a.json`, `pass-b.json`, `training/RESULTS-ocr-test-v2.md` |
 | 2b test-mly | draw script ready; **needs the Mac** (credits file, then draw, then transcription) | `training/build_test_mly.py` |
 | 3 R_d | overlays per detector ready; **needs the Mac and a person counting** | `training/measure_detection.py` (runs for `LILLY_READER=paddle` too), PREREGISTRATION "picture" |
 | 4 labels | blocked on 1–3 | — |
