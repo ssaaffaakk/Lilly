@@ -324,6 +324,38 @@ PaddleOCR in the running, and again on `test-v2` when it exists.
   code, on the GPU that holds the weights (`training/cells/clean_crop_eval.py`
   is the pattern), on held-out crops only, with counts and the interval.
 
+### 6. Switch the app's reader to PP-OCRv6 — owner decision 5
+
+Not a measurement; a product change, one commit per piece, each pushed:
+
+- `app/ocr.py`: `LILLY_READER` defaults to `paddle` at the floor the
+  confidence-floor run chose; `LILLY_READER=easyocr` is the way back and is
+  kept working. `reader_identity()` already names the floor.
+- `requirements.txt`: `paddleocr`, `paddlepaddle`, and the cv2 pinning of
+  do-not-repeat 17 (`opencv-contrib-python==4.10.0.84`, then
+  `opencv-python-headless==5.0.0.93` reinstalled last) so the EasyOCR way back
+  still scores what it scored. `Dockerfile`: the same, and the PP-OCRv6
+  weights pre-fetched at build (PaddleX pulls them from its Hugging Face
+  mirror on first use; a container with no network must not be the first use).
+- `scripts/fetch_models.py` / `publish_to_hf.py`: the EasyOCR reader stays in
+  the bundle for the way back; the Paddle weights are Baidu's and are not
+  republished under `Safak11/lilly`.
+- Re-score once through the app's door after the switch, both sets, and
+  require the floor run's numbers back to the digit — the switch changed the
+  door, not the engine, and the re-score proves it.
+- `models/lilly/README.md` (the model card) and `HANDOFF.md`: the reader's
+  headline is the test-v2 figure with its n, never 54.7% alone.
+
+### 7. Fine-tune PP-OCRv6 — after 6, under step 4's rules
+
+Wanted by the owner (4 Sep). It is step 4 with the engine named: labels from
+people or blind passes only, never from any reader; training photographs of
+the same kind as the test; split by source photograph; `test-v2` never trained
+on; both readers scored in one process on held-out crops with counts and the
+interval; pre-registered before the run. Expect little: the EasyOCR fine-tune
+was worth +4.6 points on test-v2, and PP-OCRv6 untrained is 25 points ahead
+of it. GPU: Kaggle, from the Mac.
+
 ### 5. Cyrillic — after 1–3
 
 Route by script rather than arbitrate by confidence (the confidence race
@@ -451,6 +483,15 @@ not just the totals. A delta inside the interval is written as "no change".
    confidence floor — as the new pre-registration the bake-off section
    already named for this case, and PP-OCRv6 earns the switch on test-v2 or
    not at all.
+5. **Answered 4 Sep 2026: the app's reader becomes PP-OCRv6.** The owner
+   decided the switch (step 6) while the confidence-floor run was still on
+   the 40. The run still matters: it fixes the floor the app ships with, and
+   it records *which* carried the switch — the rule (the floor clears the
+   bar on test-v2, decision 4's strict count) or the owner over it (it does
+   not, and the owner ranks 25 points of recall above the invented row for
+   this product). Either way the reason goes in the status board beside the
+   number, not in a commit message alone. Fine-tuning PP-OCRv6 (step 7) is
+   wanted too, after the switch, under step 4's rules on labels.
 
 ## Status board
 
@@ -463,3 +504,5 @@ not just the totals. A delta inside the interval is written as "no change".
 | 3 R_d | overlays per detector ready; **needs the Mac and a person counting** | `training/measure_detection.py` (runs for `LILLY_READER=paddle` too), PREREGISTRATION "picture" |
 | 4 labels | blocked on 1–3 | — |
 | 5 Cyrillic | blocked on 1–3 | — |
+| 6 switch to PP-OCRv6 | **decided by the owner 4 Sep (decision 5); waits only for the floor run to name the setting** | this file, step 6 |
+| 7 fine-tune PP-OCRv6 | wanted; after 6, and after blind labels (step 4) | this file, step 7 |
