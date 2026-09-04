@@ -28,15 +28,19 @@ Diacritic words are **214**, not 25. On the 40 that column moved 4 points per le
 
 `training/invented_words.py`, over the same readings the table above was scored from, the same count three ways:
 
+All three rows are this Mac's readings, 4 Sep; the stock row previously carried the cloud session's (2,201 / 2,178 / 2,126), which is a two-machine comparison of the kind do-not-repeat 7 forbids. paddle-v6 is identical on both machines, so only stock moved, by four words.
+
 | arm | vs the agreed key (the table's number) | vs anything either pass marked clear | vs anything either pass wrote at all |
 |---|---|---|---|
-| stock | 2,201 | 2,178 | 2,126 |
+| lilly (real reader, `2010a2d4`) | 2,071 | 2,039 | **1,972** |
+| stock | 2,205 | 2,185 | 2,132 |
 | paddle-v6 | 2,373 | 2,281 | **2,084** |
-| lilly (real reader) | 2,071 | — | — |
 
 **1,120 of paddle-v6's 2,373 — 47% — are on `Зеница_20190821_174244.jpg`**, a museum panel of typed NDH-era decrees. Its key holds 28 agreed words because both transcribers wrote that the body paragraphs were below the resolution of the 1280 px rendering and declined to guess them; PP-OCRv6 read them. Its top ten photographs — that panel, a second museum board, the 1436 charter panel, the trilingual Ljubuški board, the 1927 poster — carry 81% of its invented words; 66 of the 132 photographs have two or fewer. Counted against everything either transcriber wrote, clear or unclear, paddle-v6's 2,373 becomes 2,084 and stock's 2,201 becomes 2,126: 289 of paddle-v6's "invented" words are text a person saw and wrote down.
 
-So on this set the column measures where the transcription stopped, not where the reader invented. The 40 were transcribed to exhaustion; test-v2's dense boards were not, on purpose and on the record in `pass-a.json` and `pass-b.json`. The reversal on the invented row is real as a number and unsafe as a decision in either direction: **the definition of an invented word on test-v2 — against the union of both passes, or with dense boards handled explicitly — goes into `PREREGISTRATION.md` before this set decides the engine question.** The real shipped reader's readings are on the Mac and not in git; the same script run there against `reader-output-lilly.json` says how much of its 2,071 sits on the same panel, which is the missing cell above.
+So on this set the column measures where the transcription stopped, not where the reader invented. The 40 were transcribed to exhaustion; test-v2's dense boards were not, on purpose and on the record in `pass-a.json` and `pass-b.json`. The reversal on the invented row is real as a number and unsafe as a decision in either direction: **the definition of an invented word on test-v2 — against the union of both passes, or with dense boards handled explicitly — goes into `PREREGISTRATION.md` before this set decides the engine question.** **Measured on the Mac, 4 Sep: the real reader's 2,071 are not concentrated on that panel.** Only **53** of them sit on `Зеница_20190821_174244.jpg` — the museum panel that carries 1,120 of paddle-v6's, 47% of its total. The shipped reader's own worst photograph is `Info_Atik_džamija.jpg` (536, a board whose key holds 8 agreed words against 1,091 words of unclear lines), then the Ljubuški fort board (207) and the 1436 charter panel (204). Its top ten carry **1,482 of 2,071 (72%)**, against paddle-v6's 81%, and **56 of the 132 photographs have two or fewer**. So both readers pile their extra words onto the same handful of dense, under-transcribed boards; they simply pile them onto different ones, and PP-OCRv6 concentrates harder.
+
+**The comparison the bake-off's invented row would actually make on this set: against anything either transcriber wrote, paddle-v6 is _above_ the real shipped reader — 2,084 to 1,972, 112 words worse.** That is the strictest possible reading in PP-OCRv6's favour, counting every unclear line a person managed to put down as legitimate text, and it still does not reverse. The gap narrows as the definition loosens — 302 words against the agreed key, 242 against anything marked clear, 112 against anything written at all — but on all three definitions the shipped reader returns fewer invented words than PP-OCRv6. The invented row does not clear on test-v2 under any of the three, and 289 of paddle-v6's words being real text a person saw explains part of the gap without closing it.
 
 ## Signs against boards
 
