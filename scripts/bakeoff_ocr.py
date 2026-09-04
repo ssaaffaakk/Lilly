@@ -59,6 +59,12 @@ LETTERS = "čćđšžČĆĐŠŽ"
 # The shipped reader's numbers as published. The run must reproduce them; a
 # shipped arm that does not is a changed code path, not a new result.
 PUBLISHED = {"per_photo": 54.7, "invented": 180}
+# PREREGISTRATION "Amendment, 4 September 2026": the shipped arm is re-measured
+# under the same imaging stack as the arms it is compared with, and that stack
+# moves it (docs/OCR-ROADMAP.md, do-not-repeat 17: cv2 5.0.0 -> 4.10.0 reads
+# 54.5% / 182). Drift within this is the same reader and the bar is the arm as
+# measured; beyond it the run is invalid and the cause is found first, as before.
+TOLERANCE = {"per_photo": 0.5, "invented": 5}
 CROPS = REPO_ROOT / "data" / "ocr" / "crops"
 # One timed read through app.ocr.scan for a machine without the crop PNGs: the
 # same two calls score_crops.py --time makes, in the arm's own process, so the
@@ -252,15 +258,26 @@ def assemble(results: dict, limit: int, notes: tuple = ()) -> str:
                   "running `training/score_crops.py --json training/bakeoff/<arm>-crops.json` per arm "
                   "where the crops are, then `scripts/bakeoff_ocr.py --assemble-only`.", ""]
 
-    repro = (abs(shipped["per_photo"] - PUBLISHED["per_photo"]) <= 0.05
-             and shipped["invented"] == PUBLISHED["invented"])
+    drift_p = abs(shipped["per_photo"] - PUBLISHED["per_photo"])
+    drift_i = abs(shipped["invented"] - PUBLISHED["invented"])
+    exact = drift_p <= 0.05 and drift_i == 0
+    repro = drift_p <= TOLERANCE["per_photo"] and drift_i <= TOLERANCE["invented"]
     if not limit:
-        lines += [("The shipped arm reproduces its published 54.7% / 180." if repro else
-                   f"**The shipped arm does not reproduce its published numbers** "
-                   f"({shipped['per_photo']:.1f}% / {shipped['invented']} against 54.7% / 180). "
-                   "By the pre-registration no comparison is made: the run is invalid as a "
-                   "bake-off until the reason is found, and the tables below stand only as "
-                   "the record of what was measured."), ""]
+        if exact:
+            lines += ["The shipped arm reproduces its published 54.7% / 180.", ""]
+        elif repro:
+            lines += [f"The shipped arm re-measures at {shipped['per_photo']:.1f}% / {shipped['invented']} "
+                      "against the published 54.7% / 180 — within the tolerance of the 4 September "
+                      "amendment to `training/PREREGISTRATION.md` (±0.5 points, ±5 words: the drift of "
+                      "the imaging stack the Paddle arms need, docs/OCR-ROADMAP.md do-not-repeat 17). "
+                      "**The bar is the shipped arm as measured here.**", ""]
+        else:
+            lines += [f"**The shipped arm does not reproduce its published numbers** "
+                      f"({shipped['per_photo']:.1f}% / {shipped['invented']} against 54.7% / 180, "
+                      f"beyond the amended tolerance of ±{TOLERANCE['per_photo']} / ±{TOLERANCE['invented']}). "
+                      "By the pre-registration no comparison is made: the run is invalid as a "
+                      "bake-off until the reason is found, and the tables below stand only as "
+                      "the record of what was measured.", ""]
     if notes:
         lines += ["## Notes from this run", ""] + [f"- {n}" for n in notes] + [""]
 
@@ -399,6 +416,13 @@ def self_test() -> int:
     text = assemble(only, 0)
     assert "not measured here" in text and "`easyocr:lilly`" in text and "2.0 (x.jpg, 1.0 MP)" in text, text
     assert "No PaddleOCR arm clears the bar" in text and "No verdict" not in text
+    # Within the amended tolerance: the bar is the arm as measured, and the rule runs.
+    tol = {"lilly": {"photos": dict(ph, per_photo=54.5, invented=182), "crops": None, "timing": None},
+           "paddle-v6": {"photos": dict(ph, per_photo=67.7, invented=106), "crops": None, "timing": None}}
+    text = assemble(tol, 0)
+    assert "within the tolerance" in text and "Adopt paddle-v6" in text and "No verdict" not in text, text
+    tol["paddle-v6"]["photos"]["invented"] = 183          # worse on invented than the measured bar
+    assert "does not clear the bar" in assemble(tol, 0)
     # A shipped arm that does not reproduce: no verdict, whatever the other arms did.
     off = {"lilly": {"photos": dict(ph, per_photo=35.9, invented=225), "crops": None, "timing": None},
            "paddle-v5": {"photos": dict(ph, per_photo=60.0, invented=100), "crops": None, "timing": None}}

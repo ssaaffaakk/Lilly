@@ -996,3 +996,43 @@ fewer invented words, then PP-OCRv5, whose dictionary is the one verified.
 Whether fine-tuning PaddleOCR would help; anything about Cyrillic; and the
 detector question on its own — `R_d` in the "picture" section above is still
 the measurement for that, and it has still not been run.
+
+### Amendment, 4 September 2026 — the bar under the stack the other engine needs
+
+Written **after** the run, with the numbers known, and it says so. Authorised
+by the owner on 4 September 2026 after the alternative — leave the bar at
+54.7% / 180 and record no verdict — was put to them in the same words.
+
+**The conflict.** The threshold above requires two things of the shipped arm:
+that it be *re-measured in this run*, and that it *reproduce 54.7% / 180*.
+Do-not-repeat 17 in `docs/OCR-ROADMAP.md` records, measured on the Mac with
+the weights fixed at md5 `2010a2d4`, that these cannot both hold in any
+environment the Paddle arms run in: installing `paddleocr` replaces the `cv2`
+EasyOCR reads through (5.0.0 → 4.10.0), and under 4.10.0 the shipped arm reads
+**54.5% / 182**. Restoring cv2 5.0.0 gives 54.7% / 180 back exactly and
+segfaults both Paddle arms. The reader is the same file; the imaging stack
+moved it by 0.2 points and 2 words.
+
+**The amendment.** The bar is the shipped arm as re-measured in the same run
+and under the same imaging stack as the arms it is compared against. The
+reproduction check accepts drift from 54.7% / 180 of at most **0.5 points per
+photograph and 5 invented words**, and only when (a) `read/lilly.pth` is the
+scored reader by md5 (`training/RESULTS-ocr-weights.md`) and (b) the cause of
+the drift is identified and recorded as an environment difference, as item 17
+does. Drift beyond that, or drift with no cause found, leaves the run invalid
+exactly as before: no comparison is made.
+
+Why ±0.5 / ±5: it covers the measured drift with headroom and is below what a
+28-photograph set can resolve — one word on one photograph moves the
+per-photograph mean by up to 3.6 points — so it cannot flip a decision this set
+is able to see. The rule itself is unchanged: not worse on either row, better on
+at least one, ties to the installed reader, tie-break as written. The
+"reported, unable to change the decision" list is unchanged.
+
+**What it does not do.** It does not decide the 4 September run. Under either
+reading of the bar — 54.7% / 180 or 54.5% / 182 — paddle-v6 at 67.7% / 106
+clears it by thirteen points of recall and seventy-odd invented words, paired
+bootstrap p < 0.001, with the held-out crops (50/71 against 30/71) and the
+timing pointing the same way. Had the margin been inside 0.5 points or 5
+words, this amendment would not have been written and the answer would have
+stayed "no verdict".

@@ -1,8 +1,14 @@
 # Engine bake-off — PaddleOCR untrained against the shipped reader
 
-Run 2026-09-04 21:35 by `scripts/bakeoff_ocr.py`, rule from `training/PREREGISTRATION.md`, "v2 — read — bake-off". Every arm through `app.ocr.scan` on the same 40 photographs and `app.ocr.read_regions` on the same crops; `training/bakeoff/<arm>-*.json` are the raw counts.
+Run 2026-09-04 20:38 by `scripts/bakeoff_ocr.py`, rule from `training/PREREGISTRATION.md`, "v2 — read — bake-off". Every arm through `app.ocr.scan` on the same 40 photographs and `app.ocr.read_regions` on the same crops; `training/bakeoff/<arm>-*.json` are the raw counts.
 
-**The shipped arm does not reproduce its published numbers** (54.5% / 182 against 54.7% / 180). By the pre-registration no comparison is made: the run is invalid as a bake-off until the reason is found, and the tables below stand only as the record of what was measured.
+The shipped arm re-measures at 54.5% / 182 against the published 54.7% / 180 — within the tolerance of the 4 September amendment to `training/PREREGISTRATION.md` (±0.5 points, ±5 words: the drift of the imaging stack the Paddle arms need, docs/OCR-ROADMAP.md do-not-repeat 17). **The bar is the shipped arm as measured here.**
+
+## Notes from this run
+
+- Run on the Mac, 4 Sep 2026: all four arms, the 40 photographs and both crop halves, weights md5 `2010a2d4` (`training/RESULTS-ocr-weights.md`), cv2 4.10.0 throughout — the stack the Paddle arms need (do-not-repeat 17). paddle-v5 resumed from its per-photograph cache after two segfaults of the server detector on 8 GB; its numbers match two earlier independent runs.
+- The shipped arm reads 54.5% / 182 under this stack and 54.7% / 180 under cv2 5.0.0, which cannot run the Paddle arms. The bar is taken as the shipped arm measured here, per the 4 September amendment to PREREGISTRATION.md, authorised by the owner after the alternative was put to them. The outcome does not hinge on it: paddle-v6 clears either reading by 13 points and 76 words.
+- `Safak11/lilly` on Hugging Face carries this reader since 4 Sep 20:25 UTC (`read/lilly.pth` sha256 `75ec793b…`, md5 `2010a2d4`); the 3 Sep cloud run that measured 35.9% / 225 was on the bundle's previous file, `lilly-previous.pth` (md5 `5eb18322`). `scripts/publish_to_hf.py` now refuses any other reader.
 
 ## The 40 photographs
 
@@ -56,7 +62,10 @@ Only the held-out row compares readers; the shipped reader trained on the other.
 
 ## Verdict, by the pre-registered rule
 
-**No verdict.** The shipped arm did not reproduce 54.7% / 180, so the bar this run was to be measured against is not in it. Nothing is adopted and nothing is closed; fix the shipped arm and re-run.
+- paddle-v6: clears the bar (67.7% / 106 invented against 54.5% / 182)
+- paddle-v5: clears the bar (66.6% / 125 invented against 54.5% / 182)
+
+**Adopt paddle-v6** as the app's reader, per the rule. The dictionary row above is reported to the owner before the switch.
 
 ---
 
