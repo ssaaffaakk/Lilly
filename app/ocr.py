@@ -83,6 +83,24 @@ def _paddle_enabled() -> bool:
     return os.environ.get("LILLY_READER", "").lower() == "paddle"
 
 
+def paddle_rec_floor():
+    """The recogniser confidence below which a Paddle region is dropped, or None.
+
+    LILLY_PADDLE_REC_THRESH, unset by default: the library returns every
+    recognition whatever its confidence, and that is what the bake-off measured.
+    training/PREREGISTRATION.md, "PP-OCRv6 confidence floor", is the one run
+    that sets it; the value is part of reader_identity() so a reading cache
+    written at one floor is never scored under another.
+    """
+    raw = os.environ.get("LILLY_PADDLE_REC_THRESH", "").strip()
+    if not raw:
+        return None
+    floor = float(raw)
+    if not 0.0 <= floor <= 1.0:
+        raise RuntimeError(f"LILLY_PADDLE_REC_THRESH={raw!r}; want a confidence in [0, 1]")
+    return floor
+
+
 def paddle_models() -> tuple:
     """(detector, recogniser) names the paddle path loads, from the environment."""
     version = os.environ.get("LILLY_PADDLE_VERSION", "PP-OCRv6")
@@ -110,7 +128,8 @@ def reader_identity() -> str:
             version = getattr(paddleocr, "__version__", "?")
         except Exception:
             version = "?"
-        return f"paddle:{det}+{rec}:{version}"
+        floor = paddle_rec_floor()
+        return f"paddle:{det}+{rec}:{version}" + (f":rec>={floor:g}" if floor is not None else "")
     if _cyrillic_enabled():
         return "easyocr:lilly+cyrillic"
     trained = READ_DIR / "lilly.pth"
@@ -136,13 +155,16 @@ def get_paddle_reader():
                 # 3 Sep 2026. The plain CPU kernels read the same weights and
                 # are slower, so the timing row of the bake-off says which
                 # kernels it timed. The Mac has no oneDNN and is unaffected.
+                floor = paddle_rec_floor()
+                extra = {"text_rec_score_thresh": floor} if floor is not None else {}
                 _paddle_reader = PaddleOCR(
                     text_detection_model_name=det,
                     text_recognition_model_name=rec,
                     use_doc_orientation_classify=False,
                     use_doc_unwarping=False,
                     use_textline_orientation=False,
-                    enable_mkldnn=False)
+                    enable_mkldnn=False,
+                    **extra)
     return _paddle_reader
 
 
