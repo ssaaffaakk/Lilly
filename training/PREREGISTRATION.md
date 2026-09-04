@@ -1036,3 +1036,85 @@ bootstrap p < 0.001, with the held-out crops (50/71 against 30/71) and the
 timing pointing the same way. Had the margin been inside 0.5 points or 5
 words, this amendment would not have been written and the answer would have
 stayed "no verdict".
+
+## test-v2 — invented words — the definition, registered 4 September 2026
+
+Registered by the owner after `training/RESULTS-ocr-test-v2.md` showed the
+column on this set is partly transcription coverage (1,120 of PP-OCRv6's 2,373
+on one museum panel both transcribers declined to finish) and after the two
+readings were put to them in plain words. **The definition is the strict one
+and does not change:** `evaluate_ocr.py`'s count — on each photograph whose key
+holds at least one agreed word, the reader's words beyond those matching the
+key — against the agreed key, not the union of the passes, with no board
+excluded. The reason is the product's: an invented word becomes an invented
+sentence, and a reader that reads what people could not is not, for this app,
+worth a reader that says what is not there.
+
+Under it, on test-v2 the shipped reader (`2010a2d4`) returns 2,071 and
+PP-OCRv6 2,373; the bake-off rule's second row does not clear, and the app is
+not switched on the 40's verdict alone.
+
+## v2 — read — PP-OCRv6 confidence floor — written before the run
+
+Written 4 September 2026, before any threshold has been tried. The bake-off
+section's "what failure looks like" named this case in advance: *recall rises,
+invented words rise with it — not adopted; the invented count becomes the
+thing to fix, as a new pre-registration.* This is that pre-registration.
+
+### The question
+
+PP-OCRv6 reads 60.0% of a photograph's words on test-v2 against the shipped
+reader's 34.6%, and returns 302 more words that are on no agreed sign. It
+returns every recognition regardless of its own confidence
+(`text_rec_score_thresh` 0, the library default; the app sets nothing). Does a
+floor on that confidence remove the invented words without giving the recall
+back — enough to clear the rule on test-v2?
+
+### The arm
+
+`LILLY_READER=paddle`, PP-OCRv6 medium det + rec, untrained, oneDNN off, the
+same door as the bake-off (`app.ocr.scan`), with one new knob:
+`LILLY_PADDLE_REC_THRESH` = the recogniser confidence below which a region is
+dropped. Nothing else moves: detector thresholds, unclip ratio, resolution and
+paragraph grouping stay at the bake-off's values. One lever, because the
+question is whether *confidence* separates invented text from read text; if it
+does not, a second lever is a second pre-registration.
+
+### Two sets, two jobs, never crossed
+
+- **Choose on the 40.** Sweep the floor over {0.5, 0.6, 0.7, 0.8, 0.9} on the
+  40 scored photographs (`truth.json`), each setting in its own cache. The
+  floor chosen is the **highest** one whose words-per-photograph is still
+  ≥ 54.5% — the shipped arm's figure under the stack the Paddle arms need,
+  `RESULTS-ocr-bakeoff.md` — so the 40 pick the setting and test-v2 never
+  does. If no setting keeps 54.5%, the floor is 0 and the experiment has
+  answered: confidence does not separate them.
+- **Decide on test-v2, once.** One run at the chosen floor on the 280
+  photographs, scored against `truth-v2.json`, the strict invented count.
+  The bar is the shipped reader as scored on test-v2 on the Mac,
+  `training/bakeoff/test-v2-lilly.json`: **34.6% words per photograph, 2,071
+  invented.** The rule is the bake-off's, unchanged: not worse on either row,
+  better on at least one. PP-OCRv6 is identical to the digit across the Mac
+  and the cloud machine on both sets, so the arm may run on either; the
+  shipped reader's row is the Mac's and is not re-measured here.
+
+No second look: the threshold is not moved after the test-v2 number, and
+test-v2 is not read at more than one setting. A run that peeks is a fit.
+
+### Reported, and unable to change the decision
+
+The whole sweep table on the 40 (recall, invented, diacritic, per setting);
+paired per-photograph deltas on test-v2 against the shipped row from the
+committed json, with a bootstrap p; the sign row (n=76) beside the mean; where
+the remaining invented words sit (`training/invented_words.py`); seconds per
+photograph.
+
+### What failure looks like
+
+- **No floor keeps 54.5% on the 40.** Confidence is not the separator. The
+  next lever (detector box threshold, a size floor) is a new pre-registration.
+- **The chosen floor clears recall on test-v2 and not invented words.** Not
+  adopted. Same as above.
+- **Clears both.** Adopt PP-OCRv6 at that floor: the switch is then made as a
+  product change (default reader, `requirements.txt`, the Docker image, the
+  cv2 pinning of do-not-repeat 17), reviewed by the owner, not by this run.
