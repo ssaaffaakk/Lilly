@@ -12,7 +12,7 @@ Owner: Safak. Decisions marked **owner** are theirs, not an agent's.
 ```bash
 git fetch origin && git checkout claude/new-session-455uxc      # or merge it to main first
 export HF_TOKEN=...                                             # never in a file
-.venv/bin/python3 scripts/publish_to_hf.py Safak11/lilly --upload   # the 54.7% reader; HF still holds the 27 Aug one
+# publish_to_hf.py --upload: DONE 4 Sep 20:25 UTC — HF carries the 54.7% reader (md5 2010a2d4)
 .venv/bin/pip install paddleocr paddlepaddle                    # once; not in requirements.txt
 .venv/bin/python3 scripts/bakeoff_ocr.py --arms lilly paddle-v5 --limit 3   # smoke, minutes
 .venv/bin/python3 scripts/bakeoff_ocr.py                        # step 1, about an hour
@@ -114,9 +114,12 @@ Then the two-person transcription of `test-v2` (step 2), and the box count
   9/25 diacritic words, 225 invented — the 36.0% report's per-photograph rows
   on 25 of 28 photographs (`training/RESULTS-ocr-bakeoff.md`). The weights
   that scored 54.7% exist on the Mac and in the Kaggle `lilly-ocr` output
-  only. Until `scripts/publish_to_hf.py --upload` runs from the Mac, a fresh
-  clone, the Space and any cloud session read with the old reader, and the
-  bake-off's shipped arm cannot reproduce its bar anywhere but the Mac.
+  only. **Closed 4 Sep 2026 20:25 UTC:** published from the Mac —
+  `read/lilly.pth` on Hugging Face is now sha256 `75ec793b…`, md5 `2010a2d4`.
+  The file it replaced was `lilly-previous.pth` (md5 `5eb18322`), the reader
+  from before the real-crop training. `scripts/publish_to_hf.py` now refuses
+  any `read/lilly.pth` whose md5 is not the one `RESULTS-ocr-weights.md`
+  names, and publishes `read/` by list rather than sweeping its backups up.
 - **Corrected 4 Sep 2026: the 54.7% reader is
   `latin_g2-realcrops.pth`, md5 `2010a2d417e6c253195fa3d95ff11d33`** — and
   until that day the Mac was *not* reading with it. `models/lilly/read/lilly.pth`
@@ -424,13 +427,23 @@ not just the totals. A delta inside the interval is written as "no change".
    photograph, as pre-registered, with the sign row reported beside it. If the
    owner wants the bar on the sign row instead, that is written into
    `PREREGISTRATION.md` before the run, not after.
+3. **Answered 4 Sep 2026: the bar is the shipped arm as re-measured under the
+   stack the Paddle arms need.** Installing `paddleocr` moves the shipped
+   reader from 54.7% / 180 to 54.5% / 182 through cv2 alone (do-not-repeat
+   17), and cv2 5.0.0 segfaults the Paddle arms, so the pre-registered "must
+   reproduce 54.7 / 180" could not be met in any run that also held the other
+   engine. The owner chose, with the alternative (no verdict) put to them, to
+   accept drift of ±0.5 points / ±5 words with the cause recorded —
+   `PREREGISTRATION.md`, "Amendment, 4 September 2026", written after the
+   numbers and saying so. The decision did not hinge on it: paddle-v6 clears
+   either bar by 13 points and 76 words.
 
 ## Status board
 
 | step | state | evidence |
 |---|---|---|
 | 0 freeze | done, 3 Sep 2026 | this commit |
-| 1 bake-off | run 3–4 Sep 2026 from a cloud session, `--photos-only`: **no verdict** — the shipped arm as fetched from Hugging Face is the 27 Aug reader (35.9% / 225 invented, not 54.7% / 180), so by the pre-registration nothing is compared. For the record, same code, same day: paddle-v6 **67.7%** / 106 invented, paddle-v5 66.6% / 125, stock 46.1% / 188; on the sign row paddle-v6 72.6% against 53.8%. **Next: publish the 54.7% weights from the Mac, re-run on the Mac (crop row included), then the rule decides.** | `training/RESULTS-ocr-bakeoff.md`, `training/bakeoff/` |
+| 1 bake-off | **done, 4 Sep 2026 — verdict: adopt PP-OCRv6.** Full run on the Mac, real reader (`2010a2d4`), crop row included: paddle-v6 **67.7%** / 106 invented against the shipped 54.5% / 182 (bar per decision 3), held-out crops 50/71 against 30/71, +13.2 points paired, p < 0.001, 4.1 s a photograph against 5.8. paddle-v5 66.6% / 125 also clears; v6 wins on recall. Dictionary holds all ten letters. **The switch itself — making `paddle` the app's default reader — is a separate change and is not made by the measurement.** Caveat the report carries: the 40's sign row (n=13) is not to be quoted; `test-v2` corrected it to 56.6% over 76 (`RESULTS-ocr-test-v2.md`). | `training/RESULTS-ocr-bakeoff.md`, `training/bakeoff/`, PREREGISTRATION amendment |
 | 2 test-v2 | **done, 4 Sep 2026.** 280 fetched, both blind passes read all 280, `check` passes, key built: **2,907 agreed words at 88.2%**, 132 photographs with text, **214 diacritic words** (was 25), 628 Cyrillic, 76 in the sign class (was 13). First scores on it recorded — and its first act was to cut PP-OCRv6's sign row from 72.6% (n=13, on the 40) to 56.6% (n=76). **Remaining: re-run on the Mac with the real shipped reader** | `test-v2/truth-v2.json`, `pass-a.json`, `pass-b.json`, `training/RESULTS-ocr-test-v2.md` |
 | 2b test-mly | draw script ready; **needs the Mac** (credits file, then draw, then transcription) | `training/build_test_mly.py` |
 | 3 R_d | overlays per detector ready; **needs the Mac and a person counting** | `training/measure_detection.py` (runs for `LILLY_READER=paddle` too), PREREGISTRATION "picture" |
