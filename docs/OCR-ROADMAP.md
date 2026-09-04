@@ -387,8 +387,8 @@ not just the totals. A delta inside the interval is written as "no change".
 | step | state | evidence |
 |---|---|---|
 | 0 freeze | done, 3 Sep 2026 | this commit |
-| 1 bake-off | pre-registered, code ready, **needs the Mac** | `scripts/bakeoff_ocr.py`, PREREGISTRATION "bake-off" |
-| 2 test-v2 | pool built, 280 drawn and frozen; **fetch + transcribe on the Mac** | `test-v2/pool.tsv`, `sample.txt`, `fetch_test_v2.py` |
+| 1 bake-off | run 3–4 Sep 2026 from a cloud session, `--photos-only`: **no verdict** — the shipped arm as fetched from Hugging Face is the 27 Aug reader (35.9% / 225 invented, not 54.7% / 180), so by the pre-registration nothing is compared. For the record, same code, same day: paddle-v6 **67.7%** / 106 invented, paddle-v5 66.6% / 125, stock 46.1% / 188; on the sign row paddle-v6 72.6% against 53.8%. **Next: publish the 54.7% weights from the Mac, re-run on the Mac (crop row included), then the rule decides.** | `training/RESULTS-ocr-bakeoff.md`, `training/bakeoff/` |
+| 2 test-v2 | pool built, 280 drawn and frozen; **280 fetched, credits committed (3 Sep)**; blind transcription pass a in progress, pass b next, then `truth-v2.json` and the score | `test-v2/CREDITS.tsv`, `fetch-log.tsv`, `transcription_pass.py` |
 | 2b test-mly | draw script ready; **needs the Mac** (credits file, then draw, then transcription) | `training/build_test_mly.py` |
 | 3 R_d | overlays per detector ready; **needs the Mac and a person counting** | `training/measure_detection.py` (runs for `LILLY_READER=paddle` too), PREREGISTRATION "picture" |
 | 4 labels | blocked on 1–3 | — |

@@ -1,0 +1,8 @@
+{
+ "reader": "easyocr:lilly",
+ "timing": {
+  "photo": "War_Memorial_in_Ku\u010dine_BiH_2024.jpg",
+  "pixels": 1228800,
+  "seconds": 4.235187768936157
+ }
+}

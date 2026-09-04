@@ -1,0 +1,8 @@
+{
+ "reader": "paddle:PP-OCRv6_medium_det+PP-OCRv6_medium_rec:3.7.0",
+ "timing": {
+  "photo": "War_Memorial_in_Ku\u010dine_BiH_2024.jpg",
+  "pixels": 1228800,
+  "seconds": 9.300437211990356
+ }
+}
