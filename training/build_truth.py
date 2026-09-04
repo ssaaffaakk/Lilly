@@ -100,7 +100,15 @@ def main() -> int:
          "agreement": {"agreed": agreed_total, "either": seen_total,
                        "rate": round(rate, 1)}},
         ensure_ascii=False, indent=1), encoding="utf-8")
-    print(f"\nwrote {args.out.relative_to(REPO_ROOT)}")
+    # Repository-relative when it can be, absolute when it cannot. The bare
+    # relative_to raised after the key was already written, so a run with --out
+    # anywhere outside the repository exited non-zero having fully succeeded --
+    # which reads, to the next script or person, as "the key was not built".
+    try:
+        where = args.out.resolve().relative_to(REPO_ROOT)
+    except ValueError:
+        where = args.out
+    print(f"\nwrote {where}")
     return 0
 
 
