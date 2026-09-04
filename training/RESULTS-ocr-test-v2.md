@@ -13,6 +13,7 @@ n: **132 photographs carry agreed text** of 280 drawn; **2,908 agreed word token
 | lilly | `easyocr:lilly` — the shipped reader, `2010a2d4` | **34.6%** | 41.3% | 2,071 | 44.9% (96/214) | 57.5% (123/214) |
 | stock | `easyocr:stock` — EasyOCR's own latin_g2 | **30.0%** | 34.6% | 2,205 | 19.2% (41/214) | 41.6% |
 | paddle-v6 | `paddle:PP-OCRv6_medium_det+PP-OCRv6_medium_rec`, untrained | **60.0%** | 66.5% | 2,373 | 64.0% (137/214) | 86.0% |
+| paddle-v5 | `paddle:PP-OCRv5_server_det+latin_PP-OCRv5_mobile_rec`, untrained (cloud machine; PP-OCRv6 is machine-identical, so comparable) | **58.8%** | 66.4% | 2,485 | 61.2% (131/214) | 85.0% |
 
 Diacritic words are **214**, not 25. On the 40 that column moved 4 points per letter and the roadmap wrote it off as unable to move by design; here its 95% interval is about ±6.7 points and the gap between the arms is far outside it.
 
@@ -69,7 +70,7 @@ The fine-tune is worth 4.6 points over stock EasyOCR on held-out photographs —
 
 - **It does not settle the engine question.** The pre-registered rule (`training/PREREGISTRATION.md`, "v2 — read — bake-off") is written against the 40 and against the shipped reader reproducing 54.7% / 180. `training/RESULTS-ocr-bakeoff.md` prints no verdict because the cv2 the paddle arms need moves the shipped arm to 54.5% / 182. This set is not the pre-registered one and decides nothing on its own. The rule applied to it would answer differently on the invented row — but that row here is dominated by transcription coverage on a few dense boards ("What the invented column counts here"), so the different answer is not yet the reader's. Pre-register the definition first; then this set can decide, either way.
 - **It does settle that the set works.** A 16-point correction to one sign row, a 29-point correction to another, and a diacritic column that is a measurement instead of noise, is what 2,907 words buy over 373.
-- **PP-OCRv5 was not run here.** 76.1 s a photograph on this Mac is about five hours for 280 photographs; it is in the 40-photograph bake-off and can be added when there is a machine to spare.
+- **PP-OCRv5, run 4 Sep on the cloud machine (76 s a photograph there too):** 58.8% per photograph, 2,485 invented, 61.2% diacritic. Against PP-OCRv6, paired: Δ −1.2 points, better on 24, worse on 31, p = 0.57 — no difference on recall, 112 *more* invented words, eight times the time. Against the shipped reader: +24.2 points, 79 up, 5 down, p < 0.001. It does nothing v6 does not, and it closes the v5 question on this set as the 40 had on theirs.
 - **628 Cyrillic words sit in the key.** A Latin-only recogniser cannot produce them, so they are guaranteed misses in every row above. Any future Cyrillic work (roadmap step 5) has a real test set now; any Latin claim should say this denominator includes them.
 
 ---
