@@ -10,6 +10,7 @@ REPO = Path(__file__).resolve().parents[1]
 SPEECH = REPO / "training" / "Lilly_Speech_Kaggle.ipynb"
 SPEECH2 = REPO / "training" / "Lilly_Speech_Kaggle_Half2.ipynb"
 OCR = REPO / "training" / "Lilly_OCR_Kaggle.ipynb"
+OCR_PADDLE = REPO / "training" / "Lilly_OCR_Paddle_Kaggle.ipynb"
 
 
 def read_nb(path: Path) -> str:
@@ -208,9 +209,39 @@ def check_train_ocr() -> None:
         fail("a too-short OCR run must return 1, not 0 (exit 0 would package the old reader)")
 
 
+def check_ocr_paddle(text: str) -> None:
+    """Step 7 notebook: the pre-registered recipe, and nothing EasyOCR."""
+    check_offload(text, "OCR-paddle")
+    for needle, why in (
+        ("training/paddle_rec_data.py", "must build the lists with paddle_rec_data.py (split by source photograph)"),
+        ("tools/train.py", "must train with PaddleOCR's tools/train.py"),
+        ("Global.epoch_num=30", "pre-registered: 30 epochs"),
+        ("Optimizer.lr.learning_rate=0.0001", "pre-registered: lr 1e-4"),
+        ("Optimizer.lr.warmup_epoch=2", "pre-registered: warmup 2"),
+        ("PP-OCRv6_medium_rec_pretrained.pdparams", "must start from Baidu's training checkpoint"),
+        ("best_accuracy", "model selection is best_accuracy on the validation crops"),
+        ("tools/export_model.py", "must export the checkpoint to inference format"),
+        ("crop gate refused", "the crop gate must refuse with SystemExit before any zip"),
+        ("lilly-ocr-crops", "must attach the blind crops dataset"),
+        ("/kaggle/temp", "must clone to scratch, not /kaggle/working"),
+        ("TEE = Path(\"/kaggle/working/stdout.txt\")", "run() must tee child stdout"),
+    ):
+        if needle not in text:
+            fail(f"OCR-paddle notebook: {why} ({needle!r} missing)")
+    for needle, why in (
+        ("check=False", "must not swallow a failed child"),
+        ("train_ocr.py", "must not train EasyOCR"),
+        ("mapillary", "must not touch the closed Mapillary line"),
+        ("lilly.pth", "must not ship an EasyOCR reader"),
+        ("test-v2/photos", "test-v2 photographs must never be on the box"),
+    ):
+        if needle in text:
+            fail(f"OCR-paddle notebook: {why} ({needle!r} present)")
+
+
 def main() -> int:
     for path, fn in ((SPEECH, check_speech), (SPEECH2, check_speech_half2),
-                     (OCR, check_ocr)):
+                     (OCR, check_ocr), (OCR_PADDLE, check_ocr_paddle)):
         if not path.is_file():
             fail(f"missing {path}")
         fn(read_nb(path))

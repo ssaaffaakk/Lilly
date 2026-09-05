@@ -103,6 +103,14 @@ JOBS = {
                     "needs_weights": False, "needs_corpus": False,
                     "needs_read_pass1": True, "needs_ocr_crops": True,
                     "needs_ocr_sign_letters": True},
+    # Step 7 (docs/OCR-ROADMAP.md): the PP-OCRv6 recogniser fine-tuned on the
+    # blind Commons crops, pre-registered in training/PREREGISTRATION.md. It
+    # attaches only lilly-ocr-crops; the pretrained checkpoint is fetched on
+    # the box from Baidu; the photograph bars are measured off the box.
+    "ocr-paddle":  {"notebook": "Lilly_OCR_Paddle_Kaggle.ipynb",
+                    "slug": "lilly-ocr-paddle", "title": "Lilly ocr paddle",
+                    "needs_weights": False, "needs_corpus": False,
+                    "needs_ocr_crops": True},
 }
 STAGING = REPO_ROOT / "models" / "kaggle-staging"     # gitignored, under models/
 

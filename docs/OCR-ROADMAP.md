@@ -43,6 +43,18 @@ The transcription of test-mly then runs on the Mac with `training/transcribe/`
 (the photographs are only there); the cloud writes the trigger for it once the
 draw is committed.
 
+**Also the Mac's (needs `kaggle.json`): step 7's training run.** Pre-registered
+and built on the cloud, 5 September; nothing to decide, one command:
+
+```bash
+git pull --no-rebase origin main
+.venv/bin/python3 scripts/kaggle_train.py ocr-paddle        # attaches lilly-ocr-crops; T4; ~1 h
+.venv/bin/python3 scripts/kaggle_poll.py ocr-paddle          # COMPLETE + lilly-read-paddle.zip, or it failed
+```
+
+The zip is the exported recogniser; it decides nothing until the cloud scores
+it on test-v2 through `LILLY_PADDLE_REC_DIR` (the pre-registration says how).
+
 ---
 
 ## Why this file exists — the post-mortem in six lines
@@ -561,4 +573,4 @@ not just the totals. A delta inside the interval is written as "no change".
 | 4 labels | blocked on 1–3 | — |
 | 5 Cyrillic | **rescue rule pre-registered and built 5 Sep 2026.** Smoke on the 40 done: rescue-off equals shipped on all 40 (mechanical), 45 dropped boxes asked, 7 kept, 67.0% → 67.9% per photograph, invented 65 → 67; the 40 decide nothing. **The one test-v2 run is in progress** (started 14:40 UTC). | `app/ocr.py` (`LILLY_PADDLE_CYRILLIC_RESCUE`), PREREGISTRATION "Cyrillic rescue", `training/RESULTS-ocr-cyrillic-rescue.md` |
 | 6 switch to PP-OCRv6 | **done 5 Sep 2026.** The floor run chose 0.9 on the 40 and cleared the bar on test-v2 by the rule (57.8% / 450 against 34.6% / 2,071, +23.1 paired, p < 0.001), so the rule carried the switch, not the override. `app/ocr.py` defaults to paddle at 0.9 with `LILLY_READER=easyocr` as the way back; requirements and Dockerfile pin cv2 4.10.0.84 and pre-fetch the weights; the default door re-scored both sets to the digit. **Model card done on the Mac 5 Sep, not yet published:** `models/lilly/README.md` and `NOTICE.md` now say the app reads with PP-OCRv6 at floor 0.9 (Baidu's weights, fetched by PaddleX at run time, not in the bundle), name `read/` as the `LILLY_READER=easyocr` way back, add `PaddlePaddle/PP-OCRv6_medium_det`/`_rec` to `base_model` and to the licence table (Apache-2.0, verified against both Hub pages), and carry the photograph-level numbers for both sets so the crop table's 88.3% cannot be read as a photograph figure. `models/` is gitignored, so that edit lives only on this Mac until `scripts/publish_to_hf.py Safak11/lilly --upload` runs — **HF_TOKEN was not in the environment, so nothing was uploaded.** **`docker build` could not be run: Docker is not installed on this Mac** (no `docker` binary, no Docker.app, no colima or podman, checked 5 Sep 2026). Not worked around — installing a container runtime is not a step an agent should take unasked. Verified statically instead: the Dockerfile sets `PADDLE_PDX_MODEL_SOURCE=huggingface`, pre-fetches the weights with `get_paddle_reader()` at build time, and asserts `cv2.__version__ == '4.10.0'`; `requirements.txt` pins **both** `opencv-contrib-python` and `opencv-python-headless` to 4.10.0.84, which is the durable fix for do-not-repeat 17 (same version either way, so install order stops mattering). The two runtime checks — `reader_identity()` printing `paddle:PP-OCRv6_medium_det+PP-OCRv6_medium_rec:3.7.0:rec>=0.9` and `cv2.__version__` printing 4.10.0 — remain unrun and are the only part of step 6 not verified anywhere. | `training/RESULTS-ocr-paddle-floor.md`, commits 2d29bf3, 6c80373 **Image assertions verified 5 Sep on the cloud Linux machine, outside a container:** `requirements.txt` resolves as pinned (`pip --dry-run`), the two cv2 pins land at 4.10.0, `reader_identity()` prints `paddle:PP-OCRv6_medium_det+PP-OCRv6_medium_rec:3.7.0:rec>=0.9`, and the default door reads a photograph identically to the floor-0.9 cache. `docker build` itself is still unrun anywhere: the Mac has no Docker, this session has none. |
-| 7 fine-tune PP-OCRv6 | wanted; after 6, and after blind labels (step 4) | this file, step 7 |
+| 7 fine-tune PP-OCRv6 | **pre-registered and built 5 Sep 2026; needs the Mac to launch.** Data: the 1,799 blind Commons crops → 1,071 train / 371 valid Latin lines split by source photograph (`training/paddle_rec_data.py`); recipe fixed (PaddleOCR v3.7.0 `PP-OCRv6_medium_rec.yml`, 30 epochs, lr 1e-4, Baidu's training checkpoint, best_accuracy on the validation crops); crop gate on the box, then the two test-v2 bars through `LILLY_PADDLE_REC_DIR` at floor 0.9. Launch from the Mac: `python3 scripts/kaggle_train.py ocr-paddle` (attaches `lilly-ocr-crops`), poll with `scripts/kaggle_poll.py ocr-paddle`. | PREREGISTRATION "step 7", `training/Lilly_OCR_Paddle_Kaggle.ipynb`, `scripts/kaggle_train.py`, `training/paddle_rec_data.py` |

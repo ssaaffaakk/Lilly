@@ -52,6 +52,13 @@ def jobs() -> dict:
             "done_names": ("lilly-read.zip",),
             "min_bytes": 100_000,
         },
+        # Step 7: the exported PP-OCRv6 recogniser. The zip lands only after the
+        # crop gate; the photograph bars are measured off the box.
+        "ocr-paddle": {
+            "slug": f"{user}/lilly-ocr-paddle",
+            "done_names": ("lilly-read-paddle.zip",),
+            "min_bytes": 1_000_000,
+        },
     }
 
 
