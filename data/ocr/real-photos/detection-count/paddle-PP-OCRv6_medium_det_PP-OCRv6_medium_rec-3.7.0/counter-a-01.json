@@ -1,0 +1,321 @@
+[
+ {
+  "filename": "Entrance_to_Bosnia_and_Herzegovina_at_Brod.jpg",
+  "photo": "/home/user/Lilly/data/ocr/real-photos/scored/Entrance_to_Bosnia_and_Herzegovina_at_Brod.jpg",
+  "overlay": "/home/user/Lilly/data/ocr/real-photos/detection-overlays/paddle-PP-OCRv6_medium_det_PP-OCRv6_medium_rec-3.7.0/Entrance_to_Bosnia_and_Herzegovina_at_Brod.jpg",
+  "words": [
+   "and",
+   "bosnia",
+   "bosnu",
+   "brod",
+   "brod",
+   "dobro",
+   "došli",
+   "hercegovinu",
+   "herzegovina",
+   "i",
+   "to",
+   "u",
+   "welcome",
+   "босну",
+   "брод",
+   "добро",
+   "дошли",
+   "и",
+   "у",
+   "херцеговину"
+  ],
+  "opened": true,
+  "covered": [
+   "and",
+   "bosnia",
+   "bosnu",
+   "brod",
+   "brod",
+   "dobro",
+   "došli",
+   "hercegovinu",
+   "herzegovina",
+   "i",
+   "to",
+   "u",
+   "welcome",
+   "брод"
+  ],
+  "missed": [
+   "босну",
+   "добро",
+   "дошли",
+   "и",
+   "у",
+   "херцеговину"
+  ],
+  "not_located": []
+ },
+ {
+  "filename": "Putokaz2.jpg",
+  "photo": "/home/user/Lilly/data/ocr/real-photos/scored/Putokaz2.jpg",
+  "overlay": "/home/user/Lilly/data/ocr/real-photos/detection-overlays/paddle-PP-OCRv6_medium_det_PP-OCRv6_medium_rec-3.7.0/Putokaz2.jpg",
+  "words": [
+   "autobuska",
+   "gradiška",
+   "sarajevo",
+   "stanica",
+   "stanica",
+   "željeznička",
+   "аутобуска",
+   "градишка",
+   "дисконт",
+   "железничка",
+   "метал",
+   "сарајево",
+   "станица",
+   "станица"
+  ],
+  "opened": true,
+  "covered": [
+   "autobuska",
+   "gradiška",
+   "sarajevo",
+   "stanica",
+   "stanica",
+   "željeznička",
+   "аутобуска",
+   "дисконт",
+   "железничка",
+   "метал",
+   "сарајево",
+   "станица",
+   "станица"
+  ],
+  "missed": [
+   "градишка"
+  ],
+  "not_located": []
+ },
+ {
+  "filename": "GiPS_Bus_Lion_s_City_03.jpg",
+  "photo": "/home/user/Lilly/data/ocr/real-photos/scored/GiPS_Bus_Lion_s_City_03.jpg",
+  "overlay": "/home/user/Lilly/data/ocr/real-photos/detection-overlays/paddle-PP-OCRv6_medium_det_PP-OCRv6_medium_rec-3.7.0/GiPS_Bus_Lion_s_City_03.jpg",
+  "words": [
+   "gips",
+   "k",
+   "t"
+  ],
+  "opened": true,
+  "covered": [
+   "gips",
+   "k",
+   "t"
+  ],
+  "missed": [],
+  "not_located": []
+ },
+ {
+  "filename": "Mostar_signs.JPG",
+  "photo": "/home/user/Lilly/data/ocr/real-photos/scored/Mostar_signs.JPG",
+  "overlay": "/home/user/Lilly/data/ocr/real-photos/detection-overlays/paddle-PP-OCRv6_medium_det_PP-OCRv6_medium_rec-3.7.0/Mostar_signs.jpg",
+  "words": [
+   "dubrovnik",
+   "sarajevo",
+   "дубровник",
+   "сарајево"
+  ],
+  "opened": true,
+  "covered": [
+   "dubrovnik",
+   "sarajevo",
+   "дубровник",
+   "сарајево"
+  ],
+  "missed": [],
+  "not_located": []
+ },
+ {
+  "filename": "Street_in_Međugorje.jpg",
+  "photo": "/home/user/Lilly/data/ocr/real-photos/scored/Street_in_Međugorje.jpg",
+  "overlay": "/home/user/Lilly/data/ocr/real-photos/detection-overlays/paddle-PP-OCRv6_medium_det_PP-OCRv6_medium_rec-3.7.0/Street_in_Međugorje.jpg",
+  "words": [
+   "cd",
+   "cd",
+   "dvd",
+   "dvd",
+   "foto",
+   "giuseppe",
+   "gold",
+   "gold",
+   "market",
+   "market",
+   "mini",
+   "mini",
+   "oro",
+   "shop",
+   "shop",
+   "shop",
+   "shop",
+   "souvenirs",
+   "studio",
+   "supermarket"
+  ],
+  "opened": false,
+  "covered": [],
+  "missed": [],
+  "not_located": []
+ },
+ {
+  "filename": "Tuzla_-_Ulica_Turalibegova_-_n18_2019_.jpg",
+  "photo": "/home/user/Lilly/data/ocr/real-photos/scored/Tuzla_-_Ulica_Turalibegova_-_n18_2019_.jpg",
+  "overlay": "/home/user/Lilly/data/ocr/real-photos/detection-overlays/paddle-PP-OCRv6_medium_det_PP-OCRv6_medium_rec-3.7.0/Tuzla_-_Ulica_Turalibegova_-_n18_2019_.jpg",
+  "words": [
+   "turalibegova"
+  ],
+  "opened": false,
+  "covered": [],
+  "missed": [],
+  "not_located": []
+ },
+ {
+  "filename": "Jewish_Street_Tuzla_Bosnia.jpg",
+  "photo": "/home/user/Lilly/data/ocr/real-photos/scored/Jewish_Street_Tuzla_Bosnia.jpg",
+  "overlay": "/home/user/Lilly/data/ocr/real-photos/detection-overlays/paddle-PP-OCRv6_medium_det_PP-OCRv6_medium_rec-3.7.0/Jewish_Street_Tuzla_Bosnia.jpg",
+  "words": [
+   "artois",
+   "coca",
+   "cola",
+   "frizer",
+   "moda",
+   "moda",
+   "stella"
+  ],
+  "opened": false,
+  "covered": [],
+  "missed": [],
+  "not_located": []
+ },
+ {
+  "filename": "Plaque_at_the_Battle_of_the_Sutjeska_memorial.jpg",
+  "photo": "/home/user/Lilly/data/ocr/real-photos/scored/Plaque_at_the_Battle_of_the_Sutjeska_memorial.jpg",
+  "overlay": "/home/user/Lilly/data/ocr/real-photos/detection-overlays/paddle-PP-OCRv6_medium_det_PP-OCRv6_medium_rec-3.7.0/Plaque_at_the_Battle_of_the_Sutjeska_memorial.jpg",
+  "words": [
+   "borac",
+   "ovdje",
+   "počiva",
+   "sa",
+   "sutjeske"
+  ],
+  "opened": false,
+  "covered": [],
+  "missed": [],
+  "not_located": []
+ },
+ {
+  "filename": "Trg-kralja-tomislav-livno00658.JPG",
+  "photo": "/home/user/Lilly/data/ocr/real-photos/scored/Trg-kralja-tomislav-livno00658.JPG",
+  "overlay": "/home/user/Lilly/data/ocr/real-photos/detection-overlays/paddle-PP-OCRv6_medium_det_PP-OCRv6_medium_rec-3.7.0/Trg-kralja-tomislav-livno00658.jpg",
+  "words": [
+   "bavaria"
+  ],
+  "opened": false,
+  "covered": [],
+  "missed": [],
+  "not_located": []
+ },
+ {
+  "filename": "Gospodska_ulica_27.JPG",
+  "photo": "/home/user/Lilly/data/ocr/real-photos/scored/Gospodska_ulica_27.JPG",
+  "overlay": "/home/user/Lilly/data/ocr/real-photos/detection-overlays/paddle-PP-OCRv6_medium_det_PP-OCRv6_medium_rec-3.7.0/Gospodska_ulica_27.jpg",
+  "words": [
+   "company",
+   "malbašić"
+  ],
+  "opened": false,
+  "covered": [],
+  "missed": [],
+  "not_located": []
+ },
+ {
+  "filename": "Assasination_Plaque.JPG",
+  "photo": "/home/user/Lilly/data/ocr/real-photos/scored/Assasination_Plaque.JPG",
+  "overlay": "/home/user/Lilly/data/ocr/real-photos/detection-overlays/paddle-PP-OCRv6_medium_det_PP-OCRv6_medium_rec-3.7.0/Assasination_Plaque.jpg",
+  "words": [
+   "and",
+   "assassinated",
+   "austro",
+   "ferdinand",
+   "franz",
+   "from",
+   "gavrilo",
+   "heir",
+   "his",
+   "hungarian",
+   "june",
+   "on",
+   "place",
+   "princip",
+   "sofia",
+   "sofiju",
+   "the",
+   "the",
+   "this",
+   "throne",
+   "to",
+   "wife"
+  ],
+  "opened": false,
+  "covered": [],
+  "missed": [],
+  "not_located": []
+ },
+ {
+  "filename": "WV_banner_NE_Bosnia_Tuzla_old_town.jpg",
+  "photo": "/home/user/Lilly/data/ocr/real-photos/scored/WV_banner_NE_Bosnia_Tuzla_old_town.jpg",
+  "overlay": "/home/user/Lilly/data/ocr/real-photos/detection-overlays/paddle-PP-OCRv6_medium_det_PP-OCRv6_medium_rec-3.7.0/WV_banner_NE_Bosnia_Tuzla_old_town.jpg",
+  "words": [
+   "kapija"
+  ],
+  "opened": false,
+  "covered": [],
+  "missed": [],
+  "not_located": []
+ },
+ {
+  "filename": "Sarajevo_Trolleybus-4416_Line-102_2011-11-05.jpg",
+  "photo": "/home/user/Lilly/data/ocr/real-photos/scored/Sarajevo_Trolleybus-4416_Line-102_2011-11-05.jpg",
+  "overlay": "/home/user/Lilly/data/ocr/real-photos/detection-overlays/paddle-PP-OCRv6_medium_det_PP-OCRv6_medium_rec-3.7.0/Sarajevo_Trolleybus-4416_Line-102_2011-11-05.jpg",
+  "words": [
+   "eurohaus"
+  ],
+  "opened": false,
+  "covered": [],
+  "missed": [],
+  "not_located": []
+ },
+ {
+  "filename": "Tuzla_-_INA_petrol_station_2019_.jpg",
+  "photo": "/home/user/Lilly/data/ocr/real-photos/scored/Tuzla_-_INA_petrol_station_2019_.jpg",
+  "overlay": "/home/user/Lilly/data/ocr/real-photos/detection-overlays/paddle-PP-OCRv6_medium_det_PP-OCRv6_medium_rec-3.7.0/Tuzla_-_INA_petrol_station_2019_.jpg",
+  "words": [
+   "café",
+   "class",
+   "class",
+   "d",
+   "d",
+   "ep",
+   "gorivo",
+   "ina",
+   "ina",
+   "lpg",
+   "plus",
+   "plus",
+   "shop",
+   "sve",
+   "temperature",
+   "wash",
+   "za"
+  ],
+  "opened": false,
+  "covered": [],
+  "missed": [],
+  "not_located": []
+ }
+]
