@@ -1,6 +1,6 @@
 # PP-OCRv6 with a confidence floor — chosen on the 40, decided on test-v2
 
-Run 2026-09-04 23:08 by `scripts/paddle_floor.py`, pre-registered in `training/PREREGISTRATION.md`, "PP-OCRv6 confidence floor", before any floor was tried. One lever: `LILLY_PADDLE_REC_THRESH`, the recogniser confidence below which a region is dropped. Everything else is the bake-off's paddle-v6 arm.
+Run 2026-09-05 00:12 by `scripts/paddle_floor.py`, pre-registered in `training/PREREGISTRATION.md`, "PP-OCRv6 confidence floor", before any floor was tried. One lever: `LILLY_PADDLE_REC_THRESH`, the recogniser confidence below which a region is dropped. Everything else is the bake-off's paddle-v6 arm.
 
 ## The sweep, on the 40
 
@@ -17,6 +17,25 @@ Floor 0 is the bake-off's arm, not re-run. The floor chosen is the highest that 
 
 **Chosen floor: 0.9.**
 
+## The decision, on test-v2, at floor 0.9 — one run
+
+Bar: the shipped reader as scored on test-v2 on the Mac, `training/bakeoff/test-v2-lilly.json`. Strict invented count (owner decision 4). Rule: not worse on either row, better on at least one.
+
+| arm | words per photograph | pooled | invented words | diacritic words | folded |
+|---|---|---|---|---|---|
+| shipped (`2010a2d4`, the Mac) | **34.6%** | 41.3% | 2071 | 44.9% | 57.5% |
+| paddle-v6, floor 0.9 | **57.8%** | 64.8% | 450 | 62.1% | 81.8% |
+
+Paired, photograph by photograph: 132 photographs, mean Δ +23.1 points, better on 75, worse on 12, bootstrap p = 0.000. Reported; the bar is the table.
+
+| | signs, 1–5 words | short boards, 6–20 | long boards, 21+ |
+|---|---|---|---|
+| shipped | 33.1% (n=76) | 34.4% (n=38) | 41.5% (n=18) |
+| paddle-v6, floor 0.9 | 54.6% (n=76) | 61.1% (n=38) | 64.2% (n=18) |
+
+## Verdict, by the pre-registered rule
+
+**PP-OCRv6 at floor 0.9 clears the bar on test-v2** (57.8% / 450 against 34.6% / 2071). Adopt it — as a product change reviewed by the owner: default reader, requirements, the Docker image, the cv2 pinning of do-not-repeat 17.
 
 ---
 
