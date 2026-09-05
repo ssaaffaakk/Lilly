@@ -27,21 +27,15 @@ git add -f data/ocr/real-photos/mapillary/CREDITS.tsv && git commit -m "Mapillar
 Then the two-person transcription of `test-v2` (step 2), and the box count
 (step 3). Neither needs a GPU or Kaggle.
 
-**Still the Mac's, 5 September 2026:** the step 2b draw. The cloud fired a
-trigger at the Mac session for it at 09:52 UTC, but that session was
-disconnected (Claude Code closed on the Mac), so it did not run. Either reopen
-that session, or run by hand from `~/Desktop/Lilly`:
+**Done on the Mac, 5 September 2026 20:50 UTC:** the step 2b draw (commit
+bf084cf). **Next on the Mac, one command** — the 240 photographs exist only
+there, and the transcription runs on the cloud:
 
 ```bash
-git pull --no-rebase origin main
-.venv/bin/python3 training/build_test_mly.py                    # draws 240; refuses if frozen
-git add data/ocr/real-photos/test-mly/sample.txt data/ocr/real-photos/test-mly/CREDITS.tsv
-git commit -m "Step 2b: test-mly drawn, 240 Mapillary photographs" && git push origin HEAD:main
+cd ~/Desktop/Lilly && git pull --no-rebase origin main
+export HF_TOKEN=...                                             # never in a file
+.venv/bin/python3 training/pack_test_mly.py --upload            # zips the 240 + CREDITS, public HF dataset
 ```
-
-The transcription of test-mly then runs on the Mac with `training/transcribe/`
-(the photographs are only there); the cloud writes the trigger for it once the
-draw is committed.
 
 **Also the Mac's (needs `kaggle.json`): step 7's training run.** Pre-registered
 and built on the cloud, 5 September; nothing to decide, one command:
@@ -586,7 +580,7 @@ not just the totals. A delta inside the interval is written as "no change".
 | 0 freeze | done, 3 Sep 2026 | this commit |
 | 1 bake-off | **done, 4 Sep 2026 — verdict: adopt PP-OCRv6.** Full run on the Mac, real reader (`2010a2d4`), crop row included: paddle-v6 **67.7%** / 106 invented against the shipped 54.5% / 182 (bar per decision 3), held-out crops 50/71 against 30/71, +13.2 points paired, p < 0.001, 4.1 s a photograph against 5.8. paddle-v5 66.6% / 125 also clears; v6 wins on recall. Dictionary holds all ten letters. **The switch itself — making `paddle` the app's default reader — is a separate change and is not made by the measurement.** Caveat the report carries: the 40's sign row (n=13) is not to be quoted; `test-v2` corrected it to 56.6% over 76 (`RESULTS-ocr-test-v2.md`). **Caveat added 4 Sep from test-v2 (132 held-out photographs): the invented-word row reverses there — paddle-v6 returns 2,373 against the shipped reader's 2,071, i.e. 302 more, so on that set it would fail the very row it clears here. The adoption stands on the 40 as pre-registered; step 5's data says the engine question deserves a re-pre-registration on `test-v2` before this is treated as settled.** | `training/RESULTS-ocr-bakeoff.md`, `training/bakeoff/`, PREREGISTRATION amendment |
 | 2 test-v2 | **done and scored on the Mac, 4 Sep 2026.** 280 fetched, both blind passes, key built: **2,907 agreed words at 88.2%**, 132 photographs with text, **214 diacritic words** (was 25), 628 Cyrillic, 76 in the sign class (was 13). Scored with the real shipped reader: **lilly 34.6% per photograph / 2,071 invented, against the 54.7% published on 28** — the big held-out set says the shipped reader is 20 points below its headline, and its sign row falls 61.9% (n=13) → **33.1%** (n=76). paddle-v6 60.0% / 2,373, **+25.4 points paired (95% +19.7 to +31.2, 78 up, 11 down)** — and **302 more "invented" words, of which 1,120 of paddle-v6's 2,373 sit on one museum panel of typed decrees both transcribers declined to transcribe** (`training/invented_words.py`); against anything either transcriber wrote, **paddle-v6 2,084 against the real reader's 1,972** (stock 2,132, all three measured on the Mac) — so on the loosest of the three definitions paddle-v6 is still 112 words above the shipped reader, and the invented row does not clear on this set under any of them (302 / 242 / 112). Only 53 of the real reader's 2,071 sit on the museum panel that carries 1,120 of paddle-v6's; its top ten carry 72% against paddle-v6's 81%, and 56 of the 132 photographs have two or fewer. On this set the column also measures transcription coverage on a few dense boards — and the owner chose (decision 4) to count it strictly anyway, so PP-OCRv6 *untuned* does not clear the invented row on test-v2. **With the confidence floor the 40 chose (0.9) it does: 57.8% / 450, and the app switched (step 6).** stock 30.0%; the fine-tune is worth **+4.6 points (95% −8.5 to −0.7)** over stock, not the 18.7 the 40 suggested. paddle-v6 matched the cloud's numbers to the digit. | `test-v2/truth-v2.json`, `training/RESULTS-ocr-test-v2.md`, `training/bakeoff/test-v2-*.json` |
-| 2b test-mly | draw script ready; **needs the Mac** (draw, then transcription with `training/transcribe/` — the photographs are only there) | `training/build_test_mly.py`, `training/transcribe/` |
+| 2b test-mly | **drawn on the Mac 5 Sep 2026, commit bf084cf: 240 photographs** (zagreb 107, sarajevo 57, split 41, mostar 28, tuzla 5, zenica 2; all CC BY-SA 4.0), `sample.txt` frozen. Transcription next: the Mac packs the 240 with `training/pack_test_mly.py --upload` into the public dataset `Safak11/lilly-test-mly-photos`, the cloud runs the two blind passes with `training/transcribe/` and builds `truth-mly.json`. | `training/build_test_mly.py`, `training/pack_test_mly.py`, `training/transcribe/` |
 | 3 R_d | **done 5 Sep 2026, both detectors, two blind counters each.** PP-OCRv6 detector **R_d = 84.7%** (316/373, counters disagree on 2 words); recognition given detection **83.8%** (floor off) / 81.9% (shipped floor). CRAFT **R_d = 90.9%** (339/373, 1 disagreement) but recognition given detection **49.0%**: the switch bought 34 points of recognition for 6 of detection. For the shipped configuration the two stages now lose words in equal measure (about 15 and 14 per 100); PP-OCRv6's detector misses are few-pixel type (28 of 57 on the 144-word memorial, which CRAFT boxes 138/144). Per-photograph mean R_d 89.8% / 93.1%, so the 75% per-photograph bar is reachable by recogniser work. Addendum pre-registered before the count; both boxes files validated 40/40. | `training/RESULTS-ocr-detection.md`, `training/count_detection.py`, `detection-count/*/counter-*.json` |
 | 4 labels | blocked on 1–3 | — |
 | 5 Cyrillic | **rescue rule measured 5 Sep 2026 — does not ship.** test-v2, one pre-registered look: words per photograph 57.8% → 59.0% (paired +1.3, 95% +0.4 to +2.4, 10 up, 0 down; bar holds), pooled 64.8% → 70.0% because 145 of the 628 Cyrillic key words were read (111 on one mosque board) — but invented 450 → **530** (bar fails). 63 of 867 dropped boxes kept; the 80 new invented words sit on the Kosača fort (25) and the same board (26). The rule stays in `app/ocr.py` behind `LILLY_PADDLE_CYRILLIC_RESCUE`, off. Cyrillic moves to training (dictionary + labelled Cyrillic lines), its own pre-registration. | `training/RESULTS-ocr-cyrillic-rescue.md`, `training/paddle-rescue/test-v2.*`, PREREGISTRATION "Cyrillic rescue" |
