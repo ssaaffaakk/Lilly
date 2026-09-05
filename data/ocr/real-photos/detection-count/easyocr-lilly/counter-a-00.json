@@ -444,8 +444,19 @@
    "крупа",
    "манастир"
   ],
-  "opened": false,
-  "covered": [],
+  "opened": true,
+  "covered": [
+   "century",
+   "krupa",
+   "m",
+   "monastery",
+   "steyr",
+   "th",
+   "xiii",
+   "вијек",
+   "крупа",
+   "манастир"
+  ],
   "missed": [],
   "not_located": []
  },
@@ -464,8 +475,18 @@
    "travnik",
    "travnika"
   ],
-  "opened": false,
-  "covered": [],
+  "opened": true,
+  "covered": [
+   "aus",
+   "eisenbahnlinie",
+   "gruss",
+   "iz",
+   "jajce",
+   "pozdrav",
+   "sarajevo",
+   "travnik",
+   "travnika"
+  ],
   "missed": [],
   "not_located": []
  },
@@ -480,8 +501,14 @@
    "siemens",
    "пројект"
   ],
-  "opened": false,
-  "covered": [],
+  "opened": true,
+  "covered": [
+   "co",
+   "lanaco",
+   "malbašić",
+   "siemens",
+   "пројект"
+  ],
   "missed": [],
   "not_located": []
  },
@@ -525,9 +552,45 @@
    "česma",
    "šargovac"
   ],
-  "opened": false,
-  "covered": [],
-  "missed": [],
+  "opened": true,
+  "covered": [
+   "aleja",
+   "ante",
+   "banja",
+   "bare",
+   "borik",
+   "budžak",
+   "bulevar",
+   "centar",
+   "derviši",
+   "drakulić",
+   "jakić",
+   "luka",
+   "naselje",
+   "nova",
+   "paprikovac",
+   "petrićevac",
+   "rakovačke",
+   "rebrovac",
+   "rosulje",
+   "starčevica",
+   "sunca",
+   "tunjice",
+   "varoš",
+   "šargovac"
+  ],
+  "missed": [
+   "lauš",
+   "m",
+   "m",
+   "m",
+   "m",
+   "m",
+   "m",
+   "m",
+   "r",
+   "česma"
+  ],
   "not_located": []
  },
  {
@@ -540,9 +603,15 @@
    "ep",
    "ep"
   ],
-  "opened": false,
-  "covered": [],
-  "missed": [],
+  "opened": true,
+  "covered": [
+   "ep",
+   "ep",
+   "ep"
+  ],
+  "missed": [
+   "ep"
+  ],
   "not_located": []
  },
  {
@@ -554,8 +623,12 @@
    "ključ",
    "stari"
   ],
-  "opened": false,
-  "covered": [],
+  "opened": true,
+  "covered": [
+   "grad",
+   "ključ",
+   "stari"
+  ],
   "missed": [],
   "not_located": []
  },
@@ -571,8 +644,15 @@
    "врх",
    "требевића"
   ],
-  "opened": false,
-  "covered": [],
+  "opened": true,
+  "covered": [
+   "km",
+   "renks",
+   "trebevića",
+   "vrh",
+   "врх",
+   "требевића"
+  ],
   "missed": [],
   "not_located": []
  },
@@ -588,9 +668,17 @@
    "ponovo",
    "udara"
   ],
-  "opened": false,
-  "covered": [],
-  "missed": [],
+  "opened": true,
+  "covered": [
+   "a",
+   "beerka",
+   "o",
+   "ponovo",
+   "udara"
+  ],
+  "missed": [
+   "p"
+  ],
   "not_located": []
  }
 ]
