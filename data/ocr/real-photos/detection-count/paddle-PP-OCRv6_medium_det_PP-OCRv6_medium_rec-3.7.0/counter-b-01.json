@@ -628,9 +628,21 @@
    "крупа",
    "манастир"
   ],
-  "opened": false,
-  "covered": [],
-  "missed": [],
+  "opened": true,
+  "covered": [
+   "century",
+   "krupa",
+   "m",
+   "monastery",
+   "th",
+   "xiii",
+   "вијек",
+   "крупа",
+   "манастир"
+  ],
+  "missed": [
+   "steyr"
+  ],
   "not_located": []
  }
 ]
