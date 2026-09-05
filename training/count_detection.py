@@ -196,7 +196,7 @@ def cmd_merge(a) -> int:
     if a.out:
         with a.out.open("a", encoding="utf-8") as fh:
             fh.write("\n" + text)
-        print(f"appended to {a.out.relative_to(REPO_ROOT)}")
+        print(f"appended to {a.out.resolve().relative_to(REPO_ROOT)}")
     return 0
 
 
