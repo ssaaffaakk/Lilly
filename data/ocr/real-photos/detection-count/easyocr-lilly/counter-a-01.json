@@ -156,9 +156,31 @@
    "studio",
    "supermarket"
   ],
-  "opened": false,
-  "covered": [],
-  "missed": [],
+  "opened": true,
+  "covered": [
+   "dvd",
+   "foto",
+   "giuseppe",
+   "gold",
+   "market",
+   "mini",
+   "oro",
+   "shop",
+   "shop",
+   "souvenirs"
+  ],
+  "missed": [
+   "cd",
+   "cd",
+   "dvd",
+   "gold",
+   "market",
+   "mini",
+   "shop",
+   "shop",
+   "studio",
+   "supermarket"
+  ],
   "not_located": []
  },
  {
@@ -168,8 +190,10 @@
   "words": [
    "turalibegova"
   ],
-  "opened": false,
-  "covered": [],
+  "opened": true,
+  "covered": [
+   "turalibegova"
+  ],
   "missed": [],
   "not_located": []
  },
@@ -186,9 +210,18 @@
    "moda",
    "stella"
   ],
-  "opened": false,
-  "covered": [],
-  "missed": [],
+  "opened": true,
+  "covered": [
+   "artois",
+   "frizer",
+   "stella"
+  ],
+  "missed": [
+   "coca",
+   "cola",
+   "moda",
+   "moda"
+  ],
   "not_located": []
  },
  {
@@ -202,8 +235,14 @@
    "sa",
    "sutjeske"
   ],
-  "opened": false,
-  "covered": [],
+  "opened": true,
+  "covered": [
+   "borac",
+   "ovdje",
+   "počiva",
+   "sa",
+   "sutjeske"
+  ],
   "missed": [],
   "not_located": []
  },
@@ -214,8 +253,10 @@
   "words": [
    "bavaria"
   ],
-  "opened": false,
-  "covered": [],
+  "opened": true,
+  "covered": [
+   "bavaria"
+  ],
   "missed": [],
   "not_located": []
  },
@@ -227,8 +268,11 @@
    "company",
    "malbašić"
   ],
-  "opened": false,
-  "covered": [],
+  "opened": true,
+  "covered": [
+   "company",
+   "malbašić"
+  ],
   "missed": [],
   "not_located": []
  },
@@ -260,8 +304,31 @@
    "to",
    "wife"
   ],
-  "opened": false,
-  "covered": [],
+  "opened": true,
+  "covered": [
+   "and",
+   "assassinated",
+   "austro",
+   "ferdinand",
+   "franz",
+   "from",
+   "gavrilo",
+   "heir",
+   "his",
+   "hungarian",
+   "june",
+   "on",
+   "place",
+   "princip",
+   "sofia",
+   "sofiju",
+   "the",
+   "the",
+   "this",
+   "throne",
+   "to",
+   "wife"
+  ],
   "missed": [],
   "not_located": []
  },
@@ -272,8 +339,10 @@
   "words": [
    "kapija"
   ],
-  "opened": false,
-  "covered": [],
+  "opened": true,
+  "covered": [
+   "kapija"
+  ],
   "missed": [],
   "not_located": []
  },
@@ -284,8 +353,10 @@
   "words": [
    "eurohaus"
   ],
-  "opened": false,
-  "covered": [],
+  "opened": true,
+  "covered": [
+   "eurohaus"
+  ],
   "missed": [],
   "not_located": []
  },
@@ -312,9 +383,28 @@
    "wash",
    "za"
   ],
-  "opened": false,
-  "covered": [],
-  "missed": [],
+  "opened": true,
+  "covered": [
+   "café",
+   "class",
+   "class",
+   "d",
+   "d",
+   "gorivo",
+   "ina",
+   "ina",
+   "lpg",
+   "plus",
+   "plus",
+   "shop",
+   "sve",
+   "temperature",
+   "wash",
+   "za"
+  ],
+  "missed": [
+   "ep"
+  ],
   "not_located": []
  }
 ]

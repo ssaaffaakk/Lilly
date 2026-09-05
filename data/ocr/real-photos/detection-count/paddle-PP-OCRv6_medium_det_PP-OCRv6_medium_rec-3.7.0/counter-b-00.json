@@ -292,9 +292,25 @@
    "станица",
    "станица"
   ],
-  "opened": false,
-  "covered": [],
-  "missed": [],
+  "opened": true,
+  "covered": [
+   "autobuska",
+   "gradiška",
+   "sarajevo",
+   "stanica",
+   "stanica",
+   "željeznička",
+   "аутобуска",
+   "дисконт",
+   "железничка",
+   "метал",
+   "сарајево",
+   "станица",
+   "станица"
+  ],
+  "missed": [
+   "градишка"
+  ],
   "not_located": []
  },
  {
@@ -306,8 +322,12 @@
    "k",
    "t"
   ],
-  "opened": false,
-  "covered": [],
+  "opened": true,
+  "covered": [
+   "gips",
+   "k",
+   "t"
+  ],
   "missed": [],
   "not_located": []
  },
@@ -321,8 +341,13 @@
    "дубровник",
    "сарајево"
   ],
-  "opened": false,
-  "covered": [],
+  "opened": true,
+  "covered": [
+   "dubrovnik",
+   "sarajevo",
+   "дубровник",
+   "сарајево"
+  ],
   "missed": [],
   "not_located": []
  },
@@ -352,9 +377,31 @@
    "studio",
    "supermarket"
   ],
-  "opened": false,
-  "covered": [],
-  "missed": [],
+  "opened": true,
+  "covered": [
+   "cd",
+   "dvd",
+   "giuseppe",
+   "gold",
+   "market",
+   "market",
+   "mini",
+   "oro",
+   "shop",
+   "shop",
+   "shop",
+   "souvenirs"
+  ],
+  "missed": [
+   "cd",
+   "dvd",
+   "foto",
+   "gold",
+   "mini",
+   "shop",
+   "studio",
+   "supermarket"
+  ],
   "not_located": []
  },
  {
@@ -364,8 +411,10 @@
   "words": [
    "turalibegova"
   ],
-  "opened": false,
-  "covered": [],
+  "opened": true,
+  "covered": [
+   "turalibegova"
+  ],
   "missed": [],
   "not_located": []
  },
@@ -382,9 +431,18 @@
    "moda",
    "stella"
   ],
-  "opened": false,
-  "covered": [],
-  "missed": [],
+  "opened": true,
+  "covered": [
+   "artois",
+   "frizer",
+   "stella"
+  ],
+  "missed": [
+   "coca",
+   "cola",
+   "moda",
+   "moda"
+  ],
   "not_located": []
  }
 ]

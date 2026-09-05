@@ -1,344 +1,448 @@
 [
- {
-  "filename": "Narrow-Gauge-Railway_Spalatobahn_Station-Travnik.jpg",
-  "photo": "/home/user/Lilly/data/ocr/real-photos/scored/Narrow-Gauge-Railway_Spalatobahn_Station-Travnik.jpg",
-  "overlay": "/home/user/Lilly/data/ocr/real-photos/detection-overlays/easyocr-lilly/Narrow-Gauge-Railway_Spalatobahn_Station-Travnik.jpg",
-  "words": [
-   "aus",
-   "eisenbahnlinie",
-   "gruss",
-   "iz",
-   "jajce",
-   "pozdrav",
-   "sarajevo",
-   "travnik",
-   "travnika"
-  ],
-  "opened": true,
-  "covered": [
-   "aus",
-   "eisenbahnlinie",
-   "gruss",
-   "iz",
-   "jajce",
-   "pozdrav",
-   "sarajevo",
-   "travnik",
-   "travnika"
-  ],
-  "missed": [],
-  "not_located": []
- },
- {
-  "filename": "Trg_Krajine_čajavčev_i_ulaz_u_gospodsku.jpg",
-  "photo": "/home/user/Lilly/data/ocr/real-photos/scored/Trg_Krajine_čajavčev_i_ulaz_u_gospodsku.jpg",
-  "overlay": "/home/user/Lilly/data/ocr/real-photos/detection-overlays/easyocr-lilly/Trg_Krajine_čajavčev_i_ulaz_u_gospodsku.jpg",
-  "words": [
-   "co",
-   "lanaco",
-   "malbašić",
-   "siemens",
-   "пројект"
-  ],
-  "opened": true,
-  "covered": [
-   "co",
-   "lanaco",
-   "malbašić",
-   "siemens",
-   "пројект"
-  ],
-  "missed": [],
-  "not_located": []
- },
- {
-  "filename": "Banjaluka_streetmap.jpg",
-  "photo": "/home/user/Lilly/data/ocr/real-photos/scored/Banjaluka_streetmap.jpg",
-  "overlay": "/home/user/Lilly/data/ocr/real-photos/detection-overlays/easyocr-lilly/Banjaluka_streetmap.jpg",
-  "words": [
-   "aleja",
-   "ante",
-   "banja",
-   "bare",
-   "borik",
-   "budžak",
-   "bulevar",
-   "centar",
-   "derviši",
-   "drakulić",
-   "jakić",
-   "lauš",
-   "luka",
-   "m",
-   "m",
-   "m",
-   "m",
-   "m",
-   "m",
-   "m",
-   "naselje",
-   "nova",
-   "paprikovac",
-   "petrićevac",
-   "r",
-   "rakovačke",
-   "rebrovac",
-   "rosulje",
-   "starčevica",
-   "sunca",
-   "tunjice",
-   "varoš",
-   "česma",
-   "šargovac"
-  ],
-  "opened": true,
-  "covered": [
-   "aleja",
-   "ante",
-   "banja",
-   "bare",
-   "borik",
-   "budžak",
-   "bulevar",
-   "centar",
-   "derviši",
-   "drakulić",
-   "jakić",
-   "luka",
-   "naselje",
-   "nova",
-   "paprikovac",
-   "petrićevac",
-   "rakovačke",
-   "rebrovac",
-   "rosulje",
-   "starčevica",
-   "sunca",
-   "tunjice",
-   "varoš",
-   "šargovac"
-  ],
-  "missed": [
-   "lauš",
-   "m",
-   "m",
-   "m",
-   "m",
-   "m",
-   "m",
-   "m",
-   "r",
-   "česma"
-  ],
-  "not_located": []
- },
- {
-  "filename": "Sarajevo_EP-Gas-Station_Bulevar-Mese-Selimovica_2011-11-04_2_.jpg",
-  "photo": "/home/user/Lilly/data/ocr/real-photos/scored/Sarajevo_EP-Gas-Station_Bulevar-Mese-Selimovica_2011-11-04_2_.jpg",
-  "overlay": "/home/user/Lilly/data/ocr/real-photos/detection-overlays/easyocr-lilly/Sarajevo_EP-Gas-Station_Bulevar-Mese-Selimovica_2011-11-04_2_.jpg",
-  "words": [
-   "ep",
-   "ep",
-   "ep",
-   "ep"
-  ],
-  "opened": false,
-  "covered": [],
-  "missed": [],
-  "not_located": []
- },
- {
-  "filename": "Direction_sign_to_Old_city_of_Kljuc.jpg",
-  "photo": "/home/user/Lilly/data/ocr/real-photos/scored/Direction_sign_to_Old_city_of_Kljuc.jpg",
-  "overlay": "/home/user/Lilly/data/ocr/real-photos/detection-overlays/easyocr-lilly/Direction_sign_to_Old_city_of_Kljuc.jpg",
-  "words": [
-   "grad",
-   "ključ",
-   "stari"
-  ],
-  "opened": false,
-  "covered": [],
-  "missed": [],
-  "not_located": []
- },
- {
-  "filename": "Sarajevo_Trebević_Sign.jpg",
-  "photo": "/home/user/Lilly/data/ocr/real-photos/scored/Sarajevo_Trebević_Sign.jpg",
-  "overlay": "/home/user/Lilly/data/ocr/real-photos/detection-overlays/easyocr-lilly/Sarajevo_Trebević_Sign.jpg",
-  "words": [
-   "km",
-   "renks",
-   "trebevića",
-   "vrh",
-   "врх",
-   "требевића"
-  ],
-  "opened": false,
-  "covered": [],
-  "missed": [],
-  "not_located": []
- },
- {
-  "filename": "Mis_Irbina_Street_in_Sarajevo_03.jpg",
-  "photo": "/home/user/Lilly/data/ocr/real-photos/scored/Mis_Irbina_Street_in_Sarajevo_03.jpg",
-  "overlay": "/home/user/Lilly/data/ocr/real-photos/detection-overlays/easyocr-lilly/Mis_Irbina_Street_in_Sarajevo_03.jpg",
-  "words": [
-   "a",
-   "beerka",
-   "o",
-   "p",
-   "ponovo",
-   "udara"
-  ],
-  "opened": false,
-  "covered": [],
-  "missed": [],
-  "not_located": []
- },
- {
-  "filename": "Entrance_to_Bosnia_and_Herzegovina_at_Brod.jpg",
-  "photo": "/home/user/Lilly/data/ocr/real-photos/scored/Entrance_to_Bosnia_and_Herzegovina_at_Brod.jpg",
-  "overlay": "/home/user/Lilly/data/ocr/real-photos/detection-overlays/easyocr-lilly/Entrance_to_Bosnia_and_Herzegovina_at_Brod.jpg",
-  "words": [
-   "and",
-   "bosnia",
-   "bosnu",
-   "brod",
-   "brod",
-   "dobro",
-   "došli",
-   "hercegovinu",
-   "herzegovina",
-   "i",
-   "to",
-   "u",
-   "welcome",
-   "босну",
-   "брод",
-   "добро",
-   "дошли",
-   "и",
-   "у",
-   "херцеговину"
-  ],
-  "opened": false,
-  "covered": [],
-  "missed": [],
-  "not_located": []
- },
- {
-  "filename": "Putokaz2.jpg",
-  "photo": "/home/user/Lilly/data/ocr/real-photos/scored/Putokaz2.jpg",
-  "overlay": "/home/user/Lilly/data/ocr/real-photos/detection-overlays/easyocr-lilly/Putokaz2.jpg",
-  "words": [
-   "autobuska",
-   "gradiška",
-   "sarajevo",
-   "stanica",
-   "stanica",
-   "željeznička",
-   "аутобуска",
-   "градишка",
-   "дисконт",
-   "железничка",
-   "метал",
-   "сарајево",
-   "станица",
-   "станица"
-  ],
-  "opened": false,
-  "covered": [],
-  "missed": [],
-  "not_located": []
- },
- {
-  "filename": "GiPS_Bus_Lion_s_City_03.jpg",
-  "photo": "/home/user/Lilly/data/ocr/real-photos/scored/GiPS_Bus_Lion_s_City_03.jpg",
-  "overlay": "/home/user/Lilly/data/ocr/real-photos/detection-overlays/easyocr-lilly/GiPS_Bus_Lion_s_City_03.jpg",
-  "words": [
-   "gips",
-   "k",
-   "t"
-  ],
-  "opened": false,
-  "covered": [],
-  "missed": [],
-  "not_located": []
- },
- {
-  "filename": "Mostar_signs.JPG",
-  "photo": "/home/user/Lilly/data/ocr/real-photos/scored/Mostar_signs.JPG",
-  "overlay": "/home/user/Lilly/data/ocr/real-photos/detection-overlays/easyocr-lilly/Mostar_signs.jpg",
-  "words": [
-   "dubrovnik",
-   "sarajevo",
-   "дубровник",
-   "сарајево"
-  ],
-  "opened": false,
-  "covered": [],
-  "missed": [],
-  "not_located": []
- },
- {
-  "filename": "Street_in_Međugorje.jpg",
-  "photo": "/home/user/Lilly/data/ocr/real-photos/scored/Street_in_Međugorje.jpg",
-  "overlay": "/home/user/Lilly/data/ocr/real-photos/detection-overlays/easyocr-lilly/Street_in_Međugorje.jpg",
-  "words": [
-   "cd",
-   "cd",
-   "dvd",
-   "dvd",
-   "foto",
-   "giuseppe",
-   "gold",
-   "gold",
-   "market",
-   "market",
-   "mini",
-   "mini",
-   "oro",
-   "shop",
-   "shop",
-   "shop",
-   "shop",
-   "souvenirs",
-   "studio",
-   "supermarket"
-  ],
-  "opened": false,
-  "covered": [],
-  "missed": [],
-  "not_located": []
- },
- {
-  "filename": "Tuzla_-_Ulica_Turalibegova_-_n18_2019_.jpg",
-  "photo": "/home/user/Lilly/data/ocr/real-photos/scored/Tuzla_-_Ulica_Turalibegova_-_n18_2019_.jpg",
-  "overlay": "/home/user/Lilly/data/ocr/real-photos/detection-overlays/easyocr-lilly/Tuzla_-_Ulica_Turalibegova_-_n18_2019_.jpg",
-  "words": [
-   "turalibegova"
-  ],
-  "opened": false,
-  "covered": [],
-  "missed": [],
-  "not_located": []
- },
- {
-  "filename": "Jewish_Street_Tuzla_Bosnia.jpg",
-  "photo": "/home/user/Lilly/data/ocr/real-photos/scored/Jewish_Street_Tuzla_Bosnia.jpg",
-  "overlay": "/home/user/Lilly/data/ocr/real-photos/detection-overlays/easyocr-lilly/Jewish_Street_Tuzla_Bosnia.jpg",
-  "words": [
-   "artois",
-   "coca",
-   "cola",
-   "frizer",
-   "moda",
-   "moda",
-   "stella"
-  ],
-  "opened": false,
-  "covered": [],
-  "missed": [],
-  "not_located": []
- }
+  {
+    "filename": "Narrow-Gauge-Railway_Spalatobahn_Station-Travnik.jpg",
+    "photo": "/home/user/Lilly/data/ocr/real-photos/scored/Narrow-Gauge-Railway_Spalatobahn_Station-Travnik.jpg",
+    "overlay": "/home/user/Lilly/data/ocr/real-photos/detection-overlays/easyocr-lilly/Narrow-Gauge-Railway_Spalatobahn_Station-Travnik.jpg",
+    "words": [
+      "aus",
+      "eisenbahnlinie",
+      "gruss",
+      "iz",
+      "jajce",
+      "pozdrav",
+      "sarajevo",
+      "travnik",
+      "travnika"
+    ],
+    "opened": true,
+    "covered": [
+      "aus",
+      "eisenbahnlinie",
+      "gruss",
+      "iz",
+      "jajce",
+      "pozdrav",
+      "sarajevo",
+      "travnik",
+      "travnika"
+    ],
+    "missed": [],
+    "not_located": []
+  },
+  {
+    "filename": "Trg_Krajine_čajavčev_i_ulaz_u_gospodsku.jpg",
+    "photo": "/home/user/Lilly/data/ocr/real-photos/scored/Trg_Krajine_čajavčev_i_ulaz_u_gospodsku.jpg",
+    "overlay": "/home/user/Lilly/data/ocr/real-photos/detection-overlays/easyocr-lilly/Trg_Krajine_čajavčev_i_ulaz_u_gospodsku.jpg",
+    "words": [
+      "co",
+      "lanaco",
+      "malbašić",
+      "siemens",
+      "пројект"
+    ],
+    "opened": true,
+    "covered": [
+      "co",
+      "lanaco",
+      "malbašić",
+      "siemens",
+      "пројект"
+    ],
+    "missed": [],
+    "not_located": []
+  },
+  {
+    "filename": "Banjaluka_streetmap.jpg",
+    "photo": "/home/user/Lilly/data/ocr/real-photos/scored/Banjaluka_streetmap.jpg",
+    "overlay": "/home/user/Lilly/data/ocr/real-photos/detection-overlays/easyocr-lilly/Banjaluka_streetmap.jpg",
+    "words": [
+      "aleja",
+      "ante",
+      "banja",
+      "bare",
+      "borik",
+      "budžak",
+      "bulevar",
+      "centar",
+      "derviši",
+      "drakulić",
+      "jakić",
+      "lauš",
+      "luka",
+      "m",
+      "m",
+      "m",
+      "m",
+      "m",
+      "m",
+      "m",
+      "naselje",
+      "nova",
+      "paprikovac",
+      "petrićevac",
+      "r",
+      "rakovačke",
+      "rebrovac",
+      "rosulje",
+      "starčevica",
+      "sunca",
+      "tunjice",
+      "varoš",
+      "česma",
+      "šargovac"
+    ],
+    "opened": true,
+    "covered": [
+      "aleja",
+      "ante",
+      "banja",
+      "bare",
+      "borik",
+      "budžak",
+      "bulevar",
+      "centar",
+      "derviši",
+      "drakulić",
+      "jakić",
+      "luka",
+      "naselje",
+      "nova",
+      "paprikovac",
+      "petrićevac",
+      "rakovačke",
+      "rebrovac",
+      "rosulje",
+      "starčevica",
+      "sunca",
+      "tunjice",
+      "varoš",
+      "šargovac"
+    ],
+    "missed": [
+      "lauš",
+      "m",
+      "m",
+      "m",
+      "m",
+      "m",
+      "m",
+      "m",
+      "r",
+      "česma"
+    ],
+    "not_located": []
+  },
+  {
+    "filename": "Sarajevo_EP-Gas-Station_Bulevar-Mese-Selimovica_2011-11-04_2_.jpg",
+    "photo": "/home/user/Lilly/data/ocr/real-photos/scored/Sarajevo_EP-Gas-Station_Bulevar-Mese-Selimovica_2011-11-04_2_.jpg",
+    "overlay": "/home/user/Lilly/data/ocr/real-photos/detection-overlays/easyocr-lilly/Sarajevo_EP-Gas-Station_Bulevar-Mese-Selimovica_2011-11-04_2_.jpg",
+    "words": [
+      "ep",
+      "ep",
+      "ep",
+      "ep"
+    ],
+    "opened": true,
+    "covered": [
+      "ep",
+      "ep",
+      "ep"
+    ],
+    "missed": [
+      "ep"
+    ],
+    "not_located": []
+  },
+  {
+    "filename": "Direction_sign_to_Old_city_of_Kljuc.jpg",
+    "photo": "/home/user/Lilly/data/ocr/real-photos/scored/Direction_sign_to_Old_city_of_Kljuc.jpg",
+    "overlay": "/home/user/Lilly/data/ocr/real-photos/detection-overlays/easyocr-lilly/Direction_sign_to_Old_city_of_Kljuc.jpg",
+    "words": [
+      "grad",
+      "ključ",
+      "stari"
+    ],
+    "opened": true,
+    "covered": [
+      "grad",
+      "ključ",
+      "stari"
+    ],
+    "missed": [],
+    "not_located": []
+  },
+  {
+    "filename": "Sarajevo_Trebević_Sign.jpg",
+    "photo": "/home/user/Lilly/data/ocr/real-photos/scored/Sarajevo_Trebević_Sign.jpg",
+    "overlay": "/home/user/Lilly/data/ocr/real-photos/detection-overlays/easyocr-lilly/Sarajevo_Trebević_Sign.jpg",
+    "words": [
+      "km",
+      "renks",
+      "trebevića",
+      "vrh",
+      "врх",
+      "требевића"
+    ],
+    "opened": true,
+    "covered": [
+      "km",
+      "renks",
+      "trebevića",
+      "vrh",
+      "врх",
+      "требевића"
+    ],
+    "missed": [],
+    "not_located": []
+  },
+  {
+    "filename": "Mis_Irbina_Street_in_Sarajevo_03.jpg",
+    "photo": "/home/user/Lilly/data/ocr/real-photos/scored/Mis_Irbina_Street_in_Sarajevo_03.jpg",
+    "overlay": "/home/user/Lilly/data/ocr/real-photos/detection-overlays/easyocr-lilly/Mis_Irbina_Street_in_Sarajevo_03.jpg",
+    "words": [
+      "a",
+      "beerka",
+      "o",
+      "p",
+      "ponovo",
+      "udara"
+    ],
+    "opened": true,
+    "covered": [
+      "a",
+      "beerka",
+      "o",
+      "ponovo",
+      "udara"
+    ],
+    "missed": [
+      "p"
+    ],
+    "not_located": []
+  },
+  {
+    "filename": "Entrance_to_Bosnia_and_Herzegovina_at_Brod.jpg",
+    "photo": "/home/user/Lilly/data/ocr/real-photos/scored/Entrance_to_Bosnia_and_Herzegovina_at_Brod.jpg",
+    "overlay": "/home/user/Lilly/data/ocr/real-photos/detection-overlays/easyocr-lilly/Entrance_to_Bosnia_and_Herzegovina_at_Brod.jpg",
+    "words": [
+      "and",
+      "bosnia",
+      "bosnu",
+      "brod",
+      "brod",
+      "dobro",
+      "došli",
+      "hercegovinu",
+      "herzegovina",
+      "i",
+      "to",
+      "u",
+      "welcome",
+      "босну",
+      "брод",
+      "добро",
+      "дошли",
+      "и",
+      "у",
+      "херцеговину"
+    ],
+    "opened": true,
+    "covered": [
+      "and",
+      "bosnia",
+      "bosnu",
+      "brod",
+      "brod",
+      "dobro",
+      "došli",
+      "hercegovinu",
+      "herzegovina",
+      "to",
+      "u",
+      "welcome",
+      "босну",
+      "брод",
+      "добро",
+      "дошли",
+      "и",
+      "у",
+      "херцеговину"
+    ],
+    "missed": [
+      "i"
+    ],
+    "not_located": []
+  },
+  {
+    "filename": "Putokaz2.jpg",
+    "photo": "/home/user/Lilly/data/ocr/real-photos/scored/Putokaz2.jpg",
+    "overlay": "/home/user/Lilly/data/ocr/real-photos/detection-overlays/easyocr-lilly/Putokaz2.jpg",
+    "words": [
+      "autobuska",
+      "gradiška",
+      "sarajevo",
+      "stanica",
+      "stanica",
+      "željeznička",
+      "аутобуска",
+      "градишка",
+      "дисконт",
+      "железничка",
+      "метал",
+      "сарајево",
+      "станица",
+      "станица"
+    ],
+    "opened": true,
+    "covered": [
+      "autobuska",
+      "gradiška",
+      "sarajevo",
+      "stanica",
+      "stanica",
+      "željeznička",
+      "аутобуска",
+      "градишка",
+      "дисконт",
+      "железничка",
+      "метал",
+      "сарајево",
+      "станица",
+      "станица"
+    ],
+    "missed": [],
+    "not_located": []
+  },
+  {
+    "filename": "GiPS_Bus_Lion_s_City_03.jpg",
+    "photo": "/home/user/Lilly/data/ocr/real-photos/scored/GiPS_Bus_Lion_s_City_03.jpg",
+    "overlay": "/home/user/Lilly/data/ocr/real-photos/detection-overlays/easyocr-lilly/GiPS_Bus_Lion_s_City_03.jpg",
+    "words": [
+      "gips",
+      "k",
+      "t"
+    ],
+    "opened": true,
+    "covered": [
+      "gips",
+      "k",
+      "t"
+    ],
+    "missed": [],
+    "not_located": []
+  },
+  {
+    "filename": "Mostar_signs.JPG",
+    "photo": "/home/user/Lilly/data/ocr/real-photos/scored/Mostar_signs.JPG",
+    "overlay": "/home/user/Lilly/data/ocr/real-photos/detection-overlays/easyocr-lilly/Mostar_signs.jpg",
+    "words": [
+      "dubrovnik",
+      "sarajevo",
+      "дубровник",
+      "сарајево"
+    ],
+    "opened": true,
+    "covered": [
+      "dubrovnik",
+      "sarajevo",
+      "дубровник",
+      "сарајево"
+    ],
+    "missed": [],
+    "not_located": []
+  },
+  {
+    "filename": "Street_in_Međugorje.jpg",
+    "photo": "/home/user/Lilly/data/ocr/real-photos/scored/Street_in_Međugorje.jpg",
+    "overlay": "/home/user/Lilly/data/ocr/real-photos/detection-overlays/easyocr-lilly/Street_in_Međugorje.jpg",
+    "words": [
+      "cd",
+      "cd",
+      "dvd",
+      "dvd",
+      "foto",
+      "giuseppe",
+      "gold",
+      "gold",
+      "market",
+      "market",
+      "mini",
+      "mini",
+      "oro",
+      "shop",
+      "shop",
+      "shop",
+      "shop",
+      "souvenirs",
+      "studio",
+      "supermarket"
+    ],
+    "opened": true,
+    "covered": [
+      "dvd",
+      "foto",
+      "giuseppe",
+      "gold",
+      "market",
+      "mini",
+      "oro",
+      "shop",
+      "shop",
+      "souvenirs"
+    ],
+    "missed": [
+      "cd",
+      "cd",
+      "dvd",
+      "gold",
+      "market",
+      "mini",
+      "shop",
+      "shop",
+      "studio",
+      "supermarket"
+    ],
+    "not_located": []
+  },
+  {
+    "filename": "Tuzla_-_Ulica_Turalibegova_-_n18_2019_.jpg",
+    "photo": "/home/user/Lilly/data/ocr/real-photos/scored/Tuzla_-_Ulica_Turalibegova_-_n18_2019_.jpg",
+    "overlay": "/home/user/Lilly/data/ocr/real-photos/detection-overlays/easyocr-lilly/Tuzla_-_Ulica_Turalibegova_-_n18_2019_.jpg",
+    "words": [
+      "turalibegova"
+    ],
+    "opened": true,
+    "covered": [
+      "turalibegova"
+    ],
+    "missed": [],
+    "not_located": []
+  },
+  {
+    "filename": "Jewish_Street_Tuzla_Bosnia.jpg",
+    "photo": "/home/user/Lilly/data/ocr/real-photos/scored/Jewish_Street_Tuzla_Bosnia.jpg",
+    "overlay": "/home/user/Lilly/data/ocr/real-photos/detection-overlays/easyocr-lilly/Jewish_Street_Tuzla_Bosnia.jpg",
+    "words": [
+      "artois",
+      "coca",
+      "cola",
+      "frizer",
+      "moda",
+      "moda",
+      "stella"
+    ],
+    "opened": true,
+    "covered": [
+      "artois",
+      "frizer",
+      "stella"
+    ],
+    "missed": [
+      "coca",
+      "cola",
+      "moda",
+      "moda"
+    ],
+    "not_located": []
+  }
 ]
