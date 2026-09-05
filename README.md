@@ -187,17 +187,23 @@ which an earlier version of this same fine-tune did not manage.
 | Bosnian term recall | 65.9% | **68.2%** |
 | Wrong-variety substitutions | 5.1% | **3.3%** |
 
-**Photographs** — 40 photographs of Bosnian signs from Wikimedia Commons. Two
-readers transcribed them independently, seeing neither each other's work nor the
-model's guess; only words both of them saw are in the answer key.
+**Photographs** — two sets of Bosnian signs from Wikimedia Commons, each
+transcribed by two readers independently, seeing neither each other's work nor
+any model's guess; only words both of them saw are in the answer key. The 40 are
+the original set (373 agreed words); `test-v2` is 280 photographs drawn from the
+same pool, 132 with text, 2,907 agreed words, never trained on by anything.
 
-| | Before | Now |
+| | the 40 | `test-v2` (132 photographs) |
 | --- | --- | --- |
-| Words found per photograph | 36.0% | **54.7%** |
-| Words invented that are on no sign | 224 | **180** |
+| EasyOCR, stock | 48.0% found, 188 invented | 30.0% found |
+| EasyOCR fine-tuned on real crops (the reader until 5 Sep 2026) | 54.5% found, 182 invented | 34.6% found, 2,071 invented |
+| **PaddleOCR PP-OCRv6, untrained, confidence floor 0.9 — the reader now** | **67.0% found, 65 invented** | **57.8% found, 450 invented** |
 
-The second row matters as much as the first. Recall can always be bought by
-guessing more; this reader guesses less and finds more.
+The second number matters as much as the first. Recall can always be bought by
+guessing more; the floor is there because without it PP-OCRv6 read 60.0% and
+invented 2,373. The engine was chosen by a rule written before the run
+(`training/PREREGISTRATION.md`), on the big set, not the small one — the 40
+alone had said the fine-tuned reader read 54.7%, and the 132 say 34.6%.
 
 **Thresholds are written before the run.** Deciding measurements and their pass
 marks live in [`training/PREREGISTRATION.md`](training/PREREGISTRATION.md),

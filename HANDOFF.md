@@ -12,7 +12,7 @@ when it stops being true; a stale handoff is worse than none.
 | | measured | on what | means |
 |---|---|---|---|
 | Translation | chrF2 **67.47** | FLORES-200 dev+devtest, 2,009 pairs, through `app.translate.Engine`, tag stripped | level of NLLB-200-3.3B (67.2), best of 30 published systems on this pair |
-| Photographs | **54.7%** of words per photo | the same 40 Commons photographs, answer key from two blind transcribers at 91.2% agreement | was 36.0% before training on real crops |
+| Photographs | **57.8%** of words per photo, 450 invented | `test-v2`: 132 held-out Commons photographs with text, 2,907 agreed words from two blind transcribers at 88.2% agreement; PaddleOCR PP-OCRv6 at confidence floor 0.9, the reader since 5 Sep 2026 | the fine-tuned EasyOCR reader reads 34.6% / 2,071 on the same 132 — its published 54.7% was the 40's number, and the 40 are 28 photographs with text (`training/RESULTS-ocr-test-v2.md`, `RESULTS-ocr-paddle-floor.md`) |
 | Speech | **34.9%** word error | 200 held-out FLEURS Bosnian clips, measured here | the listener it replaced reads 35.5% on the same clips through the same code. Kaggle measured the same model at 33.9% on a T4 — quote the local pair for the like-for-like gain, the Kaggle pair (38.4% → 33.9%) only against untrained whisper-small |
 
 *Corrected 28 Aug: the translation row read "chrF2 67.34, FLORES-200 devtest,
@@ -107,11 +107,16 @@ same 200 clips through the same code; variety substitution fell 5.1% → 3.3%.
 claim is that the Croatian audio did not make the model less Bosnian — the
 failure the gate was built to catch — not that it made it more so.
 
-**The reader now reads 54.7% of a photograph's words, up from 36.0%**, after
+**The reader read 54.7% of a photograph's words on the 40, up from 36.0%**, after
 training on 1,294 hand-transcribed real crops alongside the 20,000 synthetic
 ones. Pooled words 16.9% → 45.0%, diacritic words 36.0% → 44.0%, and — the line
-that stops this being recall bought by guessing — invented words 224 → 180. It
-finds more and makes less up. Full write-up in `training/RESULTS-ocr-realcrops.md`.
+that stops this being recall bought by guessing — invented words 224 → 180. Full
+write-up in `training/RESULTS-ocr-realcrops.md`. **Superseded 5 Sep 2026:** on
+`test-v2`, 132 held-out photographs, that reader reads 34.6% — the 40 were its
+optimistic end — and the fine-tune is worth +4.6 points over stock, not 18.7.
+PaddleOCR PP-OCRv6, untrained, with a confidence floor of 0.9, reads 57.8% with
+450 invented words there and is the app's reader now (`docs/OCR-ROADMAP.md`,
+decisions 4–5, step 6); the EasyOCR reader stays as `LILLY_READER=easyocr`.
 
 **All 1,914 crops are transcribed**, blind, by twelve annotators who were never
 shown the reader's own guess. 1,702 usable, 39 marked as containing no text at
