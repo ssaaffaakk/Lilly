@@ -1118,3 +1118,77 @@ photograph.
 - **Clears both.** Adopt PP-OCRv6 at that floor: the switch is then made as a
   product change (default reader, `requirements.txt`, the Docker image, the
   cv2 pinning of do-not-repeat 17), reviewed by the owner, not by this run.
+
+## v2 — picture — picture-olcum — addendum for two detectors, written 5 September 2026, before the count
+
+The `picture-olcum` section above was written when the shipped reader was
+EasyOCR (stock CRAFT detector, `lilly.pth` recogniser) and names a validity
+check against 45.0% pooled / 54.7% per-photo. On 5 September 2026 the app
+switched to PP-OCRv6 (`docs/OCR-ROADMAP.md`, step 6), so the detector the
+decomposition is for has changed. Nothing above is rewritten; this addendum
+says how the same measurement is taken now, and it is written before a single
+word has been counted.
+
+**Same definition, same set, same key.** R_d = (truth words covered by at least
+one detected box) / 373, on the 40 in `scored-sample.txt` against `truth.json`,
+partial overlap counts, a different printing of the same word does not. The
+overlays come from `training/measure_detection.py`, unchanged.
+
+**Two arms, both counted.**
+- **PP-OCRv6 detector**, `paddle:PP-OCRv6_medium_det`, with the recognition
+  floor OFF (`LILLY_PADDLE_REC_THRESH=0`). The floor drops a box *after* the
+  recogniser has read it, so a word it removes is a recognition-stage loss and
+  must not be charged to detection. The shipped configuration (floor 0.9) is
+  the same detector with a stricter recogniser.
+- **CRAFT**, `easyocr` with `lilly.pth`: the detector behind the 54.7%, so the
+  section above gets its number too and the two detectors are compared on the
+  same key.
+
+**Validity check, restated per arm.** The boxes file each overlay run writes
+carries the recogniser's text for every box (the same `read_regions` call the
+scorer makes). Before the count is reported, that text is compared photograph
+by photograph with the arm's bakeoff cache on the 40 (`training/bakeoff/
+paddle-v6-photos.json`, `lilly-photos.json`); a mismatch means the detector
+drawn is not the one scored, and the decomposition for that arm is not
+reported. The EasyOCR arm reproduces 54.5% / 44.5% / 182 under cv2 4.10.0
+rather than the 54.7% / 45.0% / 180 the section above names; that drift is the
+4 September amendment's (do-not-repeat 17) and is inside its tolerance.
+
+**Recognition given detection**, pooled / R_d as the section above fixes it.
+The pooled figures are already on disk and are named here so they cannot be
+chosen later: PP-OCRv6 floor off **71.0%**; PP-OCRv6 at the shipped floor 0.9
+**69.4%** (`training/RESULTS-ocr-paddle-floor.md`); EasyOCR **44.5%**
+(`training/RESULTS-ocr-bakeoff.md`). The first divides by R_d(PP-OCRv6) and is
+the recogniser's own figure; the second divides by the same R_d and is the
+shipped configuration's; the third divides by R_d(CRAFT).
+
+**Who counts — a deviation, recorded.** The section above says "a human count".
+The count is made by **two vision agents**, not a person: the owner delegated
+the forward plan on 5 September 2026 ("sen nasıl uygun gördüysen öyle") and
+there is nobody to make 746 word judgements per detector. So the count is done
+the way the key itself was built — two counters, blind to each other and to the
+reader's text (the overlay shows box indices only; the boxes file is never
+given to a counter), each judging every one of the 373 words on the 28
+photographs with agreed text, per `training/transcribe/COUNT-BRIEF.md`, merged
+by `training/count_detection.py`. **R_d is the agreed count: a word is covered
+when both counters say so.** Each counter's own figure and the number of
+disagreements are reported beside it.
+
+**A reliability check that can fail, set now.** If the two counters disagree on
+more than 10% of the words (38 of 373) for an arm, that arm's count is reported
+as unreliable and no decomposition is drawn from it. Words a counter could not
+locate at all are a separate bucket (`not_located`), reported, and count as
+not covered.
+
+**What each outcome means** is unchanged from the section above, read for the
+PP-OCRv6 arm: above 85% the recogniser is the ceiling and step 7 (recogniser
+fine-tune) is aimed at the right stage; 60–85% both stages lose words and the
+fine-tune's ceiling is R_d itself, said before that run; below 60% the
+detector is the ceiling and step 7 is polishing behind a closed door. The
+CRAFT figure is reported for comparison and decides nothing now.
+
+**Bias disclosed.** The arm's name is in the overlay path a counter is given;
+the counters have no stake in either detector and are never told which is
+shipped, and the check above catches a counter that stops looking. The 40 are
+also the set the confidence floor was chosen on (decision, 5 September); R_d is
+a measurement with no bar, so nothing is being cleared on a spent set.

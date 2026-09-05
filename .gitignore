@@ -37,6 +37,15 @@ data/ocr/real-photos/*
 !data/ocr/real-photos/scored-sample.txt
 !data/ocr/real-photos/scored-sources.tsv
 !data/ocr/real-photos/EXCLUDE-flat-artwork.txt
+# detection recall: the boxes each detector produced on the 40 (small) and the two
+# counters' answers per arm; the overlays are images and are redrawn by
+# measure_detection.py
+!data/ocr/real-photos/detection-boxes-*.json
+!data/ocr/real-photos/detection-count/
+data/ocr/real-photos/detection-count/*
+!data/ocr/real-photos/detection-count/*/
+data/ocr/real-photos/detection-count/*/*
+!data/ocr/real-photos/detection-count/*/counter-?-??.json
 # The second test set (docs/OCR-ROADMAP.md step 2): the pool it is drawn from,
 # the frozen draw, the attribution record and the answer key. The photographs
 # themselves are re-fetched by data/scripts/fetch_test_v2.py.
