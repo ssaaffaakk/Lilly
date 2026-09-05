@@ -1254,3 +1254,86 @@ variant of the rule after the number.
   second engine.
 - Recall does not rise: the Cyrillic recogniser at 0.9 reads almost none of
   the dropped boxes. Reported, and the read-time line is closed for good.
+
+## v2 — read — step 7, PP-OCRv6 recogniser fine-tune — written before the run, 5 September 2026
+
+**Why now, and what R_d said.** Step 3 measured the shipped configuration's
+two stages on the 40 (`training/RESULTS-ocr-detection.md`): the PP-OCRv6
+detector boxes 84.7% of the key's words and the recogniser then reads 83.8%
+of what it is handed; the two stages lose about 15 and 14 words in every 100.
+A recogniser fine-tune is therefore aimed at a stage that still loses words,
+not at a closed door — and it can at most recover the recogniser's share.
+The roadmap's own expectation stands: "expect little"; the EasyOCR fine-tune
+was worth +4.6 points on test-v2 and PP-OCRv6 untrained is 25 points ahead.
+
+**The data, fixed now.** The blind-labelled Commons crops already on disk and
+on Kaggle (`lilly-ocr-crops`): `data/ocr/crops/labels-human.tsv` (1,701) and
+`data/ocr/crops2/labels-human.tsv` (98 rows with a label), cut by CRAFT from
+186 Commons photographs, labelled by agent passes that never saw a reader's
+output (roadmap step 4 says how to read the word "human"). From them:
+- **Cyrillic labels dropped** (272): PP-OCRv6's dictionary has no Cyrillic and
+  this run does not change the dictionary; Cyrillic is step 5's question.
+- **Labels longer than 25 characters dropped** (85 of the Latin 1,527): the
+  config's `max_text_length` is 25 and the NRTR head is built for it; raising
+  it would change the head the pretrained weights fit. Disclosed: this drops
+  long board lines, which are the hardest, so the training set is a little
+  easier than the photographs.
+- `__NOTEXT__` / `__UNSURE__` dropped (there are none in these files).
+- **Split by source photograph**, never by crop: a crop is validation when
+  `blake2b(source photograph name, 4 bytes) % 10 == 0`. On today's files that
+  is 395 validation crops from 22 photographs and 1,132 training crops from
+  163 (`training/paddle_rec_data.py` prints the counts and which boards fell
+  where; the two densest sources, the Jajce information board with 218 and
+  the Bistrik observatory board with 135, are wherever the hash put them).
+  No crop's source photograph is in test-v2 or in the 40 (checked: 0 and 0).
+- Not used: Mapillary crops (shop signs, closed line), synthetic renders,
+  plates, anything a reader labelled.
+
+**The recipe, fixed now.** PaddleOCR **v3.7.0** (the tag matching the
+installed `paddleocr==3.7.0`), `configs/rec/PP-OCRv6/PP-OCRv6_medium_rec.yml`
+unchanged except these overrides:
+`Global.pretrained_model` = Baidu's `PP-OCRv6_medium_rec_pretrained.pdparams`
+(the training checkpoint; the inference model on the Hugging Face mirror
+cannot be trained from), `Global.epoch_num=30`,
+`Optimizer.lr.learning_rate=0.0001` (a fifth of the from-scratch 0.0005),
+`Optimizer.lr.warmup_epoch=2`, `Global.eval_batch_step=[0, 18]` (one epoch is
+about 18 iterations at the config's batch of 64), `Global.save_epoch_step=5`,
+`Global.cal_metric_during_train=true`; dictionary, image shape (3×48×320),
+augmentation (RecConAug, RecAug) and both heads as in the config. **Model
+selection is PaddleOCR's own `best_accuracy` on the validation crops** — the
+only thing that ever chooses a checkpoint; test-v2 chooses nothing. One run,
+one seed (the config's). GPU: Kaggle T4, launched from the Mac with
+`scripts/kaggle_train.py ocr-paddle`; notebook
+`training/Lilly_OCR_Paddle_Kaggle.ipynb` written to `docs/kaggle-notebooks.md`.
+
+**The crop gate, on the box, before any zip.** The best checkpoint is
+exported to inference format and scored **in one process with the stock
+PP-OCRv6_medium_rec** on the 395 validation crops through PaddleX's
+`TextRecognition` module: exact-match and diacritic-folded accuracy, counts
+beside percentages, a paired bootstrap interval on the exact difference. If
+the fine-tuned model's exact accuracy is below the stock model's, the run
+ends with `SystemExit` and nothing is zipped. A NaN loss, a run that never
+reached epoch 30, or a missing pretrained file is `SystemExit`, not a warning.
+Passing the crop gate ships nothing; it only lets the model be measured.
+
+**The photograph bars, on test-v2, one look.** The exported model is loaded
+through the app's door (`LILLY_PADDLE_REC_DIR`, added for this; identity
+stamped with the weights' md5) at the **shipped floor 0.9 — not re-swept**,
+which is disclosed as a possible disadvantage for a model whose confidences
+are shaped differently. `evaluate_ocr.py` unchanged, `training/rescue_report.py`'s
+two-arm layout for the report. Both bars, from picture-egitim's rule, against
+the shipped configuration's test-v2 figures (57.8% / 450):
+- words found per photograph **rise**, paired 95% interval excluding zero;
+- invented words (strict, decision 4) **≤ 450**.
+The 40 are reported beside (67.0% / 65) and decide nothing. No second run,
+no second floor, no second checkpoint after the number.
+
+**What each outcome means.** Both hold: the fine-tuned recogniser ships
+(`models/` carries it, the model card says so, and the Hugging Face bundle
+gets a `read-paddle/` directory). Recall rises and invented words exceed 450:
+does not ship; reported with the count of new invented words. Recall does not
+rise: the recogniser is not the stage to train on these 1,132 lines, and the
+next move is labels from the test-v2 pool remainder (206 undrawn `keep`
+photographs and 318 one-region ones, two blind passes) or the detector's
+small-type misses — each its own pre-registration. Neither holds: reported,
+and the shipped configuration stays.
