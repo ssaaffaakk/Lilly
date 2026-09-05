@@ -22,6 +22,12 @@ was built: a word is covered when both counters say so.
         refuses holes, invented words, and a photograph whose three lists do
         not add up to the key's multiset
 
+    python3 training/count_detection.py validity --arm <arm> --cache data/ocr/real-photos/reader-output-<x>.json
+        the pre-registered check: the text in the arm's boxes file (what the
+        detector-plus-recogniser returned when the overlays were drawn) must
+        carry, photograph by photograph, the same words as the scorer's cache
+        for that arm; otherwise the detector drawn is not the one scored
+
     python3 training/count_detection.py merge --arm <arm> [--pooled label=value ...]
         prints, per counter and agreed, the covered count out of 373 (R_d),
         the disagreements, and recognition-given-detection = pooled / R_d for
@@ -122,6 +128,29 @@ def cmd_check(a) -> int:
     return 1 if bad else 0
 
 
+def cmd_validity(a) -> int:
+    boxes = json.loads((REAL / f"detection-boxes-{a.arm}.json").read_text(encoding="utf-8"))
+    cache = json.loads(a.cache.read_text(encoding="utf-8"))
+    readings = cache.get("readings", cache)
+    names = [n for n in a.sample.read_text(encoding="utf-8").split()]
+    print(f"boxes file: {boxes.get('_reader')}; cache stamp: {cache.get('reader')}")
+    same, differ, absent = 0, [], []
+    for n in names:
+        if n not in boxes:
+            absent.append(n)
+            continue
+        drawn = Counter(w for b in boxes[n]["boxes"] for w in str(b["text"]).split())
+        scored = Counter(str(readings.get(n, "")).split())
+        if drawn == scored:
+            same += 1
+        else:
+            differ.append((n, list((drawn - scored).elements())[:4], list((scored - drawn).elements())[:4]))
+    for n, extra, lost in differ:
+        print(f"  DIFFERS {n}: drawn-only {extra}  scored-only {lost}")
+    print(f"{same} photographs identical, {len(differ)} differ, {len(absent)} not drawn yet")
+    return 1 if differ or absent else 0
+
+
 def cmd_merge(a) -> int:
     words = key_words(a.truth)
     names = [n for n in a.sample.read_text(encoding="utf-8").split() if words.get(n)]
@@ -180,11 +209,12 @@ def main() -> int:
     s = sub.add_parser("sheet"); s.add_argument("--arm", required=True); s.add_argument("--counter", choices=["a", "b"], required=True)
     s.add_argument("--size", type=int, default=14); s.add_argument("--offset", type=int, default=7)
     c = sub.add_parser("check"); c.add_argument("--arm", required=True); c.add_argument("--counter", choices=["a", "b"], required=True)
+    v = sub.add_parser("validity"); v.add_argument("--arm", required=True); v.add_argument("--cache", type=Path, required=True)
     m = sub.add_parser("merge"); m.add_argument("--arm", required=True)
     m.add_argument("--pooled", action="append", metavar="LABEL=PERCENT", help="pooled recall figures to divide by R_d")
     m.add_argument("--out", type=Path, help="markdown file to append the section to")
     a = ap.parse_args()
-    return {"sheet": cmd_sheet, "check": cmd_check, "merge": cmd_merge}[a.cmd](a)
+    return {"sheet": cmd_sheet, "check": cmd_check, "validity": cmd_validity, "merge": cmd_merge}[a.cmd](a)
 
 
 if __name__ == "__main__":
