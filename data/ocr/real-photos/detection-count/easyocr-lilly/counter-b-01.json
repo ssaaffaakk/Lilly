@@ -561,8 +561,17 @@
       "на",
       "ћуприја"
     ],
-    "opened": false,
-    "covered": [],
+    "opened": true,
+    "covered": [
+      "beograd",
+      "bridge",
+      "centar",
+      "drina",
+      "over",
+      "дрини",
+      "на",
+      "ћуприја"
+    ],
     "missed": [],
     "not_located": []
   },
@@ -584,8 +593,21 @@
       "tuzla",
       "zenica"
     ],
-    "opened": false,
-    "covered": [],
+    "opened": true,
+    "covered": [
+      "foča",
+      "m",
+      "m",
+      "m",
+      "m",
+      "m",
+      "m",
+      "m",
+      "mostar",
+      "trnovo",
+      "tuzla",
+      "zenica"
+    ],
     "missed": [],
     "not_located": []
   },
@@ -605,8 +627,19 @@
       "крупа",
       "манастир"
     ],
-    "opened": false,
-    "covered": [],
+    "opened": true,
+    "covered": [
+      "century",
+      "krupa",
+      "m",
+      "monastery",
+      "steyr",
+      "th",
+      "xiii",
+      "вијек",
+      "крупа",
+      "манастир"
+    ],
     "missed": [],
     "not_located": []
   }
