@@ -71,13 +71,19 @@ def main() -> int:
     ap.add_argument("--log", type=Path, help="LILLY_PADDLE_RESCUE_LOG of the rescue run")
     ap.add_argument("--invented-bar", type=int, help="invented words must not exceed this (default: the shipped count)")
     ap.add_argument("--out", type=Path)
+    ap.add_argument("--no-containment", action="store_true",
+                    help="the candidate is a different recogniser, not a rescue: skip the rescue-off-equals-shipped check")
+    ap.add_argument("--label", default="rescue", help="name of the candidate arm in the table")
     a = ap.parse_args()
 
     s = json.loads(a.shipped.read_text(encoding="utf-8"))
     r = json.loads(a.rescue.read_text(encoding="utf-8"))
-    n_cached, broken = containment(a.shipped_cache, a.rescue_cache)
-    fell = [n for n in s["per_photograph"] if n in r["per_photograph"]
-            and r["per_photograph"][n][0] < s["per_photograph"][n][0]]
+    if a.no_containment:
+        n_cached, broken, fell = 0, [], []
+    else:
+        n_cached, broken = containment(a.shipped_cache, a.rescue_cache)
+        fell = [n for n in s["per_photograph"] if n in r["per_photograph"]
+                and r["per_photograph"][n][0] < s["per_photograph"][n][0]]
     changed = [(n, s["per_photograph"][n][0], r["per_photograph"][n][0], r["per_photograph"][n][1])
                for n in s["per_photograph"] if n in r["per_photograph"]
                and r["per_photograph"][n][0] != s["per_photograph"][n][0]]
@@ -92,16 +98,19 @@ def main() -> int:
                 kept += bool(json.loads(line).get("kept"))
     rise_ok = lo > 0
     invented_ok = r["invented"] <= bar
-    lines = [f"## {a.set} — Cyrillic rescue against the shipped configuration", "",
-             f"Shipped arm `{s['reader']}`; rescue arm `{r['reader']}`.", "",
-             "**Rescue-off equals shipped, mechanically:** "
-             + (f"every shipped word is in the rescue reading on all {n_cached} photographs, and no photograph's "
-                f"hit count fell." if not broken and not fell else
-                f"**FAILED** — {len(broken)} photographs with shipped words missing, {len(fell)} with fewer hits: "
-                f"{broken[:3]} {fell[:3]}"), "",
+    title = "Cyrillic rescue" if a.label == "rescue" else a.label
+    lines = [f"## {a.set} — {title} against the shipped configuration", "",
+             f"Shipped arm `{s['reader']}`; {a.label} arm `{r['reader']}`.", ""]
+    if not a.no_containment:
+        lines += ["**Rescue-off equals shipped, mechanically:** "
+                  + (f"every shipped word is in the rescue reading on all {n_cached} photographs, and no photograph's "
+                     f"hit count fell." if not broken and not fell else
+                     f"**FAILED** — {len(broken)} photographs with shipped words missing, {len(fell)} with fewer hits: "
+                     f"{broken[:3]} {fell[:3]}"), ""]
+    lines += [
              "| arm | words per photograph | pooled | invented | diacritic | folded |", "|---|---|---|---|---|---|",
              f"| shipped | **{s['per_photo']:.1f}%** | {s['pooled']:.1f}% | {s['invented']} | {s['diacritic']:.1f}% | {s['folded']:.1f}% |",
-             f"| rescue | **{r['per_photo']:.1f}%** | {r['pooled']:.1f}% | {r['invented']} | {r['diacritic']:.1f}% | {r['folded']:.1f}% |", "",
+             f"| {a.label} | **{r['per_photo']:.1f}%** | {r['pooled']:.1f}% | {r['invented']} | {r['diacritic']:.1f}% | {r['folded']:.1f}% |", "",
              f"Paired per photograph (n={p['n']}): mean Δ **{p['mean_delta']:+.1f}** points, 95% {lo:+.1f} to {hi:+.1f}, "
              f"{p['up']} up, {p['down']} down, bootstrap p {p['p']:.3f}.", "",
              f"Dropped boxes the Cyrillic recogniser was asked about: {asked}; kept at ≥ 0.9: {kept}."
