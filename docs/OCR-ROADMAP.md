@@ -27,6 +27,22 @@ git add -f data/ocr/real-photos/mapillary/CREDITS.tsv && git commit -m "Mapillar
 Then the two-person transcription of `test-v2` (step 2), and the box count
 (step 3). Neither needs a GPU or Kaggle.
 
+**Still the Mac's, 5 September 2026:** the step 2b draw. The cloud fired a
+trigger at the Mac session for it at 09:52 UTC, but that session was
+disconnected (Claude Code closed on the Mac), so it did not run. Either reopen
+that session, or run by hand from `~/Desktop/Lilly`:
+
+```bash
+git pull --no-rebase origin main
+.venv/bin/python3 training/build_test_mly.py                    # draws 240; refuses if frozen
+git add data/ocr/real-photos/test-mly/sample.txt data/ocr/real-photos/test-mly/CREDITS.tsv
+git commit -m "Step 2b: test-mly drawn, 240 Mapillary photographs" && git push origin HEAD:main
+```
+
+The transcription of test-mly then runs on the Mac with `training/transcribe/`
+(the photographs are only there); the cloud writes the trigger for it once the
+draw is committed.
+
 ---
 
 ## Why this file exists — the post-mortem in six lines
@@ -298,7 +314,20 @@ many of them quick blanks.
 - 1024px thumbnails, smaller than the 1280px Commons renderings. Say so
   beside the number.
 
-### 3. Detection recall R_d — as pre-registered, never run
+### 3. Detection recall R_d — running, 5 September 2026
+
+**How it is being done** (`training/PREREGISTRATION.md`, addendum "for two
+detectors", written before the count): overlays for both detectors drawn with
+`training/measure_detection.py` — PP-OCRv6 with the floor off (the floor is a
+recognition loss) and CRAFT — and the boxes files validated against the
+scorer's caches on all 40 (`count_detection.py validity`, 40/40 identical for
+each). The count is by two blind vision agents per detector, not a person (the
+deviation is recorded in the addendum), each judging all 373 words on the 28
+photographs with agreed text from `training/transcribe/COUNT-BRIEF.md`;
+`training/count_detection.py merge` takes the agreed count as R_d and reports
+each counter, the disagreements, and pooled / R_d for the pooled figures named
+in advance (71.0 / 69.4 / 44.5). Result goes to `training/RESULTS-ocr-detection.md`.
+
 
 `training/PREREGISTRATION.md`, section "v2 — picture", defines it: draw every
 box `training/measure_detection.py` returns, count by hand which of the 373
@@ -361,12 +390,24 @@ interval; pre-registered before the run. Expect little: the EasyOCR fine-tune
 was worth +4.6 points on test-v2, and PP-OCRv6 untrained is 25 points ahead
 of it. GPU: Kaggle, from the Mac.
 
-### 5. Cyrillic — after 1–3
+### 5. Cyrillic — the rescue rule, pre-registered 5 September 2026
 
 Route by script rather than arbitrate by confidence (the confidence race
 measured worse, `training/RESULTS-ocr-cyrillic.md`). Either PaddleOCR's
 Cyrillic model, or `cyrillic_g2` fine-tuned on the 276 Cyrillic crops split by
 source photograph. Not before the engine question is settled.
+
+**Settled, so:** PP-OCRv6's recogniser dictionary (18,708 characters) has no
+Serbian Cyrillic; test-v2's key has 628 Cyrillic words on 21 photographs, all
+certain misses. `app/ocr.py` now carries `LILLY_PADDLE_CYRILLIC_RESCUE=1`: the
+boxes the shipped floor (0.9) drops — and only those — are read once more by
+`cyrillic_PP-OCRv5_mobile_rec` and kept when that reading clears the same 0.9.
+No box the shipped configuration emits can change, so it never arbitrates; the
+question is whether the rescued boxes are words or confident garbage. Bars and
+order are in `training/PREREGISTRATION.md` ("Cyrillic rescue under PP-OCRv6"):
+the 40 as a smoke test, then one look at test-v2 — per-photo must rise (paired
+95% excluding zero) **and** invented must stay ≤ 450. Result goes to
+`training/RESULTS-ocr-cyrillic-rescue.md`.
 
 ## How to report a run — so the next agent can trust it
 
@@ -508,8 +549,8 @@ not just the totals. A delta inside the interval is written as "no change".
 | 1 bake-off | **done, 4 Sep 2026 — verdict: adopt PP-OCRv6.** Full run on the Mac, real reader (`2010a2d4`), crop row included: paddle-v6 **67.7%** / 106 invented against the shipped 54.5% / 182 (bar per decision 3), held-out crops 50/71 against 30/71, +13.2 points paired, p < 0.001, 4.1 s a photograph against 5.8. paddle-v5 66.6% / 125 also clears; v6 wins on recall. Dictionary holds all ten letters. **The switch itself — making `paddle` the app's default reader — is a separate change and is not made by the measurement.** Caveat the report carries: the 40's sign row (n=13) is not to be quoted; `test-v2` corrected it to 56.6% over 76 (`RESULTS-ocr-test-v2.md`). **Caveat added 4 Sep from test-v2 (132 held-out photographs): the invented-word row reverses there — paddle-v6 returns 2,373 against the shipped reader's 2,071, i.e. 302 more, so on that set it would fail the very row it clears here. The adoption stands on the 40 as pre-registered; step 5's data says the engine question deserves a re-pre-registration on `test-v2` before this is treated as settled.** | `training/RESULTS-ocr-bakeoff.md`, `training/bakeoff/`, PREREGISTRATION amendment |
 | 2 test-v2 | **done and scored on the Mac, 4 Sep 2026.** 280 fetched, both blind passes, key built: **2,907 agreed words at 88.2%**, 132 photographs with text, **214 diacritic words** (was 25), 628 Cyrillic, 76 in the sign class (was 13). Scored with the real shipped reader: **lilly 34.6% per photograph / 2,071 invented, against the 54.7% published on 28** — the big held-out set says the shipped reader is 20 points below its headline, and its sign row falls 61.9% (n=13) → **33.1%** (n=76). paddle-v6 60.0% / 2,373, **+25.4 points paired (95% +19.7 to +31.2, 78 up, 11 down)** — and **302 more "invented" words, of which 1,120 of paddle-v6's 2,373 sit on one museum panel of typed decrees both transcribers declined to transcribe** (`training/invented_words.py`); against anything either transcriber wrote, **paddle-v6 2,084 against the real reader's 1,972** (stock 2,132, all three measured on the Mac) — so on the loosest of the three definitions paddle-v6 is still 112 words above the shipped reader, and the invented row does not clear on this set under any of them (302 / 242 / 112). Only 53 of the real reader's 2,071 sit on the museum panel that carries 1,120 of paddle-v6's; its top ten carry 72% against paddle-v6's 81%, and 56 of the 132 photographs have two or fewer. On this set the column also measures transcription coverage on a few dense boards — and the owner chose (decision 4) to count it strictly anyway, so PP-OCRv6 *untuned* does not clear the invented row on test-v2. **With the confidence floor the 40 chose (0.9) it does: 57.8% / 450, and the app switched (step 6).** stock 30.0%; the fine-tune is worth **+4.6 points (95% −8.5 to −0.7)** over stock, not the 18.7 the 40 suggested. paddle-v6 matched the cloud's numbers to the digit. | `test-v2/truth-v2.json`, `training/RESULTS-ocr-test-v2.md`, `training/bakeoff/test-v2-*.json` |
 | 2b test-mly | draw script ready; **needs the Mac** (draw, then transcription with `training/transcribe/` — the photographs are only there) | `training/build_test_mly.py`, `training/transcribe/` |
-| 3 R_d | overlays per detector ready; **needs the Mac and a person counting** | `training/measure_detection.py` (runs for `LILLY_READER=paddle` too), PREREGISTRATION "picture" |
+| 3 R_d | **running 5 Sep 2026 on the cloud.** Addendum pre-registered for two detectors before the count; overlays drawn for PP-OCRv6 (floor off) and CRAFT, boxes files validated 40/40 against the scorer's caches and committed; eight blind counting agents (two per detector, 14 photographs each) at work. | `training/count_detection.py`, `training/transcribe/COUNT-BRIEF.md`, PREREGISTRATION addendum, `detection-boxes-*.json` |
 | 4 labels | blocked on 1–3 | — |
-| 5 Cyrillic | blocked on 1–3 | — |
+| 5 Cyrillic | **rescue rule pre-registered and built 5 Sep 2026**, smoke run on the 40 in progress; then one look at test-v2 | `app/ocr.py` (`LILLY_PADDLE_CYRILLIC_RESCUE`), PREREGISTRATION "Cyrillic rescue" |
 | 6 switch to PP-OCRv6 | **done 5 Sep 2026.** The floor run chose 0.9 on the 40 and cleared the bar on test-v2 by the rule (57.8% / 450 against 34.6% / 2,071, +23.1 paired, p < 0.001), so the rule carried the switch, not the override. `app/ocr.py` defaults to paddle at 0.9 with `LILLY_READER=easyocr` as the way back; requirements and Dockerfile pin cv2 4.10.0.84 and pre-fetch the weights; the default door re-scored both sets to the digit. **Model card done on the Mac 5 Sep, not yet published:** `models/lilly/README.md` and `NOTICE.md` now say the app reads with PP-OCRv6 at floor 0.9 (Baidu's weights, fetched by PaddleX at run time, not in the bundle), name `read/` as the `LILLY_READER=easyocr` way back, add `PaddlePaddle/PP-OCRv6_medium_det`/`_rec` to `base_model` and to the licence table (Apache-2.0, verified against both Hub pages), and carry the photograph-level numbers for both sets so the crop table's 88.3% cannot be read as a photograph figure. `models/` is gitignored, so that edit lives only on this Mac until `scripts/publish_to_hf.py Safak11/lilly --upload` runs — **HF_TOKEN was not in the environment, so nothing was uploaded.** **`docker build` could not be run: Docker is not installed on this Mac** (no `docker` binary, no Docker.app, no colima or podman, checked 5 Sep 2026). Not worked around — installing a container runtime is not a step an agent should take unasked. Verified statically instead: the Dockerfile sets `PADDLE_PDX_MODEL_SOURCE=huggingface`, pre-fetches the weights with `get_paddle_reader()` at build time, and asserts `cv2.__version__ == '4.10.0'`; `requirements.txt` pins **both** `opencv-contrib-python` and `opencv-python-headless` to 4.10.0.84, which is the durable fix for do-not-repeat 17 (same version either way, so install order stops mattering). The two runtime checks — `reader_identity()` printing `paddle:PP-OCRv6_medium_det+PP-OCRv6_medium_rec:3.7.0:rec>=0.9` and `cv2.__version__` printing 4.10.0 — remain unrun and are the only part of step 6 not verified anywhere. | `training/RESULTS-ocr-paddle-floor.md`, commits 2d29bf3, 6c80373 **Image assertions verified 5 Sep on the cloud Linux machine, outside a container:** `requirements.txt` resolves as pinned (`pip --dry-run`), the two cv2 pins land at 4.10.0, `reader_identity()` prints `paddle:PP-OCRv6_medium_det+PP-OCRv6_medium_rec:3.7.0:rec>=0.9`, and the default door reads a photograph identically to the floor-0.9 cache. `docker build` itself is still unrun anywhere: the Mac has no Docker, this session has none. |
 | 7 fine-tune PP-OCRv6 | wanted; after 6, and after blind labels (step 4) | this file, step 7 |
