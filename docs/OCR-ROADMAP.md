@@ -503,6 +503,17 @@ not just the totals. A delta inside the interval is written as "no change".
     the new run's. Delete the arm caches after touching the environment. This
     is item 7 with a new cause, and nothing in the repository catches it yet.
 
+19. **Letting a background run die with the account's usage limit, then
+    restarting it from zero.** The 5-hour limit pauses the cloud box and its
+    child processes do not survive (5 Sep 2026: the test-v2 rescue run at
+    58/280 and eight counting agents at once). What made both cheap to resume:
+    `evaluate_ocr.py` caches per photograph, so a relaunch reads only what is
+    missing, and the counting brief's save-after-every-photograph rule left
+    every judged entry on disk. Keep both habits. And do not test whether a
+    run is alive with `pgrep -f <script>` from a shell whose own command line
+    contains the name — it matches itself (twice today); use
+    `ps -eo args | grep "[e]valuate_ocr"`.
+
 ## Where things run
 
 | task | where | why |
