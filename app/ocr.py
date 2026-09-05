@@ -148,6 +148,44 @@ def paddle_cyrillic_rescue() -> bool:
     return True
 
 
+_rec_dir_stamp = {}
+
+
+def paddle_rec_dir():
+    """A recogniser exported by a fine-tune (inference.pdiparams + inference.yml), or None.
+
+    LILLY_PADDLE_REC_DIR points the pipeline at that directory instead of the
+    named official model. Step 7's photograph bars are measured through this
+    door (training/PREREGISTRATION.md), so the directory's weights are part of
+    reader_identity(): a cache written by the stock model is never read back
+    under a fine-tuned name, or the reverse.
+    """
+    raw = os.environ.get("LILLY_PADDLE_REC_DIR", "").strip()
+    if not raw:
+        return None
+    d = Path(raw)
+    if not (d / "inference.pdiparams").is_file():
+        raise RuntimeError(f"LILLY_PADDLE_REC_DIR={raw!r}: no inference.pdiparams there")
+    return d
+
+
+def paddle_rec_dir_stamp() -> str:
+    """Eight hex digits of the exported weights' md5, cached per file and mtime."""
+    d = paddle_rec_dir()
+    if d is None:
+        return ""
+    import hashlib
+    f = d / "inference.pdiparams"
+    key = (str(f), f.stat().st_mtime_ns)
+    if key not in _rec_dir_stamp:
+        h = hashlib.md5()
+        with f.open("rb") as fh:
+            for chunk in iter(lambda: fh.read(1 << 20), b""):
+                h.update(chunk)
+        _rec_dir_stamp[key] = h.hexdigest()[:8]
+    return _rec_dir_stamp[key]
+
+
 def paddle_models() -> tuple:
     """(detector, recogniser) names the paddle path loads, from the environment."""
     version = os.environ.get("LILLY_PADDLE_VERSION", "PP-OCRv6")
@@ -176,7 +214,10 @@ def reader_identity() -> str:
         except Exception:
             version = "?"
         floor = paddle_rec_floor()
-        identity = f"paddle:{det}+{rec}:{version}" + (f":rec>={floor:g}" if floor is not None else "")
+        identity = f"paddle:{det}+{rec}"
+        if paddle_rec_dir() is not None:
+            identity += f"@{paddle_rec_dir_stamp()}"
+        identity += f":{version}" + (f":rec>={floor:g}" if floor is not None else "")
         if paddle_cyrillic_rescue():
             identity += f"+rescue:{CYRILLIC_RESCUE_REC}>={floor:g}"
         return identity
@@ -212,6 +253,8 @@ def get_paddle_reader():
                 # the pipeline applies, so rescue-off equals shipped.
                 extra = ({"text_rec_score_thresh": floor}
                          if floor is not None and not paddle_cyrillic_rescue() else {})
+                if paddle_rec_dir() is not None:
+                    extra["text_recognition_model_dir"] = str(paddle_rec_dir())
                 _paddle_reader = PaddleOCR(
                     text_detection_model_name=det,
                     text_recognition_model_name=rec,

@@ -1337,3 +1337,12 @@ next move is labels from the test-v2 pool remainder (206 undrawn `keep`
 photographs and 318 one-region ones, two blind passes) or the detector's
 small-type misses — each its own pre-registration. Neither holds: reported,
 and the shipped configuration stays.
+
+### Note, same day — the split's counts after the over-length drop
+
+The counts above (395 / 1,132) were computed before the 85 over-length labels
+were removed. `training/paddle_rec_data.py` on today's files: **371 validation
+crops from 22 photographs, 1,071 training crops from 163.** The Jajce
+information board (218 lines after the drop) fell on the validation side and
+the Bistrik observatory board (128) on the training side — the hash's doing,
+recorded here so it cannot be re-rolled. Rules unchanged.
