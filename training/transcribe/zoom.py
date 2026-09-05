@@ -31,7 +31,11 @@ def main() -> int:
     a = ap.parse_args()
     img = ImageOps.exif_transpose(Image.open(a.photo).convert("RGB"))
     w, h = img.size
-    stem = Path(a.photo).stem[:40]
+    # The overlay of a photograph shares its basename in another directory, so
+    # the parent directory is part of the name: a photo zoom must not overwrite
+    # an overlay zoom of the same region (a counter lost one that way, 5 Sep).
+    src = Path(a.photo).resolve()
+    stem = f"{src.parent.name[:16]}__{src.stem[:40]}"
     a.out.mkdir(parents=True, exist_ok=True)
     print(f"{Path(a.photo).name}: {w}x{h}")
     if a.box:
