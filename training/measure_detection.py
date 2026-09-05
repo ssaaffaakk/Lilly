@@ -145,7 +145,7 @@ def main() -> int:
 
     boxes = sum(len(v["boxes"]) for k, v in record.items() if not k.startswith("_"))
     words = sum(v["truth_words"] for k, v in record.items() if not k.startswith("_"))
-    print(f"\n{len(record)} photographs, {boxes} detected regions, "
+    print(f"\n{len(record) - 1} photographs, {boxes} detected regions, "
           f"{words} words in the answer key.")
     print(f"overlays: {args.overlays}")
     print(f"boxes:    {args.out}")
