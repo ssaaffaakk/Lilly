@@ -127,6 +127,26 @@ def paddle_rec_floor():
 # decided once on test-v2: training/RESULTS-ocr-paddle-floor.md.
 DEFAULT_REC_FLOOR = 0.9
 
+# PP-OCRv6's dictionary has no Serbian Cyrillic, so a Cyrillic sign is a certain
+# miss. LILLY_PADDLE_CYRILLIC_RESCUE=1 reads the boxes the floor drops -- and
+# only those -- once more with Baidu's Cyrillic recogniser, and keeps that
+# reading when it clears the same floor. It never touches a box the shipped
+# configuration emits. Pre-registered before any run: training/PREREGISTRATION.md,
+# "Cyrillic rescue under PP-OCRv6".
+CYRILLIC_RESCUE_REC = "cyrillic_PP-OCRv5_mobile_rec"
+
+
+def paddle_cyrillic_rescue() -> bool:
+    raw = os.environ.get("LILLY_PADDLE_CYRILLIC_RESCUE", "").strip().lower()
+    if raw in ("", "0", "false", "no", "off"):
+        return False
+    if raw not in ("1", "true", "yes", "on"):
+        raise RuntimeError(f"LILLY_PADDLE_CYRILLIC_RESCUE={raw!r}; want 1 or 0")
+    if paddle_rec_floor() is None:
+        raise RuntimeError("LILLY_PADDLE_CYRILLIC_RESCUE needs a floor: with "
+                           "LILLY_PADDLE_REC_THRESH=0 nothing is dropped, so there is nothing to rescue")
+    return True
+
 
 def paddle_models() -> tuple:
     """(detector, recogniser) names the paddle path loads, from the environment."""
@@ -156,7 +176,10 @@ def reader_identity() -> str:
         except Exception:
             version = "?"
         floor = paddle_rec_floor()
-        return f"paddle:{det}+{rec}:{version}" + (f":rec>={floor:g}" if floor is not None else "")
+        identity = f"paddle:{det}+{rec}:{version}" + (f":rec>={floor:g}" if floor is not None else "")
+        if paddle_cyrillic_rescue():
+            identity += f"+rescue:{CYRILLIC_RESCUE_REC}>={floor:g}"
+        return identity
     if _cyrillic_enabled():
         return "easyocr:lilly+cyrillic"
     trained = READ_DIR / "lilly.pth"
@@ -183,7 +206,12 @@ def get_paddle_reader():
                 # are slower, so the timing row of the bake-off says which
                 # kernels it timed. The Mac has no oneDNN and is unaffected.
                 floor = paddle_rec_floor()
-                extra = {"text_rec_score_thresh": floor} if floor is not None else {}
+                # With the rescue on, the pipeline runs with no floor and
+                # _read_regions_paddle applies it, so the dropped boxes are
+                # still there to be read once more. Same test (score >= floor)
+                # the pipeline applies, so rescue-off equals shipped.
+                extra = ({"text_rec_score_thresh": floor}
+                         if floor is not None and not paddle_cyrillic_rescue() else {})
                 _paddle_reader = PaddleOCR(
                     text_detection_model_name=det,
                     text_recognition_model_name=rec,
@@ -203,13 +231,82 @@ def _field(result, key):
         return None
 
 
-def _paddle_results_to_regions(results) -> list:
+_cyrillic_rescue_reader = None
+
+
+def get_cyrillic_rescue_reader():
+    global _cyrillic_rescue_reader
+    if _cyrillic_rescue_reader is None:
+        with _reader_lock:
+            if _cyrillic_rescue_reader is None:
+                from paddleocr import TextRecognition
+                _cyrillic_rescue_reader = TextRecognition(model_name=CYRILLIC_RESCUE_REC,
+                                                          enable_mkldnn=False)
+    return _cyrillic_rescue_reader
+
+
+def _rescue_dropped(bgr, regions: list, polys: list, floor: float) -> list:
+    """Read the boxes below the floor once more with the Cyrillic recogniser.
+
+    Boxes at or above the floor pass through untouched, in their order. A box
+    below it is cropped the way the pipeline crops for its own recogniser
+    (CropByPolys on the detector's quad) and read by CYRILLIC_RESCUE_REC; the
+    reading is kept only when its confidence clears the same floor. Every
+    rescued box is appended to LILLY_PADDLE_RESCUE_LOG (JSON lines) when that
+    is set, so a run can say how many words the rescue added and where.
+    """
+    import json
+    import numpy as np
+
+    low = [i for i, r in enumerate(regions) if r[2] < floor]
+    if not low:
+        return regions
+    from paddlex.inference.pipelines.components import CropByPolys
+    quads = []
+    for i in low:
+        pts = np.asarray(polys[i], dtype=np.float32).reshape(-1, 2)
+        if len(pts) != 4:
+            x0, y0 = pts.min(axis=0)
+            x1, y1 = pts.max(axis=0)
+            pts = np.array([[x0, y0], [x1, y0], [x1, y1], [x0, y1]], dtype=np.float32)
+        quads.append(pts)
+    crops = list(CropByPolys(det_box_type="quad")(bgr, quads))
+    usable = [(i, c) for i, c in zip(low, crops) if c is not None and c.size and c.shape[0] > 0 and c.shape[1] > 0]
+    rescued = {}
+    if usable:
+        results = list(get_cyrillic_rescue_reader().predict([c for _, c in usable]))
+        for (i, _), res in zip(usable, results):
+            text = str(_field(res, "rec_text") or "").strip()
+            score = float(_field(res, "rec_score") or 0.0)
+            if text and score >= floor:
+                rescued[i] = (text, score)
+    log = os.environ.get("LILLY_PADDLE_RESCUE_LOG", "").strip()
+    if log:
+        with open(log, "a", encoding="utf-8") as fh:
+            for i in low:
+                kept = rescued.get(i)
+                fh.write(json.dumps({"v6_text": regions[i][1], "v6_score": regions[i][2],
+                                     "cyr_text": kept[0] if kept else None,
+                                     "cyr_score": kept[1] if kept else None,
+                                     "kept": kept is not None}, ensure_ascii=False) + "\n")
+    out = []
+    for i, r in enumerate(regions):
+        if r[2] >= floor:
+            out.append(r)
+        elif i in rescued:
+            out.append([r[0], rescued[i][0], rescued[i][1]])
+    return out
+
+
+def _paddle_results_to_regions(results, polys_out: list = None) -> list:
     """PaddleOCR's per-image results as EasyOCR's (box, text, confidence) triples.
 
     A box is four [x, y] corners, the way readtext returns them, so
     easyocr.utils.get_paragraph and measure_detection.py take them unchanged.
     Paddle's polygons can carry more than four points; the axis-aligned bounds
-    are what grouping and overlays need, so that is what is kept.
+    are what grouping and overlays need, so that is what is kept. `polys_out`,
+    when given, receives the detector's own polygon for every region kept, in
+    the same order, for the rescue's crops.
     """
     import numpy as np
 
@@ -231,6 +328,8 @@ def _paddle_results_to_regions(results) -> list:
             box = [[int(round(x0)), int(round(y0))], [int(round(x1)), int(round(y0))],
                    [int(round(x1)), int(round(y1))], [int(round(x0)), int(round(y1))]]
             regions.append([box, text, float(score)])
+            if polys_out is not None:
+                polys_out.append(pts)
     return regions
 
 
@@ -244,7 +343,10 @@ def _read_regions_paddle(image, detail: int, paragraph: bool) -> list:
     bgr = np.ascontiguousarray(array[:, :, :3][:, :, ::-1])
     reader = get_paddle_reader()
     with _read_lock:
-        regions = _paddle_results_to_regions(list(reader.predict(bgr)))
+        polys = []
+        regions = _paddle_results_to_regions(list(reader.predict(bgr)), polys)
+        if paddle_cyrillic_rescue():
+            regions = _rescue_dropped(bgr, regions, polys, paddle_rec_floor())
     if paragraph:
         from easyocr.utils import get_paragraph
         regions = get_paragraph(regions, x_ths=1.0, y_ths=0.5, mode="ltr")

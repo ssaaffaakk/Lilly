@@ -1192,3 +1192,65 @@ the counters have no stake in either detector and are never told which is
 shipped, and the check above catches a counter that stops looking. The 40 are
 also the set the confidence floor was chosen on (decision, 5 September); R_d is
 a measurement with no bar, so nothing is being cleared on a spent set.
+
+## v2 — read — Cyrillic rescue under PP-OCRv6 — written before the run, 5 September 2026
+
+**The hole.** PP-OCRv6's recogniser dictionary has 18,708 characters and not
+one Serbian Cyrillic letter (checked 5 September 2026, `docs/OCR-ROADMAP.md`
+step 5). test-v2's key carries **628 Cyrillic words on 21 of its 132**
+photographs with text — 21.6% of the key's 2,907 words, 328 of them on
+`Info_Atik_džamija.jpg` and 132 on `Life_scupture_Banja_Luka_01.jpg`; the 40
+carry 26 on 7 (bilingual signposts). Every one of those words is a certain
+miss today, and stays one however well the recogniser is fine-tuned on Latin.
+
+**The prior is negative and is not being ignored.** With EasyOCR, choosing
+between the Latin and Cyrillic recognisers by confidence was worse at every
+margin, and every union rule paid in invented words — the best trade was +2.3
+points per photograph for 180 → 246 (`training/RESULTS-ocr-cyrillic.md`). The
+reason recorded there, that a Cyrillic model reads Latin text as confident
+lookalikes, applies to any second recogniser. So the rule below does not
+arbitrate between two readings of a box that already counts.
+
+**The rule, fixed now, with no free parameter.** `LILLY_PADDLE_CYRILLIC_RESCUE=1`
+in `app/ocr.py`: the PP-OCRv6 pipeline runs with its floor off. A box whose
+PP-OCRv6 confidence is at or above **0.9** is emitted exactly as the shipped
+configuration emits it. A box below 0.9 — one the shipped configuration drops
+— is cropped and read once by `cyrillic_PP-OCRv5_mobile_rec` (Baidu's
+published weights, untrained, the same Hugging Face mirror); if that reading's
+confidence is at or above **0.9** it is emitted, otherwise the box is dropped
+as before. Both floors are the shipped floor, chosen on 4–5 September before
+this section existed; nothing is swept. By construction the rescue cannot
+remove or change a word the shipped configuration emits: words found per
+photograph and pooled can only rise or stay, and invented words can only rise
+or stay. The whole question is whether the rescued boxes are Cyrillic words or
+confident garbage, and only test-v2 can answer it.
+
+**The bars, both, from picture-egitim's rule, against the shipped
+configuration's own test-v2 figures** (`training/RESULTS-ocr-paddle-floor.md`:
+57.8% per photograph, 450 invented):
+- words found per photograph must **rise** — paired against the shipped arm,
+  the 95% bootstrap interval of the per-photograph difference excludes zero;
+- invented words (strict, decision 4) must be **≤ 450**. No-regression, not
+  improvement: a rescue that adds words it made up does not ship, however many
+  real ones it adds beside them.
+Reported beside the bars, deciding nothing: how many of the 628 Cyrillic key
+words the rescued path finds, and how many rescued words are on no sign.
+
+**Order.** The 40 first, as a smoke test only — 26 Cyrillic words decide
+nothing. There the untouched boxes must reproduce the shipped arm's 67.0% /
+65 mechanically (rescue off equals shipped), and the rescue arm's own figures
+are recorded. Then **one** run on test-v2 with `evaluate_ocr.py` unchanged
+under the rescue arm's own cache stamp. No second look, no second floor, no
+variant of the rule after the number.
+
+**What each outcome means.**
+- Both bars hold: the rescue is the shipped configuration (step 6's
+  environment gains one line), and step 7 fine-tunes the Latin recogniser
+  knowing Cyrillic is handled at read time.
+- Recall rises and invented words exceed 450: does not ship. The count of
+  rescued words that are key words against rescued words on no sign is
+  reported, and the Cyrillic question moves to step 7 as a training and
+  dictionary question, not a read-time one — the EasyOCR result again, on a
+  second engine.
+- Recall does not rise: the Cyrillic recogniser at 0.9 reads almost none of
+  the dropped boxes. Reported, and the read-time line is closed for good.
