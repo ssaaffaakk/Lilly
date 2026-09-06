@@ -126,6 +126,12 @@ data/signs/.osm-harvest.progress.json
 *.pt
 *.onnx
 
+# Fine-tune floor re-sweep (scripts/paddle_finetune_floor.py): the per-floor
+# summaries (the40-floor*.json/.md, test-v2-floor*.json/.md) are the raw counts
+# and are committed; the per-photo reader caches beside them are scratch that
+# evaluate_ocr recreates.
+training/paddle-finetune-floor/cache-*.json
+
 # OS / editor
 .DS_Store
 .vscode/
