@@ -1376,3 +1376,130 @@ second checkpoint. The next lever (more labelled test-v2-pool lines, or the
 detector's small-type misses from step 3) is a new pre-registration.
 See `training/RESULTS-ocr-paddle-finetune.md`; candidate weights stay on
 `Safak11/lilly-ocr-paddle-runs/20260906-2143`, not in `models/`.
+
+## v2 — read — the fine-tuned recogniser's confidence floor — written before the run, 6 September 2026
+
+Written 6 September 2026, before this recogniser has been read at any floor but
+0.9 and before any test-v2 number below or above 0.9 exists. Step 7's "what
+each outcome means" named this case in advance: *recall rises and invented
+words exceed 450: does not ship; reported with the count of new invented
+words* — and its outcome disclosed the un-swept floor as a possible
+disadvantage "for a model whose confidences are shaped differently." This is
+the pre-registration that tests that disclosed caveat. It is a **new lever**:
+step 7's look is spent (no second floor under it), and the shipped reader's
+floor was swept for the shipped reader, never for these weights.
+
+### The question
+
+The step-7 fine-tune reads better than the shipped recogniser — on test-v2,
+diacritic-word recall 62.1% → 77.1%, folded 81.8% → 89.3%, words per
+photograph 57.8% → 60.8% — but at the shipped floor 0.9 it kept 703 words that
+are on no sign against the shipped reader's 450 (`training/paddle-finetune/`,
+`training/paddle-floor/test-v2-floor0.9.json`). The floor was the shipped
+reader's, not this one's. Does a floor **calibrated to these weights** cut the
+253 extra invented words back to the shipped count without giving the reading
+gain back — enough to clear both bars on test-v2 against the shipped
+configuration?
+
+### What is fixed, and the one free knob
+
+Fixed, not free: the step-7 fine-tuned recogniser exactly as exported —
+`Safak11/lilly-ocr-paddle-runs/20260906-2143`, reader `e939d2a3c9fe2913`,
+weights md5 `87ad04a5`, loaded through the app's door
+(`LILLY_PADDLE_REC_DIR` + `app.ocr.scan`). **No retraining, no new checkpoint,
+no new labels, no detector change** — the detector stays the same
+`PP-OCRv6_medium_det`, resolution and paragraph grouping stay at the shipped
+values. The **one** free knob is `LILLY_PADDLE_REC_THRESH`, the recogniser
+confidence below which a region is dropped, applied in-code as
+`text_rec_score_thresh`. One lever, because the question is whether *this
+recogniser's* confidence separates its invented text from its read text; if it
+does not, a second lever is a second pre-registration.
+
+### Two sets, two jobs, never crossed
+
+- **Choose on the 40.** Sweep the floor on the 40 scored photographs
+  (`truth.json`), each setting in its own cache, over {0.5, 0.6, 0.7, 0.8,
+  0.9} and — because cutting invented needs a floor at or above the shipped
+  0.9 — continuing above 0.9 in steps of 0.02 (0.92, 0.94, 0.96, 0.98) until
+  the 40's words-per-photograph first falls below **67.0%**, the shipped
+  reader's the-40 figure at floor 0.9 (`training/paddle-floor/the40-floor0.9.json`).
+  The floor chosen, **f\***, is the **highest** swept setting whose the-40
+  words-per-photograph is still ≥ 67.0% — so the 40 pick the setting and
+  test-v2 never does. Disclosed in advance, not hidden: on the 40 this
+  recogniser already invents *fewer* words than the shipped reader (55 vs 65
+  at floor 0.9), so the +253 blow-up lives in test-v2's dense,
+  large-denominator photographs, and a floor chosen on the 40 may be chosen
+  too low to cut them — that transfer risk is accepted, and test-v2 is the
+  decider that exposes it.
+- **Decide on test-v2, once.** One read at f\* on the 280 photographs
+  (`truth-v2.json`), the strict invented count (owner decision 4), scored
+  through the same door. The bars are the **shipped configuration's** test-v2
+  figures at floor 0.9 — **57.8% words per photograph, 450 invented**
+  (`training/paddle-floor/test-v2-floor0.9.json`, reader `aea5890abfdb7ba3`) —
+  the same comparator step 7 used, because the product question is whether the
+  fine-tune at its own floor beats what ships today, not whether it beats
+  itself at 0.9.
+
+No second look: f\* is not moved after the test-v2 number, and test-v2 is not
+read at more than one setting. A run that peeks is a fit.
+
+### The two bars, and the metric
+
+Against the shipped configuration, both must hold to ship — the same two-sided
+shape as step 7:
+
+- **words found per photograph rise** — paired against the shipped arm, the
+  95% bootstrap interval of the per-photograph difference
+  (`training/rescue_report.py` `interval()`: 10,000 resamples, seed 0,
+  percentile) **excludes zero**;
+- **invented words (strict, decision 4) ≤ 450** — no-regression, not
+  improvement.
+
+The deciding metric is **exact** words per photograph, identical to step 7 and
+to what `rescue_report.py` computes, so the two looks compare like with like.
+**Folded** (diacritic-blind) recall — the product's meaning-not-hats view
+(`.claude/CLAUDE.md`), on which this recogniser already leads 89.3% vs 81.8% —
+is reported beside but does **not** decide here; moving the decider from exact
+to folded after step 7 scored exact would be moving the goalposts, so a
+folded-metric bar is its own future pre-registration, not a switch made now.
+
+### Reported, and unable to change the decision
+
+The whole floor-sweep table on the 40 (words per photograph, invented,
+diacritic, folded, per setting) and the chosen f\*; the paired per-photograph
+deltas on test-v2 against the shipped row with a bootstrap p, the up/down
+photograph counts, counts beside every percentage and the interval beside the
+delta; folded, diacritic and pooled recall at f\*; where the remaining invented
+words sit (`training/invented_words.py`); seconds per photograph. The crop gate
+(exact 264 → 278, folded 290 → 287) is already spent and decides nothing here.
+
+### What each outcome means
+
+- **Both bars hold.** The re-swept fine-tune ships, as a product change
+  reviewed by the owner: the weights go into `models/`, the model card says so,
+  and the Hugging Face bundle gets a `read-paddle/` directory. Not by this run.
+- **Invented ≤ 450 holds but the recall interval still straddles zero.** The
+  floor *was* the invented driver (step 7's cause confirmed), but the reading
+  gain is not separable from zero at any recall-preserving floor. Does not
+  ship. The next lever is the detector's small-type misses (step 3: PP-OCRv6's
+  detection misses concentrate on few-pixel type) or the per-photograph
+  variance itself — each its own pre-registration, not this recogniser again.
+- **Invented still > 450 at f\*.** The 253 extra words were not floor-removable
+  without losing recall; this recogniser's confidence does not separate its
+  invented text from its read text. Does not ship; the shipped configuration
+  stays.
+- **No swept floor keeps the-40 words-per-photograph ≥ 67.0%.** Confidence
+  cannot cut invented on this recogniser without dropping below the shipped
+  reader's own recall. Does not ship; the shipped configuration stays.
+
+### What this run cannot settle
+
+Even both bars passing leaves the true recall ceiling at the folded 89.3%
+(the detector's limit at this operating point) and the residual diacritic gap;
+this run decides the shippability of the step-7 recogniser at a calibrated
+floor, not the domain ceiling, and not the exact-versus-folded metric question.
+No training runs here, so the crop gate does not apply and nothing is zipped;
+the weights move into `models/` only if both bars hold, the candidate otherwise
+stays on Hugging Face, and the per-floor reader-output caches are regenerable
+scratch, not committed — but the test-v2 read at f\* keeps its per-region
+output so the invented change is attributable, not inferred.
