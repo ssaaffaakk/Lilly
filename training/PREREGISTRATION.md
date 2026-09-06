@@ -1346,3 +1346,33 @@ crops from 22 photographs, 1,071 training crops from 163.** The Jajce
 information board (218 lines after the drop) fell on the validation side and
 the Bistrik observatory board (128) on the training side — the hash's doing,
 recorded here so it cannot be re-rolled. Rules unchanged.
+
+### Outcome, 6 September 2026 — neither bar holds, the shipped configuration stays
+
+The fine-tune ran on Kaggle (T4, run `20260906-2143`), passed the crop gate
+(exact 264 → 278 on the 371 validation crops, +3.8 points, 95% −0.5 to +8.1;
+folded 290 → 287, so the gate let the model be measured and, as written above,
+decided nothing), and was scored **once** on the cloud through
+`LILLY_PADDLE_REC_DIR` at the shipped floor 0.9, exactly as fixed above. On
+test-v2 (n=132), paired against the shipped configuration
+(`training/paddle-floor/test-v2-floor0.9.json`):
+
+- words per photograph 57.8% → 60.8%, paired mean Δ +3.0 points, **95% −1.3 to
+  +7.2** (35 up, 14 down, bootstrap p 0.164) — the rise bar (interval excluding
+  zero) **does not hold**;
+- invented words 450 → **703** — the invented bar (≤ 450) **does not hold**.
+
+Neither bar holds. By the rule above ("Neither holds: reported, and the
+shipped configuration stays") the fine-tuned recogniser does not ship and the
+shipped configuration is unchanged. The 40, reported beside and deciding
+nothing: 67.0% → 68.2% words per photograph, invented 65 → 55, diacritic
+68.0% → 80.0% (paired +1.2, 95% −1.4 to +4.5).
+
+What moved: diacritic-word recall rose 62.1% → 77.1% (folded 81.8% → 89.3%) —
+the recogniser learned the letters it was trained on — but at the un-swept
+floor it keeps 253 more invented words, and the per-photograph rise is not
+separable from zero. This look is spent: no second run, no second floor, no
+second checkpoint. The next lever (more labelled test-v2-pool lines, or the
+detector's small-type misses from step 3) is a new pre-registration.
+See `training/RESULTS-ocr-paddle-finetune.md`; candidate weights stay on
+`Safak11/lilly-ocr-paddle-runs/20260906-2143`, not in `models/`.
