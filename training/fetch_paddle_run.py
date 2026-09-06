@@ -48,10 +48,14 @@ def main() -> int:
         raise SystemExit(f"{KAGGLE} missing — this runs on the Mac")
     status = kaggle("kernels", "status", a.slug)
     print(status.strip())
-    m = re.search(r'"(\w+)"', status)
-    state = (m.group(1) if m else status).lower()
+    # Kaggle prints the status as the final token, either bare ("complete") or as
+    # an enum repr ("KernelWorkerStatus.COMPLETE"). Take the last word so both parse;
+    # the old r'"(\w+)"' missed the enum form (the dot breaks \w+) and read every
+    # COMPLETE run as "not finished yet".
+    words = re.findall(r"\w+", status)
+    state = (words[-1] if words else status.strip()).lower()
     if state != "complete":
-        if state in ("error", "cancelacknowledged", "cancelrequested", "cancel"):
+        if "error" in state or "cancel" in state:
             raise SystemExit(f"the run ended {state}: a failure, whatever is in Output. Read the log at "
                              f"https://www.kaggle.com/code/{a.slug} and fix the cause; do not install anything")
         print("not finished yet — run this again later")
