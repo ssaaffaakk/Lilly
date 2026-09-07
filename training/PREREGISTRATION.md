@@ -1642,3 +1642,97 @@ corrected here. The recogniser lever is now spent across all three looks
 (exact @0.9, exact @0.94, meaning @0.94); the next lever is the detector's
 small-type misses (step 3), its own pre-registration. See
 `training/RESULTS-ocr-paddle-finetune.md`.
+
+## v2 — picture — the detector's small-type misses: higher-resolution detection — written before the run, 7 September 2026
+
+Written 7 September 2026, before the detector has been run at any side length but
+the default. The recogniser lever is spent (steps 7, 7a, 7b — all no). Step 3
+measured the shipped PP-OCRv6 detector at **R_d = 84.7%** (it never boxes ~15 of
+every 100 key words), its misses concentrated on **few-pixel type**: 28 of its
+57 misses on the 40 sit on one 144-word memorial whose text is 9–21 px high on a
+1280 px render, where CRAFT boxes 138/144 and PP-OCRv6 116/144
+(`training/RESULTS-ocr-detection.md`). That file named the detector move — "a
+larger `text_det_limit_side_len`, or PP-OCRv6's server detector" — as its own
+pre-registration. This is the first, cheapest route: the **same** medium
+detector run at a **higher resolution**, so it sees the full working image
+instead of the ~960 px version it is down-scaled to before detection. Inference
+only — no training, no new labels, no new model.
+
+### The question
+
+The app shrinks a photograph to two megapixels, then PaddleOCR shrinks it again
+to the detector's `text_det_limit_side_len` (~960) before finding boxes — so
+9–21 px type becomes a handful of pixels and is never boxed. Does raising that
+detection side length recover the small-type words the default loses, enough to
+raise words per photograph on test-v2 without inventing more from brickwork?
+
+### What is fixed, and the one free knob
+
+Fixed: the shipped configuration — PP-OCRv6 **medium** detector and **medium**
+recogniser, the recogniser floor 0.9, the app's two-megapixel working size, and
+all detector thresholds (unclip ratio, box score) at their defaults. **The one
+free knob is `text_det_limit_side_len`** (with `text_det_limit_type='max'`),
+exposed through a new env `LILLY_PADDLE_DET_SIDE_LEN` added to `app/ocr.py`'s
+pipeline construction **before the run** and never tuned on test-v2. Only *where
+text is found* changes; the recogniser and its floor do not move. Disclosed: the
+two-megapixel working-size shrink still applies and caps the benefit — whether
+to raise the working size itself is a separate product knob and a separate
+pre-registration, not this run.
+
+### Two sets, two jobs, never crossed
+
+- **Choose on the 40.** Sweep `text_det_limit_side_len` over {960 (default),
+  1280, 1600, 2048} on the 40 (`truth.json`), each setting its own cache. The
+  value chosen, **s\***, is the one that **maximises the-40 words-per-photograph
+  subject to the-40 invented ≤ 65** (the shipped detector's the-40 count) — so
+  recall is recovered, not bought with hallucination. Seconds per photograph are
+  recorded (higher resolution is slower; a product cost the owner weighs). If no
+  value beats the default, s\* = 960 and the experiment has answered: resolution
+  is not the detector lever at this working size.
+- **Decide on test-v2, once.** One read at s\* on the 280 photographs
+  (`truth-v2.json`), scored against the shipped configuration @0.9 — **57.8%
+  words per photograph, 450 invented** (`training/paddle-floor/test-v2-floor0.9.json`).
+  No second side length on test-v2; a run that peeks is a fit.
+
+### The two bars
+
+Against the shipped configuration, both must hold to ship (the same two-sided
+rule every look has used):
+
+- **words found per photograph rise** — paired against the shipped arm, the 95%
+  bootstrap interval of the per-photograph difference (`rescue_report.py`,
+  10,000 resamples, seed 0) **excludes zero**;
+- **invented words ≤ 450** — strict, exact, unchanged.
+
+The deciding metric is exact per photograph, folded reported beside — no metric
+switch mid-stream (the step-7b lesson).
+
+### Reported, and unable to change the decision
+
+The whole side-length sweep on the 40 (recall, invented, seconds per photograph,
+per setting) and the chosen s\*; the paired test-v2 delta with its interval and
+up/down counts; folded and diacritic recall at s\*; recognition-given-detection
+if a two-blind-counter detection count is later run on test-v2 (an optional
+diagnostic, not required for the decision); the 40 beside; counts beside
+percentages, the interval beside the delta.
+
+### What each outcome means
+
+- **Both bars hold.** Higher-resolution detection ships as an owner-reviewed
+  product change: the side-length knob defaults to s\*, the read-time cost
+  disclosed. Not by this run.
+- **Recall does not rise (interval straddles zero).** Resolution is not the
+  detector lever at the two-megapixel working size. The next moves — a different
+  detector (CRAFT-detect + PP-OCRv6-recognise hybrid, or the server detector),
+  or raising the app's working size — are each their own pre-registration.
+- **Recall rises but invented > 450.** Higher resolution finds more real text
+  and more brickwork; does not ship as-is; reported with the invented count.
+
+### What this run cannot settle
+
+It tests detection resolution *within* the two-megapixel working size; it does
+not test the working size itself, a different detector model, or a detector
+fine-tune (which would need box-level labels that do not exist and a GPU). Even
+a pass leaves the recogniser's own ceiling (recognition-given-detection 81.9%)
+where it is. Inference only — nothing is trained or zipped; the knob defaults to
+s\* only if both bars hold.
