@@ -308,6 +308,10 @@ def check_speech_instrument(text: str) -> None:
              "app.speech defaults to CPU int8 and 925 clips x large-v3 misses the wall")
     if "rule 3" not in text:
         fail("speech instrument: the report must name rule 3 -- a refusal closes large-v3")
+    if "lilly-listen-large-v3" not in text or "lilly-listen.zip" not in text:
+        fail("speech instrument: must find the candidate as half-2's lilly-listen.zip OR as the "
+             "lilly-listen-large-v3 dataset (built.json beside model.bin) -- the half-2 kernel "
+             "Output stopped being attachable on 7 September and version 2 died at the attach cell")
 
 
 def main() -> int:
@@ -327,6 +331,12 @@ def main() -> int:
         fail("OCR job must not require harvest on pass-8 (pass-7c already refused)")
     if "needs_ocr_sign_letters" not in kaggle_train or "push_ocr_sign_letters" not in kaggle_train:
         fail("kaggle_train.py must push lilly-ocr-sign-letters for pass-8")
+    if '"needs_listen_candidate": True' not in kaggle_train or "push_listen_candidate" not in kaggle_train:
+        fail("kaggle_train.py must attach the large-v3 candidate as the lilly-listen-large-v3 dataset "
+             "for speech-instrument -- the lilly-speech-half2 kernel Output is no longer attachable")
+    if "could not be added" not in kaggle_train:
+        fail("kaggle_train.py confirm_push must refuse a push whose attachment Kaggle "
+             "'could not be added' -- that run starts without its data and dies cells later")
     ocr_nb = read_nb(OCR)
     if "heavy-pass11" in ocr_nb and "pass-11 already refused" not in kaggle_train:
         fail("kaggle_train.py must refuse to launch pass-11 "
