@@ -2042,3 +2042,78 @@ that can actually resolve the Croatian question — clips chosen for it, held ou
 its bars written before large-v3 touches them — and judge **once**. Not this
 gate re-run, not this threshold rewritten, and not this candidate scored
 repeatedly until a version of the column lets it through.
+
+---
+
+# v3 — an outside comparison, written before any outside number exists
+
+Written 7 September 2026, before `facebook/nllb-200-distilled-600M` has
+translated a single FLORES sentence here.
+
+## Why this is missing, and why that is the biggest hole in the project
+
+Every number this project has published compares Lilly to **itself**: the
+fine-tune against its own base, one arm against the other, one floor against
+another floor. That is the right way to decide whether a change helped. It
+cannot answer the question anyone outside would ask first — *is this any good?*
+
+Nothing in the repository compares Lilly to a system built by someone else. So
+"42.14 BLEU on FLORES" is a number with no scale attached: it could be
+state-of-the-art for Bosnian or it could be well behind a model anyone can
+download. **The project does not currently know which**, and no amount of
+internal rigour substitutes for finding out.
+
+## The comparison
+
+| | |
+|---|---|
+| test set | FLORES-200, the same 2,009 pairs (devtest 1,012 + dev 997) |
+| scorer | `training/evaluate.py`'s own `score()` — sacrebleu BLEU and chrF2, word_order=0 |
+| decoding | beam 4, max_length 192, length-sorted batching — `evaluate.py`'s `translate_all`, unchanged |
+| outside system | `facebook/nllb-200-distilled-600M`, 600M parameters, `bos_Latn` / `eng_Latn` |
+| Lilly, bs→en | 42.14 BLEU / 66.79 chrF2 (published, `training/RESULTS.md`) |
+| Lilly, en→bs | 29.57 BLEU / 58.96 chrF2 (published, and re-measured identical today) |
+
+## What is fixed now, before the numbers
+
+1. **The comparison is reported whichever way it falls.** This section exists so
+   that a result showing Lilly behind NLLB is published in the same words as one
+   showing it ahead. There is no version of this run that goes unreported.
+2. **No tuning of the outside system to make it look bad, and none to make it
+   look good.** One configuration, the same decoding as Lilly's own, chosen
+   here. If a knob is later found to matter, that is reported as a limit of this
+   comparison, not used to re-run until the ordering changes.
+3. **NLLB is scored on the same 2,009 pairs, not a subset.** A comparison on a
+   convenient half is not a comparison.
+4. **The size difference is stated every time the numbers are.** NLLB-600M is
+   600M parameters against Lilly's ~230M (bs→en) and ~77M (en→bs) bases. A win
+   for a model 2.6× to 8× larger is not a surprise and must not be reported as
+   though it were a fair fight on equal terms; a win for the smaller one is the
+   interesting result.
+
+## What each outcome means
+
+- **Lilly ahead on bs→en.** A fine-tuned small model beats a general-purpose
+  larger one on the language it was built for. That is the project's thesis and
+  it would be the first evidence for it from outside.
+- **NLLB ahead on bs→en.** The honest headline changes: Lilly's fine-tune is a
+  real gain over *its own base* and still behind what is freely available. That
+  goes in the README's limits, and the next question becomes whether a bigger
+  base is the move.
+- **NLLB far ahead on en→bs.** Expected, and the most useful of the four:
+  `tc-base` is a small base and Helsinki publishes nothing big out of English
+  into this family. It would say the reply direction's ceiling is the base, not
+  the recipe, before a Kaggle GPU is spent finding that out the slow way.
+
+## What this cannot settle
+
+Any of it about **Bosnian specifically**. BLEU and chrF2 against Bosnian
+references reward a good Serbo-Croatian model, which is the whole reason
+`docs/BOSNIAN_METRIC.md` and the form-rate instrument exist. If NLLB wins on
+chrF2 it has not thereby been shown to write better *Bosnian*, and the form-rate
+comparison — `bosnian_form_rate.py` reads any en→bs system's output — is a
+separate question that this section does not decide.
+
+It also settles nothing about the product. Latency, size, and running with the
+network off are the reasons this project exists at all, and NLLB-600M in a
+browser tab is not the thing Lilly is competing with.
