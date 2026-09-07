@@ -228,8 +228,17 @@ This section exists because a README that only lists wins is not worth trusting.
   fine-tuning is worth +3.05 BLEU on news text and −0.82 BLEU on talks. Nothing
   measured here separates *learned better Bosnian* from *adapted to news style*.
 - **English → Bosnian is not fine-tuned.** The reply direction runs on the
-  untuned base: 29.57 BLEU / 58.96 chrF2 on FLORES-200. Training for it is in
-  progress.
+  untuned base: 29.57 BLEU / 58.96 chrF2 on FLORES-200. No fine-tune has been
+  launched for it — the bars it would have to clear are written and its
+  baselines are measured (`training/PREREGISTRATION.md`, "v3 — reply";
+  `docs/en-bs-launch.md`), and nothing has been trained against them yet.
+  Untuned is not the same as un-Bosnian, and the distinction is now measured:
+  on 338 audited bench targets the base writes the Bosnian form rather than its
+  Croatian or Serbian counterpart **94.3% of the time** it commits to either
+  (`training/RESULTS-en-bs-formrate.md`). The `>>bos_Latn<<` label is doing that
+  work — under `>>hrv<<` the same sentences come back at 72.5%. What the reply
+  direction lacks is fluency, not Bosnian-ness, and `tc-base` is a smaller model
+  than the forward direction's base, so the two are not of comparable quality.
 - **The photograph scores are recognition, not phone reality.** The evaluated
   images come from Wikimedia Commons. Real photographs taken on a phone in
   Bosnia would be the honest test, and there is not a labelled set of them yet.

@@ -645,8 +645,18 @@ def main() -> int:
         elif args.job == "ocr":
             print("  unzip lilly-read.zip into models/lilly/read/")
         else:
-            print("  unzip adapter to models/lilly/adapter/, then:")
-            print("  python3 scripts/build_translator.py")
+            # Per direction, because they are not interchangeable and the
+            # failure is silent: the en-bs run's Output is lilly-adapter-en-bs
+            # and belongs at models/lilly/adapter-en-bs/. Unzipping it over
+            # models/lilly/adapter/ installs a reverse adapter as the shipped
+            # forward one, which is exactly the mistake cell 0 of the notebook
+            # warns about -- "an adapter zipped under the other direction's
+            # name and installed over it". The paths here mirror that cell.
+            zipname, dest = ({"en-bs": ("lilly-adapter-en-bs.zip", "adapter-en-bs")}
+                             .get(job.get("direction"), ("lilly-adapter.zip", "adapter")))
+            print(f"  unzip {zipname} to models/lilly/{dest}/, then:")
+            print("  python3 scripts/build_translator.py"
+                  + (" --direction en-bs" if job.get("direction") == "en-bs" else ""))
         return 0
 
     # Before anything is uploaded: the notebook and the cloned scripts have to
