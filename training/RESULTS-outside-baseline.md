@@ -78,12 +78,20 @@ were scored here on whole rows through `evaluate.py`, so the comparison is like
 for like. But `training/RESULTS-devtest.md` says plainly that the whole-row path
 "is a useful diagnostic and not what anyone runs" — the product splits sentences
 and runs int8 through `app.translate.Engine`. On that served path, over the
-1,012 FLORES devtest segments, the fine-tune reads **42.39 BLEU / 67.34 chrF2**
-against a base at 41.10 / 67.51 tag-stripped: **+1.29 BLEU, −0.16 chrF2**. So the
-fine-tune's chrF2 contribution is negative on both paths and the −0.79 quoted
-above is the larger of the two. The direction of the finding does not change;
-the size does, and the served figure is the one the project's own results file
-says to quote.
+1,012 FLORES devtest segments, rescored from the committed hypotheses
+(`training/devtest-rescore.json`; `RESULTS-devtest.md`'s own Lilly row does not
+reproduce and is marked so), the shipped Arm B build reads **42.49 BLEU / 67.69
+chrF2** against a tag-stripped base at 41.10 / 67.51: **+1.39 BLEU, +0.18
+chrF2** — and 308 of 1,012 outputs carried a leaked language tag before the
+fine-tune, 0 after.
+
+**So the chrF2 direction is path-dependent and the earlier reading here was one
+path presented as the finding.** On whole rows the fine-tune is −0.79 chrF2; on
+the path the product actually serves it is **+0.18**. What survives both is that
+the contribution is small — a fraction of a chrF2 point either way — while the
++5.11 the base carries over NLLB is not. The credit still belongs mostly to
+OPUS-MT; the fine-tune's clearest win is the tag defect, which no chrF2 column
+shows.
 
 
 **Why a small specialist beats a large generalist.** `opus-mt-tc-big-zls-en`

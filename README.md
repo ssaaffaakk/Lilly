@@ -232,10 +232,13 @@ This section exists because a README that only lists wins is not worth trusting.
   36.49 BLEU bs→en against Lilly's 42.14, and 26.07 en→bs against 29.57 — a
   model 2.6× and 8× larger, beaten in both directions
   (`training/RESULTS-outside-baseline.md`). But the untouched Helsinki base
-  already accounts for +5.11 of that +5.65 BLEU, and on chrF2 the fine-tune is
-  **behind** the base it started from (+3.78 for the base, +2.99 for the shipped
-  model on the whole-row path; −0.16 on the served path over FLORES devtest,
-  `training/RESULTS-devtest.md`, which is the figure that file says to quote). In the reply direction there is no fine-tune at all, so the whole
+  already accounts for +5.11 of that +5.65 BLEU. What the fine-tune itself adds
+  is small and its sign depends on the path: −0.79 chrF2 on whole rows, **+0.18
+  on the path the product serves** (42.49 / 67.69 against a tag-stripped base at
+  41.10 / 67.51, rescored from the committed hypotheses —
+  `training/devtest-rescore.json`). Its clearest win is not in either column:
+  **308 of 1,012 base outputs leaked the model's language tag into the text, and
+  0 do after.** In the reply direction there is no fine-tune at all, so the whole
   margin is the base's. **The win belongs largely to OPUS-MT**, which this
   project builds on and did not train. And NLLB-600M is the distilled small
   variant: Google, DeepL, the 3.3B NLLB and the large general models were not

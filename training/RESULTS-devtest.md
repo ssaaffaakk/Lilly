@@ -2,6 +2,29 @@
 
 Scored build: `1aedcc11231cdf50817ff12f99ff0d1e`
 
+> **Correction, 7 September 2026 — the Lilly rows below do not reproduce.**
+> Rescoring `training/app-hypotheses-arm{A,B}.json` — the translations this
+> repository actually carries — against the same 1,012 FLORES devtest
+> references reproduces **every base row to the digit** (37.72/67.15 raw,
+> 41.10/67.51 stripped, 308 leaked tags), and reproduces **neither Lilly row**:
+>
+> | | BLEU | chrF2 |
+> |---|---|---|
+> | published below | 42.39 | 67.34 |
+> | Arm A, rescored | 42.59 | 67.58 |
+> | **Arm B, rescored** (the arm the pre-registration says wins) | **42.49** | **67.69** |
+>
+> The base side came from cache and the Lilly side from a build whose
+> hypotheses are not in this repository. **Use the Arm B row**: the fine-tune is
+> **+1.39 BLEU / +0.18 chrF2** over the tag-stripped base, not the −0.16 the
+> table below implies. Evidence: `training/devtest-rescore.json`, regenerable
+> with sacrebleu against `data/flores/devtest.en` and the committed hypotheses.
+>
+> The rows below are left standing rather than edited, because they are quoted
+> in other files and a number that silently changed would be worse than one
+> that is marked wrong.
+
+
 1,012 FLORES-200 devtest pairs — the set published leaderboards for this language pair use, so these numbers can be put beside theirs. Both models are int8 CTranslate2 builds and both go through `app.translate.Engine`, so the sentence splitting and the quantisation are the product's own. The only difference between the two columns is the fine-tuning.
 
 This is the number to quote. `training/RESULTS.md` scores the raw adapter on whole rows, which is a useful diagnostic and not what anyone runs: on the same pairs that path reads +0.54 BLEU and −0.79 chrF2, because feeding several sentences at once makes the model drop a clause and the app never does that.

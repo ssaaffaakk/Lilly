@@ -1,0 +1,64 @@
+{
+ "set": "FLORES-200 devtest, 1012 pairs",
+ "refs": 1012,
+ "published_in_RESULTS-devtest.md": {
+  "base_raw": [
+   37.72,
+   67.15
+  ],
+  "base_stripped": [
+   41.1,
+   67.51
+  ],
+  "lilly": [
+   42.39,
+   67.34
+  ]
+ },
+ "rescored_from_committed_hypotheses": {
+  "armA.base": {
+   "raw": [
+    37.72,
+    67.15
+   ],
+   "stripped": [
+    41.1,
+    67.51
+   ],
+   "leaked": 308
+  },
+  "armA.lilly": {
+   "raw": [
+    42.59,
+    67.58
+   ],
+   "stripped": [
+    42.59,
+    67.58
+   ],
+   "leaked": 0
+  },
+  "armB.base": {
+   "raw": [
+    37.72,
+    67.15
+   ],
+   "stripped": [
+    41.1,
+    67.51
+   ],
+   "leaked": 308
+  },
+  "armB.lilly": {
+   "raw": [
+    42.49,
+    67.69
+   ],
+   "stripped": [
+    42.49,
+    67.69
+   ],
+   "leaked": 0
+  }
+ }
+}
