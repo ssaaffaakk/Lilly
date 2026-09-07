@@ -2156,3 +2156,95 @@ One consequence for the reply direction's own pre-registration, above: its bar
 fine-tune that merely holds that line is not worth shipping, which is what that
 bar already says — this is the first outside evidence that it is set at the
 right place rather than an arbitrary one.
+
+---
+
+# v3 — speech — the full instrument, written before it has scored anything
+
+Written 7 September 2026, **after** large-v3 was refused on the 200-clip prefix
+and **before** it is scored on anything else. That order is the problem this
+section has to solve honestly, so the problem is stated first.
+
+## The thing that makes this suspect, said plainly
+
+A candidate failed a gate. Its author now proposes a different set. That is the
+shape of peeking, and no amount of good reasoning about instruments changes what
+it looks like. So the case for running at all has to rest on something written
+down **before** the failure, and the terms have to be **stricter**, not looser,
+than the ones it already failed.
+
+## The case, from documents older than the failure
+
+Two pre-registered specifications, both predating the gate run:
+
+1. **`training/RUBRIC.md`, 27 August**, three weeks before any of this: the
+   speech score is "word error rate on FLEURS bs_ba test, **925 utterances**,
+   forced `<|bs|><|transcribe|>`, greedy at temperature 0, no external language
+   model, scored after Whisper's `BasicTextNormalizer`."
+2. **"What the Croatian column may and may not be used for"**, above: its
+   simulated power table is computed on **69 Croatian targets**. The 200-clip
+   prefix carries **32**.
+
+The gate ran `--clips first200` — 200 clips, 167 distinct sentences, 32 Croatian
+targets — because that prefix is what the published 35.5% → 34.9% comparison
+used and keeping it made *that* comparison reproducible. It was never the set
+either specification describes. **The prefix was the deviation; the full split
+is the registered instrument**, and the rubric-facing speech number — the one
+the project's own scale is defined on — **has never been computed for any
+listener**, because `app/speech.py` decodes at `beam_size=5` and
+`evaluate_speech.py` uses its own normaliser, not Whisper's.
+
+## The run
+
+**One run. `--clips all`: 925 clips, all 349 distinct sentences.** Both
+listeners in the same process, transcripts cached by weight fingerprint, the
+paired bootstrap resampling *sentences* so the repeat recordings cannot inflate
+significance. On Kaggle, because 925 clips through large-v3 is hours of compute.
+
+Reported from it:
+
+- the **rubric WER** for both listeners: 925 utterances, greedy at temperature
+  0, `BasicTextNormalizer`. Never computed before, for anything.
+- the **gate rows** re-measured on the full instrument: word error, Bosnian term
+  recall, Croatian substitution.
+
+## The bars, and they are stricter than the ones it failed
+
+Unchanged from "The gate": word error strictly below the re-measured
+`listen-previous`; term recall not below its re-measured baseline; **Croatian
+substitution not above its re-measured baseline.** Both, not either.
+
+Added, because a second look has to cost something:
+
+3. **This is the last look.** If Croatian substitution comes in above the
+   re-measured baseline on the full instrument, whisper-large-v3 is **closed**.
+   Not re-run on another split, not re-scored with a different normaliser, not
+   revisited when a new term list is mined. The line ends and the bundle keeps
+   whisper-small, permanently, and this file records that.
+4. **No third instrument.** If the answer is again "the column cannot see", that
+   is a **failure to ship**, not an invitation to build a better column. A
+   candidate that cannot be shown safe on the largest instrument this test set
+   can offer does not get a smaller question asked instead.
+5. **The clip set is fixed here and now**: `--clips all`, every clip in
+   `data/speech/test.tsv`. Not a subset chosen afterwards, not "distinct" if
+   `all` disappoints, not a filter on which sentences carry Croatian targets.
+
+## What the power table already says about the likely answer
+
+At 69 Croatian targets the simulated power is 20% at a planted 5 points and 42%
+at 10. **The observed difference was 1.2 points.** So the honest expectation,
+written before the run: this instrument probably still cannot resolve a
+difference that size either, and the column will move for reasons closer to
+sampling than to drift. The point of running is **not** that 69 targets can see
+1.2 points — it is that the estimate on 32 targets was two words against one,
+and the estimate on 69 is a different draw from a larger sample. It may land
+above the baseline again, and rule 3 says what that means.
+
+## What would make this illegitimate, listed so it can be checked
+
+- Reporting only the rows that improved.
+- Quoting the 925-clip WER beside the 200-clip term numbers as though they came
+  from one measurement.
+- Treating a Croatian substitution that is *equal* to the baseline as "not
+  above" without saying that equal is what the bar permits and why.
+- Any fourth look. Rule 3 is not advice.
