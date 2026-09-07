@@ -26,6 +26,7 @@ import subprocess
 import sys
 import tempfile
 import time
+import zipfile
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -40,6 +41,11 @@ KAGGLE = str(REPO_ROOT / ".venv" / "bin" / "kaggle")
 # folder and its own dataset slug, and the notebook checks the label on arrival.
 WEIGHTS = REPO_ROOT / "models" / "lilly" / "translate"
 WEIGHTS_EN_BS = REPO_ROOT / "models" / "lilly" / "translate-en-bs"
+# The whisper-large-v3 candidate, as half-2 packaged it on 1 September. Its
+# model.bin is byte-identical (md5 2bd74590...) to models/lilly/listen, the
+# build the gate scored on 200 clips; the instrument must score that build and
+# no other.
+LISTEN_CANDIDATE = REPO_ROOT / "models" / "kaggle-output" / "speech-half2" / "lilly-listen.zip"
 READ_PASS1 = REPO_ROOT / "models" / "lilly" / "read" / "lilly.pth"
 OCR_CROPS = REPO_ROOT / "data" / "ocr" / "crops"
 OCR_CROPS2 = REPO_ROOT / "data" / "ocr" / "crops2"
@@ -102,7 +108,12 @@ JOBS = {
                     "slug": "lilly-speech-instrument",
                     "title": "Lilly speech instrument",
                     "needs_weights": False, "needs_corpus": False,
-                    "kernel_sources": ["lilly-speech-half2"]},
+                    # Was kernel_sources: ["lilly-speech-half2"]. On 7 September
+                    # that kernel answered "Permission 'kernels.get' was denied",
+                    # the push said "not valid kernel sources" and ran anyway, and
+                    # version 2 died at the attach cell. The candidate now comes
+                    # from a dataset built out of the zip fetched on 1 September.
+                    "needs_listen_candidate": True},
     "speech-half2": {"notebook": "Lilly_Speech_Kaggle_Half2.ipynb",
                     "slug": "lilly-speech-half2", "title": "Lilly speech half2",
                     "needs_weights": False, "needs_corpus": False,
@@ -174,6 +185,48 @@ def push_weights(user: str, weights=WEIGHTS, name="lilly-translate-base") -> str
         return slug
     print(f"uploading {sum(f.stat().st_size for f in stage.iterdir()) / 1048576:.0f} MB "
           f"to {slug} — this is the slow part, once")
+    run(KAGGLE, "datasets", "create", "-p", stage, "-r", "zip")
+    wait_until_ready(slug)
+    return slug
+
+
+def push_listen_candidate(user: str) -> str:
+    """The large-v3 candidate, unpacked, as a dataset the instrument can attach.
+
+    Unpacked rather than the zip itself: Kaggle extracts archives it is handed
+    as dataset files, so a dataset "holding lilly-listen.zip" may hold its
+    contents instead, and a notebook that searched for the zip would find
+    nothing. The notebook accepts either shape and checks built.json before
+    scoring, so what is attached here is the build, not a filename.
+    """
+    slug = f"{user}/lilly-listen-large-v3"
+    stage = STAGING / "dataset" / "lilly-listen-large-v3"
+    if not LISTEN_CANDIDATE.is_file():
+        raise SystemExit(f"no candidate at {LISTEN_CANDIDATE} -- it is half-2's Output, "
+                         f"fetched with scripts/kaggle_train.py speech-half2 --fetch")
+    stage.mkdir(parents=True, exist_ok=True)
+    with zipfile.ZipFile(LISTEN_CANDIDATE) as zf:
+        members = [m for m in zf.namelist() if m.startswith("models/lilly/listen/") and not m.endswith("/")]
+        if not members:
+            raise SystemExit(f"{LISTEN_CANDIDATE} holds no models/lilly/listen/ -- not a listener zip")
+        for m in members:
+            target = stage / Path(m).name
+            if not target.exists() or target.stat().st_size != zf.getinfo(m).file_size:
+                target.write_bytes(zf.read(m))
+    built = json.loads((stage / "built.json").read_text(encoding="utf-8"))
+    if built.get("base") != "openai/whisper-large-v3":
+        raise SystemExit(f"{LISTEN_CANDIDATE} built.json says {built} -- not whisper-large-v3; wrong zip")
+    (stage / "dataset-metadata.json").write_text(json.dumps({
+        "title": "Lilly listen large v3", "id": slug,
+        "licenses": [{"name": "other"}]}, indent=1))
+
+    existing = subprocess.run([KAGGLE, "datasets", "status", slug],
+                              text=True, capture_output=True)
+    if "ready" in existing.stdout.lower():
+        print(f"dataset already there: {slug}")
+        return slug
+    mb = sum(f.stat().st_size for f in stage.iterdir()) / 1048576
+    print(f"uploading {mb:.0f} MB to {slug} -- the slow part, once")
     run(KAGGLE, "datasets", "create", "-p", stage, "-r", "zip")
     wait_until_ready(slug)
     return slug
@@ -577,6 +630,18 @@ def push_notebook(user: str, job: dict, datasets: list) -> str:
             for src in job.get("kernel_sources") or []
         ],
     }, indent=1))
+    # A kernel source Kaggle cannot see is reported, not refused: the push prints
+    # "not valid kernel sources", exits 0, and the run starts without the file
+    # it needs. Ask for each one first; a source that has expired or lost its
+    # permission is a launch that would die several cells in.
+    for src in job.get("kernel_sources") or []:
+        full = src if "/" in src else f"{user}/{src}"
+        probe = subprocess.run([KAGGLE, "kernels", "status", full], text=True, capture_output=True)
+        if "has status" not in (probe.stdout + probe.stderr):
+            raise SystemExit(
+                f"kernel source {full} is not reachable: "
+                f"{(probe.stdout + probe.stderr).strip()[:200]}\n"
+                f"Its Output cannot be attached; upload the artefact as a dataset instead.")
     confirm_push(run(KAGGLE, "kernels", "push", "-p", stage, quiet=True))
     confirm_accelerator(slug, stage)
     return slug
@@ -598,6 +663,11 @@ def confirm_push(pushed) -> None:
             "Not running: Kaggle refused the push (see the message above).\n"
             "A GPU session limit means a run has to finish or be stopped in the "
             "browser first;\nnothing was launched, so nothing is worth watching.")
+    if "could not be added" in output.lower():
+        raise SystemExit(
+            "Pushed, but Kaggle refused an attachment (see the message above): the "
+            "run has started WITHOUT that dataset or kernel output and will die at "
+            "the cell that needs it. Stop it in the browser, fix the source, relaunch.")
 
 
 def confirm_accelerator(slug: str, stage: Path) -> None:
@@ -741,6 +811,8 @@ def main() -> int:
         datasets.append(push_ocr_crops(user))
     if job.get("needs_ocr_sign_letters"):
         datasets.append(push_ocr_sign_letters(user))
+    if job.get("needs_listen_candidate"):
+        datasets.append(push_listen_candidate(user))
     if job.get("needs_ocr_harvest"):
         hv = push_ocr_harvest(user)
         if hv is None:
