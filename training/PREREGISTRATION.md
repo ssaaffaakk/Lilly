@@ -1503,3 +1503,33 @@ the weights move into `models/` only if both bars hold, the candidate otherwise
 stays on Hugging Face, and the per-floor reader-output caches are regenerable
 scratch, not committed — but the test-v2 read at f\* keeps its per-region
 output so the invented change is attributable, not inferred.
+
+### Outcome, 7 September 2026 — invented fixed, recall not; does not ship
+
+The re-sweep ran on the cloud (`scripts/paddle_finetune_floor.py`), no
+retraining. On the 40 the floor grid picked **f\* = 0.94** — the highest floor
+keeping the-40 words-per-photograph ≥ 67.0% (at 0.96 it falls to 65.3%);
+invented on the 40 fell 55 → 48 across 0.9 → 0.94. test-v2 was read once at
+0.94, against the shipped configuration (57.8% / 450):
+
+- invented words 450 → **432** — the bar (≤ 450) **holds**. The floor was the
+  invented driver, as diagnosed: a floor calibrated to these weights cuts the
+  step-7 blow-out (703) back under the shipped count.
+- words per photograph 57.8% → **54.5%**, paired mean Δ **−3.3 points**, 95%
+  **−8.4 to +1.5** — the rise bar **does not hold**, and the point estimate is
+  negative. The floor that cuts invented to ≤ 450 also drops correct words on
+  the many sparse signs, so per-photograph recall lands below the shipped reader.
+
+Both bars do not hold together. By the rule above (invented holds but the recall
+interval straddles zero → does not ship), **the fine-tune does not ship at any
+floor and the shipped configuration stays.** The 40, beside and deciding
+nothing: 67.0% → 67.9% words/photo, invented 65 → 48 (paired +0.9, 95% −2.0 to
++4.3). Both step-7 looks — the recogniser and its floor — are now spent.
+
+Noted, not acted on (switching the decider now would be moving the goalposts):
+at f\* = 0.94 the fine-tune beats the shipped reader on pooled (64.8 → 66.1),
+diacritic (62.1 → 76.2) and folded (81.8 → **86.9**) with **fewer** invented
+words (432 < 450) — it loses only on the exact per-photograph metric this run
+fixed as the decider. The product bar is meaning, not hats (folded), so deciding
+this same candidate on the folded metric is a live next pre-registration,
+alongside the detector lever. See `training/RESULTS-ocr-paddle-finetune.md`.
