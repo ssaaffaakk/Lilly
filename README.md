@@ -234,7 +234,8 @@ This section exists because a README that only lists wins is not worth trusting.
   (`training/RESULTS-outside-baseline.md`). But the untouched Helsinki base
   already accounts for +5.11 of that +5.65 BLEU, and on chrF2 the fine-tune is
   **behind** the base it started from (+3.78 for the base, +2.99 for the shipped
-  model). In the reply direction there is no fine-tune at all, so the whole
+  model on the whole-row path; −0.16 on the served path over FLORES devtest,
+  `training/RESULTS-devtest.md`, which is the figure that file says to quote). In the reply direction there is no fine-tune at all, so the whole
   margin is the base's. **The win belongs largely to OPUS-MT**, which this
   project builds on and did not train. And NLLB-600M is the distilled small
   variant: Google, DeepL, the 3.3B NLLB and the large general models were not

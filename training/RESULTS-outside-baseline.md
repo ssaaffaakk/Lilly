@@ -73,6 +73,19 @@ there is no fine-tune at all, so **100%** of the +3.50 is the base's.
 Anyone quoting "Lilly beats NLLB" without that paragraph is quoting a number
 this project did not earn.
 
+**Which path these numbers are on, and why it matters.** Both Lilly and NLLB
+were scored here on whole rows through `evaluate.py`, so the comparison is like
+for like. But `training/RESULTS-devtest.md` says plainly that the whole-row path
+"is a useful diagnostic and not what anyone runs" — the product splits sentences
+and runs int8 through `app.translate.Engine`. On that served path, over the
+1,012 FLORES devtest segments, the fine-tune reads **42.39 BLEU / 67.34 chrF2**
+against a base at 41.10 / 67.51 tag-stripped: **+1.29 BLEU, −0.16 chrF2**. So the
+fine-tune's chrF2 contribution is negative on both paths and the −0.79 quoted
+above is the larger of the two. The direction of the finding does not change;
+the size does, and the served figure is the one the project's own results file
+says to quote.
+
+
 **Why a small specialist beats a large generalist.** `opus-mt-tc-big-zls-en`
 translates South Slavic into English and nothing else; NLLB-200 covers two
 hundred languages in one set of weights. This is the ordinary shape of that
