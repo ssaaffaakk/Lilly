@@ -1,0 +1,12 @@
+== listen
+-rw-r--r--@ 1 safaksurmeli  staff   1.5G Sep  1 08:59 models/lilly/listen/model.bin
+{"base": "openai/whisper-large-v3", "d_model": 1280, "encoder_layers": 32, "quantization": "int8"}
+== listen-previous
+-rw-r--r--@ 1 safaksurmeli  staff   237M Aug 29 18:20 models/lilly/listen-previous/model.bin
+{"base": "openai/whisper-small", "d_model": 768, "encoder_layers": 12, "quantization": "int8"}
+== listen-candidate
+-rw-r--r--@ 1 safaksurmeli  staff   237M Aug 28 09:22 models/lilly/listen-candidate/model.bin
+{"base": "openai/whisper-small", "d_model": 768, "encoder_layers": 12, "quantization": "int8"}
+== listen.before-training
+-rw-r--r--@ 1 safaksurmeli  staff   461M Aug 27 00:20 models/lilly/listen.before-training/model.bin
+

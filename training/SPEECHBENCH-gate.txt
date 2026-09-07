@@ -1,0 +1,71 @@
+clips: 200 (first200) of 925 in /Users/safaksurmeli/Desktop/Lilly/data/speech/test.tsv, 349 distinct transcripts
+transcripts shared with data/speech/train.tsv: 0
+terms: 532 families from contrast-terms.tsv (167 with a Croatian contrast, 370 with a Serbian one)
+targets: 110 across 89 of 200 clips, 64 distinct terms
+professional Croatian/Serbian renderings found for 200 of 200 graded sentences
+  listen-previous: weights a76342f6ab59b382
+  reusing saved transcriptions for listen-previous — --fresh to redo
+  listen-previous: WER 34.9%  (1360 wrong of 3901 words)
+  listen: weights e6bb58483586b06c
+  reusing saved transcriptions for listen — --fresh to redo
+  listen: WER 11.9%  (465 wrong of 3901 words)
+
+                               WER  term recall      95% interval   substitution   CROATIAN   SERBIAN
+  listen-previous            34.9%        60.0%  [ 50.7,  68.7]           2.9%       5.3%      2.0%
+  listen                     11.9%        89.1%  [ 81.9,  93.6]           4.9%       6.5%      4.1%
+  targets                                  110                             68 dec        19       50
+                                                                                       32 tgt    80 tgt
+
+by category — term recall, then Croatian and Serbian substitution
+                                                 lex                       yat
+  listen-previous                 53.3%   0.0%   0.0%        64.6% 100.0%   2.3%
+  listen                          93.3%   3.3%   0.0%        86.2% 100.0%   5.1%
+  targets                                         45                        65
+
+listen - listen-previous: +29.1 points of term recall, paired bootstrap over sentences p = 0.0000
+listen - listen-previous: +1.9 points of variety substitution, paired bootstrap over sentences p = 0.1485  (does not clear 0.05)
+listen - listen-previous: +1.2 points of CROATIAN substitution, paired bootstrap over sentences p = 0.4805  (does not clear 0.05)
+listen - listen-previous: +2.1 points of SERBIAN substitution, paired bootstrap over sentences p = 0.1765  (does not clear 0.05)
+
+marked words anywhere in the transcript, per 1,000 words (330 Croatian forms, 668 Serbian)
+  listen-previous         croatian   0.26  (1 of 3916 words)    serbian   0.51  (2)
+  listen                  croatian   1.03  (4 of 3879 words)    serbian   1.03  (4)
+
+checks on the measurement — no model involved, the transcripts themselves
+  reference control   recall  100.0%   substitution    0.0%   croatian    0.0%   serbian    0.0%   (110 decided)   markers hr  1.28 sr  0.00
+  shuffled control    recall    1.8%   substitution    0.0%   croatian    0.0%   serbian    0.0%   (2 decided)   markers hr  1.28 sr  0.00
+  croatian variant    recall   70.9%   substitution   29.1%   croatian  100.0%   serbian    0.0%   (110 decided)   markers hr  9.48 sr  0.00
+  serbian variant     recall   27.3%   substitution   72.7%   croatian    0.0%   serbian  100.0%   (110 decided)   markers hr  1.28 sr 21.02
+  croatian rendering  recall   50.0%   substitution   19.1%   croatian   86.7%   serbian    0.0%   (68 decided)   markers hr  9.59 sr  0.00
+  serbian rendering   recall   23.6%   substitution   67.1%   croatian    0.0%   serbian   96.4%   (79 decided)   markers hr  0.00 sr 18.75
+  the variant controls check the scorer, not a model: audio of a person saying
+    'mjesto' cannot be edited to say 'mesto', so there is no audio-side counterfactual.
+    What they establish is that the Croatian column answers to Croatian and the
+    Serbian column to Serbian.
+  the two RENDERING rows are the strong version of that check: the professional
+    Croatian and Serbian translations of the same FLORES sentences, held out of
+    the term mining, scored as if a listener had produced them. Recall falls a
+    long way because an independent translation rewords much more than a term,
+    but of the targets it does decide, nearly all should land in its own column.
+
+what this instrument can and cannot see
+  targets: 110;  can show Croatian drift: 32 (29%);  Serbian drift: 80 (73%);  both: 2
+  yat pairs, which are Serbian-only by construction: 65 (59%)
+  targets the model resolved to neither variety: 42 of 110 (38.2%)
+    of those, 27 (64%) have a word within two characters of the spoken form in the transcript — heard, mis-spelled, and scored as neither rather than as drift
+    resolving those by edit distance was tried and measured, and it is wrong:
+    on the cached runs it recovered 15 Bosnian decisions, ZERO Croatian ones, and
+    the Serbian ones it recovered were prednje for prijetnje, ideo for dio, ritko
+    for rijetko — mishearings that land within one edit of an ekavian form.
+    It would manufacture drift out of transcription noise, so matching stays exact.
+  drift into a form that is not in the term's alternative list — a different
+    inflection, a paraphrase — lands in 'neither', which lowers recall without
+    raising substitution.
+
+  written in Croatian by listen-previous: vjerovatno (1)
+
+  written in Serbian by listen-previous: nedjelju (1)
+
+  written in Croatian by listen: vjerovatno (1), evropom (1)
+
+  written in Serbian by listen: nedjelju (1), svjedok (1), prijete (1)
