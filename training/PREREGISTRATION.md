@@ -1736,3 +1736,31 @@ fine-tune (which would need box-level labels that do not exist and a GPU). Even
 a pass leaves the recogniser's own ceiling (recognition-given-detection 81.9%)
 where it is. Inference only — nothing is trained or zipped; the knob defaults to
 s\* only if both bars hold.
+
+### Outcome, 7 September 2026 — no gain; resolution is not the lever; does not ship
+
+Ran on the cloud (`scripts/paddle_detect_sidelen.py`), inference only. The-40
+sweep: 960 → 65.7%, **1280 → 67.1%**, 1600 → 67.1%, 2048 → 67.1% words per
+photograph (invented 60/64/65/64) — recall plateaus at 1280 and higher side
+lengths find nothing more, so the library default already detects at roughly
+1280. **s\* = 1280.** On test-v2 against the shipped configuration @0.9:
+
+- words per photograph 57.8% → **57.3%**, paired mean Δ **−0.4 points**, 95%
+  **−3.1 to +1.9** (12 up, 11 down, p 0.758) — the rise bar does not hold; the
+  change is flat, only 23 of 132 photographs move at all.
+- invented 450 → **438** — holds.
+- diacritic and folded unchanged (62.1%, 81.8%).
+
+The 40 beside (decides nothing): Δ +0.0, one photograph changed. By the rule the
+higher-resolution detector does not ship; the shipped configuration stays, and
+the `LILLY_PADDLE_DET_SIDE_LEN` knob defaults off.
+
+A clean negative with a clear meaning: the medium detector at the two-megapixel
+working size already finds what raising the detection side length can find, so
+the step-3 small-type misses are lost **upstream** — to the app's two-megapixel
+shrink, before the detector — or to the detector model itself, not to the
+detection resolution. The next detector-side pre-registrations are (1) raising
+the app's working size (read at more than two megapixels; `evaluate_ocr.py
+--full-res` measures the ceiling) and (2) a different detector (CRAFT-detect +
+PP-OCRv6-recognise hybrid, or the server detector).
+See `training/RESULTS-ocr-detection.md`.

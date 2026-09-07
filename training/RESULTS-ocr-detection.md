@@ -163,3 +163,67 @@ measure (about 15 and 14 per 100), and the detector's share sits on dense
 small type. A detector-side move (a larger `text_det_limit_side_len`, or
 PP-OCRv6's server detector) is a separate experiment and gets its own
 pre-registration before anyone runs it; nothing here chooses it.
+
+# Step 8 — higher-resolution detection: no gain; does not ship
+
+Pre-registered in `training/PREREGISTRATION.md`, "the detector's small-type
+misses: higher-resolution detection". The recogniser lever is spent (steps 7,
+7a, 7b). This ran the **same** medium detector at a larger
+`text_det_limit_side_len` (new env knob `LILLY_PADDLE_DET_SIDE_LEN`), inference
+only, on the cloud (`scripts/paddle_detect_sidelen.py`).
+
+## The side-length sweep, on the 40
+
+| side length | words/photo | invented | folded | seconds/photo |
+|---|---|---|---|---|
+| 960 | 65.7% | 60 | 92.0% | 5 |
+| **1280 (s\*)** | **67.1%** | 64 | 92.0% | 7 |
+| 1600 | 67.1% | 65 | 92.0% | 8 |
+| 2048 | 67.1% | 64 | 92.0% | 8 |
+
+Recall plateaus at 67.1% from 1280 on; 1600 and 2048 find nothing more and only
+cost time, and 960 is *below* the plateau — so the library default already
+detects at roughly 1280. **s\* = 1280** (the highest the-40 words-per-photograph
+with invented ≤ 65, and the cheapest at that recall).
+
+## The decision, on test-v2, at s\* = 1280
+
+| arm | words/photo | pooled | invented | diacritic | folded |
+|---|---|---|---|---|---|
+| shipped `aea5890a` @0.9 | **57.8%** | 64.8% | 450 | 62.1% | 81.8% |
+| det side1280 `a8265dab` | **57.3%** | 64.4% | 438 | 62.1% | 81.8% |
+
+Paired per photograph (n=132): mean Δ **−0.4 points**, 95% **−3.1 to +1.9**,
+12 up, 11 down, bootstrap p 0.758.
+
+- **words per photograph rise — does not hold.** It is flat: −0.4, the interval
+  centred on zero, only 23 of 132 photographs change at all.
+- **invented ≤ 450 — holds** (438).
+
+The 40 beside (decides nothing): Δ +0.0, one photograph changed.
+
+**By the pre-registered rule, higher-resolution detection does not ship; the
+shipped configuration stays.**
+
+## What this rules out, and the next lever
+
+This is a clean negative with a clear meaning: the medium detector at the
+two-megapixel working size **already finds what raising the detection resolution
+can find** — the small-type misses are *not* recoverable by the detector's side
+length. So the words step 3 saw the detector miss are lost either **upstream, to
+the app's two-megapixel shrink** (which down-samples the photograph before the
+detector ever sees it), or **to the detector model itself** at that resolution.
+The side-length knob, added for this run, defaults off and stays off.
+
+The next detector-side levers, each its own pre-registration:
+1. **Raise the app's working size** — read at more than two megapixels (or full
+   resolution) so few-pixel type survives the shrink. `evaluate_ocr.py --full-res`
+   already measures this ceiling; if full resolution recovers the words, the fix
+   is a cheap product knob (the working size), and if it does not, the miss is
+   the detector model.
+2. **A different detector** — CRAFT-detect + PP-OCRv6-recognise hybrid (CRAFT's
+   R_d on the 40 is 90.9% against PP-OCRv6's 84.7%), or the server detector.
+
+Numbers in `training/detector-sidelen/`; per-photograph reader caches beside
+them are regenerable scratch and not committed. Reader identity at s\*:
+`a8265dab…` (`…PP-OCRv6_medium_rec:3.7.0:rec>=0.9:det<=1280`).
