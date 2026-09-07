@@ -1533,3 +1533,87 @@ words (432 < 450) — it loses only on the exact per-photograph metric this run
 fixed as the decider. The product bar is meaning, not hats (folded), so deciding
 this same candidate on the folded metric is a live next pre-registration,
 alongside the detector lever. See `training/RESULTS-ocr-paddle-finetune.md`.
+
+## v2 — read — the fine-tune on the meaning (folded) metric — written before the folded number, 7 September 2026
+
+Written 7 September 2026, before the folded per-photograph interval has been
+computed. Step 7 (at floor 0.9) and step 7a (at the re-swept floor 0.94) both
+decided the fine-tune on **exact** per-photograph recall and both said it does
+not ship. But `.claude/CLAUDE.md` fixes the product bar as **meaning, not
+hats** — `kuca` → House is enough, a dropped hat on a word the translator still
+gets is not a reason to throw the row out. On the diacritic-blind (folded) view
+the fine-tune already leads the shipped reader (81.8% → 86.9% folded) with
+**fewer** invented words (432 < 450) at the step-7a floor. Step 7a's outcome
+named this as its own pre-registration; this is it.
+
+### The question
+
+Read on the product's own meaning-metric — folded, diacritic-blind — does the
+fine-tune beat the shipped reader on test-v2 by the same two-sided rule the
+exact looks used, or is even the meaning-level per-photograph rise
+indistinguishable from zero?
+
+### What is fixed, and what is new
+
+Fixed, not free: **the same candidate weights** (`Safak11/lilly-ocr-paddle-runs/
+20260906-2143`, reader `f104826cee294a28` at the floor below) **and the same
+floor f\* = 0.94** that step 7a's pre-registered rule already chose and already
+read on test-v2. **No new floor sweep** (that would be a second look on the
+floor), **no retraining, no new read of any photograph.** The only new thing is
+the **deciding metric**: folded (diacritic-blind) per-photograph recall in place
+of exact. Reusing 0.94 is not a free choice dressed up: the invented bar (≤ 450,
+a test-v2 quantity) is the binding constraint, 0.94 is where test-v2 invented
+first crosses under 450 (432; at 0.9 it is 703 and fails), and a higher floor
+only cuts folded recall — so 0.94 is the floor that clears invented while
+keeping folded recall highest, and step 7a already landed and read it.
+
+### The measurement that decides
+
+The folded per-photograph paired 95% bootstrap interval, candidate @0.94 against
+the shipped configuration @0.9, computed from the **committed reader-output
+caches** (`data/ocr/real-photos/test-v2/reader-output-paddle-v6-floor0.9.json`
+for shipped; the step-7a candidate cache for the fine-tune) and `truth-v2.json`
+— no photograph is re-read. `training/folded_decision.py` mirrors
+`evaluate_ocr.py`'s word tokenisation and fold, and `rescue_report.py`'s paired
+percentile bootstrap (10,000 resamples, seed 0), so the folded figure is the
+exact figure's method with the fold applied. This number does not exist yet.
+
+### The two bars, against the shipped configuration @0.9
+
+Both must hold to ship:
+
+- **meaning found per photograph rises** — folded words-per-photograph, paired
+  against the shipped arm, 95% bootstrap interval of the per-photograph
+  difference **excludes zero**;
+- **invented words ≤ 450** — the **strict, exact** invented count (owner
+  decision 4), unchanged and **not** loosened to a folded count. Recall moves to
+  meaning; hallucination stays measured strictly. At 0.94 this is already 432,
+  so it holds; it is stated so the rule is complete, not to be re-opened.
+
+### Reported, and unable to change the decision
+
+The exact per-photograph delta from step 7a (−3.3, the losing metric) beside the
+folded one; pooled folded (64.8/81.8 shipped vs 66.1/86.9 fine-tune, already
+known); diacritic recall; the 40's folded numbers; counts beside percentages and
+the interval beside the delta.
+
+### What each outcome means
+
+- **Both bars hold.** The fine-tune ships **on the meaning metric**, as an
+  owner-reviewed product change (weights into `models/`, model card, the HF
+  bundle's `read-paddle/` directory). The exact-metric loss on sparse signs
+  (−3.3) is disclosed as the known cost. Two things still need the owner/Mac and
+  are not this run's to decide: the HF publish (needs `HF_TOKEN`, Mac only) and
+  how the app fetches the fine-tuned weights at runtime.
+- **The folded interval still straddles zero.** Even on the product's own
+  metric the per-photograph rise is not distinguishable from zero. The fine-tune
+  does not ship; the recogniser lever is fully spent, and the next lever is the
+  detector's small-type misses (step 3), its own pre-registration.
+
+### What this run cannot settle
+
+It decides the fine-tune's shippability on the meaning metric at the step-7a
+floor; it does not re-open the floor, the exact metric, or the detector ceiling.
+It re-scores committed caches only — no training, no reading — so nothing is
+zipped and no crop gate applies; the weights move into `models/` only if both
+bars hold, and the candidate otherwise stays on Hugging Face.
