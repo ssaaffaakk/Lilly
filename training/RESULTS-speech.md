@@ -146,3 +146,107 @@ here to land on.** The run being judged added 3,430 clips of *Croatian*.
 
 Long sentences with numerals and foreign proper nouns, which is where the
 remaining third of the errors live.
+
+---
+
+# whisper-large-v3 at the gate — 7 September 2026
+
+The larger listener was trained on Kaggle and installed at `models/lilly/listen`
+on 1 September. **Its gate had never been run.** The 68.2% in the section above
+belongs to the whisper-small candidate, and `RESULTS-speech-half2.md:53` still
+says "running locally" for the term-recall row. So the model on the Mac was
+better than the one that ships and nobody had established it by the rule.
+
+Run now, both listeners scored in one process on the same 200 clips through the
+same code, `training/SPEECHBENCH-gate.txt`:
+
+| | `listen-previous` (whisper-small, 237 MB) | `listen` (**whisper-large-v3**, 1.5 GB) |
+|---|---|---|
+| word error | 34.9%  (1,360 wrong of 3,901) | **11.9%**  (465 wrong) |
+| Bosnian term recall | 60.0%  [50.7, 68.7] | **89.1%**  [81.9, 93.6] |
+| variety substitution | 2.9% | 4.9% |
+| — Croatian | 5.3% | 6.5% |
+| — Serbian | 2.0% | 4.1% |
+
+Paired bootstrap over sentences:
+
+    term recall           +29.1 points   p = 0.0000
+    variety substitution   +1.9 points   p = 0.1485   (does not clear 0.05)
+    CROATIAN substitution  +1.2 points   p = 0.4805   (does not clear 0.05)
+    SERBIAN  substitution  +2.1 points   p = 0.1765   (does not clear 0.05)
+
+## Against the pre-registered gate, row by row
+
+| threshold (`PREREGISTRATION.md`, "The gate") | measured | |
+|---|---|---|
+| word error **strictly below** the re-measured `listen-previous` | 11.9% against 34.9% | **pass** |
+| term recall **not below** the re-measured baseline | 89.1% against 60.0% | **pass** |
+| Croatian substitution **not above** the re-measured baseline | 6.5% against 5.3% | **fails, literally** |
+
+Two of three pass by margins this project has never seen. Word error falls to a
+third — the hard gate, with 3,901 reference words behind it. Term recall rises
+29.1 points at p = 0.0000, where the whisper-small fine-tune the section above
+celebrates managed +2.4 at p = 0.1475.
+
+**And the third row is above its baseline, so by "Both, not either" it does not
+ship.** That is what the rule says and it is written down first, before any
+argument about it.
+
+## What the third row actually contains
+
+The instrument prints the targets it lost, and they are countable:
+
+    written in Croatian by listen-previous: vjerovatno (1)
+    written in Croatian by listen:          vjerovatno (1), evropom (1)
+
+**The entire +1.2-point Croatian difference is one occurrence of one word** —
+`europom` written where the speaker said `evropom`. Both listeners make the
+`vjerojatno`/`vjerovatno` error; the larger one additionally makes `europom`.
+
+Total substitutions of any variety: `listen-previous` 2 words, `listen` 5.
+
+This is exactly the size the pre-registration described in advance, in a section
+headed *"What the Croatian column may and may not be used for"*, written before
+any listener was scored:
+
+> the whole +5.6-point Croatian move between the untrained model and the
+> installed one is ONE occurrence of ONE word — `vjerojatno` for `vjerovatno`,
+> 1 of 18 decided targets. That is what a movement of this size looks like from
+> the inside.
+
+and, from the simulated power table in the same section:
+
+| planted difference | power, Croatian column |
+|---|---|
+| 5 points | 20% |
+| 10 points | 42% |
+| 20 points | 76% |
+
+> **the Croatian column is a coarse alarm with its power stated, and a null
+> result is recorded as "the instrument could not see", NEVER as "no drift".**
+> Sixty-nine targets need about twenty points before the column speaks at all.
+
+So the pre-registration contains a row that fails this candidate and a section,
+written the same day, saying that row cannot resolve a movement of this size.
+**The tension is in the document, not in the reading of it**, and it is recorded
+here rather than settled quietly in whichever direction flatters the result.
+
+## One confound worth stating, which does not rescue anything
+
+A listener that mishears a word cannot drift on it. `listen-previous` resolved
+**42 of 110** targets to neither variety; `listen` resolved **7 of 110**. Part
+of the smaller model's lower substitution rate is that it did not transcribe the
+word at all. The paired comparison above controls for this — it scores the 68
+targets *both* models decided — so the +1.2 points is not an artefact of that.
+It is recorded because the raw single-model columns would overstate the smaller
+model's cleanliness, and someone will quote them.
+
+The marker rate has the same shape and the same small counts: Croatian 1 word of
+3,916 for `listen-previous`, 4 of 3,879 for `listen`; Serbian 2 against 4.
+
+## Status
+
+**Not published.** The weights sit at `models/lilly/listen` on the Mac and the
+released bundle still carries whisper-small. Publishing is an outward-facing,
+hard-to-reverse act and this result does not clear the gate as written, so it
+waits on the owner's decision, recorded here either way.

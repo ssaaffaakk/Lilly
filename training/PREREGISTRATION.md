@@ -1989,3 +1989,37 @@ inherited. Also measured, and unlike the forward direction: the en-bs base
 leaks its language tag into **0 of 2,009** outputs, where the bs-en base leaks
 it in 433 of 1,012. A fine-tune that starts leaking it would be introducing a
 defect the base does not have, and that belongs in the write-up if it happens.
+
+### Outcome, 7 September 2026 — whisper-large-v3 at "The gate", and a tension in this file
+
+Both listeners scored in one process, same 200 clips, same code
+(`training/SPEECHBENCH-gate.txt`); full write-up in `training/RESULTS-speech.md`.
+
+| threshold | re-measured `listen-previous` | `listen` (large-v3) | |
+|---|---|---|---|
+| word error, strictly below | 34.9% | **11.9%** | pass |
+| term recall, not below | 60.0% | **89.1%** (+29.1, p = 0.0000) | pass |
+| Croatian substitution, not above | 5.3% | **6.5%** (+1.2, p = 0.4805) | **fails** |
+
+By "Both, not either" this candidate does not ship. That is written first
+because it is what the rule says.
+
+**And this file contradicts itself on that row.** Ten lines below the gate
+table, "What the Croatian column may and may not be used for" states its
+simulated power — 20% at a planted 5 points, 76% at 20 — and concludes that
+"sixty-nine targets need about twenty points before the column speaks at all",
+with the calibration that a 5.6-point Croatian move was *one occurrence of one
+word*. The move here is +1.2 points, and the instrument names it: `europom` for
+`evropom`, one word, on top of the `vjerojatno` error both listeners make.
+
+So the gate table asks a column to fail a candidate on a movement the same
+document says the column cannot see. Nothing in this file resolves that, and it
+is not being resolved retroactively by whoever reads it with a number in hand.
+The tension is recorded, the candidate is unpublished, and the decision to
+publish or not — an outward-facing act — belongs to the owner and gets written
+down here with its reason.
+
+What must not happen, and is worth naming because the result is tempting: the
+Croatian row does not get deleted, reworded, or re-thresholded now. A 23-point
+fall in word error and a 29.1-point rise in term recall at p = 0.0000 are not a
+licence to edit the bar they were measured against.
