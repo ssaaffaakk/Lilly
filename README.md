@@ -164,6 +164,35 @@ licenses are in [`models/lilly/NOTICE.md`](models/lilly/NOTICE.md).
 
 ## How well it works
 
+### Where it started
+
+The first builds were worse than anything in the tables below. No measurement
+was kept of them — the habit of writing a number down before changing anything
+came later, and is now the rule — so the earliest column is the owner's account
+of those builds, written as a bound. The next column is the first number that
+was recorded, with the file it lives in. The last is today.
+
+| | the first builds (unrecorded) | first recorded | today |
+| --- | --- | --- | --- |
+| Photographs — words found per photograph, the 40 | **< 33%** | 36.0% (`training/RESULTS-ocr.md`) | **67.0%** |
+| Photographs — words found, pooled | **< 14%** | 16.9% (63 of 373) | **69.4%** |
+| Photographs — words invented that are on no sign | **> 230** | 224 | **65** |
+| Speech — word error, 200 held-out clips | **> 40%** | 38.5% (`training/RESULTS-speech.md`) | **34.9%** shipped · **11.9%** trained, not yet published (see below) |
+| Translation — BLEU on FLORES devtest, as the user sees it | **< 35** | 37.72, with the model's language tag leaked into 308 of 1,012 outputs (`training/RESULTS-devtest.md`) | **42.49**, leaked into **0** |
+
+One recorded moment says what the early period was like: the reader scored
+about 75% on synthetic text and **36% the first time it was pointed at real
+photographs** (`training/RESULTS-ocr-dataset.md`). The 75% was never a real
+number. Everything after that was measured on real photographs, real audio and
+held-out sentences, and the tables below are those measurements.
+
+The speech row's second figure is a whisper-large-v3 fine-tune that reads 11.9%
+word error against the shipped listener's 34.9% on the same clips
+(`training/SPEECHBENCH-gate.txt`). It did not ship: its Croatian-substitution
+row came in one word above the re-measured baseline and the pre-registered gate
+is "both, not either". A last, larger measurement is pre-registered
+(`training/PREREGISTRATION.md`, "the full instrument"); it ships or it closes.
+
 Every number below compares Lilly against the untuned model it started from, on
 data held out of training, run through the app's own code path so the only
 difference between the columns is the fine-tuning.
