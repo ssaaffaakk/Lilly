@@ -219,6 +219,62 @@ def translate(sources, adapter=None, tag=">>bos_Latn<<", batch_size=16):
     return out
 
 
+# Two limits of the literal matcher, found on the base and reported before any
+# candidate exists. Neither can move the decision -- the pre-registration's table
+# is the bar -- and both are floors rather than measurements, which is why they
+# are computed with lists that can only under-count.
+#
+# Only stems that are unambiguously Croatian AND long enough not to fire inside
+# an unrelated word. The short ones that a first pass matched on (val, zrak,
+# studen, sigurnos, otok) are deliberately absent: they occur in Bosnian too, or
+# match inside other words, and a noisy ceiling is worse than a clean floor.
+CROATIAN_THIRD_FORMS = (
+    "povij", "obitelj", "zrakoplov", "tisuć", "sudjelov", "tjedan", "tjedn",
+    "siječ", "veljač", "ožuj", "travnj", "svibnj", "lipnj", "srpnj", "kolovoz",
+    "rujn", "listopad", "prosinc", "kazališ", "znanstven", "gospodarstv",
+    "europ", "nogomet", "glazb", "tvrtk", "unatoč", "unaprjeđ",
+)
+
+
+def diagnose(result: Path, other: "Path | None" = None) -> None:
+    """Why the silent column is what it is, and whether the label still steers."""
+    d = json.loads(result.read_text(encoding="utf-8"))
+    silent = [m for m in d["marks"] if m["mark"] == "silent"]
+    both = sum(1 for m in silent
+               if present(m["term"], fold(m["output"])) and present(m["variant"], fold(m["output"])))
+    # A word sharing the Bosnian form's first five letters: the model wrote the
+    # Bosnian word in another case ending, and the literal matcher -- equally
+    # literal on both sides -- dropped it into silence rather than missing it.
+    infl = sum(1 for m in silent if len(m["term"]) >= 5 and
+               re.search(rf"(?<!\w){re.escape(fold(m['term'])[:5])}\w*", fold(m["output"])))
+    third = [m for m in silent if any(
+        re.search(rf"(?<!\w){stem}", fold(m["output"])) for stem in CROATIAN_THIRD_FORMS)]
+    print(f"\n--- {d['label']}: what the {len(silent)} silent targets are ---")
+    print(f"  both forms present (the output hedged) : {both}")
+    print(f"  neither form present                   : {len(silent) - both}")
+    print(f"  ...of those, a word sharing the Bosnian form's first 5 letters: "
+          f"{infl}  (a different case ending, lost from both columns alike)")
+    print(f"  ...of those, a listed Croatian THIRD form (povijest, tisuću, "
+          f"tjedan…): {len(third)}  — a FLOOR on drift this two-way matcher "
+          f"cannot see, not a measurement of it")
+    for m in third[:8]:
+        print(f"       wanted {m['term']!r}: {m['output'][:80]}")
+
+    if other:
+        o = json.loads(other.read_text(encoding="utf-8"))
+        a, b = d["marks"], o["marks"]
+        same = sum(1 for x, y in zip(a, b) if x["output"].strip() == y["output"].strip())
+        flip = sum(1 for x, y in zip(a, b)
+                   if x["mark"] == "bosnian" and y["mark"] == "variant")
+        print(f"\n--- does the label still steer?  {d['tag']} against {o['tag']} ---")
+        print(f"  identical output      : {same}/{len(a)}  ({same / len(a) * 100:.1f}%)")
+        print(f"  form rate             : {d['form_rate'] * 100:.1f}%  ->  "
+              f"{o['form_rate'] * 100:.1f}%   ({(d['form_rate'] - o['form_rate']) * 100:+.1f} points)")
+        print(f"  targets flipped Bosnian -> counterpart: {flip}")
+        print("  A fine-tune that shrinks this gap toward zero has deafened the "
+              "decoder to its own selector.")
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--audit", action="store_true",
@@ -227,7 +283,16 @@ def main() -> int:
     ap.add_argument("--label", default="base", help="names the output files")
     ap.add_argument("--tag", default=">>bos_Latn<<")
     ap.add_argument("--limit", type=int, default=None)
+    ap.add_argument("--diagnose", nargs="+", metavar="RESULT",
+                    help="read one or two written result files and print the "
+                         "silent-column breakdown and the label-steering gap; "
+                         "loads no model and decides nothing")
     args = ap.parse_args()
+
+    if args.diagnose:
+        paths = [Path(p) for p in args.diagnose]
+        diagnose(paths[0], paths[1] if len(paths) > 1 else None)
+        return 0
 
     OUT.mkdir(parents=True, exist_ok=True)
     rows, targets = load_targets()

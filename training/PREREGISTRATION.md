@@ -1907,3 +1907,66 @@ while chrF2 falls does not ship either. Both directions, not either.
 
 The base's own number goes into this file as soon as it is measured, in a note
 appended below this line and not by editing anything above it.
+
+### Outcome, 7 September 2026 — the base's own numbers, before the fine-tune exists
+
+Measured on the untouched `opus-mt-tc-base-en-sh` with
+`training/bosnian_form_rate.py`, whose rule is the amendment above and was
+committed before it had read a single output. Full write-up:
+`training/RESULTS-en-bs-formrate.md`. Appended here, not edited into anything
+above it.
+
+| | base |
+|---|---|
+| attempted / decided / silent | 338 / 245 / 93 |
+| wrote the Bosnian form | 231 |
+| wrote the counterpart | 14 |
+| **Bosnian form rate** | **94.3%**  (95% Wilson 90.6–96.6) |
+
+**So the third row of the deciding table is now filled in: not below 94.3%.**
+
+The number changes how this section should be read, and the honest thing is to
+say so before a candidate exists rather than after one fails. The row was
+written as a bar the fine-tune had to clear; the base clears it at 94.3%, so it
+is a bar with **5.7 points of headroom and 94.3 points of downside**. It was
+called "a floor, not a headline" above, and that was right for a reason that was
+not yet visible. Nothing about the bar moves — a fine-tune that writes less
+Bosnian does not ship — but nobody may present this row as the thing the reverse
+fine-tune is for. **chrF2 above 58.96 is what it is for.**
+
+### The two controls, measured on the base for the same reason
+
+| control | base |
+|---|---|
+| `>>bos_Latn<<` survives tokenisation as one piece | **yes**, id 5941 |
+| form rate under `>>bos_Latn<<` vs `>>hrv<<` | **94.3% → 72.5%**, a 21.8-point gap |
+| outputs identical under the two labels | 38 / 338 (11.2%) |
+| targets flipped Bosnian → counterpart by the label alone | 53 |
+
+The base's decoder is listening to its selector, and now there is a number for
+how hard. After the fine-tune, this pair is re-run: a gap that has collapsed
+toward zero means the adapter has deafened the decoder to the only thing
+separating Bosnian output from Croatian, and by the rule above it does not ship
+whatever the table says.
+
+The measurement deviates from the section above in one stated way. That section
+said "decode the same FLORES source twice". The 338 sources used here are the
+bench cases — 265 of them FLORES, 38 NTREX, 35 SETimes — chosen because they are
+the **same** sentences the form rate is measured on, which makes the control
+paired with it rather than merely adjacent. It is a strictly stronger test on a
+superset of source corpora, and it is recorded here rather than left for a
+reader to notice.
+
+### One limit found while measuring, which cannot move the bar
+
+Of the 93 silent targets, none hedged (no output contained both forms) and 52
+carry the Bosnian word in a different case ending — silence is mostly
+inflection, symmetric across both columns because the matcher is literal on both
+sides. But in **6** the model wrote an unambiguously Croatian *third* form that
+is neither listed alternative (*povijest* for `historiji`/`istoriji`, *tisuću*
+for `hiljada`/`tisuća`). For yat pairs the listed counterpart is the **Serbian**
+form, so Croatian drift has somewhere to escape to. Six is a **floor** on drift
+this two-way matcher cannot see, from a short hand-written stem list that can
+only under-count. Reported, reproducible (`--diagnose`), and unable to change
+the decision: widening the matcher after a candidate exists is exactly the
+degree of freedom this file is written to close.
