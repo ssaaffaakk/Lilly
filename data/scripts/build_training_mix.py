@@ -46,7 +46,7 @@ THE EIGHT STEPS, in this order, with what each one actually removes:
   3. asymmetric band on log(en/bs chars)    25,309 pairs  (the variance cut)
   4. drop micro-pairs under 3 characters        46 pairs
   5. deduplicate                             9,664 pairs
-  6. hard 128-SentencePiece-token cap          753 pairs  (MAX_LEN=128 lossless)
+  6. hard 128-SentencePiece-token cap          753 pairs  (MAX_LEN=128 lossless; en-bs: 656, see COUNTS)
   7. hold back 462 ntrex pairs               -> data/clean/ntrex-holdout.tsv
   8. integer corpus weights, one shuffle    361,621 training examples
 
@@ -93,6 +93,33 @@ OUT_HOLDOUT = CLEAN_DIR / "ntrex-holdout.tsv"
 # otherwise the cap is a guess. Same resolution order as training/train_translation.py.
 BASE_MODEL = os.environ.get("LILLY_BASE") or str(DATA_DIR.parent / "models" / "lilly" / "translate")
 MAX_TOKENS = 128            # training/train_translation.py: MAX_LEN = 128
+
+# Everything from step 6 on depends on which tokenizer the cap is measured under,
+# and the two directions do not share one: bs-en trains on opus-mt-tc-big-zls-en
+# (the recipe's numbers), en-bs on opus-mt-tc-base-en-sh, a different
+# SentencePiece pair under which more of the same pairs cross 128 tokens. Steps
+# 1-5 are text-only and identical for both. The en-bs column was measured on
+# 7 September 2026 with `--dry-run --direction en-bs` against
+# models/lilly/translate-en-bs, counting the way the trainer counts for that
+# direction (tok(en, text_target=bs)); the first Kaggle run counted it the
+# other way round and measured 4,067, which is the source-spm doubling the
+# docstring of token_lengths describes, not the number.
+COUNTS = {
+    "bs-en": {"over": 753,            # recipe 713
+              "unique": 323_537,      # recipe 322,271
+              "pool": 323_074,        # recipe 321,809
+              "by_corpus": {"WikiMatrix": 145_057, "SETIMES": 130_313,
+                            "wikimedia": 35_849, "TED2020": 10_022,
+                            "ntrex": 1_349, "Tatoeba": 484},
+              "examples": 361_621},   # recipe 359,852
+    "en-bs": {"over": 656,
+              "unique": 323_634,
+              "pool": 323_171,
+              "by_corpus": {"WikiMatrix": 145_092, "SETIMES": 130_324,
+                            "wikimedia": 35_897, "TED2020": 10_025,
+                            "ntrex": 1_349, "Tatoeba": 484},
+              "examples": 361_766},
+}
 
 SEED = 41                   # same seed the trainer shuffles with
 
@@ -341,7 +368,8 @@ def read_rows(path: Path) -> list:
     return rows
 
 
-def build(verbose=True):
+def build(direction="bs-en", verbose=True):
+    C = COUNTS[direction]
     log = print if verbose else (lambda *a, **k: None)
 
     for path in (TRAIN, EXTRA):
@@ -506,7 +534,7 @@ def build(verbose=True):
     # target cut mid-sentence and then handed a </s>. That is a small but free
     # contribution to terseness — the model is shown, 1,912 times, that stopping
     # early is correct. Dropping those pairs makes the cap lossless instead.
-    lengths = token_lengths(deduped)
+    lengths = token_lengths(deduped, direction)
     final, over = [], 0
     prov4 = {}
     for i, (corpus, bs, en) in enumerate(deduped):
@@ -515,9 +543,10 @@ def build(verbose=True):
             continue
         prov4[len(final)] = prov3[i]
         final.append((corpus, bs, en))
-    check("step 6 over-length pairs dropped", over, 753,          # recipe 713
-          f"cap is {MAX_TOKENS} SentencePiece tokens under {BASE_MODEL}")
-    check("total unique one-sentence pairs", len(final), 323_537)   # recipe 322,271
+    check("step 6 over-length pairs dropped", over, C["over"],
+          f"cap is {MAX_TOKENS} SentencePiece tokens under {BASE_MODEL}, "
+          f"counted for direction {direction}")
+    check("total unique one-sentence pairs", len(final), C["unique"])
     log(f"6. over {MAX_TOKENS} tokens: {over:,} dropped")
     log(f"   -> {len(final):,} unique one-sentence pairs")
 
@@ -537,7 +566,7 @@ def build(verbose=True):
     pool = [p for i, p in enumerate(final)
             if i not in holdout_idx and i not in leaked]
     check("step 7 holdout size", len(holdout), HOLDOUT_N)
-    check("step 7 training pool", len(pool), 323_074)   # recipe 321,809
+    check("step 7 training pool", len(pool), C["pool"])
     log(f"7. ntrex holdout: {len(holdout):,} pairs "
         f"({len(leaked):,} sibling sentences dropped to keep the split clean)")
 
@@ -547,9 +576,7 @@ def build(verbose=True):
     # TED2020 10,026, ntrex 1,333, Tatoeba 484 — 321,809. Every one of these is
     # within 1% of it, and Tatoeba is identical. The shares the recipe reasons
     # about are unchanged to the tenth of a percent.
-    for corpus, expected in (("WikiMatrix", 145_057), ("SETIMES", 130_313),
-                             ("wikimedia", 35_849), ("TED2020", 10_022),
-                             ("ntrex", 1_349), ("Tatoeba", 484)):
+    for corpus, expected in C["by_corpus"].items():
         check(f"step 8 pool [{corpus}]", by_corpus[corpus], expected)
     unknown = set(by_corpus) - set(WEIGHTS)
     if unknown:
@@ -561,7 +588,7 @@ def build(verbose=True):
     for corpus, bs, en in pool:
         mix.extend([(corpus, bs, en)] * WEIGHTS[corpus])
     random.Random(SEED).shuffle(mix)
-    check("step 8 training examples", len(mix), 361_621)   # recipe 359,852
+    check("step 8 training examples", len(mix), C["examples"])
     log("8. weights:")
     for corpus, w in sorted(WEIGHTS.items(), key=lambda kv: -by_corpus[kv[0]] * kv[1]):
         n = by_corpus[corpus] * w
@@ -571,7 +598,7 @@ def build(verbose=True):
     return mix, holdout, final, split_drop, band_drop, prov4, stripped
 
 
-def token_lengths(pairs) -> list:
+def token_lengths(pairs, direction="bs-en") -> list:
     """Per-side SentencePiece lengths, counted the way the trainer counts them.
 
     Marian carries two sentencepiece models, source.spm and target.spm, and the
@@ -581,8 +608,10 @@ def token_lengths(pairs) -> list:
     ~2,000 pairs that in fact fit.
 
     So the call is the same one training/train_translation.py's PairDataset
-    makes: tok(bs, text_target=en). Lengths include the </s> the tokenizer
-    appends, because MAX_LEN=128 truncation counts it too.
+    makes: tok(bs, text_target=en) for bs-en, and tok(en, text_target=bs) for
+    en-bs, where read_tsv has flipped the pair and the base's source.spm is the
+    English one. Lengths include the </s> the tokenizer appends, because
+    MAX_LEN=128 truncation counts it too.
     """
     try:
         from transformers import AutoTokenizer
@@ -595,7 +624,9 @@ def token_lengths(pairs) -> list:
     out = []
     for i in range(0, len(pairs), 4096):
         chunk = pairs[i:i + 4096]
-        enc = tok([bs for _, bs, _ in chunk], text_target=[en for _, _, en in chunk])
+        src = [bs for _, bs, _ in chunk] if direction == "bs-en" else [en for _, _, en in chunk]
+        tgt = [en for _, _, en in chunk] if direction == "bs-en" else [bs for _, bs, _ in chunk]
+        enc = tok(src, text_target=tgt)
         out.extend((len(a), len(b)) for a, b in zip(enc["input_ids"], enc["labels"]))
         print(f"   tokenising {min(i + 4096, len(pairs)):,}/{len(pairs):,}",
               end="\r", file=sys.stderr)
@@ -656,9 +687,15 @@ def main() -> int:
                     help="print N pairs to read by hand")
     ap.add_argument("--seed", type=int, default=SEED,
                     help="sample seed for --review")
+    ap.add_argument("--direction", default="bs-en", choices=sorted(COUNTS),
+                    help="which base's tokenizer measures the step-6 cap, and "
+                         "which way round the pair is fed to it")
     args = ap.parse_args()
+    if any(v is None for v in COUNTS[args.direction].values()):
+        raise SystemExit(f"the {args.direction} counts have not been measured yet; "
+                         f"see COUNTS at the top of this file")
 
-    mix, holdout, final, _, _, prov4, stripped = build()
+    mix, holdout, final, _, _, prov4, stripped = build(args.direction)
 
     # The point of the whole recipe, measured on what was actually produced.
     # Everything above is bookkeeping; these three numbers are the deliverable.

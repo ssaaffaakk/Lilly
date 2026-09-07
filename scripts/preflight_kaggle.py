@@ -13,6 +13,7 @@ OCR = REPO / "training" / "Lilly_OCR_Kaggle.ipynb"
 OCR_PADDLE = REPO / "training" / "Lilly_OCR_Paddle_Kaggle.ipynb"
 OUTSIDE = REPO / "training" / "Lilly_Outside_Baseline_Kaggle.ipynb"
 SPEECH_INSTR = REPO / "training" / "Lilly_Speech_Instrument_Kaggle.ipynb"
+TRANSLATION = REPO / "training" / "Lilly_Translation_Kaggle.ipynb"
 
 
 def read_nb(path: Path) -> str:
@@ -314,11 +315,25 @@ def check_speech_instrument(text: str) -> None:
              "Output stopped being attachable on 7 September and version 2 died at the attach cell")
 
 
+def check_translation(text: str) -> None:
+    """Both directions train from one notebook; what differs must be passed
+    down, not assumed. Version 2 of the en-bs run died in build_training_mix.py
+    because step 6 counted the pair the forward way round under the reverse
+    base's tokenizer (7 September 2026)."""
+    if '"data/scripts/build_training_mix.py", "--direction", DIRECTION' not in text:
+        fail("translation: build_training_mix.py must be called with --direction DIRECTION -- "
+             "the 128-token cap is measured under this run's tokenizer, fed the way the "
+             "trainer feeds it, and the script refuses a direction it has not measured")
+    if 'DIRECTION = "' not in text or 'ARM = "' not in text:
+        fail("translation: cell 0 must set DIRECTION and ARM in the committed file")
+
+
 def main() -> int:
     for path, fn in ((SPEECH, check_speech), (SPEECH2, check_speech_half2),
                      (OCR, check_ocr), (OCR_PADDLE, check_ocr_paddle),
                      (OUTSIDE, check_outside),
-                     (SPEECH_INSTR, check_speech_instrument)):
+                     (SPEECH_INSTR, check_speech_instrument),
+                     (TRANSLATION, check_translation)):
         if not path.is_file():
             fail(f"missing {path}")
         fn(read_nb(path))
@@ -362,7 +377,7 @@ def main() -> int:
     offload = (REPO / "training" / "kaggle_offload.py").read_text(encoding="utf-8")
     if "experiment_log.json" not in offload or "scan_trainproof" not in offload:
         fail("training/kaggle_offload.py must write experiment_log.json and scan the tee")
-    print("preflight ok: speech half-1 + half-2 + instrument, OCR, outside-baseline notebooks")
+    print("preflight ok: speech half-1 + half-2 + instrument, OCR, outside-baseline, translation notebooks")
     return 0
 
 
