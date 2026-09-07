@@ -73,6 +73,20 @@ source, but `app/ocr.py`'s 2 MP-cap note already records an informal check where
 PP-OCRv6-recognise hybrid. The shipped PP-OCRv6 reader (54.7% words/photo on the
 40, +38.7 on test-mly over the old reader) is the product. All three modes —
 text, voice, picture — ship and work.
+
+**Benchmark caveat, found 7 September 2026 (measured, not yet fully quantified):**
+the test photos on disk are *downscales* — `20130606_Mostar_034.jpg` is 1280 px
+on disk but **3968×2976 on Commons** (checked via the Commons API; two of two
+sampled). The app reads at up to 2 MP (~1633 px), so on a real high-resolution
+upload the reader gets ~1633 px of a sign, not the benchmark's 1280 px — a regime
+the step-8 side-length sweep could not test because it ran on the 1280 px files.
+So **54.7% words/photo plausibly *understates* real use**, where people upload
+high-resolution phone photos. This is untested against the 2 MP-cap note (which
+compared ≥2 MP variants, not 1280 px → 1633 px) and would be confirmed by
+re-scoring the shipped reader on the full-resolution originals. **Bulk-fetching
+those from Commons is rate-limited from the cloud (0/6, HTTP 429), so the
+measurement is deferred to a Mac fetch.** It changes no weights; it reframes the
+number, upward, and validates the reader for the photos a user actually takes.
 `training/RESULTS-ocr-detection.md`, `training/PREREGISTRATION.md`.
 
 ---
