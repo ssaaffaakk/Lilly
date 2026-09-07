@@ -51,6 +51,13 @@ how Lilly scores.
 
 ## Open, in order of urgency
 
+0. **The model card on the Mac (`models/lilly/README.md`, not in git) needs the
+   "Where it started" paragraph before the next `scripts/publish_to_hf.py`.** The
+   repository README ("Where it started") and `space/README.md` carry the text
+   and the numbers: the owner's first builds (< 30% found, > 280 invented,
+   > 55% word error, < 30 BLEU), the first recorded numbers, and today's. The
+   cloud clone cannot push that file; apply it on the Mac and publish.
+
 1. **Bosnian Cyrillic is unreadable and nothing in the current plan changes
    that.** `app/ocr.py` builds `easyocr.Reader(["bs","en"])`, which is Latin
    only; `latin_g2` has 351 output classes and none are Cyrillic. **272** of the
