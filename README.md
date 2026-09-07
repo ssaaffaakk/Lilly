@@ -202,7 +202,10 @@ project started — the section above is — it is the fairest thing to measure 
 change against.
 
 **Translation** — 2,009 held-out FLORES-200 Bosnian–English pairs, paired
-bootstrap for significance.
+bootstrap for significance. "Base" is the untuned model Lilly is built on, not
+where the project started: the first fine-tunes, by the owner's notes, came in
+under 30 BLEU — below the base they were meant to improve — before the recipe
+that produced the column on the right.
 
 | | Base | Lilly | Change |
 | --- | --- | --- | --- |
