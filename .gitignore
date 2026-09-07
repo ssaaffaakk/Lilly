@@ -131,6 +131,7 @@ data/signs/.osm-harvest.progress.json
 # and are committed; the per-photo reader caches beside them are scratch that
 # evaluate_ocr recreates.
 training/paddle-finetune-floor/cache-*.json
+training/detector-sidelen/cache-*.json
 
 # OS / editor
 .DS_Store
