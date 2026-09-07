@@ -1,0 +1,15 @@
+{
+ "direction": "bs-en",
+ "base": "/tmp/Lilly/models/lilly/translate",
+ "tag": null,
+ "pairs": 2009,
+ "bleu": 41.484170565867664,
+ "chrf2": 67.54762591188857,
+ "tag_leak": 833,
+ "committed": {
+  "bleu": 41.6,
+  "chrf2": 67.58,
+  "pairs": 2009,
+  "source": "training/RESULTS.md, Base (untuned), FLORES-200"
+ }
+}

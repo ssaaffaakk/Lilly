@@ -1,6 +1,6 @@
 {
  "direction": "en-bs",
- "base": "/home/user/Lilly/models/lilly/translate-en-bs",
+ "base": "/tmp/Lilly/models/lilly/translate-en-bs",
  "tag": ">>bos_Latn<<",
  "pairs": 2009,
  "bleu": 29.569138099853895,
