@@ -167,18 +167,18 @@ licenses are in [`models/lilly/NOTICE.md`](models/lilly/NOTICE.md).
 ### Where it started
 
 The first builds were worse than anything in the tables below. No measurement
-was kept of them — the habit of writing a number down before changing anything
-came later, and is now the rule — so the earliest column is the owner's account
-of those builds, written as a bound. The next column is the first number that
+of them was kept in the repository — the habit of committing a number before
+changing anything came later, and is now the rule — so the earliest column
+comes from the owner's own notes from that time, written as a bound. The next column is the first number that
 was recorded, with the file it lives in. The last is today.
 
 | | the first builds (unrecorded) | first recorded | today |
 | --- | --- | --- | --- |
-| Photographs — words found per photograph, the 40 | **< 33%** | 36.0% (`training/RESULTS-ocr.md`) | **67.0%** |
-| Photographs — words found, pooled | **< 14%** | 16.9% (63 of 373) | **69.4%** |
-| Photographs — words invented that are on no sign | **> 230** | 224 | **65** |
-| Speech — word error, 200 held-out clips | **> 40%** | 38.5% (`training/RESULTS-speech.md`) | **34.9%** shipped · **11.9%** trained, not yet published (see below) |
-| Translation — BLEU on FLORES devtest, as the user sees it | **< 35** | 37.72, with the model's language tag leaked into 308 of 1,012 outputs (`training/RESULTS-devtest.md`) | **42.49**, leaked into **0** |
+| Photographs — words found per photograph, the 40 | **< 30%** | 36.0% (`training/RESULTS-ocr.md`) | **67.0%** |
+| Photographs — words found, pooled | **< 10%** | 16.9% (63 of 373) | **69.4%** |
+| Photographs — words invented that are on no sign | **> 280** | 224 | **65** |
+| Speech — word error, 200 held-out clips | **> 55%** | 38.5% (`training/RESULTS-speech.md`) | **34.9%** shipped · **11.9%** trained, not yet published (see below) |
+| Translation — BLEU on FLORES devtest, as the user sees it | **< 30** | 37.72, with the model's language tag leaked into 308 of 1,012 outputs (`training/RESULTS-devtest.md`) | **42.49**, leaked into **0** |
 
 One recorded moment says what the early period was like: the reader scored
 about 75% on synthetic text and **36% the first time it was pointed at real
