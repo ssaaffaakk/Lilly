@@ -1,0 +1,57 @@
+{
+ "scored_photographs": 132,
+ "shipped_reader": "aea5890abfdb7ba3",
+ "fine_tune_reader": "f104826cee294a28",
+ "invented": {
+  "shipped": 450,
+  "fine_tune": 432,
+  "bar": 450
+ },
+ "metrics": {
+  "exact": {
+   "shipped_per_photo": 57.77525349074356,
+   "fine_tune_per_photo": 54.51287292046189,
+   "shipped_pooled": 64.78679504814305,
+   "fine_tune_pooled": 66.12792297111417,
+   "paired": {
+    "n": 132,
+    "mean_delta": -3.2623805702816715,
+    "lo": -8.386694471755204,
+    "hi": 1.4850786765600963,
+    "up": 27,
+    "down": 25,
+    "p": 0.18819999999999992
+   }
+  },
+  "folded_all": {
+   "shipped_per_photo": 59.91428478059325,
+   "fine_tune_per_photo": 54.77549091592001,
+   "shipped_pooled": 66.23108665749656,
+   "fine_tune_pooled": 66.98762035763411,
+   "paired": {
+    "n": 132,
+    "mean_delta": -5.138793864673274,
+    "lo": -10.12654520076837,
+    "hi": -0.5799805629776694,
+    "up": 22,
+    "down": 30,
+    "p": 0.025600000000000067
+   }
+  },
+  "folded_dia": {
+   "shipped_per_photo": 73.0847080847081,
+   "fine_tune_per_photo": 80.92254592254594,
+   "shipped_pooled": 81.77570093457943,
+   "fine_tune_pooled": 86.91588785046729,
+   "paired": {
+    "n": 37,
+    "mean_delta": 7.8378378378378395,
+    "lo": 0.13513513513513514,
+    "hi": 17.027027027027025,
+    "up": 9,
+    "down": 2,
+    "p": 0.0468
+   }
+  }
+ }
+}

@@ -1617,3 +1617,28 @@ floor; it does not re-open the floor, the exact metric, or the detector ceiling.
 It re-scores committed caches only — no training, no reading — so nothing is
 zipped and no crop gate applies; the weights move into `models/` only if both
 bars hold, and the candidate otherwise stays on Hugging Face.
+
+### Outcome, 7 September 2026 — worse on the meaning metric; does not ship
+
+Computed from the committed caches (`training/folded_decision.py`), no re-read.
+The exact per-photograph delta reproduces step 7a's −3.3 (sanity check that the
+folded scorer is `evaluate_ocr.py`'s method). On the deciding metric — **all
+words, diacritics folded, per photograph** — candidate @0.94 against shipped
+@0.9 (n=132):
+
+- folded (all words) words per photograph 59.9% → **54.8%**, paired mean Δ
+  **−5.1 points**, 95% **−10.1 to −0.6** (p 0.026, 22 up / 30 down) — the rise
+  bar does not hold, and the interval is **entirely below zero**: the fine-tune
+  is significantly *worse* on the meaning metric per photograph.
+- invented (strict, exact) 432 ≤ 450 — holds.
+
+Both bars do not hold; the fine-tune does not ship on the meaning metric. The
+diacritic-words-*only* folded row did rise (+7.8, 95% +0.1 to +17.0) — the
+accented slice the fine-tune learned — but that is ~214 of ~2,900 words and does
+not carry the photograph; pooled all-words folded is a hair higher for the
+fine-tune (66.2 → 67.0) on the dense boards, yet per photograph it is 5 points
+lower. The "81.8 → 86.9 folded" cited in step 7a was this diacritic-only slice,
+corrected here. The recogniser lever is now spent across all three looks
+(exact @0.9, exact @0.94, meaning @0.94); the next lever is the detector's
+small-type misses (step 3), its own pre-registration. See
+`training/RESULTS-ocr-paddle-finetune.md`.

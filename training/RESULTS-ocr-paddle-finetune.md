@@ -191,3 +191,59 @@ Reader identity at f\*: `f104826cee294a28`
 (`paddle:PP-OCRv6_medium_det+PP-OCRv6_medium_rec@87ad04a5:3.7.0:rec>=0.94`).
 Per-floor summaries in `training/paddle-finetune-floor/`; the per-photograph
 reader caches beside them are regenerable scratch and not committed.
+
+# The meaning-metric decision (folded) — worse per photograph; does not ship
+
+Pre-registered separately in `training/PREREGISTRATION.md`, "the fine-tune on
+the meaning (folded) metric". Step 7a closed on the *exact* metric but flagged
+that on the diacritic-blind view the fine-tune appeared to lead — the product
+bar being meaning, not hats. This look reuses the step-7a floor (0.94) and its
+already-committed reads (no re-read, no retraining) and only changes the
+deciding metric to **folded**. Computed by `training/folded_decision.py` from
+the committed caches, same tokenisation/fold as `evaluate_ocr.py` and same
+paired bootstrap as `rescue_report.py`. Sanity: the exact per-photograph delta
+reproduces step 7a's −3.3 to the digit.
+
+The product's meaning metric is **all words with diacritics folded, per
+photograph** — not the diacritic-words-*only* "folded" row `evaluate_ocr.py`
+prints (`kuca` → House is enough applies to every word, not just the accented
+ones). All three, candidate @0.94 against shipped @0.9 on test-v2 (n=132):
+
+| metric | shipped /photo | fine-tune /photo | paired Δ | 95% interval | up/down |
+|---|---|---|---|---|---|
+| exact (all words) | 57.8% | 54.5% | −3.3 | −8.4 to +1.5 | 27/25 |
+| **folded, all words (decider)** | **59.9%** | **54.8%** | **−5.1** | **−10.1 to −0.6** | 22/30 |
+| folded, diacritic words only | 73.1% | 80.9% | +7.8 | +0.1 to +17.0 | 9/2 |
+
+Invented (strict, exact): 432 ≤ 450 — holds.
+
+**On the meaning metric the fine-tune is not better — it is significantly
+*worse* per photograph: −5.1 points, 95% −10.1 to −0.6 (entirely below zero),
+p 0.026, worse on 30 photographs and better on 22.** The rise bar does not
+hold, and unlike the exact look the interval is wholly negative. By the
+pre-registered rule the fine-tune does not ship on the meaning metric either.
+
+**The correction this run forces, on the record:** the "folded 81.8% → 86.9%"
+cited from step 7a is the *diacritic-words-only* row — the `folded, diacritic
+words only` line above (+7.8, real). It does **not** carry the photograph: those
+words are ~214 of the ~2,900 in the key, and across all words per photograph the
+floor-induced recall loss on sparse signs dominates. Folding rescues a
+mis-accented word, not a missed one. (Pooled all-words folded is a hair higher
+for the fine-tune, 66.2% → 67.0%, on the dense boards — but per photograph, the
+figure that describes pointing a camera at a sign, it is 5 points lower.) The
+earlier reading of that row as "better on meaning" was the accented slice, not
+the picture; corrected here.
+
+## The recogniser lever is spent
+
+Three pre-registered looks, three noes: exact at the shipped floor (step 7,
++3.0 recall but invented 703), exact at the floor re-swept for these weights
+(step 7a, invented fixed to 432 but recall −3.3), and the meaning metric at that
+floor (step 7b, recall −5.1). Fine-tuning the recogniser taught it the accented
+letters — a real, narrow gain — but on whole photographs it cannot beat the
+shipped reader without inventing, at any floor and on either metric. The next
+lever is not the recogniser: it is **the detector's small-type misses** (step 3
+found PP-OCRv6's detection misses concentrate on few-pixel type that CRAFT
+boxes), its own pre-registration. The candidate weights stay on
+`Safak11/lilly-ocr-paddle-runs/20260906-2143`; `models/` and the app are
+unchanged. Numbers in `training/paddle-finetune-floor/folded-decision.json`.
