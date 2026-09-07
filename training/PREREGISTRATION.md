@@ -1816,3 +1816,94 @@ Invented is reported beside (more resolution can find more real text and more
 brickwork). Some Commons titles will not resolve; the miss count is reported and
 the caches (`training/highres/reader-output-fullres.json`) are regenerable
 scratch, not committed — only the scored summary is.
+
+---
+
+# Amendment, 7 September 2026 — the Bosnian form rate, defined before the base number exists
+
+The "v3 — reply — English to Bosnian" section above put a third row in its
+deciding table — **Bosnian form rate, output side** — and then, correctly,
+refused to define it loosely: it fixed three properties (baseline measured on
+the base *before* the fine-tune launches, cases reused from `bench/` rather than
+rebuilt, non-discriminating cases dropped *before* the run) and left the scorer
+to be written. `training/bosnian_bench.py` cannot be that scorer; it says so in
+its own docstring, because it reads English output.
+
+This amendment writes the scorer's rule down before it has produced a number
+about any model. `training/bosnian_form_rate.py` implements it. Nothing below is
+reinterpreted once a model output exists.
+
+## The rule
+
+Every surviving target is read twice against the same output, with the same
+matcher: does the Bosnian surface form appear (exact form, word boundary, case
+folded), and does its Croatian or Serbian counterpart appear?
+
+    decided     the output contains exactly one of the two
+    form rate = decided-for-Bosnian / decided
+    silent    = attempted − decided, reported beside it and never averaged in
+
+**A silent target is the instrument unable to say, not a miss.** Neither form
+present (the model wrote a third word, or a different inflection) and both forms
+present (the output hedged) are the same category and are reported as their own
+column, exactly as `bosnian_bench.py` reports its 27-of-85. Folding silence into
+either side would be a choice made after the fact.
+
+**The matcher stays literal.** Exact surface form, word boundary, case folded,
+both sides the same way. The pairs in `bench/` are inflection-matched
+(`pobjedu>pobedu`, `dvije>dve`), so a model writing a different inflection is
+lost from *both* columns equally and the loss lands in `silent`, where it can be
+seen. Loosening the matcher to stems is a degree of freedom, and one chosen with
+a number in hand is one chosen to be passed.
+
+## The audit, run before any model output existed
+
+Point 3 of the section above, executed. `--audit` loads no model. A target
+survives only if it has a named counterpart, the two forms differ folded,
+neither contains the other, and the professional's own Bosnian reference
+actually used the Bosnian form. Result, from `training/form-rate/audit.json`:
+
+| | |
+|---|---|
+| bench cases | 346 |
+| targets (a case may carry more than one) | 385 |
+| **discriminating targets kept** | **338**, across 308 cases |
+| dropped — no counterpart named | 47 |
+| dropped — forms identical folded | 0 |
+| dropped — one form nested in the other | 0 |
+| dropped — Bosnian form absent from the reference | 0 |
+| distinct term pairs behind them | 179 |
+
+338 is not a small set. The forward direction's instrument had 85 targets of
+which 58 decided, and its +5.9 points came back at p = 0.10; this one starts
+with four times the targets. **The instrument can speak.** That is recorded here,
+before it has said anything.
+
+## The asterisk, written before the number and not after it
+
+`bosnian_bench.py`'s honest limit is that 73 of its 85 targets are yat pairs
+whose alternative is Serbian, so drift toward *Croatian* had almost nothing to
+land on. The same split, measured on this set:
+
+| counterpart | targets |
+|---|---|
+| yat (ijekavica/ekavica — the alternative is Serbian) | 237 |
+| lexical choice | 100 |
+| `h` (e.g. *historija*/*istorija*) | 1 |
+| of those, a listed **Croatian** form (*obitelj*, *zrakoplov*, *tisuću*, *rujna*…) | **78 / 338** |
+
+23% Croatian-facing against the forward instrument's 14%, so this measure is
+better against Croatian drift — and still Serbian-heavy. A form rate that holds
+up here is evidence about ekavica first and Croatian second, and the write-up
+says so in those words or does not make the claim.
+
+## What this row can and cannot do to the decision
+
+It is a **floor, not a headline.** The table above already fixes chrF2 as the
+deciding measure and BLEU as its floor; this row is the third bar and works the
+same way — *not below the base's rate*. A fine-tune that raises chrF2 while
+writing less Bosnian does not ship, and a fine-tune that raises the form rate
+while chrF2 falls does not ship either. Both directions, not either.
+
+The base's own number goes into this file as soon as it is measured, in a note
+appended below this line and not by editing anything above it.
