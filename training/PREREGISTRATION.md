@@ -1970,3 +1970,22 @@ this two-way matcher cannot see, from a short hand-written stem list that can
 only under-count. Reported, reproducible (`--diagnose`), and unable to change
 the decision: widening the matcher after a candidate exists is exactly the
 degree of freedom this file is written to close.
+
+### The bar re-measured, 7 September 2026 — it reproduces exactly
+
+The two deciding numbers above were published months before this section was
+written and have been carried in prose since. Re-measured on the untouched base
+with `training/verify_base_flores.py`, which imports every scoring step from
+`training/evaluate.py` rather than restating it:
+
+| FLORES-200, 2,009 pairs | committed | re-measured |
+|---|---|---|
+| BLEU | 29.57 | **29.57** |
+| chrF2 | 58.96 | **58.96** |
+
+Identical to the second decimal, so the table above stands unchanged and the
+candidate will be weighed against a bar that has been checked rather than
+inherited. Also measured, and unlike the forward direction: the en-bs base
+leaks its language tag into **0 of 2,009** outputs, where the bs-en base leaks
+it in 433 of 1,012. A fine-tune that starts leaking it would be introducing a
+defect the base does not have, and that belongs in the write-up if it happens.

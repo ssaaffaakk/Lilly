@@ -142,3 +142,34 @@ Reproduce:
     .venv/bin/python3 training/bosnian_form_rate.py --label base-hrv --tag ">>hrv<<"
     .venv/bin/python3 training/bosnian_form_rate.py --diagnose \
         training/form-rate/base.json training/form-rate/base-hrv.json
+
+---
+
+# The bar itself, re-measured — 7 September 2026
+
+The pre-registration judges the candidate against two numbers published months
+ago and carried forward in prose since. A candidate is about to be weighed
+against them, so they were re-measured on the untouched base first, with
+`training/verify_base_flores.py` — every scoring step imported from
+`training/evaluate.py` rather than restated, so this is the same instrument and
+not a second opinion.
+
+| FLORES-200, 2,009 pairs, `>>bos_Latn<<` | committed | re-measured | difference |
+|---|---|---|---|
+| BLEU | 29.57 | **29.57** | −0.00 |
+| chrF2 | 58.96 | **58.96** | +0.00 |
+
+**Identical to the second decimal.** The bar is what the project said it was,
+and a candidate compared against it is compared against something checked.
+
+One number worth recording beside them, because the forward direction's is
+different and the difference is easy to carry across by accident:
+`training/evaluate.py` notes that the **bs-en** base writes its language tag
+into the output text of 433 of 1,012 FLORES sentences — a real defect, stripped
+before scoring, reported separately. The **en-bs** base leaks the tag in
+**0 of 2,009**. Whatever the reply direction's problems are, that is not one of
+them, and a fine-tune that introduces it would be introducing something the base
+never did.
+
+    .venv/bin/python3 data/scripts/download_flores.py
+    .venv/bin/python3 training/verify_base_flores.py --direction en-bs
