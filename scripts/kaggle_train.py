@@ -718,6 +718,14 @@ def main() -> int:
 
     if args.status:
         return 0 if status(slug) else 1
+    if args.watch and "running" in status(slug).lower():
+        # A watch is not a launch. `translation-en-bs --watch`, run after the
+        # launch to follow it, went through this whole function again and pushed
+        # version 4 of the same commit while version 3 was running (7 September):
+        # a second GPU session for nothing. If the latest version is running,
+        # follow that one and push nothing.
+        print(f"{slug} is already running; watching it, not pushing another version")
+        return watch(slug)
     if args.fetch:
         out = REPO_ROOT / "models" / "kaggle-output"
         out.mkdir(parents=True, exist_ok=True)
@@ -826,12 +834,20 @@ def main() -> int:
     print("check on it with:  python3 scripts/kaggle_train.py --status")
 
     if args.watch:
-        while True:
-            time.sleep(120)
-            state = status(slug).lower()
-            if "complete" in state or "error" in state or "cancel" in state:
-                break
+        return watch(slug)
     return 0
+
+
+def watch(slug: str) -> int:
+    """Poll every 120 s until the latest version stops. ERROR and CANCEL exit 1:
+    a zip left behind by either is not a result (docs/kaggle-fail-stop.md #12)."""
+    while True:
+        time.sleep(120)
+        state = status(slug).lower()
+        if "complete" in state:
+            return 0
+        if "error" in state or "cancel" in state:
+            return 1
 
 
 if __name__ == "__main__":
