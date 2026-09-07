@@ -28,6 +28,11 @@ import time
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[1]
+# `training` goes in FRONT of the repo root, and both go in front of
+# site-packages, ON PURPOSE. `evaluate` is also a PyPI package -- HuggingFace's
+# -- and Kaggle ships it. Reorder these two lines and `from evaluate import
+# score` silently binds to that package instead of the repo's evaluate.py, so
+# the run would report numbers from a different scorer with no error anywhere.
 sys.path.insert(0, str(REPO))
 sys.path.insert(0, str(REPO / "training"))
 
