@@ -29,6 +29,24 @@ Shipped reader: 54.7% words per photograph on the 40 Commons photographs (`train
 
 **Product bar is meaning, not hats.** `kuca` → House is enough. A dropped č/ć/š/ž on a word the translator still gets is not a reason to throw the row out. The crop gate still counts letters and can ERROR; that is the notebook, not the product.
 
+## Heavy compute goes to Kaggle
+
+Training, benchmarking a large model, scoring thousands of sentences, reading
+hundreds of photographs: these run on **Kaggle**, not on a laptop and not on a
+cloud agent box. An agent that starts a six-hour CPU job "because it can" is
+burning wall-clock the owner did not agree to spend and producing numbers on
+hardware nobody else will reproduce.
+
+Write the notebook, add the job to `scripts/kaggle_train.py`, update
+`scripts/preflight_kaggle.py` in the same commit, push, and launch. The rules in
+`docs/kaggle-notebooks.md` and `docs/kaggle-fail-stop.md` apply to every new
+notebook, measurement jobs included.
+
+What may still run locally: something that takes minutes, not hours — a smoke
+test, an audit that loads no model, a scorer reading cached outputs, a
+re-measurement small enough to finish while you wait. If it needs a GPU or more
+than a few minutes of CPU, it is a Kaggle job.
+
 ## Push every step
 
 Commit and push after every meaningful step. Verify on GitHub. A clone must be able to work before the pusher does.

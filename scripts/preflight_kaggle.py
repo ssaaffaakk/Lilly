@@ -11,6 +11,7 @@ SPEECH = REPO / "training" / "Lilly_Speech_Kaggle.ipynb"
 SPEECH2 = REPO / "training" / "Lilly_Speech_Kaggle_Half2.ipynb"
 OCR = REPO / "training" / "Lilly_OCR_Kaggle.ipynb"
 OCR_PADDLE = REPO / "training" / "Lilly_OCR_Paddle_Kaggle.ipynb"
+OUTSIDE = REPO / "training" / "Lilly_Outside_Baseline_Kaggle.ipynb"
 
 
 def read_nb(path: Path) -> str:
@@ -239,9 +240,46 @@ def check_ocr_paddle(text: str) -> None:
             fail(f"OCR-paddle notebook: {why} ({needle!r} present)")
 
 
+def check_outside(text: str) -> None:
+    """The outside comparison is the run most likely to be quietly softened.
+
+    It is a measurement job with no weights to ship, so the usual "did it train"
+    guards do not apply and a weaker set has to take their place: it must score
+    all 2,009 FLORES pairs, it must refuse to package a --limit smoke run as the
+    comparison, and it must not swallow empty translations. A number produced by
+    any of those holes would go straight into the README beside Lilly's own.
+    """
+    if "/kaggle/working/stdout.txt" not in text or "Popen" not in text:
+        fail("outside baseline: run() must Popen+tee into /kaggle/working/stdout.txt")
+    if "/kaggle/temp" not in text:
+        fail("outside baseline: must clone to /kaggle/temp — a clone in "
+             "/kaggle/working buries the artefact in Output")
+    if "!= 2009" not in text:
+        fail("outside baseline: must assert 2,009 FLORES pairs before measuring — "
+             "the pre-registered comparison is all of them, not a partial download")
+    if 'n["limited"]' not in text:
+        fail("outside baseline: must refuse to package a --limit smoke run as "
+             "the comparison")
+    if "empty translations" not in text:
+        fail("outside baseline: must refuse to score a run with empty outputs")
+    if "verify_base_flores.py" not in text:
+        fail("outside baseline: must score Lilly's bases on the same GPU as the "
+             "anchor — otherwise it compares NLLB-on-a-T4 to Lilly-on-a-CPU")
+    # The quoted path, not the bare name: the notebook explains in a comment WHY
+    # fetch_models.py is the wrong script, and a check that cannot tell a
+    # warning from a call would forbid writing the warning down.
+    if '"scripts/fetch_models.py"' in text:
+        fail("outside baseline: fetch_models.py pulls the published bundle and "
+             "skips the float32 base this scorer reads — use "
+             "fetch_translate_base.py --direction for each direction")
+    if "check_trainproof" not in text:
+        fail("outside baseline: must scan the tee before packaging")
+
+
 def main() -> int:
     for path, fn in ((SPEECH, check_speech), (SPEECH2, check_speech_half2),
-                     (OCR, check_ocr), (OCR_PADDLE, check_ocr_paddle)):
+                     (OCR, check_ocr), (OCR_PADDLE, check_ocr_paddle),
+                     (OUTSIDE, check_outside)):
         if not path.is_file():
             fail(f"missing {path}")
         fn(read_nb(path))
@@ -279,7 +317,7 @@ def main() -> int:
     offload = (REPO / "training" / "kaggle_offload.py").read_text(encoding="utf-8")
     if "experiment_log.json" not in offload or "scan_trainproof" not in offload:
         fail("training/kaggle_offload.py must write experiment_log.json and scan the tee")
-    print("preflight ok: speech half-1 + half-2 + OCR notebooks")
+    print("preflight ok: speech half-1 + half-2 + OCR + outside-baseline notebooks")
     return 0
 
 

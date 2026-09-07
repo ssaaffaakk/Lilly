@@ -84,6 +84,14 @@ JOBS = {
                     "direction": "en-bs",
                     "weights": WEIGHTS_EN_BS,
                     "weights_slug": "lilly-translate-en-bs-base"},
+    # A measurement job, not a training pass: it loads no Lilly weights, ships
+    # no model, and its Output is a small zip of JSON. The fail-stop rules still
+    # apply -- a run that scored a partial FLORES download, or that produced empty
+    # translations, refuses to package rather than returning a number.
+    "outside-baseline": {"notebook": "Lilly_Outside_Baseline_Kaggle.ipynb",
+                    "slug": "lilly-outside-baseline",
+                    "title": "Lilly outside baseline",
+                    "needs_weights": False, "needs_corpus": False},
     "speech":      {"notebook": "Lilly_Speech_Kaggle.ipynb",
                     "slug": "lilly-speech", "title": "Lilly speech",
                     "needs_weights": False, "needs_corpus": False},
@@ -644,6 +652,12 @@ def main() -> int:
             print("  python3 data/scripts/label_crops.py sheets --crops data/ocr/crops2")
         elif args.job == "ocr":
             print("  unzip lilly-read.zip into models/lilly/read/")
+        elif args.job == "outside-baseline":
+            print("  unzip lilly-outside-baseline.zip; the JSON goes to")
+            print("    training/outside/ and training/form-rate/, the markdown to")
+            print("    training/RESULTS-outside-baseline.md — then commit and push.")
+            print("  The pre-registration fixed that this is written up whichever")
+            print("    way it fell; that is not reopened now the numbers exist.")
         else:
             # Per direction, because they are not interchangeable and the
             # failure is silent: the en-bs run's Output is lilly-adapter-en-bs

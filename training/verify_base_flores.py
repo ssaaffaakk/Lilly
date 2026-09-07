@@ -36,6 +36,8 @@ sys.path.insert(0, str(REPO / "training"))
 COMMITTED = {
     "en-bs": {"bleu": 29.57, "chrf2": 58.96, "pairs": 2009,
               "source": "training/RESULTS-en-bs.md, base (untuned), FLORES-200"},
+    "bs-en": {"bleu": 41.60, "chrf2": 67.58, "pairs": 2009,
+              "source": "training/RESULTS.md, Base (untuned), FLORES-200"},
 }
 
 
