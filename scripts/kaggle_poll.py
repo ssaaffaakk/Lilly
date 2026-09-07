@@ -47,6 +47,12 @@ def jobs() -> dict:
                            "lilly-listen-half1.zip", "lilly-listen-half2.zip"),
             "min_bytes": 1_000_000,
         },
+        # The full speech instrument: a measurement zip, small by design.
+        "speech-instrument": {
+            "slug": f"{user}/lilly-speech-instrument",
+            "done_names": ("lilly-speech-instrument.zip",),
+            "min_bytes": 20_000,
+        },
         "ocr": {
             "slug": f"{user}/lilly-ocr",
             "done_names": ("lilly-read.zip",),

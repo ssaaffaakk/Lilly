@@ -36,7 +36,13 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO_ROOT))
 from training.build_test_v2 import ALLOWED_LICENCES, licence_family, title_of  # noqa: E402
 
-TEST = REPO_ROOT / "data" / "ocr" / "real-photos" / "test-v2"
+REAL = REPO_ROOT / "data" / "ocr" / "real-photos"
+# Which draw to fetch. test-v2 is the frozen 280; test-v2b is the next 160 of
+# the same hash-ranked pool (training/extend_test_v2.py), drawn so the
+# photograph count can reach the 200-with-text that training/RUBRIC.md gates on.
+# Both are read at 1280px through the same code, so --set changes nothing but
+# which sample.txt is fetched.
+TEST = REAL / "test-v2"
 PHOTOS = TEST / "photos"
 API = "https://commons.wikimedia.org/w/api.php"
 UA = "Lilly-OCR-eval/1.0 (https://github.com/ssaaffaakk/Lilly; test-v2 fetch)"
@@ -99,12 +105,20 @@ def strip_html(text: str) -> str:
 
 def main() -> int:
     ap = argparse.ArgumentParser()
+    ap.add_argument("--set", default="test-v2",
+                    help="the draw to fetch: a directory under data/ocr/real-photos "
+                         "holding sample.txt and pool.tsv (test-v2, test-v2b)")
     ap.add_argument("--check", action="store_true")
     ap.add_argument("--thumbnails-only", action="store_true",
                     help="fetch only the photographs whose 1280px rendering is a standard thumbnail "
                          "and stop; the originals, which upload.wikimedia.org rate-limits, come in a "
                          "later run of the same command without this flag")
     args = ap.parse_args()
+    global TEST, PHOTOS
+    TEST = REAL / args.set
+    PHOTOS = TEST / "photos"
+    if not (TEST / "sample.txt").is_file() or not (TEST / "pool.tsv").is_file():
+        raise SystemExit(f"{TEST} has no sample.txt/pool.tsv — draw the set first")
 
     names = [ln.strip() for ln in (TEST / "sample.txt").read_text(encoding="utf-8").splitlines() if ln.strip()]
     with (TEST / "pool.tsv").open(encoding="utf-8") as fh:

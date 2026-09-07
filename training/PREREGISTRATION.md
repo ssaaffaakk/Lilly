@@ -2248,3 +2248,52 @@ above the baseline again, and rule 3 says what that means.
 - Treating a Croatian substitution that is *equal* to the baseline as "not
   above" without saying that equal is what the bar permits and why.
 - Any fourth look. Rule 3 is not advice.
+
+---
+
+# v3 — picture — test-v2b, drawn before any photograph in it has been looked at
+
+Written 7 September 2026, the day the draw was made and before a single one of
+its photographs was opened, transcribed, or read by any reader.
+
+## Why
+
+`training/RUBRIC.md` refuses to score the reader below **200 real, held-out,
+eye-transcribed photographs** — "void, not low". test-v2 drew 280 and **132**
+carry text. Every reader number this project has published for the photograph
+lane is therefore, by the project's own scale, not a score. Nothing about the
+reader changes that. Transcription does.
+
+## The draw
+
+`training/extend_test_v2.py`: the **next 160** photographs of the same
+hash-ranked pool that test-v2 was drawn from — ranks 281–440 of
+`test-v2/pool.tsv`, eligible rows only, in the order already committed. The
+script refuses to run unless `test-v2/sample.txt` is exactly the first 280
+eligible rows of that pool, so "the next 160" is defined by files in git and
+not by anyone's hand. At test-v2's rate (47% with text) 160 should carry about
+75, taking the total past 200 with margin. If it falls short, a further
+extension is drawn the same way; nothing is cherry-picked to reach the number.
+
+## What is fixed now
+
+1. **Two blind passes, the same as the 280.** `transcription_pass.py sheet
+   --set test-v2b --pass a` and `--pass b`, by two people or two agents that
+   never see each other's work or any reader's output; `check` refuses a pass
+   that skipped a photograph or looks like a reader's output; `build_truth.py`
+   keeps only the words both passes saw.
+2. **No reader touches test-v2b until `truth-v2b.json` exists.** Not the
+   shipped reader, not a candidate, not a detector "just to see".
+3. **The score is the union.** test-v2 ∪ test-v2b, scored once, one interval.
+   test-v2 alone is not re-quoted as though the gate were met.
+4. **The reader is the shipped one and it does not change for this.** This is a
+   measurement of the test set's validity, not a lever on the model.
+
+## What this does not fix, said now
+
+The rubric's metric is **strict end-to-end word F1 with box overlap**. The
+transcriptions carry words, not boxes; no box truth exists for any of these
+photographs. So even at 200-with-text the number this project can compute is
+**box-relaxed** — an upper bound on the rubric's F1, not the F1. That stays in
+every sentence that quotes it, and closing it is a separate, later decision
+about whether to annotate boxes at all.

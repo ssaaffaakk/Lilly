@@ -95,6 +95,14 @@ JOBS = {
     "speech":      {"notebook": "Lilly_Speech_Kaggle.ipynb",
                     "slug": "lilly-speech", "title": "Lilly speech",
                     "needs_weights": False, "needs_corpus": False},
+    # The full speech instrument (PREREGISTRATION.md, "v3 -- speech -- the full
+    # instrument"): 925 clips, both listeners, gate rows + rubric WER. A
+    # measurement, not a training pass; it reads large-v3 from half-2's Output.
+    "speech-instrument": {"notebook": "Lilly_Speech_Instrument_Kaggle.ipynb",
+                    "slug": "lilly-speech-instrument",
+                    "title": "Lilly speech instrument",
+                    "needs_weights": False, "needs_corpus": False,
+                    "kernel_sources": ["lilly-speech-half2"]},
     "speech-half2": {"notebook": "Lilly_Speech_Kaggle_Half2.ipynb",
                     "slug": "lilly-speech-half2", "title": "Lilly speech half2",
                     "needs_weights": False, "needs_corpus": False,
@@ -652,6 +660,13 @@ def main() -> int:
             print("  python3 data/scripts/label_crops.py sheets --crops data/ocr/crops2")
         elif args.job == "ocr":
             print("  unzip lilly-read.zip into models/lilly/read/")
+        elif args.job == "speech-instrument":
+            print("  unzip lilly-speech-instrument.zip: speech-gate.json and")
+            print("    speech-rubric.json -> training/speech-instrument/;")
+            print("    bench-speech-outputs.json REPLACES bench/speech/.outputs.json;")
+            print("    speech-instrument.md is the raw report. Then write the outcome")
+            print("    into RESULTS-speech.md and PREREGISTRATION.md whichever way it")
+            print("    fell. DOES NOT SHIP means rule 3: large-v3 is closed.")
         elif args.job == "outside-baseline":
             print("  unzip lilly-outside-baseline.zip; the JSON goes to")
             print("    training/outside/ and training/form-rate/, the markdown to")

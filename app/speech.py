@@ -24,6 +24,7 @@ callers remembering: loading a second evicts the first. `release()` drops it
 early, which is what lets a benchmark hand the memory back before it starts the
 next build rather than during it.
 """
+import os
 import sys
 import threading
 from pathlib import Path
@@ -69,7 +70,14 @@ def get_model(build=None):
             if model is None:
                 _models.clear()
                 from faster_whisper import WhisperModel
-                model = WhisperModel(key, device="cpu", compute_type="int8")
+                # The product runs int8 on CPU, and that is the path every
+                # published number was measured on. A Kaggle measurement run
+                # may put the same weights on the GPU -- opt-in by environment,
+                # so nothing about the app changes and a benchmark that forgets
+                # to set it gets the product's own path, not a faster one.
+                device = os.environ.get("LILLY_SPEECH_DEVICE", "cpu")
+                compute = os.environ.get("LILLY_SPEECH_COMPUTE", "int8")
+                model = WhisperModel(key, device=device, compute_type=compute)
                 _models[key] = model
     return model
 
@@ -84,12 +92,22 @@ def release(build=None) -> None:
         _models.pop(_key(build), None)
 
 
-def transcribe(audio_path: str, language: str = "bs", build=None) -> str:
+def transcribe(audio_path: str, language: str = "bs", build=None,
+               beam_size: int = 5, temperature=None) -> str:
+    """The product decodes at beam_size=5 and those are the defaults.
+
+    `beam_size` and `temperature` exist for one caller: training/RUBRIC.md
+    defines the speech score at greedy, temperature 0, and speech_bench.py's
+    --decode rubric passes beam_size=1, temperature=0.0 to measure that. The
+    server never passes either, so its path is unchanged.
+    """
     with _transcribe_lock:
         try:
+            extra = {} if temperature is None else {"temperature": temperature}
             segments, info = get_model(build).transcribe(audio_path,
                                                          language=language,
-                                                         beam_size=5)
+                                                         beam_size=beam_size,
+                                                         **extra)
             # segments is a generator: it has to be drained inside the lock
             return " ".join(seg.text.strip() for seg in segments).strip()
         except BadInput:

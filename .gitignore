@@ -186,3 +186,16 @@ models/lilly/read/.train_ocr.lock
 bench/.outputs.json
 data/osm/
 # data/signs/ — see exceptions above (sign-text.tsv for white paper)
+# test-v2b: the next 160 of the same hash-ranked pool (training/extend_test_v2.py),
+# drawn so the reader's test set can reach the 200-with-text RUBRIC.md gates on.
+# Same shape as test-v2: the draw, the pool, the attribution, the two blind
+# passes and the key are committed; the photographs are re-fetched.
+!data/ocr/real-photos/test-v2b/
+data/ocr/real-photos/test-v2b/*
+!data/ocr/real-photos/test-v2b/pool.tsv
+!data/ocr/real-photos/test-v2b/sample.txt
+!data/ocr/real-photos/test-v2b/CREDITS.tsv
+!data/ocr/real-photos/test-v2b/fetch-log.tsv
+!data/ocr/real-photos/test-v2b/truth-v2b.json
+!data/ocr/real-photos/test-v2b/pass-a.json
+!data/ocr/real-photos/test-v2b/pass-b.json

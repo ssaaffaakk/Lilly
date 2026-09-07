@@ -461,10 +461,14 @@ def marker_rate(hyps: list, vocab: set) -> tuple:
     return (1000 * hits / max(words, 1)), hits, words
 
 
-def word_error_rate(cases: list, hyps: list) -> tuple:
+def word_error_rate(cases: list, hyps: list, tokens=None) -> tuple:
+    """`tokens` turns text into the words that are compared. Default is this
+    project's own normalise(); the rubric decode passes Whisper's
+    BasicTextNormalizer, because training/RUBRIC.md scores after it."""
+    tokens = tokens or normalise
     total_edits = total_words = 0
     for case, hyp in zip(cases, hyps):
-        ref_words, hyp_words = normalise(case["reference"]), normalise(hyp)
+        ref_words, hyp_words = tokens(case["reference"]), tokens(hyp)
         total_edits += edits(hyp_words, ref_words)
         total_words += len(ref_words)
     return 100 * total_edits / max(total_words, 1), total_edits, total_words
@@ -607,7 +611,12 @@ def fingerprint(build: Path) -> str:
     return h.hexdigest()
 
 
-def transcribe(build: Path, cases: list, language: str, cache: dict, key: str) -> list:
+def transcribe(build: Path, cases: list, language: str, cache: dict, key: str,
+               decode: dict | None = None) -> list:
+    """`decode` is the kwargs handed to app.speech.transcribe: {} for the
+    product's own settings, {"beam_size": 1, "temperature": 0.0} for the
+    rubric's greedy decode. Callers key the cache differently for the two."""
+    decode = decode or {}
     have = cache.get(key, {})
     todo = [c for c in cases if c["clip"].name not in have]
     if todo:
@@ -623,7 +632,7 @@ def transcribe(build: Path, cases: list, language: str, cache: dict, key: str) -
         started = time.time()
         for i, case in enumerate(todo, 1):
             have[case["clip"].name] = listen(str(case["clip"]), language=language,
-                                             build=build)
+                                             build=build, **decode)
             if i % 20 == 0 or i == len(todo):
                 cache[key] = have
                 CACHE.write_text(json.dumps(cache, ensure_ascii=False), encoding="utf-8")
@@ -882,7 +891,28 @@ def main() -> int:
     ap.add_argument("--power", action="store_true",
                     help="simulate how large a difference this run could detect, "
                          "and stop. No model, for writing a threshold with")
+    ap.add_argument("--decode", choices=("app", "rubric"), default="app",
+                    help="app: the product's path, beam 5, this file's normaliser -- "
+                         "the gate's instrument. rubric: greedy at temperature 0, WER "
+                         "after Whisper's BasicTextNormalizer -- training/RUBRIC.md's "
+                         "definition of the speech score. Separate caches.")
+    ap.add_argument("--json", type=Path, default=None,
+                    help="write the per-listener rows and the paired p-values here")
     args = ap.parse_args()
+
+    if args.decode == "rubric":
+        from transformers.models.whisper.english_normalizer import BasicTextNormalizer
+        _whisper_norm = BasicTextNormalizer()
+        wer_tokens = lambda text: _whisper_norm(text).split()  # noqa: E731
+        decode_kwargs = {"beam_size": 1, "temperature": 0.0}
+        cache_suffix = ":greedy"
+        print("decode: RUBRIC -- greedy, temperature 0, WER after Whisper's "
+              "BasicTextNormalizer. The term rows below are on these transcripts too "
+              "and are NOT the gate's instrument; use --decode app for the gate.")
+    else:
+        wer_tokens = None
+        decode_kwargs = {}
+        cache_suffix = ""
 
     OUT.mkdir(parents=True, exist_ok=True)
     all_rows = read_tsv(args.data)
@@ -949,17 +979,61 @@ def main() -> int:
             fp = fingerprint(build)
             print(f"  {build.name}: weights {fp[:16]}")
             hyps = transcribe(build, cases, args.language, cache,
-                              f"{fp[:16]}:{args.language}")
-            wer, wrong, words = word_error_rate(cases, hyps)
+                              f"{fp[:16]}:{args.language}{cache_suffix}",
+                              decode=decode_kwargs)
+            wer, wrong, words = word_error_rate(cases, hyps, wer_tokens)
             results[build.name] = {"hyps": hyps, "marks": score(cases, hyps),
-                                   "wer": wer, "wrong": wrong, "words": words}
+                                   "wer": wer, "wrong": wrong, "words": words,
+                                   "fingerprint": fp[:16]}
             print(f"  {build.name}: WER {wer:.1f}%  ({wrong} wrong of {words} words)")
     else:
         print("\nterm-set coverage of the chosen clips")
         coverage(score(cases, [c["reference"] for c in cases]))
 
     report(cases, results, controls, terms, hypotheses)
+    if args.json and results:
+        args.json.parent.mkdir(parents=True, exist_ok=True)
+        args.json.write_text(json.dumps(
+            gate_record(args, rows, all_rows, cases, results), ensure_ascii=False,
+            indent=1), encoding="utf-8")
+        print(f"wrote {args.json}")
     return 0
+
+
+def gate_record(args, rows: list, all_rows: list, cases: list, results: dict) -> dict:
+    """The rows a gate reads, as data. Same functions report() prints from."""
+    out = {"decode": args.decode, "clips": args.clips, "n_clips": len(rows),
+           "n_clips_in_split": len(all_rows),
+           "n_sentences": len({r[1] for r in rows}),
+           "n_targets": sum(len(c["targets"]) for c in cases),
+           "listeners": {}, "paired": {}}
+    for label, r in results.items():
+        m = r["marks"]
+        k = sum(1 for x in m if x["outcome"] == "bosnian")
+        lo, hi = wilson(k, len(m))
+        sub, _, decided = substitution(m)
+        hr, hr_a, hr_dec, hr_n = variety_substitution(m, "hr")
+        sr, sr_a, sr_dec, sr_n = variety_substitution(m, "sr")
+        out["listeners"][label] = {
+            "fingerprint": r["fingerprint"], "wer": r["wer"], "wrong": r["wrong"],
+            "words": r["words"], "term_recall": 100 * k / max(len(m), 1),
+            "term_recall_ci95": [100 * lo, 100 * hi], "targets": len(m),
+            "substitution": 100 * sub, "decided": decided,
+            "croatian": 100 * hr, "croatian_subs": hr_a, "croatian_decided": hr_dec,
+            "croatian_targets": hr_n,
+            "serbian": 100 * sr, "serbian_subs": sr_a, "serbian_decided": sr_dec,
+            "serbian_targets": sr_n}
+    labels = list(results)
+    if len(labels) == 2:
+        a, b = results[labels[0]]["marks"], results[labels[1]]["marks"]
+        for name, stat in (("term_recall", recall),
+                           ("substitution", lambda m: substitution(m)[0]),
+                           ("croatian", lambda m: variety_substitution(m, "hr")[0]),
+                           ("serbian", lambda m: variety_substitution(m, "sr")[0])):
+            d, p = paired_bootstrap(a, b, stat)
+            out["paired"][name] = {"second_minus_first": 100 * d, "p": p,
+                                   "first": labels[0], "second": labels[1]}
+    return out
 
 
 def write_artifacts(terms: list, refused: list, cases: list, source: str) -> None:

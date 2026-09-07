@@ -12,6 +12,7 @@ SPEECH2 = REPO / "training" / "Lilly_Speech_Kaggle_Half2.ipynb"
 OCR = REPO / "training" / "Lilly_OCR_Kaggle.ipynb"
 OCR_PADDLE = REPO / "training" / "Lilly_OCR_Paddle_Kaggle.ipynb"
 OUTSIDE = REPO / "training" / "Lilly_Outside_Baseline_Kaggle.ipynb"
+SPEECH_INSTR = REPO / "training" / "Lilly_Speech_Instrument_Kaggle.ipynb"
 
 
 def read_nb(path: Path) -> str:
@@ -281,10 +282,39 @@ def check_outside(text: str) -> None:
              "relaunch would delete it")
 
 
+def check_speech_instrument(text: str) -> None:
+    """The last look at large-v3. The pre-registration fixes the clip set, the
+    decode, and that it is judged once; the notebook must not be able to drift
+    from any of that between launches."""
+    if "/kaggle/working/stdout.txt" not in text or "Popen" not in text:
+        fail("speech instrument: run() must Popen+tee into /kaggle/working/stdout.txt")
+    if "/kaggle/temp" not in text:
+        fail("speech instrument: must clone to /kaggle/temp")
+    if "!= 925" not in text:
+        fail("speech instrument: must assert all 925 FLEURS bs_ba test clips before scoring")
+    if '"--clips", "all"' not in text:
+        fail("speech instrument: the pre-registration fixes --clips all; not distinct, not first200")
+    if '"--decode", "rubric"' not in text:
+        fail("speech instrument: must also compute the rubric WER (greedy, BasicTextNormalizer)")
+    if "openai/whisper-large-v3" not in text:
+        fail("speech instrument: must check the candidate's built.json is whisper-large-v3 "
+             "before scoring -- the wrong zip would be scored under its name")
+    if "train_speech.py" in text:
+        fail("speech instrument: is a measurement; it must not train")
+    if "check_trainproof" not in text:
+        fail("speech instrument: must scan the tee before packaging")
+    if "LILLY_SPEECH_DEVICE" not in text:
+        fail("speech instrument: must opt the listener onto the GPU by env -- "
+             "app.speech defaults to CPU int8 and 925 clips x large-v3 misses the wall")
+    if "rule 3" not in text:
+        fail("speech instrument: the report must name rule 3 -- a refusal closes large-v3")
+
+
 def main() -> int:
     for path, fn in ((SPEECH, check_speech), (SPEECH2, check_speech_half2),
                      (OCR, check_ocr), (OCR_PADDLE, check_ocr_paddle),
-                     (OUTSIDE, check_outside)):
+                     (OUTSIDE, check_outside),
+                     (SPEECH_INSTR, check_speech_instrument)):
         if not path.is_file():
             fail(f"missing {path}")
         fn(read_nb(path))
@@ -322,7 +352,7 @@ def main() -> int:
     offload = (REPO / "training" / "kaggle_offload.py").read_text(encoding="utf-8")
     if "experiment_log.json" not in offload or "scan_trainproof" not in offload:
         fail("training/kaggle_offload.py must write experiment_log.json and scan the tee")
-    print("preflight ok: speech half-1 + half-2 + OCR + outside-baseline notebooks")
+    print("preflight ok: speech half-1 + half-2 + instrument, OCR, outside-baseline notebooks")
     return 0
 
 
