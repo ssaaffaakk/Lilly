@@ -41,9 +41,11 @@ getting my sentences wrong — close enough to look right, wrong enough to leave
 me lost in the room. They also treat Bosnian as one more entry in a South Slavic
 bucket, and that is not the same thing as understanding it.
 
-So I trained the models myself, measured them against the untuned versions they
-started from, and published every number, including the ones that say the
-fine-tuning did nothing. Lilly is how I show that I can work in Bosnian and that
+So I trained the models myself. The first versions were bad — under 30% of the
+words on a sign, more than half the words of a sentence heard wrong — and I
+kept the numbers as they climbed, measured every change against the untuned
+model underneath it, and published all of them, including the ones that say a
+change did nothing. Lilly is how I show that I can work in Bosnian and that
 I can build something serious when I hit a wall.
 
 The longer version is in [`docs/STORY.md`](docs/STORY.md).
@@ -193,9 +195,11 @@ row came in one word above the re-measured baseline and the pre-registered gate
 is "both, not either". A last, larger measurement is pre-registered
 (`training/PREREGISTRATION.md`, "the full instrument"); it ships or it closes.
 
-Every number below compares Lilly against the untuned model it started from, on
+Every number below compares Lilly against the untuned model it is built on, on
 data held out of training, run through the app's own code path so the only
-difference between the columns is the fine-tuning.
+difference between the columns is the fine-tuning. That base is not where the
+project started — the section above is — it is the fairest thing to measure a
+change against.
 
 **Translation** — 2,009 held-out FLORES-200 Bosnian–English pairs, paired
 bootstrap for significance.
@@ -210,9 +214,11 @@ Read that honestly: the fine-tuning buys word-level accuracy and removes a
 visible defect. It does not improve chrF2 — it stopped costing anything there,
 which an earlier version of this same fine-tune did not manage.
 
-**Speech** — 200 held-out FLEURS Bosnian clips, the same clips before and after.
+**Speech** — 200 held-out FLEURS Bosnian clips, the same clips for both
+columns. The first listeners, by the owner's notes, were above 55% word error;
+the stock checkpoint is the first number kept.
 
-| | Before | Now |
+| | Stock checkpoint | Now |
 | --- | --- | --- |
 | Word error rate | 38.5% (stock Whisper-small) | **34.9%** |
 | Bosnian term recall | 65.9% | **68.2%** |
@@ -223,6 +229,9 @@ transcribed by two readers independently, seeing neither each other's work nor
 any model's guess; only words both of them saw are in the answer key. The 40 are
 the original set (373 agreed words); `test-v2` is 280 photographs drawn from the
 same pool, 132 with text, 2,907 agreed words, never trained on by anything.
+The first reader read **36.0%** of the words on the 40 and invented 224
+(`training/RESULTS-ocr.md`); the builds before it, by the owner's notes, read
+under 30% and invented more than 280. Everything in this table came after.
 
 | | the 40 | `test-v2` (132 photographs) |
 | --- | --- | --- |
@@ -322,6 +331,9 @@ python3 scripts/preflight_kaggle.py
 python3 scripts/kaggle_train.py speech          # half 1
 python3 scripts/kaggle_train.py ocr             # in parallel if a GPU slot is free
 python3 scripts/kaggle_train.py speech-half2    # only after half 1 is COMPLETE
+python3 scripts/kaggle_train.py speech-instrument   # 925 clips, both listeners: the last look at large-v3
+python3 scripts/kaggle_train.py translation-en-bs   # the reply direction, LoRA, pre-registered bars
+python3 scripts/kaggle_train.py outside-baseline    # NLLB-200 on the same FLORES pairs
 python3 scripts/kaggle_poll.py                  # CANCEL or ERROR counts as failure
 ```
 
@@ -352,8 +364,8 @@ list of failures already paid for: [`docs/kaggle-fail-stop.md`](docs/kaggle-fail
 - [x] Translate, listen, speak, read, web app, correction pipeline
 - [x] Published weights and model card with every score and every limit
 - [x] Pre-registered thresholds and hash-bound results
-- [ ] English → Bosnian fine-tune
-- [ ] Larger speech model, trained in two halves on Kaggle
+- [ ] English → Bosnian fine-tune — bars and baselines written, launch pending
+- [ ] Larger speech model — trained (11.9% word error); refused by one word at the gate; last look pre-registered
 - [ ] A labelled set of real phone photographs from Bosnia
 
 ---
