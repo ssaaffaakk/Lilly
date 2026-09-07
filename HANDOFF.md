@@ -107,13 +107,17 @@ same 200 clips through the same code; variety substitution fell 5.1% → 3.3%.
 claim is that the Croatian audio did not make the model less Bosnian — the
 failure the gate was built to catch — not that it made it more so.
 
-**The reader read 54.7% of a photograph's words on the 40, up from 36.0%**, after
+**The reader read 54.7% of a photograph's words on the 40, up from 36.0%** — the
+first recorded number; the builds before it, by the owner's notes, read under 30%
+and invented more than 280 (README, "Where it started") — after
 training on 1,294 hand-transcribed real crops alongside the 20,000 synthetic
 ones. Pooled words 16.9% → 45.0%, diacritic words 36.0% → 44.0%, and — the line
 that stops this being recall bought by guessing — invented words 224 → 180. Full
 write-up in `training/RESULTS-ocr-realcrops.md`. **Superseded 5 Sep 2026:** on
 `test-v2`, 132 held-out photographs, that reader reads 34.6% — the 40 were its
 optimistic end — and the fine-tune is worth +4.6 points over stock, not 18.7.
+**Superseded again 5 Sep 2026:** the shipped reader is now PP-OCRv6 at floor 0.9,
+**67.0% on the 40 with 65 invented**, 57.8% on `test-v2` (`training/RESULTS-ocr-bakeoff.md`).
 PaddleOCR PP-OCRv6, untrained, with a confidence floor of 0.9, reads 57.8% with
 450 invented words there and is the app's reader now (`docs/OCR-ROADMAP.md`,
 decisions 4–5, step 6); the EasyOCR reader stays as `LILLY_READER=easyocr`.
