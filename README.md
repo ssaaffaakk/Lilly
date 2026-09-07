@@ -147,15 +147,17 @@ contain.
 
 ### Weights it is built from
 
-Lilly is a bundle, not a new architecture. The translator, the listener, and the
-OCR recogniser are fine-tuned here; the voice is stock. Full attribution and
+Lilly is a bundle, not a new architecture. The translator and the listener are
+fine-tuned here; the reader and the voice are off the shelf — the reader is
+PP-OCRv6, which a rule written before the run chose over the fine-tuned EasyOCR
+one, and four later attempts to fine-tune it never beat it. Full attribution and
 licenses are in [`models/lilly/NOTICE.md`](models/lilly/NOTICE.md).
 
 | Ability | Built from | Fine-tuned here |
 | --- | --- | --- |
 | Translate | OPUS-MT [`opus-mt-tc-big-zls-en`](https://huggingface.co/Helsinki-NLP/opus-mt-tc-big-zls-en) (Helsinki-NLP), CTranslate2 int8 | yes — LoRA merged into the weights |
 | Listen | [`faster-whisper-small`](https://huggingface.co/Systran/faster-whisper-small) (SYSTRAN conversion of OpenAI Whisper) | yes — LoRA |
-| Read | [EasyOCR](https://github.com/JaidedAI/EasyOCR), CRAFT detector by Clova AI | recogniser only |
+| Read | [PaddleOCR PP-OCRv6](https://github.com/PaddlePaddle/PaddleOCR) (`PP-OCRv6_medium_det` + `_medium_rec`, PaddlePaddle), fetched at run time; [EasyOCR](https://github.com/JaidedAI/EasyOCR) + CRAFT stays as the `LILLY_READER=easyocr` way back | no — stock, chosen by a pre-registered rule; the EasyOCR fallback is fine-tuned |
 | Speak | [Kokoro-82M](https://huggingface.co/hexgrad/Kokoro-82M) (hexgrad) | no — stock weights |
 
 ---
@@ -231,6 +233,10 @@ This section exists because a README that only lists wins is not worth trusting.
 - **The photograph scores are recognition, not phone reality.** The evaluated
   images come from Wikimedia Commons. Real photographs taken on a phone in
   Bosnia would be the honest test, and there is not a labelled set of them yet.
+  The Commons images are also *downscaled*: a sign whose Commons original is
+  3968 px wide is scored here at 1280 px, and the app reads at up to 2 MP — so
+  these numbers, if anything, understate what the reader does on a
+  full-resolution photo. Measuring that is pre-registered and not yet run.
 - **One test set.** FLORES is professionally translated and even in register.
   Real user input is not.
 
