@@ -207,15 +207,20 @@ where the project started: the first fine-tunes, by the owner's notes, came in
 under 30 BLEU — below the base they were meant to improve — before the recipe
 that produced the column on the right.
 
-| | Base | Lilly | Change |
-| --- | --- | --- | --- |
-| BLEU | 40.81 | **42.18** | **+1.37**, p = 0.001 |
-| chrF2 | 67.34 | 67.47 | +0.14, p = 0.104 — not significant |
-| Outputs with the model's language tag leaked into them | 572 of 2,009 (28.5%) | **0** | the defect a reader actually sees |
+| | First builds (owner's notes) | Base, as downloaded | Base, tag stripped | **Lilly** |
+| --- | --- | --- | --- | --- |
+| BLEU | **< 30** | 37.60 | 40.81 | **42.18** |
+| chrF2 | — | 67.00 | 67.34 | **67.47** |
+| Outputs with the model's language tag leaked into them | — | **572 of 2,009 (28.5%)** | *(removed for scoring)* | **0** |
 
-Read that honestly: the fine-tuning buys word-level accuracy and removes a
-visible defect. It does not improve chrF2 — it stopped costing anything there,
-which an earlier version of this same fine-tune did not manage.
+Two honest ways to read the change. **As a user sees it**, against the base as
+downloaded: **+4.58 BLEU**, and a defect in every fourth output gone. **As a
+translation-quality claim**, against the base with its tags stripped so the
+defect cannot take credit: **+1.37 BLEU** at p = 0.001, and **+0.14 chrF2** at
+p = 0.104 — not significant. The fine-tuning buys word-level accuracy and
+removes a visible defect. It does not improve chrF2 — it stopped costing
+anything there, which the first fine-tunes, under 30 BLEU, did not manage.
+(All four columns: `training/app-hypotheses-armB.json`, rescored 7 September.)
 
 **Speech** — 200 held-out FLEURS Bosnian clips, the same clips for both
 columns. The first listeners, by the owner's notes, were above 55% word error;
