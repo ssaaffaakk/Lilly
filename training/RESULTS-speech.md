@@ -244,9 +244,34 @@ model's cleanliness, and someone will quote them.
 The marker rate has the same shape and the same small counts: Croatian 1 word of
 3,916 for `listen-previous`, 4 of 3,879 for `listen`; Serbian 2 against 4.
 
-## Status
+## Decision — 7 September 2026: it does not ship
 
-**Not published.** The weights sit at `models/lilly/listen` on the Mac and the
-released bundle still carries whisper-small. Publishing is an outward-facing,
-hard-to-reverse act and this result does not clear the gate as written, so it
-waits on the owner's decision, recorded here either way.
+**Not published, by the rule as written.** The owner was shown both readings —
+the literal gate ("Both, not either", and the Croatian row is above its
+baseline) and the same document's power analysis (that column needs about
+twenty points to speak; this is 1.2, and it is one word) — and chose the
+literal one.
+
+The reason is not that the drift is believed to be real. It is that the
+project's credibility rests on the bar meaning what it said before the number
+existed. Three OCR fine-tunes were refused this year on exactly this discipline
+(`RESULTS-ocr-paddle-finetune.md`, steps 7, 7a, 7b) — each of them looked better
+on some column and none of them shipped. A gate that bends the first time the
+result is spectacular is not a gate, and every later refusal would have to be
+read as "we could not find an argument this time".
+
+So the released bundle keeps **whisper-small at 34.9% word error**, and a
+listener measured at **11.9%** stays unpublished at `models/lilly/listen`, with
+its full result recorded above. That cost is real and it is the price of the
+rule; it is written here in those words so nobody has to reconstruct it later.
+
+**What would change this, and what would not.** Not a re-run, not a re-reading,
+not a threshold edited now. The Croatian column failed to resolve 1.2 points
+because it has 32 Croatian-capable targets in this test set, and the
+pre-registration says plainly that this is a limit of the *test set* — "about 70
+of the 349 FLEURS Bosnian sentences contain a word that has a Croatian
+counterpart at all, and nothing in this project's control raises that". An
+instrument that could actually decide this question would need clips built for
+it, held out, and pre-registered before large-v3 is scored on them again. That
+is a new measurement with its own written bars, judged **once** — not this one
+re-run until it passes.

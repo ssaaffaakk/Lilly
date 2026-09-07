@@ -2023,3 +2023,22 @@ What must not happen, and is worth naming because the result is tempting: the
 Croatian row does not get deleted, reworded, or re-thresholded now. A 23-point
 fall in word error and a 29.1-point rise in term recall at p = 0.0000 are not a
 licence to edit the bar they were measured against.
+
+#### The decision, same day: it does not ship
+
+The owner was shown both readings and chose the literal gate. large-v3 stays
+unpublished; the bundle keeps whisper-small at 34.9% word error while a listener
+measured at 11.9% sits unreleased.
+
+The reason is recorded because the cost is real: a bar that bends the first time
+a result is spectacular is not a bar. Three OCR fine-tunes were refused this
+year on this same discipline, each better on some column, none shipped. Bending
+it here would retroactively make those three refusals look like failures of
+imagination rather than of evidence.
+
+The contradiction above is therefore left standing rather than repaired in the
+candidate's favour, and this is what may be done about it: build an instrument
+that can actually resolve the Croatian question — clips chosen for it, held out,
+its bars written before large-v3 touches them — and judge **once**. Not this
+gate re-run, not this threshold rewritten, and not this candidate scored
+repeatedly until a version of the column lets it through.
