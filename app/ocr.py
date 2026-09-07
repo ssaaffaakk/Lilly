@@ -196,6 +196,24 @@ def paddle_models() -> tuple:
             os.environ.get("LILLY_PADDLE_REC", rec))
 
 
+def paddle_det_side_len():
+    """A larger text_det_limit_side_len for the detector, or None.
+
+    LILLY_PADDLE_DET_SIDE_LEN raises the resolution the detector sees (limit type
+    'max'), so few-pixel type survives to be boxed instead of being down-scaled
+    away before detection. Step 8's photograph bars are measured through this knob
+    (training/PREREGISTRATION.md, "the detector's small-type misses"); unset, the
+    library default holds and nothing changes.
+    """
+    raw = os.environ.get("LILLY_PADDLE_DET_SIDE_LEN", "").strip()
+    if not raw:
+        return None
+    n = int(raw)
+    if n < 1:
+        raise RuntimeError(f"LILLY_PADDLE_DET_SIDE_LEN={raw!r}; want a positive pixel length")
+    return n
+
+
 def reader_identity() -> str:
     """Which reader a read goes through, as a string a cache can be stamped with.
 
@@ -220,6 +238,8 @@ def reader_identity() -> str:
         identity += f":{version}" + (f":rec>={floor:g}" if floor is not None else "")
         if paddle_cyrillic_rescue():
             identity += f"+rescue:{CYRILLIC_RESCUE_REC}>={floor:g}"
+        if paddle_det_side_len() is not None:
+            identity += f":det<={paddle_det_side_len()}"
         return identity
     if _cyrillic_enabled():
         return "easyocr:lilly+cyrillic"
@@ -255,6 +275,10 @@ def get_paddle_reader():
                          if floor is not None and not paddle_cyrillic_rescue() else {})
                 if paddle_rec_dir() is not None:
                     extra["text_recognition_model_dir"] = str(paddle_rec_dir())
+                side = paddle_det_side_len()
+                if side is not None:
+                    extra["text_det_limit_side_len"] = side
+                    extra["text_det_limit_type"] = "max"
                 _paddle_reader = PaddleOCR(
                     text_detection_model_name=det,
                     text_recognition_model_name=rec,
