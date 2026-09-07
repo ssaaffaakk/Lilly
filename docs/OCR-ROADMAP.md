@@ -63,8 +63,17 @@ upstream (the app's 2 MP shrink) or to the model. **The remaining detector
 levers, each its own pre-registration: raise the app's working size** (read at
 > 2 MP; `evaluate_ocr --full-res` measures the ceiling), **or a different
 detector** (CRAFT-detect + PP-OCRv6-recognise hybrid, or the server detector).
-All three product modes ship and work; OCR is in the refine-with-diminishing-
-returns phase. `training/RESULTS-ocr-detection.md`, `training/PREREGISTRATION.md`.
+**Decision, 7 September 2026: the OCR improvement line is paused here.** Four
+pre-registered looks — the recogniser fine-tune (steps 7, 7a, 7b) and detector
+resolution (step 8) — all failed to beat the shipped reader on test-v2. The two
+remaining detector levers are documented and **deferred**, each its own
+pre-registration if revisited: raising the app's working size (higher-resolution
+source, but `app/ocr.py`'s 2 MP-cap note already records an informal check where
+8/4/2 MP misread the same word — "pixels nobody reads"), and a CRAFT-detect +
+PP-OCRv6-recognise hybrid. The shipped PP-OCRv6 reader (54.7% words/photo on the
+40, +38.7 on test-mly over the old reader) is the product. All three modes —
+text, voice, picture — ship and work.
+`training/RESULTS-ocr-detection.md`, `training/PREREGISTRATION.md`.
 
 ---
 
