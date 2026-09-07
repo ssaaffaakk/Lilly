@@ -1764,3 +1764,55 @@ the app's working size (read at more than two megapixels; `evaluate_ocr.py
 --full-res` measures the ceiling) and (2) a different detector (CRAFT-detect +
 PP-OCRv6-recognise hybrid, or the server detector).
 See `training/RESULTS-ocr-detection.md`.
+
+## v2 — picture — the reader on full-resolution inputs — written before the run, 7 September 2026
+
+Written 7 September 2026, before any full-resolution number exists. Found while
+closing the detector line: the committed test-v2 photos are **downscales** —
+`20130606_Mostar_034.jpg` is 1280 px on disk but 3968×2976 on Commons (Commons
+API, 2/2 sampled). The app reads at up to 2 MP (~1633 px), so a real
+high-resolution upload gives the reader ~1633 px of a sign, not the benchmark's
+1280 px — a regime the step-8 side-length sweep could not test because it ran on
+the 1280 px files. Real users upload high-resolution phone photos, so the
+shipped reader's 57.8% words/photo on test-v2 may **understate** real use.
+
+### The question
+
+Re-read the same test-v2 photos at their **full Commons resolution** through the
+shipped reader (PP-OCRv6, floor 0.9, `app.ocr.scan` — unchanged), scored against
+the same `truth-v2.json` (truth is by word, resolution-independent). Does
+words-per-photograph rise over the 1280 px benchmark?
+
+### What is fixed, and what changes
+
+Fixed: the shipped reader and the whole app path, including the 2 MP working-size
+cap — **nothing about the model or the code changes.** The only thing that
+changes is the **input photograph's resolution** (the full original instead of
+the 1280 px downscale), which is the user's own photo, not something the product
+controls. This is a **measurement of the shipped reader on realistic inputs**,
+not a change to be shipped.
+
+### Method
+
+`scripts/fetch_highres_and_score.py`, **on the Mac** (bulk-fetching Commons
+originals is rate-limited from the cloud — HTTP 429, 0/6). For each test-v2
+photo with text: fetch the Commons original, read through `app.ocr.scan`, cache
+the reading, delete the original (disk-safe, resumable). Then score the cache
+against `truth-v2.json` with `evaluate_ocr.py`, and compare to the committed
+downscaled score `training/paddle-floor/test-v2-floor0.9.json`. If more than 15%
+of photos cannot be fetched, it refuses to score a holey set.
+
+### What each outcome means
+
+- **words per photograph rise, paired 95% interval (rescue_report.py) excluding
+  zero.** The benchmark understated real use; the shipped reader is better on the
+  high-resolution photos a user actually takes. Record the higher figure as the
+  realistic one beside the benchmark; whether raising the 2 MP cap itself helps
+  further is a separate pre-registration.
+- **flat.** The 1280 px downscale was not costing recall; the benchmark is fair
+  and 57.8% stands for real use too.
+
+Invented is reported beside (more resolution can find more real text and more
+brickwork). Some Commons titles will not resolve; the miss count is reported and
+the caches (`training/highres/reader-output-fullres.json`) are regenerable
+scratch, not committed — only the scored summary is.

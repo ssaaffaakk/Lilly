@@ -132,6 +132,8 @@ data/signs/.osm-harvest.progress.json
 # evaluate_ocr recreates.
 training/paddle-finetune-floor/cache-*.json
 training/detector-sidelen/cache-*.json
+training/highres/reader-output-fullres.json
+training/highres/_orig.tmp
 
 # OS / editor
 .DS_Store

@@ -84,9 +84,21 @@ So **54.7% words/photo plausibly *understates* real use**, where people upload
 high-resolution phone photos. This is untested against the 2 MP-cap note (which
 compared ≥2 MP variants, not 1280 px → 1633 px) and would be confirmed by
 re-scoring the shipped reader on the full-resolution originals. **Bulk-fetching
-those from Commons is rate-limited from the cloud (0/6, HTTP 429), so the
-measurement is deferred to a Mac fetch.** It changes no weights; it reframes the
-number, upward, and validates the reader for the photos a user actually takes.
+those from Commons is rate-limited from the cloud (0/6, HTTP 429), so it is
+pre-registered** ("the reader on full-resolution inputs") **with a ready-to-run
+Mac script** (`scripts/fetch_highres_and_score.py`): run it on the Mac to get the
+real-input number, commit `training/highres/`, and the cloud reads it back. It
+changes no weights; it reframes the number, upward, and validates the reader for
+the photos a user actually takes.
+
+**Docs to reconcile (found 7 Sep, needs the owner's publish knowledge):** the app
+defaults to PP-OCRv6 (step 6, committed), but the root `README.md` "built from"
+table and the (gitignored) model card still list the reader as EasyOCR and the
+listener as whisper-small. The published HF bundle still carries whisper-small
+(248 MB `listen/model.bin`), so the whisper-large-v3 listener (WER 11.8%, half 2,
+1 Sep) is **Mac-local and unpublished** — the shipped listener is still small
+(WER ~35%). Reconciling these needs the owner's knowledge of what is actually
+published, so it is flagged here rather than guessed.
 `training/RESULTS-ocr-detection.md`, `training/PREREGISTRATION.md`.
 
 ---
