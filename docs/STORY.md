@@ -40,9 +40,13 @@ So I decided to build it myself.
 I trained on real Bosnian, deliberately. I measured it. I tested it. And I
 published the numbers — including the ones that didn’t flatter me:
 
-- **chrF2 67.47** on 2,009 FLORES pairs
-- **34.9% WER** on held-out Bosnian speech, now training whisper-large-v3
-- **54.7%** of words read correctly per photograph, up from 36%
+- **chrF2 67.47** on 2,009 FLORES pairs, from a base that leaked its own
+  language tag into 572 of them — now 0
+- **34.9% WER** on held-out Bosnian speech, from listeners that began above 55%;
+  a whisper-large-v3 I trained reads **11.9%** and is waiting at a gate it
+  missed by one word
+- **67.0%** of words read correctly per photograph, from under 30% at the start
+  and 36% the first time I wrote the number down
 
 Type. Speak. Snap.
 
