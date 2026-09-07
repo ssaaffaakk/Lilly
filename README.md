@@ -227,6 +227,18 @@ This section exists because a README that only lists wins is not worth trusting.
 - **The gain is concentrated in news prose.** Broken out by corpus, the
   fine-tuning is worth +3.05 BLEU on news text and −0.82 BLEU on talks. Nothing
   measured here separates *learned better Bosnian* from *adapted to news style*.
+- **Against an outside system Lilly wins, and mostly not on its own merit.**
+  `facebook/nllb-200-distilled-600M` on the same 2,009 FLORES-200 pairs scores
+  36.49 BLEU bs→en against Lilly's 42.14, and 26.07 en→bs against 29.57 — a
+  model 2.6× and 8× larger, beaten in both directions
+  (`training/RESULTS-outside-baseline.md`). But the untouched Helsinki base
+  already accounts for +5.11 of that +5.65 BLEU, and on chrF2 the fine-tune is
+  **behind** the base it started from (+3.78 for the base, +2.99 for the shipped
+  model). In the reply direction there is no fine-tune at all, so the whole
+  margin is the base's. **The win belongs largely to OPUS-MT**, which this
+  project builds on and did not train. And NLLB-600M is the distilled small
+  variant: Google, DeepL, the 3.3B NLLB and the large general models were not
+  tested, so none of this is a claim about the state of the art.
 - **English → Bosnian is not fine-tuned.** The reply direction runs on the
   untuned base: 29.57 BLEU / 58.96 chrF2 on FLORES-200. No fine-tune has been
   launched for it — the bars it would have to clear are written and its

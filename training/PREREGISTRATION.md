@@ -2117,3 +2117,42 @@ separate question that this section does not decide.
 It also settles nothing about the product. Latency, size, and running with the
 network off are the reasons this project exists at all, and NLLB-600M in a
 browser tab is not the thing Lilly is competing with.
+
+### Outcome, 7 September 2026 — Lilly wins both directions, and mostly not on its own merit
+
+Kaggle T4, all 2,009 FLORES-200 pairs, one configuration each as fixed above.
+Full write-up: `training/RESULTS-outside-baseline.md`.
+
+| | NLLB-600M | Lilly base | Lilly shipped |
+|---|---|---|---|
+| bs→en BLEU / chrF2 | 36.49 / 63.80 | 41.60 / 67.58 | 42.14 / 66.79 |
+| en→bs BLEU / chrF2 | 26.07 / 56.22 | 29.57 / 58.96 | *(no fine-tune)* |
+
+    Lilly shipped − NLLB   bs→en  +5.65 BLEU  +2.99 chrF2
+                           en→bs  +3.50 BLEU  +2.74 chrF2
+
+The section above said "a win for the smaller one is the interesting result".
+It won, at 2.6× and 8× smaller.
+
+**The anchor held**, which is the only reason the gaps are readable: Lilly's
+bases re-scored on the same GPU came back **−0.12 BLEU** (bs→en) and **−0.00**
+(en→bs) from their published CPU numbers. Hardware is worth a tenth of a point
+against gaps of 5.65 and 3.50.
+
+**And the honest reading, which the section above required to be published in
+the same words whichever way it fell:** the margin is mostly not Lilly's. The
+untouched Helsinki base is already +5.11 BLEU / **+3.78 chrF2** over NLLB;
+Lilly's own fine-tune adds **+0.54 BLEU and −0.79 chrF2** on top of it. On chrF2
+the shipped model is *behind its own base*, so against NLLB the base is the
+stronger model on that metric. In the reply direction there is no fine-tune at
+all, so the whole +3.50 belongs to `opus-mt-tc-base-en-sh`.
+
+Point 4 above — "the size difference is stated every time the numbers are" —
+now has a companion that was not anticipated and is registered here so it is not
+dropped later: **the base's share of the credit is stated every time too.**
+
+One consequence for the reply direction's own pre-registration, above: its bar
+(chrF2 above 58.96) sits on a base that is already 3.5 BLEU ahead of NLLB. A
+fine-tune that merely holds that line is not worth shipping, which is what that
+bar already says — this is the first outside evidence that it is set at the
+right place rather than an arbitrary one.

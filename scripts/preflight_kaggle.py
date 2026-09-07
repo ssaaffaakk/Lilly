@@ -274,6 +274,11 @@ def check_outside(text: str) -> None:
              "fetch_translate_base.py --direction for each direction")
     if "check_trainproof" not in text:
         fail("outside baseline: must scan the tee before packaging")
+    if '"RESULTS-outside-baseline.md"' in text:
+        fail("outside baseline: must write its table to training/outside/"
+             "report-raw.md, not over RESULTS-outside-baseline.md — the "
+             "RESULTS-*.md files carry a person's reading of the numbers and a "
+             "relaunch would delete it")
 
 
 def main() -> int:
