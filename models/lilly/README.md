@@ -21,25 +21,492 @@ base_model:
   - PaddlePaddle/PP-OCRv6_medium_rec
 ---
 
-# Lilly — Bosnian and English, five models in one folder
+> This card is the project's README, mirrored here so the numbers live in one place (`scripts/sync_model_card.py`). The folder layout and the licenses that travel with these weights are at the end.
 
-The weights the [Lilly](https://github.com/ssaaffaakk/Lilly) app runs on. Lilly turns
-Bosnian into English three ways — typed text, spoken Bosnian, and photographs of Bosnian
-text — reads the English back aloud, and gives you the Bosnian to say in reply.
+<h1 align="center">Lilly</h1>
 
-This is **a bundle, not a new architecture**. Three of the five folders are fine-tuned
-by this project — both translators and the listener — and each carries its own scores
-on this page, measured against the untuned model it is built on. The voice is stock.
-The EasyOCR reader in `read/` is fine-tuned too, but the app reads photographs with
-PaddleOCR PP-OCRv6, chosen by a rule written before the comparison ran; it is fetched
-by the app at install time and is not in this bundle. Every upstream model is credited
-below. Once installed, nothing reaches the network at runtime.
+<p align="center"><strong>A Bosnian translator you can type into, talk to, or point a camera at — running entirely on your own machine.</strong></p>
 
-Two directions. Bosnian → English is the shipped direction and carries the scores
-below. English → Bosnian (`translator-en-bs/`, the reply the app offers under the swap
-button) is a smaller base fine-tuned on 8 September 2026; its own numbers are in
-"The reply direction" below, and nothing here says the two directions are of
-comparable quality — on the evidence they are not.
+<p align="center">
+  <a href="#run-it"><img src="https://img.shields.io/badge/python-3.12+-3776AB.svg" alt="Python 3.12+"></a>
+  <a href="#whats-inside"><img src="https://img.shields.io/badge/FastAPI-0.115+-009688.svg" alt="FastAPI"></a>
+  <a href="#how-well-it-works"><img src="https://img.shields.io/badge/offline-no%20network%20at%20inference-2ea043.svg" alt="Offline"></a>
+  <a href="https://huggingface.co/Safak11/lilly"><img src="https://img.shields.io/badge/weights-Safak11%2Flilly-FFD21E.svg" alt="Hugging Face weights"></a>
+</p>
+
+<p align="center">
+  <img src="https://raw.githubusercontent.com/ssaaffaakk/Lilly/main/docs/images/demo-translate.jpg" alt="Lilly translating a Bosnian sentence into English" width="760">
+</p>
+
+<p align="center">
+  <a href="#why-i-built-it">Why</a> ·
+  <a href="#see-it-work">Examples</a> ·
+  <a href="#run-it">Run it</a> ·
+  <a href="#whats-inside">Inside</a> ·
+  <a href="#the-journey-so-far">Journey</a> ·
+  <a href="#how-well-it-works">Numbers</a> ·
+  <a href="#what-it-cannot-do-yet">Limits</a> ·
+  <a href="#training">Training</a>
+</p>
+
+---
+
+## Why I built it
+
+I applied to a lot of internships and kept getting turned down for the same
+reason: I did not know Bosnian.
+
+I could not learn a language in a week, so I built the thing I needed instead.
+Lilly is a translator I made for myself. In class and at work I press the
+microphone, say what I just heard, and get it back in English. I point the
+camera at a whiteboard or a sign and read it. I type what I want to say in
+English and Lilly gives me the Bosnian to say back.
+
+I tried the tools that already existed. Google Translate and the rest kept
+getting my sentences wrong — close enough to look right, wrong enough to leave
+me lost in the room. They also treat Bosnian as one more entry in a South Slavic
+bucket, and that is not the same thing as understanding it.
+
+So I trained the models myself. The first versions were bad — under 30% of the
+words on a sign, more than half the words of a sentence heard wrong — and I
+kept the numbers as they climbed, measured every change against the untuned
+model underneath it, and published all of them, including the ones that say a
+change did nothing. Lilly is how I show that I can work in Bosnian and that
+I can build something serious when I hit a wall.
+
+The longer version is in [`docs/STORY.md`](https://github.com/ssaaffaakk/Lilly/blob/main/docs/STORY.md).
+
+---
+
+## See it work
+
+![Type, speak, or snap a photo](https://raw.githubusercontent.com/ssaaffaakk/Lilly/main/docs/images/lilly-modes.jpg)
+
+Real output from the running app, not hand-picked from a benchmark.
+
+**Bosnian → English**
+
+| You type | Lilly returns |
+| --- | --- |
+| Molim vas, možete li ponoviti? Nisam razumio zadaću. | Please, can you repeat that? I didn't understand the assignment. |
+| Sastanak je sutra u devet u kancelariji na drugom spratu. | The meeting is tomorrow at nine in the office on the second floor. |
+| Rok za predaju projekta je sljedeći petak. | The deadline for handing over the project is next Friday. |
+
+**English → Bosnian**, for saying something back
+
+| You type | Lilly returns |
+| --- | --- |
+| Could you send me the file before the meeting? | Možete li mi poslati dosje prije sastanka? |
+| I am still learning Bosnian, please be patient with me. | Još učim bosanski, molim vas budite strpljivi sa mnom. |
+
+Speech and photographs go through the same translator, so a spoken sentence and
+a photographed sign come back the same way a typed one does.
+
+---
+
+## Run it
+
+```bash
+uv venv .venv --python 3.12
+uv pip install --python .venv/bin/python -r requirements.txt
+.venv/bin/python scripts/fetch_models.py        # the bundle, then the reader's own weights
+.venv/bin/uvicorn app.server:app --port 8000
+```
+
+Open http://localhost:8000. Allow the microphone, or photograph something with a
+**đ** in it.
+
+That gives you all five abilities. The translator arrives already fine-tuned
+and quantised, so there is nothing to build for the forward direction, and the
+bundle has carried the reply direction (English in, Bosnian out, the swap
+button in the UI) since 8 September 2026, so `fetch_models.py` pulls it as
+`translator-en-bs/`. The fetch also pulls PP-OCRv6 into PaddleX's cache
+through the app's own reader, so the first photograph does not wait on a
+download, and it checks the listener it was handed against the gated one,
+saying so out loud if an older fetch left the closed whisper-large-v3 behind.
+To rebuild the reply direction yourself from the upstream base instead:
+
+```bash
+.venv/bin/python scripts/fetch_translate_base.py --direction en-bs
+.venv/bin/python scripts/build_translator.py --direction en-bs
+```
+
+Without `translator-en-bs/` the app still runs and `/api/reply` answers 503.
+`python3 app/lilly.py` prints which parts are installed.
+
+Startup is instant because each model loads on first use. Once
+`fetch_models.py` has finished, nothing reaches the network again.
+`python3 -m pytest tests` checks the parts that need no model: the sentence
+splitter, the batch grouping, the correction store and the server's answers
+to bad input.
+
+---
+
+## What's inside
+
+![Lilly offline architecture](https://raw.githubusercontent.com/ssaaffaakk/Lilly/main/docs/images/architecture.png)
+
+Every ability sits behind one object and one API.
+
+```python
+from app.lilly import lilly
+lilly.translate("Dobar dan")          # Bosnian text   -> English text
+lilly.reply("Good morning")           # English text   -> Bosnian text
+lilly.listen("clip.m4a")              # spoken Bosnian -> Bosnian text
+lilly.read("sign.jpg")                # photo          -> Bosnian text
+lilly.speak("Good day", "out.wav")    # English text   -> spoken English
+```
+
+| Endpoint | Body | Returns |
+| --- | --- | --- |
+| `POST /api/translate` | `{"text": "..."}` | Bosnian in, English out |
+| `POST /api/reply` | `{"text": "..."}` | English in, Bosnian out |
+| `POST /api/speech` | audio upload | transcribes Bosnian, then translates it |
+| `POST /api/photo` | image upload | reads Bosnian off the image, then translates it |
+| `POST /api/speak` | `{"text": "..."}` | English speech as WAV |
+| `POST /api/feedback` | a correction | stored for review and retraining |
+| `GET /health` | — | liveness |
+
+Every request is bounded before it reaches a model — uploads by size, text by
+how much work it asks for, images by pixel count — because the server is written
+to face the open internet.
+
+### The correction button
+
+When a translation is wrong, you press **This translation is wrong**, say what
+it should have been, and the correction is stored for review. Verified
+corrections go back into the training pool, so the model improves on the
+sentences people actually hit rather than the ones a benchmark happens to
+contain.
+
+### Weights it is built from
+
+Lilly is a bundle, not a new architecture. The translator and the listener are
+fine-tuned here. The reader and the voice are off the shelf: the reader is
+PP-OCRv6, chosen over the fine-tuned EasyOCR reader by a rule written before the
+comparison ran, and four later attempts to fine-tune it never beat it. Full
+attribution and licenses are in [`models/lilly/NOTICE.md`](https://github.com/ssaaffaakk/Lilly/blob/main/models/lilly/NOTICE.md).
+
+| Ability | Built from | Fine-tuned here |
+| --- | --- | --- |
+| Translate | OPUS-MT [`opus-mt-tc-big-zls-en`](https://huggingface.co/Helsinki-NLP/opus-mt-tc-big-zls-en) (Helsinki-NLP), CTranslate2 int8 | yes — LoRA merged into the weights |
+| Reply | OPUS-MT [`opus-mt-tc-base-en-sh`](https://huggingface.co/Helsinki-NLP/opus-mt-tc-base-en-sh) (Helsinki-NLP), CTranslate2 int8 | yes — LoRA merged into the weights; cleared its gate and published 8 Sep 2026 |
+| Listen | [`whisper-large-v3`](https://huggingface.co/openai/whisper-large-v3) (OpenAI), converted to CTranslate2 int8 here | yes — LoRA. **Shipped by the owner's decision, refused at its gate** (see [Speech](#speech)); the gated [`faster-whisper-small`](https://huggingface.co/Systran/faster-whisper-small) fine-tune stays the baseline |
+| Read | [PaddleOCR PP-OCRv6](https://github.com/PaddlePaddle/PaddleOCR) (`PP-OCRv6_medium_det` + `_medium_rec`, PaddlePaddle), fetched at run time; [EasyOCR](https://github.com/JaidedAI/EasyOCR) + CRAFT stays as the `LILLY_READER=easyocr` way back | no — stock, chosen by a pre-registered rule; the EasyOCR fallback is fine-tuned |
+| Speak | [Kokoro-82M](https://huggingface.co/hexgrad/Kokoro-82M) (hexgrad) | no — stock weights |
+
+---
+
+## How well it works
+
+### The journey so far
+
+The first builds were worse than anything below. No measurement of them was
+kept in the repository — the habit of committing a number before changing
+anything came later, and is now the rule — so the first column comes from the
+owner's own notes from that time, written as a bound. The next column is the
+first number that was recorded, with the file it lives in. The last is today.
+
+| | the first builds (unrecorded) | first recorded | today |
+| --- | --- | --- | --- |
+| Photographs — words found per photograph, the 40 | **< 30%** | 36.0% (`training/RESULTS-ocr.md`) | **67.0%** |
+| Photographs — words found, pooled | **< 10%** | 16.9% (63 of 373) | **69.4%** |
+| Photographs — words invented that are on no sign | **> 280** | 224 | **65** |
+| Speech — word error, 200 held-out clips | **> 55%** | 38.5% (`training/RESULTS-speech.md`) | **11.9%** (whisper-large-v3, shipped by decision, refused at its gate; the gated whisper-small reads 34.9%) |
+| Translation — BLEU on FLORES devtest, as the user sees it | **< 30** | 37.72, with the language tag leaked into 308 of 1,012 outputs (`training/RESULTS-devtest.md`) | **43.25**, leaked into **0** (re-measured 8 Sep on a T4 after the ordinal splitter fix) |
+| Reply, English → Bosnian — chrF2 on FLORES-200 | — | 58.96, the base as downloaded (`training/RESULTS-en-bs.md`) | **60.00**, fine-tuned and published 8 Sep |
+
+One recorded moment says what the early period was like: the reader scored
+about 75% on synthetic text and **36% the first time it was pointed at real
+photographs** (`training/RESULTS-ocr-dataset.md`). The 75% was never a real
+number. Everything after that was measured on real photographs, real audio and
+held-out sentences.
+
+### Where the credit goes
+
+The fairest thing to measure a change against is the untuned model it is built
+on. Every "Lilly today" figure below is measured on data the model never
+trained on, through the app's own code path, against exactly that base. The
+pass marks were written down before each run (see
+[thresholds](#thresholds-are-written-before-the-run)).
+
+| Ability | Measured on | Untuned base | Lilly today | Where it stands |
+| --- | --- | --- | --- | --- |
+| **Translate**, Bosnian → English | 1,012 FLORES devtest sentences, as the user sees them | 42.08 BLEU / 67.85 chrF2 with its tag stripped; the base emits its language tag into 576 of 2,009 outputs, which the app strips since 8 Sep | **43.25 BLEU / 68.10 chrF2**, **0** leaks | shipped; re-measured 8 Sep on a T4 after the ordinal splitter fix |
+| **Reply**, English → Bosnian | 2,009 FLORES-200 pairs | 29.57 BLEU / 58.96 chrF2 | **30.73 / 60.00**; writes the Bosnian form of a contested word **99.2%** of the time (base 94.3%) | cleared all four bars 8 Sep; **in the bundle since 8 Sep** |
+| **Listen**, whisper-small | 200 held-out FLEURS clips | 38.5% word error | **34.9%** word error; Bosnian term recall 65.9% → 68.2% | the listener that cleared its gate; kept as the baseline |
+| **Listen**, whisper-large-v3 | the same 200, then all 925 | — | 11.9% word error on the 200; **14.1%** on 925 against small's 39.5% | **shipped since 8 Sep by the owner's decision, refused at its gate**: writes Croatian forms more often (1.1% → 6.1%); closed to further looks, see below |
+| **Read** | 40 Commons photographs; `test-v2`, 132 with text | first reader: 36.0% of sign words found, 224 invented | **67.0% found, 65 invented** on the 40; **57.8% found, 450 invented** on `test-v2` | shipped (PP-OCRv6, untrained) |
+
+### How to read the numbers
+
+- **Word error rate** (speech): the share of words heard wrong. Lower is better.
+- **BLEU and chrF2** (translation): how much the output overlaps a professional
+  translation. Higher is better. chrF2 counts characters, so it is the fairer
+  measure for a heavily inflected language, and it is the one that decides here.
+  A difference of a point or so is noise unless a paired bootstrap says
+  otherwise; every gain quoted above has one.
+- **Words found and invented** (photographs): the share of the words on the
+  signs that the reader read correctly, and how many words it produced that are
+  on no sign at all. The second number matters as much as the first, because
+  recall can always be bought by guessing more.
+- **Published**: the public bundle `Safak11/lilly` carries exactly the builds
+  these numbers were measured on. The publisher checks each one by content
+  fingerprint and refuses any other; the listener goes up only under a
+  fingerprint named on the command line, because it did not clear its gate.
+
+### Translation
+
+Held-out FLORES-200 Bosnian–English, through the app's own path.
+
+| | the first builds (unrecorded) | first recorded | today |
+| --- | --- | --- | --- |
+| BLEU, 1,012 devtest pairs | **< 30** | 37.72 — the model's language tag leaked into 308 of 1,012 outputs (`training/RESULTS-devtest.md`) | **43.25**, leaked into **0** |
+| chrF2, 1,012 devtest pairs | — | 67.15 | **68.10** |
+
+The "first recorded" column is the untuned model as downloaded. Scored with its
+leaked tags stripped, so the defect cannot take credit, the fine-tuning is worth
+**+1.26 BLEU** at p = 0.001 and **+0.15 chrF2** at p = 0.074, which does not
+clear 0.05, on all 2,009 pairs (`training/RESULTS-product.md`; on the devtest
+half +1.17 / +0.25). In plain terms: it makes word-level accuracy better, it
+removes a defect from every third output, and it does not move chrF2 by an
+amount the bootstrap can see. The first builds, under 30 BLEU, did not manage
+any of that.
+
+**Re-measured on 8 September 2026 after the splitter fix.** Until that day
+`app.translate.Engine` cut a Bosnian date into pieces (*5. maja 1990. godine*
+became three sentences) and translated each alone. The fix was pre-registered
+(`training/PREREGISTRATION.md`, "v4 — translate — ordinals") and then measured
+on Kaggle with both splitters on the same T4: the new rule is worth
+**+0.89 BLEU / +0.37 chrF2** to the fine-tune and **+1.05 / +0.38** to the base
+(p = 0.001, 167 of 2,009 rows changed), and the difference between the Mac's
+CPU and the T4 on the old rule is inside noise (−0.04 BLEU, p = 0.25). The
+figures above are the new ones; the old ones (42.49 / 67.69) are in the
+records, not erased.
+
+**The reply direction** (English → Bosnian) was fine-tuned on 8 September and
+cleared all four of its pre-registered bars on the same 2,009 pairs: chrF2
+**58.96 → 60.00**, BLEU **29.57 → 30.73** (a paired bootstrap over sentences
+puts the gains at +1.04 [+0.70, +1.35] chrF2 and +1.16 [+0.70, +1.62] BLEU, 0
+of 1,000 resamples at or below zero); the Bosnian form rate on 338 audited bench
+targets **94.3% → 99.2%** (244 of 246 decided,
+`training/RESULTS-en-bs-formrate.md`); and the `>>bos_Latn<<` label still
+steers, its gap against `>>hrv<<` going 21.8 → 22.5 points. The served build
+was rebuilt with the adapter merged and published on 8 September;
+`scripts/fetch_models.py` pulls it as `translator-en-bs/`. Its base, `tc-base`,
+is a smaller model than the forward direction's, so the two directions are not
+of comparable quality.
+
+### Speech
+
+200 held-out FLEURS Bosnian clips, the same clips in every column.
+
+| | the first builds (unrecorded) | first recorded | today |
+| --- | --- | --- | --- |
+| Word error rate | **> 55%** | 38.5% (stock Whisper-small, `training/RESULTS-speech.md`) | **34.9%** |
+| Bosnian term recall | — | 65.9% | **68.2%** |
+| Wrong-variety substitutions | — | 5.1% | **3.3%** |
+
+**The larger listener: refused at its gate, shipped by decision.** A whisper-large-v3
+fine-tune reads 11.9% word error against the shipped listener's 34.9% on the
+same 200 clips (`training/SPEECHBENCH-gate.txt`). It has to clear three rows,
+not one: word error, Bosnian term recall, and Croatian substitution — how often
+it writes the Croatian form of a word where the Bosnian one was said.
+
+- Its gate, run 7 September, refused it by one word on the Croatian row.
+- The pre-registered last look, all 925 clips and both listeners on
+  8 September (`training/speech-instrument/`), refused it again, and not by one
+  word: Croatian substitution **1.1% → 6.1%** (1 of 87 against 8 of 131 decided
+  targets, p = 0.018), the same two words over and over (*Europom* for
+  *evropom*, *vjerojatno* for *vjerovatno*). Word error and term recall passed
+  by wide margins.
+- On the project's own scale (`training/RUBRIC.md`, computed for the first time
+  in that run) the two listeners read **39.5%** and **14.1%**: band 3 against
+  band 8.
+- By rule 3 of that pre-registration **whisper-large-v3 is closed to any
+  further look**: no other split, normaliser or instrument. That closes the
+  question of whether it passes. What ships is a separate decision.
+- **The owner's decision, 8 September, evening: it ships anyway.** With both
+  readings on the table, the owner chose the larger listener for what it gets
+  right, 14.1% against 39.5% of words wrong and 72% against 50% of
+  Bosnian-specific words recovered, and accepted what it gets wrong: two
+  Croatian spellings, *Europom* and *vjerojatno*, in 8 of 131 decided targets.
+  The gate's result stands as written, in `training/PREREGISTRATION.md` with
+  the reason. The bundle carries this listener only under its fingerprint
+  named on the publish command (`--allow-listen e6bb58483586b06c`), every
+  fresh install is told it is not the gated listener, and the gated
+  whisper-small (34.9%) stays beside it as the baseline every listener is
+  measured against.
+- **How it got there, not tidied.** The 4–5 September reader publish swept the
+  Mac's `models/lilly/listen`, already large-v3, into `Safak11/lilly` before
+  any gate had run. That is the failure the fail-stop rules exist to prevent.
+  It was taken out at 11:31 UTC on 8 September and put back that evening by
+  the decision above, with the numbers on the table this time.
+
+### Photographs
+
+Two sets of Bosnian signs from Wikimedia Commons, each transcribed by two
+readers independently, seeing neither each other's work nor any model's guess;
+only words both of them saw are in the answer key. The 40 are the original set
+(373 agreed words). `test-v2` is 280 photographs drawn from the same pool, 132
+with text, 2,907 agreed words, never trained on by anything.
+
+| | the 40 | `test-v2` (132 photographs) |
+| --- | --- | --- |
+| **the first builds (unrecorded)** | **< 30% found, > 280 invented** | — |
+| **first recorded** — the first reader (`training/RESULTS-ocr.md`) | **36.0% found, 224 invented** | — |
+| EasyOCR, stock | 48.0% found, 188 invented | 30.0% found |
+| EasyOCR fine-tuned on real crops (the reader until 5 Sep 2026) | 54.5% found, 182 invented | 34.6% found, 2,071 invented |
+| **PaddleOCR PP-OCRv6, untrained, confidence floor 0.9 — the reader now** | **67.0% found, 65 invented** | **57.8% found, 450 invented** |
+
+The confidence floor is there because without it PP-OCRv6 read 60.0% and
+invented 2,373. The engine was chosen by a rule written before the run
+(`training/PREREGISTRATION.md`), on the big set, not the small one: the 40
+alone had said the fine-tuned reader read 54.7%, and the 132 say 34.6%.
+
+### Thresholds are written before the run
+
+Deciding measurements and their pass marks live in
+[`training/PREREGISTRATION.md`](https://github.com/ssaaffaakk/Lilly/blob/main/training/PREREGISTRATION.md), fixed before any
+number exists. Two retraining arms were run for the translator and the
+pre-written tie-break chose the one with the *lower* headline BLEU, because the
+rule said chrF2 decides. Published scores are bound to the weights by content
+hash, so the numbers and the model cannot drift apart.
+
+---
+
+## What it cannot do yet
+
+This section exists because a README that only lists wins is not worth trusting.
+
+- **The Bosnian-specific claim is not proven for the forward direction.** A
+  benchmark of 346 cases built from terms that separate Bosnian from Croatian
+  and Serbian moves 91.7% → 92.2% at p = 0.360. The base model is already
+  trained across South Slavic and arrives at 91.7% on its own, so there is very
+  little room above it. (The reply direction is the first place this claim can
+  be tested head-on, and there it holds: 94.3% → 99.2%.)
+- **The gain is concentrated in news prose.** Broken out by corpus, the
+  fine-tuning is worth +3.05 BLEU on news text and −0.82 BLEU on talks. Nothing
+  measured here separates *learned better Bosnian* from *adapted to news style*.
+- **Against an outside system Lilly wins, and mostly not on its own merit.**
+  `facebook/nllb-200-distilled-600M` on the same 2,009 FLORES-200 pairs scores
+  36.49 BLEU bs→en against Lilly's 42.14, and 26.07 en→bs against 29.57 — a
+  model 2.6× and 8× larger, beaten in both directions
+  (`training/RESULTS-outside-baseline.md`). But the untouched Helsinki base
+  already accounts for +5.11 of that +5.65 BLEU. What the fine-tune itself adds
+  is small and its sign depends on the path: −0.79 chrF2 on whole rows, **+0.15
+  on the path the product serves** (43.03 / 67.81 against a tag-stripped base at
+  41.77 / 67.66 on all 2,009 pairs, re-measured 8 September;
+  `training/RESULTS-product.md`). Its clearest win is not in either column:
+  **308 of 1,012 base outputs leaked the model's language tag into the text, and
+  0 do after.** In the reply direction the published bundle has no fine-tune
+  yet, so that margin is the base's. **The win belongs largely to OPUS-MT**,
+  which this project builds on and did not train. And NLLB-600M is the distilled
+  small variant: Google, DeepL, the 3.3B NLLB and the large general models were
+  not tested, so none of this is a claim about the state of the art.
+- **English → Bosnian is not published yet, and stays the weaker direction.**
+  The fine-tune cleared its bars (above) but the bundle serves the untuned base
+  until the owner publishes. Even fine-tuned, it starts from a smaller base than
+  the forward direction and reads 60.00 chrF2 where the forward direction reads
+  68.10.
+- **The photograph scores are recognition, not phone reality.** The evaluated
+  images come from Wikimedia Commons. Real photographs taken on a phone in
+  Bosnia would be the honest test, and there is not a labelled set of them yet.
+  The Commons images are also *downscaled*: a sign whose Commons original is
+  3968 px wide is scored here at 1280 px, and the app reads at up to 2 MP, so
+  these numbers, if anything, understate what the reader does on a
+  full-resolution photo. Measuring that is pre-registered and not yet run.
+- **The photograph score is not yet a valid score by the project's own scale.**
+  `training/RUBRIC.md` refuses to grade the reader below 200 real photographs
+  with text; `test-v2` has 132. Another 160 photographs (`test-v2b`) are
+  fetched and waiting for two blind transcriptions.
+- **One test set.** FLORES is professionally translated and even in register.
+  Real user input is not.
+
+The full write-up of every limit is on the
+[model card](https://huggingface.co/Safak11/lilly) and in
+[`training/`](https://github.com/ssaaffaakk/Lilly/blob/main/training/).
+
+---
+
+## Training
+
+![Kaggle training flow](https://raw.githubusercontent.com/ssaaffaakk/Lilly/main/docs/images/kaggle-flow.png)
+
+Training runs on Kaggle GPUs. This Mac commits, launches, polls, and installs
+the result; it does not run multi-hour fine-tunes. The boundary is written down
+in [`docs/V2-BOUNDARIES.md`](https://github.com/ssaaffaakk/Lilly/blob/main/docs/V2-BOUNDARIES.md).
+
+| Lane | What it does | Gate before anything ships |
+| --- | --- | --- |
+| Translation | LoRA or full fine-tune, either direction → adapter zip | pre-registered bars on FLORES, form rate and label steering |
+| Speech half 1 | one epoch → `lilly-listen-half1.zip` | training exits 0; no quality claim here |
+| Speech half 2 | resumes for epoch 2, then scores WER → `lilly-listen.zip` | WER must beat the shipped listener |
+| Speech instrument | scores two listeners on all 925 clips | the three gate rows, both not either |
+| OCR | harvest, real crops, synthetic crops → `lilly-read.zip` | install gate must pass; the line is paused, see the roadmap |
+
+A known failure stops the kernel. A `COMPLETE` status, a leftover zip from an
+earlier run, or hitting the 12-hour wall does not override a gate.
+
+```bash
+python3 scripts/preflight_kaggle.py
+python3 scripts/kaggle_train.py speech          # half 1
+python3 scripts/kaggle_train.py ocr             # in parallel if a GPU slot is free
+python3 scripts/kaggle_train.py speech-half2    # only after half 1 is COMPLETE
+python3 scripts/kaggle_train.py speech-instrument   # 925 clips, both listeners: the last look at large-v3
+python3 scripts/kaggle_train.py translation-en-bs   # the reply direction, LoRA, pre-registered bars
+python3 scripts/kaggle_train.py outside-baseline    # NLLB-200 on the same FLORES pairs
+python3 scripts/kaggle_poll.py                  # CANCEL or ERROR counts as failure
+```
+
+What gets trained next, and what does not, is in [`docs/V4-PLAN.md`](https://github.com/ssaaffaakk/Lilly/blob/main/docs/V4-PLAN.md).
+The reader's queue and do-not-repeat list are in
+[`docs/OCR-ROADMAP.md`](https://github.com/ssaaffaakk/Lilly/blob/main/docs/OCR-ROADMAP.md). How to write a notebook that
+fails loudly: [`docs/kaggle-notebooks.md`](https://github.com/ssaaffaakk/Lilly/blob/main/docs/kaggle-notebooks.md). The list
+of failures already paid for: [`docs/kaggle-fail-stop.md`](https://github.com/ssaaffaakk/Lilly/blob/main/docs/kaggle-fail-stop.md).
+
+---
+
+## Repo map
+
+| Path | What is in it |
+| --- | --- |
+| `app/` | FastAPI server, the four abilities, the web UI |
+| `models/lilly/` | Offline weights, model card, attribution notice |
+| `training/` | Notebooks, training and evaluation scripts, every results file |
+| `bench/` | The Bosnian-versus-neighbours benchmark and how its cases are built |
+| `scripts/` | `kaggle_train.py`, preflight, poll, fetch, publish |
+| `docs/` | Plans, boundaries, fail-stop rules, white paper — index in [`docs/README.md`](https://github.com/ssaaffaakk/Lilly/blob/main/docs/README.md) |
+| `data/` | Corpora and OCR crops (large, usually local only) |
+| `space/` | Hugging Face Space packaging |
+
+---
+
+## Status
+
+- [x] Translate, listen, speak, read, web app, correction pipeline
+- [x] Published weights and model card with every score and every limit
+- [x] Pre-registered thresholds and hash-bound results
+- [x] English → Bosnian fine-tune — all four pre-registered bars cleared 8 Sep (chrF2 +1.04, BLEU +1.16, form rate 99.2%, label gap 22.5); built and **published 8 Sep**
+- [x] Larger speech model — trained (11.9% word error); refused at the gate 7 Sep and at the pre-registered last look 8 Sep (Croatian 1.1% → 6.1%, p = 0.018); closed to further looks by rule 3; **shipped 8 Sep evening by the owner's decision**, refused row and all, under a fingerprint named on the publish command
+- [ ] A valid photograph score: `test-v2b`'s 160 photographs transcribed blind, then one score on the union
+- [x] Re-measure the served translation path after the ordinal splitter fix — done 8 Sep on Kaggle, both splitters on one T4: devtest 42.49 → **43.25** BLEU, 67.69 → **68.10** chrF2 (p = 0.001); device drift within noise
+- [ ] A labelled set of real phone photographs from Bosnia
+
+---
+
+## Credits
+
+The weights come from Helsinki-NLP and the OPUS-MT project, OpenAI and SYSTRAN,
+JaidedAI and Clova AI Research, PaddlePaddle, and hexgrad. CTranslate2 and peft
+shape the build. Please credit them rather than this repository. Every license
+was checked against the project's own page and is listed in
+[`models/lilly/NOTICE.md`](https://github.com/ssaaffaakk/Lilly/blob/main/models/lilly/NOTICE.md). The OPUS-MT authors ask to be
+cited; the citation is on the [model card](https://huggingface.co/Safak11/lilly).
+
+Built by [@ssaaffaakk](https://github.com/ssaaffaakk).
+
+---
 
 ## Layout
 
@@ -64,279 +531,6 @@ lilly.listen("clip.m4a")              # spoken Bosnian -> Bosnian text
 lilly.speak("Good day", "out.wav")    # English text   -> spoken English
 lilly.read("sign.jpg")                # photo          -> Bosnian text
 ```
-
----
-
-# Where it started
-
-The first builds were worse than anything on this page. No measurement of them was
-kept — the habit of committing a number before changing anything came later, and is
-now the rule — so the first column is the owner's own notes from that time, written as
-a bound. The next column is the first number that was recorded, with the file it lives
-in. The last is today.
-
-| | the first builds (unrecorded) | first recorded | today |
-|---|---|---|---|
-| Photographs — words found per photograph, the 40 | **< 30%** | 36.0% (`training/RESULTS-ocr.md`) | **67.0%** |
-| Photographs — words found, pooled | **< 10%** | 16.9% (63 of 373) | **69.4%** |
-| Photographs — words invented that are on no sign | **> 280** | 224 | **65** |
-| Speech — word error, 200 held-out clips | **> 55%** | 38.5% (`training/RESULTS-speech.md`) | **11.9%** (whisper-large-v3, shipped by the owner's decision, refused at its gate; the gated whisper-small reads 34.9%) |
-| Translation — BLEU on FLORES devtest, as the user sees it | **< 30** | 37.72, with the language tag leaked into 308 of 1,012 outputs (`training/RESULTS-devtest.md`) | **42.49**, leaked into **0** |
-| Reply, English → Bosnian — chrF2 on FLORES-200 | — | 58.96, the base as downloaded (`training/RESULTS-en-bs.md`) | **60.00**, fine-tuned and published 8 Sep 2026 |
-
-Every number after the first column was measured on real photographs, real audio and
-held-out sentences, and the rest of this page is those measurements.
-
-# The reply direction — English → Bosnian
-
-`translator-en-bs/` is `opus-mt-tc-base-en-sh` with a LoRA adapter merged in, fine-tuned
-on 8 September 2026 on the same corpus as the forward direction with the pairs flipped,
-and quantised to int8 the same way. It cleared all four bars written before it ran
-(`training/PREREGISTRATION.md`, "v3 — reply"), measured on the 2,009 FLORES-200 pairs
-with `training/evaluate.py` and `training/bosnian_form_rate.py`:
-
-| | base as downloaded | fine-tuned | bar |
-|---|---|---|---|
-| chrF2, FLORES-200 | 58.96 | **60.00**  (+1.04, paired bootstrap p < 0.001) | above 58.96 |
-| BLEU, FLORES-200 | 29.57 | **30.73**  (+1.16, p < 0.001) | not below 29.57 |
-| Bosnian form rate, 338 audited targets | 94.3% | **99.2%**  (244 of 246 decided) | not below 94.3% |
-| `>>bos_Latn<<` against `>>hrv<<`, form-rate gap | 21.8 points | **22.5 points** | not collapsed |
-
-The form rate asks, for words that separate Bosnian from Croatian and Serbian, which
-form the model wrote; the label gap checks the decoder still hears its language
-selector. Both moved the right way. Two things this does not say: the numbers are the
-adapter's through `training/evaluate.py`, and this int8 build has not been scored through
-the app's own path yet; and `tc-base` is a smaller model than the forward direction's
-base, so 60.00 here and 67.47 there are not the same quality. Bound to these numbers
-by the served build's digest, `training/RESULTS-en-bs-formrate.md`.
-
-# Measured translation quality
-
-**Test set:** 2,009 FLORES-200 Bosnian–English pairs, held out — not in the base model's
-training data and not in the fine-tuning data.
-
-**How it was measured:** both the base and the fine-tuned model built the same way (int8
-CTranslate2) and run through the app's own `app.translate.Engine`, so the sentence
-splitting and the quantisation are identical on both sides and the only difference
-between the columns is the fine-tuning. Significance is a paired bootstrap.
-
-The base model prints its own language tag — `>>eng<<` and friends — into the translation
-in 572 of 2,009 outputs (28.5%). The fine-tuned model does it in 0 (0.0%). That is a
-defect a reader sees, so both numbers are given: with the tag, because it is what arrives
-on screen; without it, because otherwise the fine-tuning is credited with translation
-quality it did not gain.
-
-### With the language tag stripped — the number to quote
-
-| Model | BLEU | chrF2 | Length vs reference |
-|---|---|---|---|
-| Base (untuned) | 40.81 | 67.34 | 1.019 |
-| Lilly (fine-tuned) | **42.18** | 67.47 | 1.001 |
-| Gap | **+1.37** | +0.14 | |
-
-BLEU moves +1.37 at p = 0.001. chrF2 moves +0.14 at p = 0.104, which does **not** clear
-the 0.05 bar — so the right reading is not that chrF2 improved. It is that the fine-tuning
-no longer costs anything there. An earlier version of this model lost 0.22 chrF2 at
-p = 0.028; rebuilding the training corpus so its length variance matches the benchmark's
-(sd of log character ratio 0.213 → 0.130 against FLORES's 0.129) removed that loss.
-Output length went from 0.992 of the reference to 1.001.
-
-### As a user sees it, tag and all
-
-| Model | BLEU | chrF2 | Length vs reference |
-|---|---|---|---|
-| Base (untuned) | 37.60 | 67.00 | 1.048 |
-| Lilly (fine-tuned) | 42.18 | 67.47 | 1.001 |
-| Gap | +4.58 | +0.48 | |
-
-BLEU moves +4.58 at p = 0.001 and chrF2 +0.48 at p = 0.001. Both clear the 0.05 bar, so
-both are measured rather than leaned towards. But most of the +4.58 is the tag leak being
-fixed rather than translation improving, which is why the stripped table above is the one
-to quote — this one says what a reader gets, not what the model learned.
-
-Source: `training/RESULTS-product.md`, generated by `training/evaluate_app.py`. That file
-names the build its scores were measured on by content hash, and the publisher refuses to
-upload weights whose hash does not match — so the numbers on this page and the weights
-beside them cannot come apart.
-
-**Chosen against a threshold written first.** Two retraining arms were run and both cleared
-the bars set in `training/PREREGISTRATION.md` before either number existed. The tie-break
-written at the same time says the higher chrF2 wins and not the higher BLEU; the other arm
-scored 42.21 BLEU / 67.35 chrF2, so it had the better headline and lost. Split across
-FLORES's own halves the choice holds — the shipped arm leads on chrF2 in both devtest
-(67.69 vs 67.58) and dev (67.25 vs 67.10) — so it is not an artifact of selecting on the
-set being reported.
-
-### The same fine-tune, scored three ways
-
-Worth stating plainly, because the spread is larger than the effect:
-
-| Method | BLEU | chrF2 |
-|---|---|---|
-| Raw adapter, whole rows (earlier model) | +0.54 | −0.79 |
-| Through the app's path, tag stripped | +1.37 | +0.14 |
-| Through the app's path, as the user sees it | +4.58 | +0.48 |
-
-Each change of method had a reason and none was chosen to flatter the result — but all
-three moved in the flattering direction, and that pattern is what a garden of forking
-paths looks like from the inside. The project's response was to write
-`training/PREREGISTRATION.md` fixing the deciding measurement and its thresholds
-**before** the next training run produced any numbers. If you are weighing these
-results, read that file alongside this table.
-
-**Training data:** 361,621 examples from 351,889 pairs. 334,790 cleaned pairs to start
-with, then 21,178 misaligned WikiMatrix pairs removed (their two sides are about the same
-subject rather than being translations of each other) and 38,277 pairs the base model had
-never seen added from wikimedia-v20260327 and NTREX-128 — 351,889. The corpus is then
-rebuilt as one sentence per example inside a length band matched to the benchmark's, which
-is why there are more examples than pairs: a pair carrying two sentences becomes two.
-
-**Build:** the LoRA adapter is merged into the weights and the result converted to
-CTranslate2 int8, because an adapter cannot be applied after quantisation
-(`scripts/build_translator.py`).
-
----
-
-# Limits
-
-**The thing this project says it is for is not measurably better.** Lilly's pitch is real
-Bosnian rather than generic Serbo-Croatian, so a benchmark was built to test exactly that:
-240 terms that separate Bosnian from Croatian and Serbian, chosen by counting rather than
-by intuition — a term is kept only if it appears at least 20 times in professionally
-translated Bosnian, holds 98% of the share against its alternative, and that alternative
-occurs at least once in mixed text. 346 cases.
-
-| | term recall | 95% interval |
-|---|---|---|
-| Base | 91.7% | [88.5, 94.1] |
-| Lilly | 92.2% | [89.1, 94.5] |
-
-**+0.5 points, paired bootstrap p = 0.360.** Nine targets fixed, seven broken. On the same
-cases BLEU moves +5.7 against the base and this does not move at all. The reason is not
-mysterious: the base is `opus-mt-tc-big-zls-en`, already trained across South Slavic, and
-it arrives at 91.7% on its own. There is very little room above that.
-
-**Does the benchmark work?** Two controls say the scoring code is sound rather than
-generous: feeding it the professional reference recovers 100.0% of targets, and feeding it
-a copy of the Bosnian input recovers 0.0%. A third says something about the test's reach —
-only 3.6% of swapped targets score differently from the Bosnian one, so replacing a
-Bosnian term with its Croatian or Serbian form usually changes nothing the model does.
-That is a narrow signal, and it bounds what this benchmark can detect.
-
-**A second measure, reported and not promoted.** The gap between a model's score on the
-Bosnian form and on the swapped one is arguably a more direct look at this project's claim
-than term recall is: a model leaning on generic Serbo-Croatian should do relatively better
-when the term is swapped, so a wider gap is what "it really is Bosnian" would look like.
-Lilly's gap is **+0.9 points wider** than the base's — and at p = 0.4388 that does not
-clear the bar either. It is stated here because it was looked at, and stated second
-because it was not the measure named in `training/PREREGISTRATION.md` and was tested after
-the headline was already known. A number noticed afterwards that happens to favour us is
-exactly what pre-registration exists to keep in its place.
-
-An earlier version of this benchmark had 398 cases and 61 of them — 15.3% — were
-sentences the model had trained on. NTREX was added to the training corpus and is also one
-of this benchmark's sources, and holding 462 NTREX rows out did not help because the
-benchmark drew from all of NTREX. The check now lives in `bench/build.py`, where cases are
-made: a sentence that appears in the training corpus cannot enter the set. The leak
-favoured the fine-tuned model, so this could only have moved its score down — and it read
-+0.2 at p = 0.465 before and +0.5 at p = 0.360 after, which is the same answer either
-way.
-
-The benchmark's own limits are worth stating too, because they cut both ways. Every
-Turkism was rejected — *kahva*, *čaršija*, *avlija*, *sokak*, *mahala* occur zero times in
-the news and wiki text available, so the categories that would most obviously show
-Bosnian character are absent from the record rather than absent from the language. What
-remains is a test of ijekavian forms and lexical doublets. See `bench/` and
-`training/bosnian_bench.py`.
-
-**The gain is concentrated in clean news prose.** Broken out by source corpus, the
-fine-tuning is worth **+3.05 BLEU on SETIMES** (news) and **−0.82 BLEU on TED2020**
-(talks). The training corpus leans the same way. So two explanations fit the numbers
-equally well — *the model learned better Bosnian*, and *the model adapted to news
-style* — and **nothing measured here distinguishes them.** Telling them apart needs a
-measure aimed at that claim, which does not exist yet. Until it does, treat the headline
-gain as demonstrated on news-like prose and unestablished elsewhere.
-
-**chrF2 does not improve, it merely stops getting worse.** +0.14 against the base at
-p = 0.104, which does not clear the 0.05 bar — so on the measure that is fairer for a
-language inflecting as heavily as Bosnian, this model is indistinguishable from the one it
-started from. That is an improvement only relative to an earlier version of this same
-fine-tune, which lost 0.22 chrF2 at p = 0.028; rebuilding the corpus so its length
-variance matched the benchmark's removed that loss. The honest summary is that the
-fine-tuning buys word-level accuracy and, now, costs nothing at the character level —
-not that it improves both.
-
-**One direction, one language pair.** Bosnian → English. The base model is multilingual
-across South Slavic languages; the fine-tuning, the evaluation and the app are Bosnian
-only, so nothing here says how it behaves on Croatian, Serbian, Slovenian or Macedonian.
-
-**`speak/` carries no score on this page.** It is stock Kokoro-82M; for how it performs,
-see upstream.
-
-**`listen/` — speech.** Whisper large-v3 with a LoRA adapter, trained on Kaggle in
-two halves on FLEURS Bosnian plus Croatian audio, converted to CTranslate2 int8. It is
-the listener the owner chose to ship on 8 September 2026 **knowing its pre-registered
-gate refused it**, and both sides of that are here.
-
-| 925 FLEURS bs_ba test clips | whisper-small, the gated listener | **whisper-large-v3, shipped** |
-|---|---|---|
-| word error, greedy, Whisper's normaliser (`training/RUBRIC.md`) | 39.5% | **14.1%** |
-| Bosnian-specific words recovered (581 targets) | 49.6% | **72.1%** |
-| Croatian form written where Bosnian was said | **1.1%** (1 of 87 decided) | 6.1% (8 of 131), p = 0.018 |
-
-On the 200-clip prefix the two read 34.9% and 11.9% word error. The gate has three
-rows and says all three must pass; the third failed, on two words written the
-Croatian way (*Europom* for *evropom*, *vjerojatno* for *vjerovatno*), and by rule 3
-of its pre-registration this model gets no further look on any other split, normaliser
-or term list. The owner then shipped it for what it gets right and accepted what it
-gets wrong; the reason is written in `training/PREREGISTRATION.md` and the record in
-`training/RESULTS-speech.md` and `training/speech-instrument/`. The gated whisper-small
-(38.5% → 35.5% on the 200 clips by `training/evaluate_speech.py`, 34.9% by the bench's
-scorer) is not in this bundle; it is the baseline every listener is measured against.
-
-**`translator-en-bs/` — the reply direction.** See "The reply direction" below.
-
-**`read/` — photographs.** Only the recogniser is fine-tuned; the CRAFT detector is stock.
-Measured through easyocr's own recognise path with the app's allowlist, on 600 held-out
-crops sampled to keep the set's mix (17.3% photographs, the rest synthetic):
-
-| | shipped recogniser | fine-tuned |
-|---|---|---|
-| whole words exact | 69.5% | **88.3%** |
-| Bosnian letters kept | 69.5% | **86.0%** |
-| words, photographs only | 47.1% | **75.0%** |
-
-The held-out set shares no label text with the training set — 873 texts once sat on both
-sides and over half of every reader score this project printed was recital until that was
-fixed. Photographs gain most, which is the half that matters: a stock recogniser reads
-under half the words in a photograph of a Bosnian sign.
-
-Two things this does not say. The crops are word images, so this measures recognition and
-not the detector's ability to find text on a real photograph. And the crops' photographs
-are synthesised.
-
-**On real photographs, and why the app no longer reads with these weights.** The figures
-above are crops; on whole photographs the same fine-tuned EasyOCR reader is far weaker,
-and PaddleOCR PP-OCRv6 at floor 0.9 beats it on both rows of every comparison run:
-
-| set | | fine-tuned EasyOCR | PP-OCRv6 @ 0.9 |
-|---|---|---|---|
-| the 40 Commons photographs | words found per photograph | 54.5% | **67.0%** |
-| | words invented | 182 | **65** |
-| `test-v2`, 132 held-out photographs | words found per photograph | 34.6% | **57.8%** |
-| (2,907 agreed words, two blind transcribers) | words invented | 2,071 | **450** |
-
-`test-v2` is the larger and entirely held-out set — 132 photographs carrying text against
-28 — and it is the honest figure for this ability: **the fine-tuned EasyOCR reader finds
-about a third of the words on a photograph of Bosnian text, not the 88.3% the crop table
-above shows.** The two are different measurements, not a contradiction: word images versus
-whole photographs, detector included. Full method and counts in
-`training/RESULTS-ocr-bakeoff.md`, `training/RESULTS-ocr-test-v2.md` and
-`training/RESULTS-ocr-paddle-floor.md` in the app repository.
-
-**Single test set.** All translation numbers above come from one held-out set of 2,009
-FLORES-200 pairs. FLORES is professionally translated and fairly uniform in register;
-real user input is not.
 
 ---
 
@@ -405,4 +599,3 @@ NOTICE.md was written when the translation folder was named `translate/`; its
   `speak/` were renamed so the app can load them by a stable path:
   `kokoro-v1_0.pth` → `model.pth`, and `voices/af_heart.pt` → `voices/default.pt`.
   Only the `af_heart` voice is included; the rest are in the upstream repository.
-

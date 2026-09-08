@@ -188,7 +188,7 @@ first number that was recorded, with the file it lives in. The last is today.
 | Photographs — words found, pooled | **< 10%** | 16.9% (63 of 373) | **69.4%** |
 | Photographs — words invented that are on no sign | **> 280** | 224 | **65** |
 | Speech — word error, 200 held-out clips | **> 55%** | 38.5% (`training/RESULTS-speech.md`) | **11.9%** (whisper-large-v3, shipped by decision, refused at its gate; the gated whisper-small reads 34.9%) |
-| Translation — BLEU on FLORES devtest, as the user sees it | **< 30** | 37.72, with the language tag leaked into 308 of 1,012 outputs (`training/RESULTS-devtest.md`) | **42.49**, leaked into **0** |
+| Translation — BLEU on FLORES devtest, as the user sees it | **< 30** | 37.72, with the language tag leaked into 308 of 1,012 outputs (`training/RESULTS-devtest.md`) | **43.25**, leaked into **0** (re-measured 8 Sep on a T4 after the ordinal splitter fix) |
 | Reply, English → Bosnian — chrF2 on FLORES-200 | — | 58.96, the base as downloaded (`training/RESULTS-en-bs.md`) | **60.00**, fine-tuned and published 8 Sep |
 
 One recorded moment says what the early period was like: the reader scored
@@ -207,7 +207,7 @@ pass marks were written down before each run (see
 
 | Ability | Measured on | Untuned base | Lilly today | Where it stands |
 | --- | --- | --- | --- | --- |
-| **Translate**, Bosnian → English | 1,012 FLORES devtest sentences, as the user sees them | 37.72 BLEU, and the model's language tag leaked into 308 of 1,012 outputs | **42.49 BLEU**, **0** leaks | shipped |
+| **Translate**, Bosnian → English | 1,012 FLORES devtest sentences, as the user sees them | 42.08 BLEU / 67.85 chrF2 with its tag stripped; the base emits its language tag into 576 of 2,009 outputs, which the app strips since 8 Sep | **43.25 BLEU / 68.10 chrF2**, **0** leaks | shipped; re-measured 8 Sep on a T4 after the ordinal splitter fix |
 | **Reply**, English → Bosnian | 2,009 FLORES-200 pairs | 29.57 BLEU / 58.96 chrF2 | **30.73 / 60.00**; writes the Bosnian form of a contested word **99.2%** of the time (base 94.3%) | cleared all four bars 8 Sep; **in the bundle since 8 Sep** |
 | **Listen**, whisper-small | 200 held-out FLEURS clips | 38.5% word error | **34.9%** word error; Bosnian term recall 65.9% → 68.2% | the listener that cleared its gate; kept as the baseline |
 | **Listen**, whisper-large-v3 | the same 200, then all 925 | — | 11.9% word error on the 200; **14.1%** on 925 against small's 39.5% | **shipped since 8 Sep by the owner's decision, refused at its gate**: writes Croatian forms more often (1.1% → 6.1%); closed to further looks, see below |
@@ -236,25 +236,28 @@ Held-out FLORES-200 Bosnian–English, through the app's own path.
 
 | | the first builds (unrecorded) | first recorded | today |
 | --- | --- | --- | --- |
-| BLEU, 1,012 devtest pairs | **< 30** | 37.72 — the model's language tag leaked into 308 of 1,012 outputs (`training/RESULTS-devtest.md`) | **42.49**, leaked into **0** |
-| chrF2, 1,012 devtest pairs | — | 67.15 | **67.69** |
+| BLEU, 1,012 devtest pairs | **< 30** | 37.72 — the model's language tag leaked into 308 of 1,012 outputs (`training/RESULTS-devtest.md`) | **43.25**, leaked into **0** |
+| chrF2, 1,012 devtest pairs | — | 67.15 | **68.10** |
 
 The "first recorded" column is the untuned model as downloaded. Scored with its
 leaked tags stripped, so the defect cannot take credit, the fine-tuning is worth
-**+1.37 BLEU** at p = 0.001 and **+0.14 chrF2** at p = 0.104, which is not
-significant (`training/app-hypotheses-armB.json`, rescored 7 September). In
-plain terms: it makes word-level accuracy better, it removes a defect from every
-third output, and it does not move chrF2. The first builds, under 30 BLEU, did
-not manage any of that.
+**+1.26 BLEU** at p = 0.001 and **+0.15 chrF2** at p = 0.074, which does not
+clear 0.05, on all 2,009 pairs (`training/RESULTS-product.md`; on the devtest
+half +1.17 / +0.25). In plain terms: it makes word-level accuracy better, it
+removes a defect from every third output, and it does not move chrF2 by an
+amount the bootstrap can see. The first builds, under 30 BLEU, did not manage
+any of that.
 
-**One caveat on every served-path number above.** They were measured through
-`app.translate.Engine` as it split sentences until 8 September 2026, when the
-splitter learned that a Bosnian ordinal (*5. maja 1990. godine*) is not a full
-stop; before that a date was cut into pieces and each piece translated alone.
-Both builds went through the same splitter, so the comparisons stand. The
-absolute figures are re-measured under a pre-registration
-(`training/PREREGISTRATION.md`, "v4 — translate — ordinals"), and the new ones
-replace these when that run lands.
+**Re-measured on 8 September 2026 after the splitter fix.** Until that day
+`app.translate.Engine` cut a Bosnian date into pieces (*5. maja 1990. godine*
+became three sentences) and translated each alone. The fix was pre-registered
+(`training/PREREGISTRATION.md`, "v4 — translate — ordinals") and then measured
+on Kaggle with both splitters on the same T4: the new rule is worth
+**+0.89 BLEU / +0.37 chrF2** to the fine-tune and **+1.05 / +0.38** to the base
+(p = 0.001, 167 of 2,009 rows changed), and the difference between the Mac's
+CPU and the T4 on the old rule is inside noise (−0.04 BLEU, p = 0.25). The
+figures above are the new ones; the old ones (42.49 / 67.69) are in the
+records, not erased.
 
 **The reply direction** (English → Bosnian) was fine-tuned on 8 September and
 cleared all four of its pre-registered bars on the same 2,009 pairs: chrF2
@@ -366,10 +369,10 @@ This section exists because a README that only lists wins is not worth trusting.
   model 2.6× and 8× larger, beaten in both directions
   (`training/RESULTS-outside-baseline.md`). But the untouched Helsinki base
   already accounts for +5.11 of that +5.65 BLEU. What the fine-tune itself adds
-  is small and its sign depends on the path: −0.79 chrF2 on whole rows, **+0.18
-  on the path the product serves** (42.49 / 67.69 against a tag-stripped base at
-  41.10 / 67.51, rescored from the committed hypotheses,
-  `training/devtest-rescore.json`). Its clearest win is not in either column:
+  is small and its sign depends on the path: −0.79 chrF2 on whole rows, **+0.15
+  on the path the product serves** (43.03 / 67.81 against a tag-stripped base at
+  41.77 / 67.66 on all 2,009 pairs, re-measured 8 September;
+  `training/RESULTS-product.md`). Its clearest win is not in either column:
   **308 of 1,012 base outputs leaked the model's language tag into the text, and
   0 do after.** In the reply direction the published bundle has no fine-tune
   yet, so that margin is the base's. **The win belongs largely to OPUS-MT**,
@@ -380,7 +383,7 @@ This section exists because a README that only lists wins is not worth trusting.
   The fine-tune cleared its bars (above) but the bundle serves the untuned base
   until the owner publishes. Even fine-tuned, it starts from a smaller base than
   the forward direction and reads 60.00 chrF2 where the forward direction reads
-  67.69.
+  68.10.
 - **The photograph scores are recognition, not phone reality.** The evaluated
   images come from Wikimedia Commons. Real photographs taken on a phone in
   Bosnia would be the honest test, and there is not a labelled set of them yet.
@@ -462,7 +465,7 @@ of failures already paid for: [`docs/kaggle-fail-stop.md`](docs/kaggle-fail-stop
 - [x] English → Bosnian fine-tune — all four pre-registered bars cleared 8 Sep (chrF2 +1.04, BLEU +1.16, form rate 99.2%, label gap 22.5); built and **published 8 Sep**
 - [x] Larger speech model — trained (11.9% word error); refused at the gate 7 Sep and at the pre-registered last look 8 Sep (Croatian 1.1% → 6.1%, p = 0.018); closed to further looks by rule 3; **shipped 8 Sep evening by the owner's decision**, refused row and all, under a fingerprint named on the publish command
 - [ ] A valid photograph score: `test-v2b`'s 160 photographs transcribed blind, then one score on the union
-- [ ] Re-measure the served translation path after the ordinal splitter fix of 8 Sep (pre-registered; `training/compare_hypotheses.py`)
+- [x] Re-measure the served translation path after the ordinal splitter fix — done 8 Sep on Kaggle, both splitters on one T4: devtest 42.49 → **43.25** BLEU, 67.69 → **68.10** chrF2 (p = 0.001); device drift within noise
 - [ ] A labelled set of real phone photographs from Bosnia
 
 ---

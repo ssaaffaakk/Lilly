@@ -1,0 +1,36 @@
+{
+  "job": "ordinals-remeasure",
+  "run_id": "Batch",
+  "started": "2026-09-08T15:38:56Z",
+  "git": "e4ab01c8fc6d04155c3f71dfc623270860f91351",
+  "status": "complete",
+  "error": null,
+  "metrics": {
+    "flores_pairs": 2009,
+    "ordinals_lilly_chrf_old": 67.44391057645598,
+    "ordinals_lilly_chrf_new": 67.8135484843309,
+    "ordinals_lilly_bleu_old": 42.14003789814222,
+    "ordinals_lilly_bleu_new": 43.02958609048573,
+    "ordinals_lilly_changed": 167,
+    "ordinals_base_chrf_old": 67.2779281942616,
+    "ordinals_base_chrf_new": 67.65939518041097,
+    "ordinals_base_bleu_old": 40.717984546145516,
+    "ordinals_base_bleu_new": 41.76786745772596,
+    "ordinals_base_changed": 167,
+    "device-drift_lilly_chrf_old": 67.47363295347311,
+    "device-drift_lilly_chrf_new": 67.44391057645598,
+    "device-drift_lilly_bleu_old": 42.18208415046094,
+    "device-drift_lilly_bleu_new": 42.14003789814222,
+    "device-drift_lilly_changed": 616,
+    "device-drift_base_chrf_old": 67.33640774112105,
+    "device-drift_base_chrf_new": 67.2779281942616,
+    "device-drift_base_bleu_old": 40.809325043478665,
+    "device-drift_base_bleu_new": 40.717984546145516,
+    "device-drift_base_changed": 707
+  },
+  "artifacts": [
+    "lilly-ordinals.zip"
+  ],
+  "hardware": "Tesla T4",
+  "ended": "2026-09-08T15:50:06Z"
+}

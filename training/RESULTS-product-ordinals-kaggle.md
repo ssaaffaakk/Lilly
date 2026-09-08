@@ -2,39 +2,6 @@
 
 Scored build: `1aedcc11231cdf50817ff12f99ff0d1e`
 
-## Provenance — re-measured 8 September 2026 on Kaggle, after the ordinal splitter fix
-
-Until 8 September `app.translate.Engine` ended a sentence at every "digit,
-period, space", so a Bosnian date was cut into pieces and each piece translated
-alone. The rule was fixed and the re-measurement pre-registered
-(`training/PREREGISTRATION.md`, "v4 — translate — ordinals" and its amendment).
-The run: Kaggle T4, both served builds uploaded from the Mac and checked by
-digest (this one and the base `348a984c…`), both splitters on the same box,
-`training/Lilly_Ordinals_Kaggle.ipynb`. The tables below are the new rule; the
-old rule on the same box is `training/RESULTS-product-oldsplit-kaggle.md`, and
-the Mac's old report is in git history before this commit.
-
-| 2,009 pairs, tag stripped, same T4 | old splitter | new splitter | delta | p (paired bootstrap) | rows changed |
-|---|---|---|---|---|---|
-| Lilly, BLEU | 42.14 | **43.03** | +0.89 | 0.001 | 167 |
-| Lilly, chrF2 | 67.44 | **67.81** | +0.37 | 0.001 | 167 |
-| base, BLEU | 40.72 | **41.77** | +1.05 | 0.001 | 167 |
-| base, chrF2 | 67.28 | **67.66** | +0.38 | 0.001 | 167 |
-
-On the 1,012-pair devtest half: Lilly 42.42 → **43.25** BLEU, 67.75 → **68.10**
-chrF2; base 41.05 → 42.08, 67.45 → 67.85; all p = 0.001, 77 rows changed.
-
-Device drift, the Mac's CPU against this T4 on the **old** rule, same builds,
-same rows (`training/compare-device-drift-*.json`): Lilly 42.18 → 42.14 BLEU
-(p = 0.25), 67.47 → 67.44 chrF2 (p = 0.23); base 40.81 → 40.72 (p = 0.15),
-67.34 → 67.28 (p = 0.13). The text differs on 616 and 707 rows and the scores
-do not: the machine is not the lever, the splitter is.
-
-Raw: `training/app-hypotheses-ordinals-kaggle.json` (new rule),
-`training/app-hypotheses-oldsplit-kaggle.json` (old rule, T4),
-`training/app-hypotheses-armB.json` (old rule, Mac),
-`training/compare-ordinals-*.json`, `training/ordinals-experiment_log.json`.
-
 2,009 FLORES-200 pairs the base model was not trained on. Both models are int8 CTranslate2 builds and both go through `app.translate.Engine`, so the sentence splitting and the quantisation are the product's own. The only difference between the two columns is the fine-tuning.
 
 This is the number to quote. `training/RESULTS.md` scores the raw adapter on whole rows, which is a useful diagnostic and not what anyone runs: on the same pairs that path reads +0.54 BLEU and −0.79 chrF2, because feeding several sentences at once makes the model drop a clause and the app never does that.

@@ -2579,6 +2579,39 @@ new-splitter figures, stated with the device beside them and the drift row
 under them. The bar, the exception for a rule that joins real sentences, and
 the expected size are unchanged.
 
+### Outcome, 8 September 2026, 17:50 UTC — the rule stays; the numbers are replaced
+
+Kaggle T4, `lilly-ordinals-remeasure` version 2 (version 1 died writing its
+smoke file to a scratch path the box did not have, before any measurement).
+Both builds matched their digests; FLORES was 2,009; no empty translation.
+
+| 2,009 pairs, tag stripped, same T4 | old rule | new rule | delta | p |
+|---|---|---|---|---|
+| fine-tune, BLEU / chrF2 | 42.14 / 67.44 | **43.03 / 67.81** | +0.89 / +0.37 | 0.001 / 0.001 |
+| base, BLEU / chrF2 | 40.72 / 67.28 | **41.77 / 67.66** | +1.05 / +0.38 | 0.001 / 0.001 |
+
+167 rows changed on each side. Devtest half: fine-tune 42.42 → 43.25 BLEU,
+67.75 → 68.10 chrF2; base 41.05 → 42.08, 67.45 → 67.85; p = 0.001, 77 rows.
+
+**chrF2 rose on both builds; the exception for a rule that joins real
+sentences is not triggered; the rule stays.** The size is what was written
+down — under a point on chrF2, upward — and a little larger than written on
+BLEU for the base (+1.05 against "under a point"), which is noted and not
+explained away: BLEU rewards whole sentences more than a character measure
+does. The device drift, the Mac's CPU against the T4 on the old rule, is
+−0.04 / −0.03 for the fine-tune and −0.09 / −0.06 for the base, none of it
+clearing p = 0.13; the machine is not the lever.
+
+The fine-tune's gain re-quoted on the new translations: **+1.26 BLEU
+(p = 0.001), +0.15 chrF2 (p = 0.074)** on 2,009 pairs; +1.17 / +0.25 on
+devtest. The chrF2 gain still does not clear 0.05 and is reported as such.
+`README.md`, `training/RESULTS-product.md` and the model card now carry
+43.25 / 68.10 (devtest) and 43.03 / 67.81 (all pairs); 42.49 / 67.69 and
+42.18 / 67.47 stay in the records. Files: `training/RESULTS-product.md`,
+`training/RESULTS-product-oldsplit-kaggle.md`,
+`training/app-hypotheses-{oldsplit,ordinals}-kaggle.json`,
+`training/compare-{ordinals,device-drift}-{lilly,base}.json`.
+
 ---
 
 # v4 — listen — one language token per clip, written before any run

@@ -2,6 +2,13 @@
 
 Scored build: `1aedcc11231cdf50817ff12f99ff0d1e`
 
+> **Superseded on the numbers, 8 September 2026 (evening):** the served path was
+> re-measured on Kaggle after the ordinal splitter fix, both splitters on one T4.
+> The devtest figures are now **43.25 / 68.10** for Lilly and 42.08 / 67.85 for
+> the tag-stripped base (`training/RESULTS-product.md`,
+> `training/compare-ordinals-*.json`). The correction below stands as the record
+> of the 7 September rescoring under the old splitter.
+
 > **Correction, 7 September 2026 — the Lilly rows below do not reproduce.**
 > Rescoring `training/app-hypotheses-arm{A,B}.json` — the translations this
 > repository actually carries — against the same 1,012 FLORES devtest
