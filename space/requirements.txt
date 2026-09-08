@@ -42,8 +42,10 @@ easyocr
 pillow
 numpy
 
-# fetching the weights at build time
-huggingface_hub
+# fetching the weights at build time. Below 1.0 because transformers 4.49.0
+# requires it; said here so the resolver does not spend the build discovering
+# it (the Gradio Space's base image ships 1.x and has to step down).
+huggingface_hub<1.0
 
 # the server
 fastapi

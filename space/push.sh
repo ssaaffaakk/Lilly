@@ -64,10 +64,14 @@ else
   cp "$ROOT/space/gradio/lilly_space.py" "$STAGE/lilly_space.py"
   cp "$ROOT/space/gradio/packages.txt" "$STAGE/packages.txt"
   # The same card, under the Gradio SDK's front matter: the body of
-  # space/README.md is everything after its own front matter.
+  # space/README.md is everything after its own front matter. sdk_version is
+  # the last Gradio 5: the SDK's own build step installs gradio==sdk_version,
+  # and Gradio 6 needs huggingface-hub >= 1.2 while transformers 4.49.0 (the
+  # tokeniser's version, pinned in requirements.txt) needs < 1.0. The first
+  # build on 6.18.0 died on exactly that: ResolutionImpossible.
   {
     printf '%s\n' '---' 'title: Lilly' 'emoji: 🌉' 'colorFrom: blue' 'colorTo: gray' \
-      'sdk: gradio' 'sdk_version: 6.18.0' 'python_version: "3.12"' 'app_file: lilly_space.py' \
+      'sdk: gradio' 'sdk_version: 5.50.0' 'python_version: "3.12"' 'app_file: lilly_space.py' \
       'pinned: false' 'license: other' 'models:' '  - Safak11/lilly' '---'
     awk 'seen >= 2 { print } /^---$/ { seen++ }' "$ROOT/space/README.md"
   } > "$STAGE/README.md"
