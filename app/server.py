@@ -8,14 +8,20 @@ Endpoints:
     GET  /health            liveness, for whatever is watching the process
     POST /api/translate     {"text": "..."}            -> Bosnian text to English
     POST /api/reply         {"text": "..."}            -> English text to Bosnian
-    POST /api/speech        audio file upload           -> transcribe Bosnian + translate
-    POST /api/speak         {"text": "..."}            -> English speech (WAV)
-    POST /api/photo         image file upload           -> OCR Bosnian + translate
+    POST /api/speech        audio upload [+ direction]  -> transcribe, then translate
+    POST /api/speak         {"text": "...", "language": "en"|"bs"} -> speech (WAV)
+    POST /api/photo         image upload [+ direction]  -> read, then translate
     POST /api/feedback      correction report           -> saved to review database
 
 Every ability comes from the one Lilly object (app/lilly.py), which reads its
 weights from models/lilly/. Parts load lazily on first use, so startup is
 instant and unused features cost nothing.
+
+Every ability runs both ways. The uploads take an optional `direction` form
+field, "bs-en" (the default: Bosnian heard or photographed, English back) or
+"en-bs" (English heard or photographed, Bosnian back); the answer is always
+{"bosnian": ..., "english": ...}, whichever side was the input. /api/speak takes
+`language`, "en" (default) or "bs", for reading the answer aloud on either side.
 
 This is written to face the open internet, so every request is bounded before it
 reaches a model: uploads by size, text by how much work it asks for, images by
@@ -29,7 +35,7 @@ from pathlib import Path
 
 from typing import Annotated
 
-from fastapi import FastAPI, UploadFile
+from fastapi import FastAPI, Form, UploadFile
 from fastapi.responses import FileResponse, JSONResponse, Response
 from pydantic import BaseModel, Field, StringConstraints
 from starlette.concurrency import run_in_threadpool
@@ -67,6 +73,12 @@ class TranslateIn(BaseModel):
 
 class SpeakIn(BaseModel):
     text: SpeakIn_text
+    language: str = Field(default="en", pattern="^(en|bs)$")
+
+
+# The uploads' direction, a form field beside the file. Checked here so a typo
+# is a 422 with the field named, never a 400 blamed on the recording.
+Direction = Annotated[str, Form(pattern="^(bs-en|en-bs)$")]
 
 
 class FeedbackIn(BaseModel):
@@ -166,10 +178,10 @@ async def reply(body: TranslateIn):
 
 
 @app.post("/api/speech")
-async def speech(file: UploadFile):
+async def speech(file: UploadFile, direction: Direction = "bs-en"):
     tmp_path = await _save_upload(file, "a.webm", MAX_UPLOAD["/api/speech"])
     try:
-        bosnian, english = await run_in_threadpool(lilly.translate_audio, tmp_path)
+        bosnian, english = await run_in_threadpool(lilly.translate_audio, tmp_path, direction)
     except FileNotFoundError as exc:
         # No listener on this machine. Not the caller's recording and not a
         # crash: the same 503 the reply direction answers with.
@@ -184,18 +196,22 @@ async def speak(body: SpeakIn):
     with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as tmp:
         tmp_path = tmp.name
     try:
-        await run_in_threadpool(lilly.speak, body.text, tmp_path)
+        await run_in_threadpool(lilly.speak, body.text, tmp_path, body.language)
         data = Path(tmp_path).read_bytes()
+    except FileNotFoundError as exc:
+        # The Bosnian voice is a separate download, like the reply model:
+        # missing weights are neither the caller's text nor a crash.
+        return JSONResponse(status_code=503, content={"error": str(exc)})
     finally:
         Path(tmp_path).unlink(missing_ok=True)
     return Response(content=data, media_type="audio/wav")
 
 
 @app.post("/api/photo")
-async def photo(file: UploadFile):
+async def photo(file: UploadFile, direction: Direction = "bs-en"):
     tmp_path = await _save_upload(file, "a.jpg", MAX_UPLOAD["/api/photo"])
     try:
-        bosnian, english = await run_in_threadpool(lilly.translate_photo, tmp_path)
+        bosnian, english = await run_in_threadpool(lilly.translate_photo, tmp_path, direction)
     finally:
         Path(tmp_path).unlink(missing_ok=True)
     return {"bosnian": bosnian, "english": english}

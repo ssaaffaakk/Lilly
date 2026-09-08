@@ -22,6 +22,10 @@ does not:
   * the reply direction. translator-en-bs/ (English -> Bosnian) is in the
     bundle since 8 September 2026 and is pulled when present; its absence is
     not a failure, the app answers 503 on /api/reply and says why.
+  * the Bosnian voice. speak-bs/ is not in the bundle at all: it is Piper's
+    public sr_RS voice, and scripts/fetch_speak_bs.py pulls the 77 MB from
+    rhasspy/piper-voices after the bundle. Without it the app runs and
+    /api/speak with "language": "bs" answers 503.
 
     python3 scripts/fetch_models.py
     python3 scripts/fetch_models.py --skip-reader-warmup   # the Dockerfiles: they warm
@@ -216,6 +220,11 @@ def main() -> int:
         return 1
 
     gated = check_listener(DEST / "listen")
+    # The Bosnian voice lives upstream, not in the bundle (scripts/fetch_speak_bs.py
+    # says why). Fetched here so a fresh clone speaks both ways after one command.
+    sys.path.insert(0, str(REPO_ROOT / "scripts"))
+    from fetch_speak_bs import fetch_bosnian_voice
+    fetch_bosnian_voice()
     if not args.skip_reader_warmup:
         warm_reader()
     if not gated and os.environ.get("LILLY_REQUIRE_GATED_LISTEN"):

@@ -669,7 +669,9 @@
       </div>
       <div class="block">
         <div class="label">English</div>
-        <div class="english" id="outEnglish"></div>
+        <div class="source-row">
+          <div class="english" id="outEnglish"></div>
+        </div>
       </div>
     </div>
     <div class="result-actions">
@@ -715,7 +717,7 @@
 
 <script>
   const $ = id => document.getElementById(id);
-  const state = { bosnian: "", english: "", audioUrl: null };
+  const state = { bosnian: "", english: "", audioUrl: null, audioLang: "" };
   const calm = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   function isReply() { return document.body.classList.contains("en-bs"); }
@@ -731,14 +733,17 @@
     input.lang = reply ? "en" : "bs";
     input.setAttribute("aria-label", (reply ? "English" : "Bosnian") + " text");
     input.placeholder = reply ? "Type English\u2026" : "Upi\u0161ite bosanski tekst\u2026";
+    $("micBtn").title = reply ? "Speak English" : "Speak Bosnian";
     $("hint").textContent = reply
-      ? "Type English to get Bosnian back."
+      ? "Type it, say it, or photograph it in English. Lilly answers in Bosnian."
       : "Type it, say it, or photograph a sign.";
   }
 
-  function ensureBosnianIn() {
-    if (isReply()) applyDirection(false);
-  }
+  /* The direction the server is asked for, and which side of its answer is
+     the input: every ability runs both ways, so a recording or a photo goes
+     out with the direction the arrow shows rather than flipping it back. */
+  function direction() { return isReply() ? "en-bs" : "bs-en"; }
+  function sourceOf(data) { return isReply() ? data.english : data.bosnian; }
 
   /* ---- messages ---------------------------------------------------- */
   let toastTimer = 0;
@@ -823,7 +828,7 @@
         return "Lilly could not read that request. Reload the page, then " + next + ".";
 
       case 503:
-        return (text || "The English-to-Bosnian model is not on this machine")
+        return (text || "That model is not on this machine")
              + ". " + cap(next) + ".";
     }
 
@@ -841,6 +846,8 @@
   function setThumb(file) {
     if (thumbUrl) { URL.revokeObjectURL(thumbUrl); thumbUrl = null; }
     const el = $("srcThumb");
+    // The thumbnail belongs beside what was photographed, whichever side that is.
+    (isReply() ? $("outEnglish") : $("outBosnian")).parentElement.prepend(el);
     if (file) { thumbUrl = URL.createObjectURL(file); el.src = thumbUrl; el.hidden = false; }
     else { el.removeAttribute("src"); el.hidden = true; }
   }
@@ -963,7 +970,6 @@
 
   $("micBtn").addEventListener("click", async () => {
     if (recorder && recorder.state === "recording") { recorder.stop(); return; }
-    ensureBosnianIn();
     // Browsers hand out getUserMedia only on a secure origin, and localhost
     // counts as one. Reached over plain http from a phone on the same wifi —
     // which is how the README says to try Lilly on a phone — the whole
@@ -994,16 +1000,18 @@
         const blob = new Blob(chunks, { type: recorder.mimeType });
         const form = new FormData();
         form.append("file", blob, "speech.webm");
+        form.append("direction", direction());
         try {
           const data = await apiJson("/api/speech", { method: "POST", body: form });
-          if (!data.bosnian) {
+          const heard = sourceOf(data);
+          if (!heard) {
             fail("Lilly did not catch any words. Record again, closer to the microphone.");
             return;
           }
-          $("input").value = data.bosnian;
+          $("input").value = heard;
           document.body.classList.add("has-text");
           showResult(data.bosnian, data.english);
-          playEnglish();               // speak the answer back automatically
+          playAnswer();                // speak the answer back automatically
         } catch (e) {
           fail(describe(e, "speech"));
         } finally {
@@ -1034,18 +1042,19 @@
   /* ---- photo --------------------------------------------------------- */
   async function readPhoto(file) {
     if (!file) return;
-    ensureBosnianIn();
     busy($("photoBtn"), true);
     setStatus("Reading the photo…", true);
     const form = new FormData();
     form.append("file", file, file.name || "photo.jpg");
+    form.append("direction", direction());
     try {
       const data = await apiJson("/api/photo", { method: "POST", body: form });
-      if (!data.bosnian) {
+      const seen = sourceOf(data);
+      if (!seen) {
         fail("No text found in that photo. Take it again straight on, with the words filling the frame.");
         return;
       }
-      $("input").value = data.bosnian;
+      $("input").value = seen;
       document.body.classList.add("has-text");
       showResult(data.bosnian, data.english, file);
     } catch (e) {
@@ -1090,20 +1099,26 @@
   });
 
   /* ---- voice out ----------------------------------------------------- */
-  async function playEnglish() {
-    if (!state.english) return;
+  /* The answer, read aloud: the English when Bosnian came in, the Bosnian
+     when English did. The audio is kept per answer and per language, so a
+     swap after the fact fetches the other side rather than replaying this one. */
+  async function playAnswer() {
+    const lang = isReply() ? "bs" : "en";
+    const text = lang === "bs" ? state.bosnian : state.english;
+    if (!text) return;
     const btn = $("playBtn");
     btn.disabled = true;
     busy(btn, true);
     try {
-      if (!state.audioUrl) {
+      if (!state.audioUrl || state.audioLang !== lang) {
         const res = await fetch("/api/speak", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ text: state.english })
+          body: JSON.stringify({ text, language: lang })
         });
         if (!res.ok) throw httpError(res, await res.json().catch(() => null));
         state.audioUrl = URL.createObjectURL(await res.blob());
+        state.audioLang = lang;
       }
       await new Audio(state.audioUrl).play();
     } catch (e) {
@@ -1118,7 +1133,7 @@
       btn.disabled = false;
     }
   }
-  $("playBtn").addEventListener("click", playEnglish);
+  $("playBtn").addEventListener("click", playAnswer);
 
   /* Copying has to survive three worlds: a secure origin where the async
      clipboard API works, a plain-http origin (a phone on the local network)

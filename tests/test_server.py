@@ -67,3 +67,33 @@ def test_feedback_direction_is_validated(client, tmp_path, monkeypatch):
     res = client.post("/api/feedback", json={"source_text": "Dobar dan", "model_output": "Good day",
                                              "suggested_translation": "Hello", "direction": "bs-en"})
     assert res.status_code == 200 and res.json()["ok"] is True
+
+
+def test_speak_language_is_validated(client):
+    assert client.post("/api/speak", json={"text": "Dobar dan", "language": "fr"}).status_code == 422
+
+
+def test_missing_bosnian_voice_is_a_503_not_a_500(client, tmp_path, monkeypatch):
+    from app import tts
+    monkeypatch.setattr(tts, "VOICE_BS", tmp_path / "voice.onnx")
+    monkeypatch.setattr(tts, "VOICE_BS_CONFIG", tmp_path / "voice.onnx.json")
+    monkeypatch.setattr(tts, "_bosnian", None)
+    res = client.post("/api/speak", json={"text": "Dobar dan", "language": "bs"})
+    assert res.status_code == 503
+    assert "no Bosnian voice" in res.json()["error"]
+
+
+@pytest.mark.parametrize("path,name,mime", [("/api/speech", "a.webm", "audio/webm"),
+                                            ("/api/photo", "a.jpg", "image/jpeg")])
+def test_upload_direction_is_validated(client, path, name, mime):
+    res = client.post(path, files={"file": (name, b"RIFF....", mime)}, data={"direction": "fr-en"})
+    assert res.status_code == 422
+
+
+def test_missing_listener_is_a_503_in_the_reply_direction_too(client, tmp_path, monkeypatch):
+    from app import speech
+    monkeypatch.setattr(speech, "LISTEN_DIR", tmp_path / "no-listener")
+    res = client.post("/api/speech", files={"file": ("a.webm", b"RIFF....", "audio/webm")},
+                      data={"direction": "en-bs"})
+    assert res.status_code == 503
+    assert "no listener" in res.json()["error"]

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Lilly — one object, four abilities, one model folder.
+"""Lilly — one object, five abilities, both directions, one model folder.
 
     from app.lilly import lilly
 
@@ -8,6 +8,18 @@
     lilly.speak("Good day", "out.wav")        # English text  -> spoken English
     lilly.read("sign.jpg")                    # photo          -> Bosnian text
     lilly.reply("Good morning")               # English text  -> Bosnian text
+
+    # and the other way round, for answering back
+    lilly.listen("clip.m4a", language="en")               # spoken English -> English text
+    lilly.speak("Dobar dan", "out.wav", language="bs")    # Bosnian text  -> spoken Bosnian
+    lilly.translate_audio("clip.m4a", direction="en-bs")  # spoken English -> (Bosnian, English)
+    lilly.translate_photo("sign.jpg", direction="en-bs")  # English photo  -> (Bosnian, English)
+
+Since the evening of 8 September 2026 every ability runs in both directions.
+The listener and the reader are the same weights either way -- Whisper is told
+which language to hear, and PP-OCRv6 reads Latin script whatever the language
+-- so the reverse direction adds exactly one new part: a Bosnian voice, under
+speak-bs/, optional in the same way translator-en-bs/ is (below).
 
 Every weight Lilly needs lives under models/lilly/ and is read straight off
 this disk — nothing is fetched over the network. Each ability loads the first
@@ -28,7 +40,8 @@ TRANSLATOR_DIR = MODELS / "translator"  # Bosnian -> English, quantised, what we
 TRANSLATOR_EN_BS_DIR = MODELS / "translator-en-bs"  # English -> Bosnian, the reply side
 TRANSLATE_DIR = MODELS / "translate"   # the trainable copy, only training reads it
 LISTEN_DIR = MODELS / "listen"         # speech -> text
-SPEAK_DIR = MODELS / "speak"           # text -> speech
+SPEAK_DIR = MODELS / "speak"           # English text -> speech (Kokoro)
+SPEAK_BS_DIR = MODELS / "speak-bs"     # Bosnian text -> speech (Piper), the reply side's voice
 READ_DIR = MODELS / "read"             # photo -> text
 ADAPTER_DIR = MODELS / "adapter"       # our fine-tuned adapter, once trained
 
@@ -55,7 +68,26 @@ OPTIONAL = {
         "or build it from the upstream base:\n"
         "    python3 scripts/fetch_translate_base.py --direction en-bs\n"
         "    python3 scripts/build_translator.py --direction en-bs"),
+    SPEAK_BS_DIR: (
+        "the Bosnian voice (spoken replies). Not in the bundle: it is Piper's "
+        "public sr_RS voice, fetched from upstream by\n"
+        "    python3 scripts/fetch_models.py\n"
+        "or on its own:\n"
+        "    python3 scripts/fetch_speak_bs.py"),
 }
+
+# The two ways round. "bs-en" reads Bosnian and writes English; "en-bs" is the
+# reply: English in, Bosnian out. Whatever the direction, the pair a method
+# returns is (bosnian, english) -- which side was typed, said or photographed
+# is the difference, and a caller reading `english` should not have to know
+# how it was produced. app/server.py and app/feedback.py use the same names.
+DIRECTIONS = ("bs-en", "en-bs")
+
+
+def check_direction(direction: str) -> str:
+    if direction not in DIRECTIONS:
+        raise BadInput(f"direction must be one of {DIRECTIONS}, not {direction!r}")
+    return direction
 
 
 def required_parts() -> tuple:
@@ -127,25 +159,44 @@ class Lilly:
         return get_engine("en-bs").translate(english, truncate=truncate)
 
     def listen(self, audio_path: str, language: str = "bs") -> str:
+        """Speech in `language` ("bs" or "en") -> text in that language.
+
+        One listener hears both: Whisper is multilingual and is told which
+        language to expect, so the reply direction costs no second model.
+        """
         from app.speech import transcribe
         return transcribe(audio_path, language=language)
 
-    def speak(self, english: str, out_path: str) -> str:
+    def speak(self, text: str, out_path: str, language: str = "en") -> str:
+        """Text in `language` ("en" or "bs") -> WAV at out_path.
+
+        Two engines behind one door: Kokoro for English, Piper for Bosnian
+        (app/tts.py says why). A missing Bosnian voice is a missing download,
+        reported the way a missing reply model is.
+        """
         from app.tts import speak_to_file
-        return speak_to_file(english, out_path)
+        return speak_to_file(text, out_path, language=language)
 
     def read(self, image_path: str) -> str:
         from app.ocr import scan
         return scan(image_path)
 
-    # convenience: the two things the app actually does with the other parts
+    # convenience: the two things the app actually does with the other parts.
     # truncate=True on both: the reader never typed this text, so a refusal
     # over its length would be baffling. Better a translated beginning.
-    def translate_audio(self, audio_path: str) -> tuple:
+    # Both return (bosnian, english) whichever way round they ran -- see
+    # DIRECTIONS above.
+    def translate_audio(self, audio_path: str, direction: str = "bs-en") -> tuple:
+        if check_direction(direction) == "en-bs":
+            english = self.listen(audio_path, language="en")
+            return (self.reply(english, truncate=True) if english else ""), english
         bosnian = self.listen(audio_path)
         return bosnian, (self.translate(bosnian, truncate=True) if bosnian else "")
 
-    def translate_photo(self, image_path: str) -> tuple:
+    def translate_photo(self, image_path: str, direction: str = "bs-en") -> tuple:
+        if check_direction(direction) == "en-bs":
+            english = self.read(image_path)
+            return (self.reply(english, truncate=True) if english else ""), english
         bosnian = self.read(image_path)
         return bosnian, (self.translate(bosnian, truncate=True) if bosnian else "")
 

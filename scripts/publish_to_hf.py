@@ -157,6 +157,11 @@ EXCLUDE_RULES = (
                          "bound to training/RESULTS-en-bs-formrate.md"),
     ("adapter-en-bs", "raw LoRA adapter for the reply direction; the merged model is published "
                       "as translator-en-bs/ (--with-reply)"),
+    # The Bosnian voice. Never published from here: it is Piper's public
+    # sr_RS voice, pulled from rhasspy/piper-voices by scripts/fetch_speak_bs.py
+    # on every install, and a copy in this bundle would add nothing to it.
+    ("speak-bs", "the Bosnian voice (Piper sr_RS-serbski_institut-medium), fetched upstream by "
+                 "scripts/fetch_speak_bs.py on every install; not published from here"),
     # The whisper-large-v3 listener refused at its gate (7 Sep) and at the
     # pre-registered last look (8 Sep): closed by rule 3, kept on this machine
     # as the record of what was refused. It is never published; the gated

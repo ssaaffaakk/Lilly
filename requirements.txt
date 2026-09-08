@@ -18,9 +18,11 @@ sacrebleu
 # Speech input (spoken Bosnian)
 faster-whisper
 
-# Voice output (English speech)
+# Voice output: Kokoro for English, Piper for the Bosnian reply. The piper-tts
+# wheel carries its own espeak-ng data, so nothing is installed beside Python.
 kokoro
 soundfile
+piper-tts
 
 # Photo scan. The app reads with PaddleOCR PP-OCRv6 (docs/OCR-ROADMAP.md,
 # decision 5); EasyOCR stays installed as the way back (LILLY_READER=easyocr)
