@@ -2440,3 +2440,83 @@ photographs. So even at 200-with-text the number this project can compute is
 **box-relaxed** — an upper bound on the rubric's F1, not the F1. That stays in
 every sentence that quotes it, and closing it is a separate, later decision
 about whether to annotate boxes at all.
+
+---
+
+# v4 — translate — ordinals, written before the re-measurement
+
+Written 8 September 2026, after `app/translate.py`'s sentence splitter was
+changed and **before** any number has been produced through the changed
+splitter. Nothing below is reinterpreted afterwards.
+
+## What changed, and why it is a correctness fix rather than a candidate
+
+`app/translate.py` splits input into sentences before translating, because the
+model drops a clause when handed several at once. Until 8 September the rule
+ended a sentence at every "digit, period, whitespace". Bosnian writes ordinals
+and dates with a trailing period, so "Rođen je 5. maja 1990. godine u
+Sarajevu." was translated as three fragments — "Rođen je 5." / "maja 1990." /
+"godine u Sarajevu." — and "Otvoreno od 8. do 16. sati." as three. The rule now
+ends a sentence after a digit-period only when the next character is not a
+lowercase letter, which is what a real boundary after a number looks like
+("… u 9.30. Dođite ranije!"). The cases are in `tests/test_translate.py`.
+
+Every served-path number this project has published — 42.49 / 67.69 on the
+devtest half, 42.18 / 67.47 on 2,009 pairs, the base's 41.10 / 67.51 — was
+produced with the fragments, on **both** sides of every comparison. The
+comparisons stand; the absolute figures are what this re-measures.
+
+## The measurement that decides which numbers the README quotes
+
+    python3 scripts/build_translator.py --no-adapter --dest models/lilly/translator-base   # if not already built
+    python3 training/evaluate_app.py --fresh \
+        --saved training/app-hypotheses-ordinals.json \
+        --out training/RESULTS-product-ordinals.md
+    python3 training/compare_hypotheses.py \
+        training/app-hypotheses-armB.json training/app-hypotheses-ordinals.json --side lilly
+    python3 training/compare_hypotheses.py \
+        training/app-hypotheses-armB.json training/app-hypotheses-ordinals.json --side base
+
+Same 2,009 FLORES-200 pairs, same two builds — the scored build named in
+`training/RESULTS-product.md` and `translator-base` — int8, through
+`app.translate.Engine`. The only thing that differs between the two hypotheses
+files is the splitter, and `compare_hypotheses.py` refuses two files that name
+different builds. It runs the paired bootstrap on BLEU and chrF2 between the
+old and the new translations of the same build, tag stripped, on all pairs and
+on the devtest half beside them. About forty minutes on the Mac, where the
+builds are; the Kaggle rule in `.claude/CLAUDE.md` covers it if the Mac is not
+available, as its own measurement notebook.
+
+## The bar
+
+The fix is a correctness fix and it is not the candidate: a date cut into
+three sentences is wrong whatever a corpus metric says of it, and the rule was
+written from the grammar, not from a score. What the run decides is the
+numbers, not the rule.
+
+- The re-measured served-path figures **replace** 42.49 / 67.69 and
+  42.18 / 67.47 in `README.md`, `training/RESULTS-product.md` and the model
+  card, whichever way they move, with the paired interval beside the delta.
+- If chrF2 of the shipped build **falls** at p < 0.05 against its own
+  old-splitter translations, that is reported as a finding and the rule
+  stays — with one exception, named now so it cannot be invented afterwards:
+  if the per-row diff shows the fall comes from the rule *joining* two real
+  sentences (a number followed by a lowercase word that opens a new sentence),
+  the rule is wrong and is reverted or narrowed, and that is reported instead.
+- The base-against-Lilly comparison is re-run on the new translations and the
+  fine-tune's gain is re-quoted from it. A gain that no longer clears p < 0.05
+  is reported as such.
+
+## Expected size, stated now
+
+Rows carrying a digit-period followed by a lowercase word are a minority of
+FLORES, so the expected movement is under a point on either metric, and more
+likely upward than not, because the references were written from whole
+sentences. Written down so that a larger movement is a surprise to be
+explained, not a result to be enjoyed.
+
+## What this run cannot settle
+
+Abbreviations — *npr.*, *dr.*, *tzv.* — still split as they did before. That is
+a separate rule, it is not changed here, and a number from this run says
+nothing about it. Nothing about the model, the corpus or the build changes.

@@ -53,3 +53,7 @@ pyarrow
 fastapi
 uvicorn
 python-multipart
+
+# Tests: python3 -m pytest tests  -- the sentence splitter, the batch grouping
+# and the server's error mapping, none of which needs a model.
+pytest

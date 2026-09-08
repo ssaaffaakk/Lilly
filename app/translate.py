@@ -40,7 +40,20 @@ MAX_SENTENCE_TOKENS = 256
 # the opening clause entirely. Measured on exactly that sign: the prohibition
 # vanished from the translation, so the reader never saw that entry was
 # forbidden. The lines are the sentence boundaries the punctuation is missing.
-SENTENCE_BREAK = re.compile(r"(?<=[.!?])\s+|\s*\n+\s*")
+#
+# An ordinal is not a full stop. Bosnian writes ordinal numbers and dates with
+# a trailing period -- "5. maja 1990. godine", "u 19. stoljeću", "od 8. do 16.
+# sati" -- so a splitter that ends a sentence at every "digit, period, space"
+# cut a date into three pieces and translated each alone: "Rođen je 5." /
+# "maja 1990." / "godine u Sarajevu." A period after a digit therefore ends a
+# sentence only when what follows does not start with a lowercase letter,
+# which is what a real boundary after a number looks like ("... u 9.30. Dođite
+# ranije!"). Every served-path number published before this rule was produced
+# with the pieces; the re-measurement is pre-registered
+# (training/PREREGISTRATION.md, "v4 -- translate -- ordinals").
+LOWERCASE = "a-zčćđšž"
+SENTENCE_BREAK = re.compile(
+    rf"(?<=[.!?])(?:(?<!\d\.)\s+|\s+(?![{LOWERCASE}]))|\s*\n+\s*")
 
 # Each direction is its own build, its own tokenizer and its own target label.
 # The label is not decoration: this base decodes five South Slavic languages and

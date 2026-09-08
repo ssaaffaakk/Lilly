@@ -237,6 +237,15 @@ plain terms: it makes word-level accuracy better, it removes a defect from every
 third output, and it does not move chrF2. The first builds, under 30 BLEU, did
 not manage any of that.
 
+**One caveat on every served-path number above.** They were measured through
+`app.translate.Engine` as it split sentences until 8 September 2026, when the
+splitter learned that a Bosnian ordinal (*5. maja 1990. godine*) is not a full
+stop; before that a date was cut into pieces and each piece translated alone.
+Both builds went through the same splitter, so the comparisons stand. The
+absolute figures are re-measured under a pre-registration
+(`training/PREREGISTRATION.md`, "v4 — translate — ordinals"), and the new ones
+replace these when that run lands.
+
 **The reply direction** (English → Bosnian) was fine-tuned on 8 September and
 cleared all four of its pre-registered bars on the same 2,009 pairs: chrF2
 **58.96 → 60.00**, BLEU **29.57 → 30.73** (a paired bootstrap over sentences
@@ -432,6 +441,7 @@ of failures already paid for: [`docs/kaggle-fail-stop.md`](docs/kaggle-fail-stop
 - [x] English → Bosnian fine-tune — all four pre-registered bars cleared 8 Sep (chrF2 +1.04, BLEU +1.16, form rate 99.2%, label gap 22.5); built, **not yet published**
 - [ ] Larger speech model — trained (11.9% word error); refused at the gate 7 Sep and at the pre-registered last look 8 Sep (Croatian 1.1% → 6.1%, p = 0.018); **closed by rule 3**; still in the published bundle, ungated — owner to revert `listen/`
 - [ ] A valid photograph score: `test-v2b`'s 160 photographs transcribed blind, then one score on the union
+- [ ] Re-measure the served translation path after the ordinal splitter fix of 8 Sep (pre-registered; `training/compare_hypotheses.py`)
 - [ ] A labelled set of real phone photographs from Bosnia
 
 ---
