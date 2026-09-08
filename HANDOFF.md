@@ -7,6 +7,16 @@ when it stops being true; a stale handoff is worse than none.
 > items below. The Mapillary line (passes 14–19) is closed; the queue, the
 > numbers to trust and the do-not-repeat list are there.
 
+> **8 Sep 2026, night:** every ability runs the other way. `/api/speech` and
+> `/api/photo` take `direction=en-bs`, `/api/speak` takes `language=bs`, and
+> the page sends the direction the arrow shows. The one new part is
+> `models/lilly/speak-bs/`, Piper's Serbian voice, fetched from
+> `rhasspy/piper-voices` by `scripts/fetch_speak_bs.py` (and by
+> `fetch_models.py`), never from the bundle. Nothing about English hearing or
+> reading is measured; the README says so. Owner decisions open: which of the
+> voice's two speakers (`built.json`, `--speaker`), and whether a Serbian voice
+> is acceptable for the Bosnian side at all.
+
 ## The three numbers
 
 | | measured | on what | means |

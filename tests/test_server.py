@@ -97,3 +97,7 @@ def test_missing_listener_is_a_503_in_the_reply_direction_too(client, tmp_path, 
                       data={"direction": "en-bs"})
     assert res.status_code == 503
     assert "no listener" in res.json()["error"]
+
+
+def test_the_page_is_revalidated_not_kept_on_heuristics(client):
+    assert client.get("/").headers["cache-control"] == "no-cache"

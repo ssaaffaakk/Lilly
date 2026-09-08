@@ -109,6 +109,19 @@ To rebuild the reply direction yourself from the upstream base instead:
 Without `translator-en-bs/` the app still runs and `/api/reply` answers 503.
 `python3 app/lilly.py` prints which parts are installed.
 
+Every ability runs both ways. The arrow between the two language names is a
+button: swap it and Lilly hears English, reads an English photograph, answers
+in Bosnian, and says the answer out loud. The listener and the reader are the
+same weights either way; the one new part is the Bosnian voice, `speak-bs/`,
+which `fetch_models.py` pulls from `rhasspy/piper-voices` rather than from the
+bundle. Piper has no Bosnian voice; this is the one it files under Serbian,
+read through Serbian phonemes (so numbers come out the Serbian way, "dve" for
+"dvije"), and its own card says the recordings behind it are the Sorbian
+Institute's Lower Sorbian data — intelligible, accented, and worth hearing
+before relying on. Without it the app still runs and `/api/speak` with
+`"language": "bs"` answers 503. How well Lilly hears and reads *English* has not
+been measured here — see [What it cannot do yet](#what-it-cannot-do-yet).
+
 Startup is instant because each model loads on first use. Once
 `fetch_models.py` has finished, nothing reaches the network again.
 `python3 -m pytest tests` checks the parts that need no model: the sentence
@@ -130,15 +143,21 @@ lilly.reply("Good morning")           # English text   -> Bosnian text
 lilly.listen("clip.m4a")              # spoken Bosnian -> Bosnian text
 lilly.read("sign.jpg")                # photo          -> Bosnian text
 lilly.speak("Good day", "out.wav")    # English text   -> spoken English
+
+# and the other way round, for answering back
+lilly.listen("clip.m4a", language="en")               # spoken English -> English text
+lilly.speak("Dobar dan", "out.wav", language="bs")    # Bosnian text   -> spoken Bosnian
+lilly.translate_audio("clip.m4a", direction="en-bs")  # spoken English -> (Bosnian, English)
+lilly.translate_photo("sign.jpg", direction="en-bs")  # English photo  -> (Bosnian, English)
 ```
 
 | Endpoint | Body | Returns |
 | --- | --- | --- |
 | `POST /api/translate` | `{"text": "..."}` | Bosnian in, English out |
 | `POST /api/reply` | `{"text": "..."}` | English in, Bosnian out |
-| `POST /api/speech` | audio upload | transcribes Bosnian, then translates it |
-| `POST /api/photo` | image upload | reads Bosnian off the image, then translates it |
-| `POST /api/speak` | `{"text": "..."}` | English speech as WAV |
+| `POST /api/speech` | audio upload, optional `direction` field | transcribes, then translates: Bosnian heard → English (`bs-en`, the default) or English heard → Bosnian (`en-bs`); the answer is `{"bosnian", "english"}` either way |
+| `POST /api/photo` | image upload, optional `direction` field | reads the text off the image, then translates it, the same two ways |
+| `POST /api/speak` | `{"text": "...", "language": "en"}` | speech as WAV; `"bs"` reads the Bosnian answer with the Bosnian voice |
 | `POST /api/feedback` | a correction | stored for review and retraining |
 | `GET /health` | — | liveness |
 
@@ -168,7 +187,7 @@ attribution and licenses are in [`models/lilly/NOTICE.md`](models/lilly/NOTICE.m
 | Reply | OPUS-MT [`opus-mt-tc-base-en-sh`](https://huggingface.co/Helsinki-NLP/opus-mt-tc-base-en-sh) (Helsinki-NLP), CTranslate2 int8 | yes — LoRA merged into the weights; cleared its gate and published 8 Sep 2026 |
 | Listen | [`whisper-large-v3`](https://huggingface.co/openai/whisper-large-v3) (OpenAI), converted to CTranslate2 int8 here | yes — LoRA. **Shipped by the owner's decision, refused at its gate** (see [Speech](#speech)); the gated [`faster-whisper-small`](https://huggingface.co/Systran/faster-whisper-small) fine-tune stays the baseline |
 | Read | [PaddleOCR PP-OCRv6](https://github.com/PaddlePaddle/PaddleOCR) (`PP-OCRv6_medium_det` + `_medium_rec`, PaddlePaddle), fetched at run time; [EasyOCR](https://github.com/JaidedAI/EasyOCR) + CRAFT stays as the `LILLY_READER=easyocr` way back | no — stock, chosen by a pre-registered rule; the EasyOCR fallback is fine-tuned |
-| Speak | [Kokoro-82M](https://huggingface.co/hexgrad/Kokoro-82M) (hexgrad) | no — stock weights |
+| Speak | English: [Kokoro-82M](https://huggingface.co/hexgrad/Kokoro-82M) (hexgrad). Bosnian: Piper [`sr_RS-serbski_institut-medium`](https://huggingface.co/rhasspy/piper-voices/tree/main/sr/sr_RS/serbski_institut/medium) (rhasspy) — filed under Serbian, trained on the Sorbian Institute's recordings by its own card, since Piper has none for Bosnian; fetched from upstream, not bundled | no — stock weights |
 
 ---
 
@@ -395,6 +414,14 @@ This section exists because a README that only lists wins is not worth trusting.
   which this project builds on and did not train. And NLLB-600M is the distilled
   small variant: Google, DeepL, the 3.3B NLLB and the large general models were
   not tested, so none of this is a claim about the state of the art.
+- **English in is unmeasured.** Since 8 September the listener hears English
+  and the reader reads English photographs, because Whisper is multilingual and
+  PP-OCRv6 reads Latin script whatever the language — but no held-out English
+  set has been scored here, so there is no number for either. And the voice
+  that says the Bosnian answer is not Bosnian: Piper's `sr_RS` voice, Serbian
+  phonemes over recordings its card attributes to the Sorbian Institute, with
+  numbers spelled out in the Serbian form. Nobody has yet measured how a
+  Bosnian speaker hears it.
 - **English → Bosnian stays the weaker direction.** The fine-tune cleared its
   bars (above) and has been in the bundle since 8 September, but it starts from
   a smaller base than the forward direction and reads 60.00 chrF2 where the
@@ -461,7 +488,7 @@ of failures already paid for: [`docs/kaggle-fail-stop.md`](docs/kaggle-fail-stop
 
 | Path | What is in it |
 | --- | --- |
-| `app/` | FastAPI server, the four abilities, the web UI |
+| `app/` | FastAPI server, the five abilities in both directions, the web UI |
 | `models/lilly/` | Offline weights, model card, attribution notice |
 | `training/` | Notebooks, training and evaluation scripts, every results file |
 | `bench/` | The Bosnian-versus-neighbours benchmark and how its cases are built |

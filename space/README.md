@@ -17,7 +17,8 @@ Bosnian into English — typed, spoken, or photographed.
 
 Type a sentence and it translates. Record yourself and it listens first. Point a
 camera at a sign and it reads that. The English comes back written, and out loud
-if you want it.
+if you want it. Swap the arrow and it runs the other way: say or photograph
+English, get Bosnian back — spoken too.
 
 Everything runs here. No API is called and nothing you send leaves this machine.
 The weights are fetched when the Space starts, so the first visit after it has
@@ -26,15 +27,17 @@ up to a minute for a ten-second clip.
 
 ## What it is
 
-Four models under one roof, published at
-[Safak11/lilly](https://huggingface.co/Safak11/lilly):
+The models under one roof, published at
+[Safak11/lilly](https://huggingface.co/Safak11/lilly), plus one fetched from
+where it lives:
 
 | | |
 |---|---|
 | translator | OPUS-MT, fine-tuned, quantised to int8 |
 | listen | Whisper large-v3, fine-tuned on Bosnian speech; shipped 8 Sep 2026 by the owner's decision after it was refused at its pre-registered gate (the gated whisper-small stays the baseline) |
 | read | PaddleOCR PP-OCRv6, off the shelf, chosen by a pre-registered rule over the fine-tuned EasyOCR one |
-| speak | Kokoro-82M, as published |
+| speak | Kokoro-82M, as published, for English |
+| speak-bs | Piper's `sr_RS-serbski_institut-medium` for the Bosnian reply — filed under Serbian, trained on the Sorbian Institute's recordings by its own card; Piper has no Bosnian voice. Pulled from `rhasspy/piper-voices` at start, not from the bundle |
 
 ## How well it works
 

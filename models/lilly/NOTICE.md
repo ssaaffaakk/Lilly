@@ -40,6 +40,20 @@ The upstream card credits CC-BY-licensed training audio, including Koniwa and SI
 
 ---
 
+**speak-bs/** — Piper voice `sr_RS-serbski_institut-medium`
+Copyright © the Piper project (Michael Hansen, rhasspy).
+License: MIT
+<https://huggingface.co/rhasspy/piper-voices>
+<https://github.com/rhasspy/piper>
+These weights are **not redistributed in this repository**: `scripts/fetch_speak_bs.py`
+fetches them from the repository above at install time. Two files are renamed on
+arrival — the `.onnx` to `voice.onnx`, its `.onnx.json` to `voice.onnx.json` — and Piper's
+own `MODEL_CARD` travels with them. Piper files it under Serbian (`sr_RS`) and it is
+phonemized as Serbian; Piper has no Bosnian voice, and the application says so wherever
+it names it.
+
+---
+
 **read/** — EasyOCR detection and recognition weights
 Copyright © JaidedAI. Detector: CRAFT, copyright © Clova AI Research, NAVER Corp.
 License: Apache License 2.0 (EasyOCR); MIT (CRAFT)
@@ -88,6 +102,14 @@ here because those licenses require it:
   (under 1 hour used)
 - **SIWIS** — the University of Edinburgh — CC BY 4.0 —
   <https://datashare.ed.ac.uk/handle/10283/2353> (under 11 hours used)
+
+**speak-bs/** — Piper's card for the voice says it was fine-tuned from Piper's English
+`lessac` voice on the recordings at
+<https://github.com/marytts/serbski-institut-dsb-data>, licensed CC BY-NC-SA 4.0 —
+<https://creativecommons.org/licenses/by-nc-sa/4.0/> — credited here because that
+licence requires it, and non-commercial because it says so. That repository is the
+Sorbian Institute's (Serbski institut, Bautzen) Lower Sorbian speech data, made for
+MaryTTS voices; the voice is filed under Serbian by Piper and read as Serbian here.
 
 **read/** — the CRAFT detector was trained on SynthText, IC13 and IC17 by Clova AI
 Research; see Baek et al., "Character Region Awareness for Text Detection", CVPR 2019

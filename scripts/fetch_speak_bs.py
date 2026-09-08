@@ -1,14 +1,16 @@
 #!/usr/bin/env python3
 """Put the Bosnian voice on this machine: models/lilly/speak-bs/.
 
-Piper has no Bosnian voice, so this is Piper's Serbian one,
+Piper has no Bosnian voice, so this is the one it files under Serbian,
 `sr_RS-serbski_institut-medium` from rhasspy/piper-voices. Serbian Latin is
 written with the same letters as Bosnian and spoken with the same sounds, and
 espeak-ng's `sr` phonemizer -- bundled inside the piper-tts wheel, so nothing
 has to be installed beside Python -- reads c, c and d with their diacritics
-correctly and spells numbers out. It spells them the Serbian way ("dve" where
-a Bosnian says "dvije"), which is the one place the voice is audibly not
-Bosnian. app/tts.py says the same.
+correctly and spells numbers out, the Serbian way ("dve" where a Bosnian says
+"dvije"). Its own MODEL_CARD, kept beside the weights, names the recordings it
+was trained on as the Sorbian Institute's Lower Sorbian MaryTTS data, so the
+sounds come from Sorbian speakers read through Serbian phonemes: intelligible,
+accented, and to be heard before it is relied on. app/tts.py says the same.
 
 Not in the Lilly bundle on purpose. The upstream is public, needs no build and
 no gate, so every install pulls the 77 MB from where it lives rather than a

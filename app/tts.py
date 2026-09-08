@@ -7,14 +7,18 @@ models/lilly/speak-bs/: a 22.05 kHz WAV, many times faster than real time.
 Kokoro has no South Slavic language, so the Bosnian side is a different engine,
 not a different voice file for the same one.
 
-The Bosnian voice is Piper's Serbian `sr_RS-serbski_institut-medium`, and that
-is its honest name: Piper has no Bosnian voice, and Serbian Latin is written
-with the same letters and spoken with the same sounds. Its phonemizer is
-espeak-ng's `sr`, which reads c, c and d with their diacritics correctly and
-spells numbers out -- in the Serbian, ekavian form ("dve hiljade" where a
-Bosnian says "dvije hiljade"). That is the one place the voice is audibly not
-Bosnian; a limit to know about, not a defect to hide. scripts/fetch_speak_bs.py
-fetches it and says the same.
+The Bosnian voice is Piper's `sr_RS-serbski_institut-medium`, and that name
+needs unpacking. Piper files it under Serbian and phonemizes it with espeak-ng's
+`sr`, which reads c, c and d with their diacritics correctly and spells numbers
+out -- in the Serbian, ekavian form ("dve hiljade" where a Bosnian says "dvije
+hiljade"). But the card beside the weights names its recordings as the Sorbian
+Institute's Lower Sorbian MaryTTS data (github.com/marytts/serbski-institut-dsb-
+data; "Serbski institut" is Sorbian for Sorbian Institute), so the sounds were
+learned from Sorbian speakers and are read through Serbian phonemes. It is
+intelligible Bosnian with an accent, not a Bosnian voice; Piper has none, and
+the per-language MMS voices Meta published are gone from the Hub. A limit to
+know about and to hear before shipping, not a defect to hide.
+scripts/fetch_speak_bs.py fetches it and says the same.
 
 Usage:
     python3 app/tts.py "Hello, how are you?" out.wav

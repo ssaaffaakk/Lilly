@@ -146,7 +146,15 @@ async def _save_upload(file: UploadFile, fallback_name: str, cap: int) -> str:
 
 @app.get("/")
 def index():
-    return FileResponse(APP_DIR / "web" / "index.html")
+    # no-cache means "ask before reusing", not "never cache": the browser sends
+    # If-Modified-Since and gets a 304 while the page is unchanged. Without it,
+    # a page served with only a Last-Modified header is kept on heuristics --
+    # a tenth of its age -- and a browser that loaded Lilly a week ago goes on
+    # running that week-old script against a server that has moved on. Seen
+    # on 8 September 2026: the microphone flipped the arrow back to Bosnian
+    # an hour after the page had stopped doing that.
+    return FileResponse(APP_DIR / "web" / "index.html",
+                        headers={"Cache-Control": "no-cache"})
 
 
 @app.get("/health")
