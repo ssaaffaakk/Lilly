@@ -1,0 +1,25 @@
+{
+  "job": "speech-instrument",
+  "run_id": "Batch",
+  "started": "2026-09-08T00:15:26Z",
+  "git": "6cf069bcdfdcc5743a186a0bcc99774fa9a7b08d",
+  "status": "complete",
+  "error": null,
+  "metrics": {
+    "clips": 925,
+    "gate_wer_listen-previous": 52.37311531110639,
+    "gate_recall_listen-previous": 49.5697074010327,
+    "gate_croatian_listen-previous": 1.1494252873563218,
+    "gate_wer_listen": 32.9634741983436,
+    "gate_recall_listen": 72.1170395869191,
+    "gate_croatian_listen": 6.106870229007633,
+    "rubric_wer_listen-previous": 39.5224171539961,
+    "rubric_wer_listen": 14.13796837773446,
+    "verdict_ships": false
+  },
+  "artifacts": [
+    "lilly-speech-instrument.zip"
+  ],
+  "hardware": "Tesla T4",
+  "ended": "2026-09-08T01:18:50Z"
+}

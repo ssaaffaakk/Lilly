@@ -611,6 +611,22 @@ def fingerprint(build: Path) -> str:
     return h.hexdigest()
 
 
+def clip_key(case: dict) -> str:
+    """The cache entry for one clip: its file name AND a hash of its audio.
+
+    The name alone is not an identity. FLEURS bs_ba test downloaded on Kaggle on
+    8 September 2026 numbered its clips one off from the download on the Mac
+    (Kaggle's 00005.wav is the Mac's 00004.wav, 919 of 925 shifted the same
+    way), and the full instrument reused the Mac's 200 cached transcripts under
+    those names: 200 of 925 clips in its app-decode rows were scored against
+    the wrong sentence at ~116% word error for both listeners
+    (training/speech-instrument/). Keyed on content, a transcript can only be
+    served for the audio it was made from, on any machine.
+    """
+    h = hashlib.md5(Path(case["clip"]).read_bytes()).hexdigest()[:12]
+    return f"{case['clip'].name}#{h}"
+
+
 def transcribe(build: Path, cases: list, language: str, cache: dict, key: str,
                decode: dict | None = None) -> list:
     """`decode` is the kwargs handed to app.speech.transcribe: {} for the
@@ -618,7 +634,8 @@ def transcribe(build: Path, cases: list, language: str, cache: dict, key: str,
     rubric's greedy decode. Callers key the cache differently for the two."""
     decode = decode or {}
     have = cache.get(key, {})
-    todo = [c for c in cases if c["clip"].name not in have]
+    keys = {c["clip"].name: clip_key(c) for c in cases}
+    todo = [c for c in cases if keys[c["clip"].name] not in have]
     if todo:
         if not (build / "model.bin").exists():
             raise SystemExit(f"no listener at {build}")
@@ -631,8 +648,8 @@ def transcribe(build: Path, cases: list, language: str, cache: dict, key: str,
         claim(1.2, f"speech bench ({build.name})")
         started = time.time()
         for i, case in enumerate(todo, 1):
-            have[case["clip"].name] = listen(str(case["clip"]), language=language,
-                                             build=build, **decode)
+            have[keys[case["clip"].name]] = listen(str(case["clip"]), language=language,
+                                                   build=build, **decode)
             if i % 20 == 0 or i == len(todo):
                 cache[key] = have
                 CACHE.write_text(json.dumps(cache, ensure_ascii=False), encoding="utf-8")
@@ -646,7 +663,7 @@ def transcribe(build: Path, cases: list, language: str, cache: dict, key: str,
         release(build)
     else:
         print(f"  reusing saved transcriptions for {build.name} — --fresh to redo")
-    return [have[c["clip"].name] for c in cases]
+    return [have[keys[c["clip"].name]] for c in cases]
 
 
 # ---------------------------------------------------------------- report

@@ -275,3 +275,47 @@ instrument that could actually decide this question would need clips built for
 it, held out, and pre-registered before large-v3 is scored on them again. That
 is a new measurement with its own written bars, judged **once** — not this one
 re-run until it passes.
+
+---
+
+# The full instrument — 8 September 2026: whisper-large-v3 is closed
+
+The last look, pre-registered in `training/PREREGISTRATION.md` ("v3 — speech —
+the full instrument") and run on a Kaggle T4 as `lilly-speech-instrument`
+version 4: all 925 FLEURS bs_ba test clips, both listeners in one process,
+both checked against the gate's weight fingerprints before scoring. Raw files:
+`training/speech-instrument/`.
+
+| threshold | `listen-previous` (whisper-small) | `listen` (whisper-large-v3) | |
+|---|---|---|---|
+| word error, strictly below | 52.4%  (9,865 of 18,836) | 33.0%  (6,209) | pass |
+| term recall, not below | 49.6%  [45.5, 53.6] | 72.1%  [68.3, 75.6]  (+22.5, p = 0.0000) | pass |
+| Croatian substitution, not above | 1.1%  (1 of 87 decided, 177 targets) | **6.1%  (8 of 131)**  (+5.0, p = 0.018) | **fails** |
+
+`listen` wrote *evropom* five times and *vjerovatno* three where the speaker
+said *evropom* / *vjerovatno*; `listen-previous` wrote *vjerovatno* once.
+Serbian substitution moved the other way (4.2% → 1.9%, p = 0.081) and is not
+a bar.
+
+**Rubric WER**, the project's own scale (`RUBRIC.md`: greedy, temperature 0,
+`BasicTextNormalizer`, 925 utterances), computed here for the first time:
+whisper-small **39.5%**, whisper-large-v3 **14.1%** (18,468 words). Band 3
+against band 8.
+
+**Verdict, by "Both, not either": does not ship. By rule 3 of the
+pre-registration, whisper-large-v3 is closed** — no other split, normaliser or
+instrument. The bundle keeps whisper-small.
+
+One defect in the run, reported in the outcome note and not repeated here at
+length: the app-decode rows reused 200 of the Mac's cached transcripts under
+clip names that mean different audio on Kaggle (the two downloads number the
+clips one apart), so the two *passing* rows are computed with 200 of 925 clips
+scored against the wrong sentence for both listeners; on the 725 clips the box
+transcribed itself the word error is 35.7% against 11.4%. The greedy rows are
+clean, and the deciding Croatian row is decided on real transcripts and agrees
+with the greedy decode (3.0% → 6.2%, p = 0.023). The cause — a cache keyed on
+file name — is fixed in `training/speech_bench.py`; the Kaggle cache was not
+installed over this Mac's.
+
+Left with the owner: the published bundle has carried this listener, ungated,
+since 4 September; reverting `listen/` to whisper-small is a publish act.

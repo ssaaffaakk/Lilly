@@ -1,0 +1,402 @@
+$ git clone -q https://github.com/ssaaffaakk/Lilly.git
+$ /usr/bin/python3 -m pip install -q faster-whisper transformers==4.49.0 soundfile huggingface_hub pyarrow
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 44.0/44.0 kB 1.7 MB/s eta 0:00:00
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 10.0/10.0 MB 78.8 MB/s eta 0:00:00
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.1/1.1 MB 52.5 MB/s eta 0:00:00
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 566.4/566.4 kB 32.2 MB/s eta 0:00:00
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 35.8/35.8 MB 58.7 MB/s eta 0:00:00
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 39.6/39.6 MB 51.2 MB/s eta 0:00:00
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 23.1/23.1 MB 76.1 MB/s eta 0:00:00
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 3.1/3.1 MB 76.9 MB/s eta 0:00:00
+$ /usr/bin/python3 data/scripts/download_speech_data.py --split test
+bs_ba: 1 file(s), 682 MB total
+  test:
+    downloading 682 MB
+      100 MB (15%)
+      200 MB (29%)
+      300 MB (44%)
+      400 MB (59%)
+      500 MB (73%)
+      600 MB (88%)
+    got 682 MB
+    925 clips -> /tmp/Lilly/data/speech/test
+    transcripts -> /tmp/Lilly/data/speech/test.tsv
+
+925 clips ready. Train with:
+  python3 training/train_speech.py --data data/speech/train.tsv
+$ /usr/bin/python3 training/speech_bench.py --clips all --limit 8 --model /tmp/Lilly/models/lilly/listen-previous --model /tmp/Lilly/models/lilly/listen --json /kaggle/temp/smoke.json
+clips: 8 (all) of 925 in /tmp/Lilly/data/speech/test.tsv, 349 distinct transcripts
+transcripts shared with data/speech/train.tsv: 0
+  NOTE: the WER column below is NOT comparable to the pre-registered 35.5%.
+        That figure is the first 200 clips; use --clips first200 for it.
+terms: 532 families from contrast-terms.tsv (167 with a Croatian contrast, 370 with a Serbian one)
+targets: 6 across 4 of 8 clips, 6 distinct terms
+  small sample: the intervals below are wide, and a difference of a few points
+  between two listeners will not clear them
+  listen-previous: weights a76342f6ab59b382
+  reusing saved transcriptions for listen-previous — --fresh to redo
+  listen-previous: WER 112.9%  (192 wrong of 170 words)
+  listen: weights e6bb58483586b06c
+  reusing saved transcriptions for listen — --fresh to redo
+  listen: WER 114.1%  (194 wrong of 170 words)
+
+                               WER  term recall      95% interval   substitution   CROATIAN   SERBIAN
+  listen-previous           112.9%         0.0%  [  0.0,  39.0]           0.0%       0.0%      0.0%
+  listen                    114.1%         0.0%  [  0.0,  39.0]           0.0%       0.0%      0.0%
+  targets                                    6                              0 dec         0        0
+                                                                                        2 tgt     5 tgt
+
+by category — term recall, then Croatian and Serbian substitution
+                                                 lex                       yat
+  listen-previous                  0.0%   0.0%   0.0%         0.0%   0.0%   0.0%
+  listen                           0.0%   0.0%   0.0%         0.0%   0.0%   0.0%
+  targets                                          2                         4
+
+listen - listen-previous: +0.0 points of term recall, paired bootstrap over sentences p = 1.0000  (does not clear 0.05)
+listen - listen-previous: +0.0 points of variety substitution, paired bootstrap over sentences p = 1.0000  (does not clear 0.05)
+listen - listen-previous: +0.0 points of CROATIAN substitution, paired bootstrap over sentences p = 1.0000  (does not clear 0.05)
+listen - listen-previous: +0.0 points of SERBIAN substitution, paired bootstrap over sentences p = 1.0000  (does not clear 0.05)
+
+marked words anywhere in the transcript, per 1,000 words (330 Croatian forms, 668 Serbian)
+  listen-previous         croatian   0.00  (0 of 169 words)    serbian   0.00  (0)
+  listen                  croatian   0.00  (0 of 165 words)    serbian   0.00  (0)
+
+checks on the measurement — no model involved, the transcripts themselves
+  reference control   recall  100.0%   substitution    0.0%   croatian    0.0%   serbian    0.0%   (6 decided)   markers hr  0.00 sr  0.00
+  shuffled control    recall    0.0%   substitution    0.0%   croatian    0.0%   serbian    0.0%   (0 decided)   markers hr  0.00 sr  0.00
+  croatian variant    recall   66.7%   substitution   33.3%   croatian  100.0%   serbian    0.0%   (6 decided)   markers hr 11.76 sr  0.00
+  serbian variant     recall   16.7%   substitution   83.3%   croatian    0.0%   serbian  100.0%   (6 decided)   markers hr  0.00 sr 29.41
+  the variant controls check the scorer, not a model: audio of a person saying
+    'mjesto' cannot be edited to say 'mesto', so there is no audio-side counterfactual.
+    What they establish is that the Croatian column answers to Croatian and the
+    Serbian column to Serbian.
+  the two RENDERING rows are the strong version of that check: the professional
+    Croatian and Serbian translations of the same FLORES sentences, held out of
+    the term mining, scored as if a listener had produced them. Recall falls a
+    long way because an independent translation rewords much more than a term,
+    but of the targets it does decide, nearly all should land in its own column.
+
+what this instrument can and cannot see
+  targets: 6;  can show Croatian drift: 2 (33%);  Serbian drift: 5 (83%);  both: 1
+  yat pairs, which are Serbian-only by construction: 4 (67%)
+  *** fewer than 30 Croatian-contrasting targets: this run cannot judge a Croatian-trained model ***
+  targets the model resolved to neither variety: 6 of 6 (100.0%)
+    of those, 0 (0%) have a word within two characters of the spoken form in the transcript — heard, mis-spelled, and scored as neither rather than as drift
+    resolving those by edit distance was tried and measured, and it is wrong:
+    on the cached runs it recovered 15 Bosnian decisions, ZERO Croatian ones, and
+    the Serbian ones it recovered were prednje for prijetnje, ideo for dio, ritko
+    for rijetko — mishearings that land within one edit of an ekavian form.
+    It would manufacture drift out of transcription noise, so matching stays exact.
+  drift into a form that is not in the term's alternative list — a different
+    inflection, a paraphrase — lands in 'neither', which lowers recall without
+    raising substitution.
+wrote /kaggle/temp/smoke.json
+$ /usr/bin/python3 training/speech_bench.py --clips all --model /tmp/Lilly/models/lilly/listen-previous --model /tmp/Lilly/models/lilly/listen --json /kaggle/working/speech-gate.json
+clips: 925 (all) of 925 in /tmp/Lilly/data/speech/test.tsv, 349 distinct transcripts
+transcripts shared with data/speech/train.tsv: 0
+  NOTE: the WER column below is NOT comparable to the pre-registered 35.5%.
+        That figure is the first 200 clips; use --clips first200 for it.
+terms: 532 families from contrast-terms.tsv (167 with a Croatian contrast, 370 with a Serbian one)
+targets: 581 across 442 of 925 clips, 117 distinct terms
+  listen-previous: weights a76342f6ab59b382
+  listen-previous 20/726  (16s)
+  listen-previous 40/726  (29s)
+  listen-previous 60/726  (42s)
+  listen-previous 80/726  (55s)
+  listen-previous 100/726  (68s)
+  listen-previous 120/726  (81s)
+  listen-previous 140/726  (94s)
+  listen-previous 160/726  (108s)
+  listen-previous 180/726  (122s)
+  listen-previous 200/726  (135s)
+  listen-previous 220/726  (149s)
+  listen-previous 240/726  (162s)
+  listen-previous 260/726  (176s)
+  listen-previous 280/726  (190s)
+  listen-previous 300/726  (202s)
+  listen-previous 320/726  (215s)
+  listen-previous 340/726  (229s)
+  listen-previous 360/726  (243s)
+  listen-previous 380/726  (257s)
+  listen-previous 400/726  (270s)
+  listen-previous 420/726  (283s)
+  listen-previous 440/726  (297s)
+  listen-previous 460/726  (311s)
+  listen-previous 480/726  (325s)
+  listen-previous 500/726  (339s)
+  listen-previous 520/726  (352s)
+  listen-previous 540/726  (366s)
+  listen-previous 560/726  (379s)
+  listen-previous 580/726  (392s)
+  listen-previous 600/726  (405s)
+  listen-previous 620/726  (419s)
+  listen-previous 640/726  (432s)
+  listen-previous 660/726  (445s)
+  listen-previous 680/726  (459s)
+  listen-previous 700/726  (473s)
+  listen-previous 720/726  (485s)
+  listen-previous 726/726  (490s)
+  listen-previous: WER 52.4%  (9865 wrong of 18836 words)
+  listen: weights e6bb58483586b06c
+  listen 20/726  (44s)
+  listen 40/726  (75s)
+  listen 60/726  (106s)
+  listen 80/726  (138s)
+  listen 100/726  (170s)
+  listen 120/726  (201s)
+  listen 140/726  (233s)
+  listen 160/726  (265s)
+  listen 180/726  (300s)
+  listen 200/726  (331s)
+  listen 220/726  (366s)
+  listen 240/726  (397s)
+  listen 260/726  (431s)
+  listen 280/726  (465s)
+  listen 300/726  (495s)
+  listen 320/726  (525s)
+  listen 340/726  (559s)
+  listen 360/726  (592s)
+  listen 380/726  (626s)
+  listen 400/726  (659s)
+  listen 420/726  (690s)
+  listen 440/726  (724s)
+  listen 460/726  (757s)
+  listen 480/726  (792s)
+  listen 500/726  (828s)
+  listen 520/726  (859s)
+  listen 540/726  (891s)
+  listen 560/726  (925s)
+  listen 580/726  (955s)
+  listen 600/726  (987s)
+  listen 620/726  (1018s)
+  listen 640/726  (1051s)
+  listen 660/726  (1084s)
+  listen 680/726  (1116s)
+  listen 700/726  (1149s)
+  listen 720/726  (1179s)
+  listen 726/726  (1189s)
+  listen: WER 33.0%  (6209 wrong of 18836 words)
+
+                               WER  term recall      95% interval   substitution   CROATIAN   SERBIAN
+  listen-previous            52.4%        49.6%  [ 45.5,  53.6]           3.4%       1.1%      4.2%
+  listen                     33.0%        72.1%  [ 68.3,  75.6]           3.2%       6.1%      1.9%
+  targets                                  581                            298 dec        87      215
+                                                                                      177 tgt   421 tgt
+
+by category — term recall, then Croatian and Serbian substitution
+                                                 lex                       yat
+  listen-previous                 48.2%   0.0%   0.0%        50.4%  50.0%   4.7%
+  listen                          69.5%   4.2%   0.0%        73.7%  27.3%   2.2%
+  targets                                        220                       361
+
+listen - listen-previous: +22.5 points of term recall, paired bootstrap over sentences p = 0.0000
+listen - listen-previous: -0.1 points of variety substitution, paired bootstrap over sentences p = 0.4480  (does not clear 0.05)
+listen - listen-previous: +5.0 points of CROATIAN substitution, paired bootstrap over sentences p = 0.0180
+listen - listen-previous: -2.3 points of SERBIAN substitution, paired bootstrap over sentences p = 0.0810  (does not clear 0.05)
+
+marked words anywhere in the transcript, per 1,000 words (330 Croatian forms, 668 Serbian)
+  listen-previous         croatian   0.16  (3 of 18882 words)    serbian   0.58  (11)
+  listen                  croatian   0.80  (15 of 18747 words)    serbian   0.48  (9)
+
+checks on the measurement — no model involved, the transcripts themselves
+  reference control   recall  100.0%   substitution    0.0%   croatian    0.0%   serbian    0.0%   (581 decided)   markers hr  0.48 sr  0.00
+  shuffled control    recall    1.7%   substitution    0.0%   croatian    0.0%   serbian    0.0%   (10 decided)   markers hr  0.48 sr  0.00
+  croatian variant    recall   69.5%   substitution   30.1%   croatian  100.0%   serbian    0.0%   (578 decided)   markers hr  9.98 sr  0.00
+  serbian variant     recall   27.5%   substitution   72.5%   croatian    0.0%   serbian  100.0%   (581 decided)   markers hr  0.48 sr 22.83
+  the variant controls check the scorer, not a model: audio of a person saying
+    'mjesto' cannot be edited to say 'mesto', so there is no audio-side counterfactual.
+    What they establish is that the Croatian column answers to Croatian and the
+    Serbian column to Serbian.
+  the two RENDERING rows are the strong version of that check: the professional
+    Croatian and Serbian translations of the same FLORES sentences, held out of
+    the term mining, scored as if a listener had produced them. Recall falls a
+    long way because an independent translation rewords much more than a term,
+    but of the targets it does decide, nearly all should land in its own column.
+
+what this instrument can and cannot see
+  targets: 581;  can show Croatian drift: 177 (30%);  Serbian drift: 421 (72%);  both: 17
+  yat pairs, which are Serbian-only by construction: 361 (62%)
+  targets the model resolved to neither variety: 283 of 581 (48.7%)
+    of those, 121 (43%) have a word within two characters of the spoken form in the transcript — heard, mis-spelled, and scored as neither rather than as drift
+    resolving those by edit distance was tried and measured, and it is wrong:
+    on the cached runs it recovered 15 Bosnian decisions, ZERO Croatian ones, and
+    the Serbian ones it recovered were prednje for prijetnje, ideo for dio, ritko
+    for rijetko — mishearings that land within one edit of an ekavian form.
+    It would manufacture drift out of transcription noise, so matching stays exact.
+  drift into a form that is not in the term's alternative list — a different
+    inflection, a paraphrase — lands in 'neither', which lowers recall without
+    raising substitution.
+
+  written in Croatian by listen-previous: vjerovatno (1)
+
+  written in Serbian by listen-previous: vjerovatno (3), srijede (1), spriječi (1), cijena (1), predsjedava (1), vještine (1), izmjene (1)
+
+  written in Croatian by listen: evropom (5), vjerovatno (3)
+
+  written in Serbian by listen: prije (2), vrijednosti (2), srijede (1), sjeveru (1)
+wrote /kaggle/working/speech-gate.json
+$ /usr/bin/python3 training/speech_bench.py --clips all --decode rubric --model /tmp/Lilly/models/lilly/listen-previous --model /tmp/Lilly/models/lilly/listen --json /kaggle/working/speech-rubric.json
+decode: RUBRIC -- greedy, temperature 0, WER after Whisper's BasicTextNormalizer. The term rows below are on these transcripts too and are NOT the gate's instrument; use --decode app for the gate.
+clips: 925 (all) of 925 in /tmp/Lilly/data/speech/test.tsv, 349 distinct transcripts
+transcripts shared with data/speech/train.tsv: 0
+  NOTE: the WER column below is NOT comparable to the pre-registered 35.5%.
+        That figure is the first 200 clips; use --clips first200 for it.
+terms: 532 families from contrast-terms.tsv (167 with a Croatian contrast, 370 with a Serbian one)
+targets: 581 across 442 of 925 clips, 117 distinct terms
+  listen-previous: weights a76342f6ab59b382
+  listen-previous 20/925  (14s)
+  listen-previous 40/925  (26s)
+  listen-previous 60/925  (37s)
+  listen-previous 80/925  (48s)
+  listen-previous 100/925  (59s)
+  listen-previous 120/925  (71s)
+  listen-previous 140/925  (82s)
+  listen-previous 160/925  (93s)
+  listen-previous 180/925  (105s)
+  listen-previous 200/925  (116s)
+  listen-previous 220/925  (128s)
+  listen-previous 240/925  (139s)
+  listen-previous 260/925  (150s)
+  listen-previous 280/925  (162s)
+  listen-previous 300/925  (173s)
+  listen-previous 320/925  (184s)
+  listen-previous 340/925  (196s)
+  listen-previous 360/925  (207s)
+  listen-previous 380/925  (219s)
+  listen-previous 400/925  (230s)
+  listen-previous 420/925  (242s)
+  listen-previous 440/925  (254s)
+  listen-previous 460/925  (265s)
+  listen-previous 480/925  (277s)
+  listen-previous 500/925  (288s)
+  listen-previous 520/925  (299s)
+  listen-previous 540/925  (311s)
+  listen-previous 560/925  (323s)
+  listen-previous 580/925  (334s)
+  listen-previous 600/925  (346s)
+  listen-previous 620/925  (357s)
+  listen-previous 640/925  (369s)
+  listen-previous 660/925  (380s)
+  listen-previous 680/925  (392s)
+  listen-previous 700/925  (405s)
+  listen-previous 720/925  (416s)
+  listen-previous 740/925  (427s)
+  listen-previous 760/925  (439s)
+  listen-previous 780/925  (450s)
+  listen-previous 800/925  (462s)
+  listen-previous 820/925  (473s)
+  listen-previous 840/925  (484s)
+  listen-previous 860/925  (495s)
+  listen-previous 880/925  (506s)
+  listen-previous 900/925  (518s)
+  listen-previous 920/925  (528s)
+  listen-previous 925/925  (531s)
+  listen-previous: WER 39.5%  (7299 wrong of 18468 words)
+  listen: weights e6bb58483586b06c
+  listen 20/925  (36s)
+  listen 40/925  (66s)
+  listen 60/925  (92s)
+  listen 80/925  (117s)
+  listen 100/925  (143s)
+  listen 120/925  (171s)
+  listen 140/925  (197s)
+  listen 160/925  (223s)
+  listen 180/925  (250s)
+  listen 200/925  (275s)
+  listen 220/925  (303s)
+  listen 240/925  (329s)
+  listen 260/925  (356s)
+  listen 280/925  (383s)
+  listen 300/925  (410s)
+  listen 320/925  (436s)
+  listen 340/925  (463s)
+  listen 360/925  (490s)
+  listen 380/925  (519s)
+  listen 400/925  (545s)
+  listen 420/925  (576s)
+  listen 440/925  (603s)
+  listen 460/925  (632s)
+  listen 480/925  (659s)
+  listen 500/925  (685s)
+  listen 520/925  (710s)
+  listen 540/925  (738s)
+  listen 560/925  (766s)
+  listen 580/925  (794s)
+  listen 600/925  (823s)
+  listen 620/925  (849s)
+  listen 640/925  (879s)
+  listen 660/925  (907s)
+  listen 680/925  (936s)
+  listen 700/925  (966s)
+  listen 720/925  (991s)
+  listen 740/925  (1019s)
+  listen 760/925  (1047s)
+  listen 780/925  (1072s)
+  listen 800/925  (1100s)
+  listen 820/925  (1125s)
+  listen 840/925  (1152s)
+  listen 860/925  (1180s)
+  listen 880/925  (1207s)
+  listen 900/925  (1236s)
+  listen 920/925  (1261s)
+  listen 925/925  (1268s)
+  listen: WER 14.1%  (2611 wrong of 18468 words)
+
+                               WER  term recall      95% interval   substitution   CROATIAN   SERBIAN
+  listen-previous            39.5%        55.8%  [ 51.7,  59.8]           3.9%       3.0%      4.1%
+  listen                     14.1%        88.6%  [ 85.8,  91.0]           3.2%       6.2%      1.8%
+  targets                                  581                            337 dec        99      244
+                                                                                      177 tgt   421 tgt
+
+by category — term recall, then Croatian and Serbian substitution
+                                                 lex                       yat
+  listen-previous                 54.5%   1.0%   0.0%        56.5%  66.7%   4.7%
+  listen                          87.7%   4.0%   0.0%        89.2%  33.3%   2.1%
+  targets                                        220                       361
+
+listen - listen-previous: +32.9 points of term recall, paired bootstrap over sentences p = 0.0000
+listen - listen-previous: -0.7 points of variety substitution, paired bootstrap over sentences p = 0.2785  (does not clear 0.05)
+listen - listen-previous: +3.2 points of CROATIAN substitution, paired bootstrap over sentences p = 0.0230
+listen - listen-previous: -2.3 points of SERBIAN substitution, paired bootstrap over sentences p = 0.0455
+
+marked words anywhere in the transcript, per 1,000 words (330 Croatian forms, 668 Serbian)
+  listen-previous         croatian   0.26  (5 of 18885 words)    serbian   0.64  (12)
+  listen                  croatian   0.79  (15 of 18881 words)    serbian   0.42  (8)
+
+checks on the measurement — no model involved, the transcripts themselves
+  reference control   recall  100.0%   substitution    0.0%   croatian    0.0%   serbian    0.0%   (581 decided)   markers hr  0.48 sr  0.00
+  shuffled control    recall    1.7%   substitution    0.0%   croatian    0.0%   serbian    0.0%   (10 decided)   markers hr  0.48 sr  0.00
+  croatian variant    recall   69.5%   substitution   30.1%   croatian  100.0%   serbian    0.0%   (578 decided)   markers hr  9.98 sr  0.00
+  serbian variant     recall   27.5%   substitution   72.5%   croatian    0.0%   serbian  100.0%   (581 decided)   markers hr  0.48 sr 22.83
+  the variant controls check the scorer, not a model: audio of a person saying
+    'mjesto' cannot be edited to say 'mesto', so there is no audio-side counterfactual.
+    What they establish is that the Croatian column answers to Croatian and the
+    Serbian column to Serbian.
+  the two RENDERING rows are the strong version of that check: the professional
+    Croatian and Serbian translations of the same FLORES sentences, held out of
+    the term mining, scored as if a listener had produced them. Recall falls a
+    long way because an independent translation rewords much more than a term,
+    but of the targets it does decide, nearly all should land in its own column.
+
+what this instrument can and cannot see
+  targets: 581;  can show Croatian drift: 177 (30%);  Serbian drift: 421 (72%);  both: 17
+  yat pairs, which are Serbian-only by construction: 361 (62%)
+  targets the model resolved to neither variety: 244 of 581 (42.0%)
+    of those, 154 (63%) have a word within two characters of the spoken form in the transcript — heard, mis-spelled, and scored as neither rather than as drift
+    resolving those by edit distance was tried and measured, and it is wrong:
+    on the cached runs it recovered 15 Bosnian decisions, ZERO Croatian ones, and
+    the Serbian ones it recovered were prednje for prijetnje, ideo for dio, ritko
+    for rijetko — mishearings that land within one edit of an ekavian form.
+    It would manufacture drift out of transcription noise, so matching stays exact.
+  drift into a form that is not in the term's alternative list — a different
+    inflection, a paraphrase — lands in 'neither', which lowers recall without
+    raising substitution.
+
+  written in Croatian by listen-previous: vjerovatno (2), evropom (1)
+
+  written in Serbian by listen-previous: vjerovatno (3), nedjelju (2), srijede (1), spriječi (1), cijena (1), vještine (1), izmjene (1)
+
+  written in Croatian by listen: evropom (6), vjerovatno (4)
+
+  written in Serbian by listen: prije (2), nedjelju (1), prijete (1), srijede (1), sjeveru (1), vrijednosti (1)
+wrote /kaggle/working/speech-rubric.json

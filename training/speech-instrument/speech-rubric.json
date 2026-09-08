@@ -1,0 +1,80 @@
+{
+ "decode": "rubric",
+ "clips": "all",
+ "n_clips": 925,
+ "n_clips_in_split": 925,
+ "n_sentences": 349,
+ "n_targets": 581,
+ "listeners": {
+  "listen-previous": {
+   "fingerprint": "a76342f6ab59b382",
+   "wer": 39.5224171539961,
+   "wrong": 7299,
+   "words": 18468,
+   "term_recall": 55.76592082616179,
+   "term_recall_ci95": [
+    51.70255347691606,
+    59.75353993367578
+   ],
+   "targets": 581,
+   "substitution": 3.857566765578635,
+   "decided": 337,
+   "croatian": 3.0303030303030303,
+   "croatian_subs": 3,
+   "croatian_decided": 99,
+   "croatian_targets": 177,
+   "serbian": 4.098360655737705,
+   "serbian_subs": 10,
+   "serbian_decided": 244,
+   "serbian_targets": 421
+  },
+  "listen": {
+   "fingerprint": "e6bb58483586b06c",
+   "wer": 14.13796837773446,
+   "wrong": 2611,
+   "words": 18468,
+   "term_recall": 88.64027538726334,
+   "term_recall_ci95": [
+    85.80217278916676,
+    90.97075170868015
+   ],
+   "targets": 581,
+   "substitution": 3.195488721804511,
+   "decided": 532,
+   "croatian": 6.211180124223603,
+   "croatian_subs": 10,
+   "croatian_decided": 161,
+   "croatian_targets": 177,
+   "serbian": 1.8229166666666667,
+   "serbian_subs": 7,
+   "serbian_decided": 384,
+   "serbian_targets": 421
+  }
+ },
+ "paired": {
+  "term_recall": {
+   "second_minus_first": 32.87435456110155,
+   "p": 0.0,
+   "first": "listen-previous",
+   "second": "listen"
+  },
+  "substitution": {
+   "second_minus_first": -0.6620780437741238,
+   "p": 0.2785,
+   "first": "listen-previous",
+   "second": "listen"
+  },
+  "croatian": {
+   "second_minus_first": 3.180877093920572,
+   "p": 0.023,
+   "first": "listen-previous",
+   "second": "listen"
+  },
+  "serbian": {
+   "second_minus_first": -2.2754439890710376,
+   "p": 0.0455,
+   "first": "listen-previous",
+   "second": "listen"
+  }
+ }
+}

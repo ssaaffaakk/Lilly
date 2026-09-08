@@ -380,6 +380,11 @@ def main() -> int:
         fail("train_speech must stop when the encoder gets no gradient, not warn and continue")
     if "FiniteLossCheck" not in speech_train or "logging_nan_inf_filter=False" not in speech_train:
         fail("train_speech must stop on NaN/Inf loss, not filter it out of the log")
+    bench = (REPO / "training" / "speech_bench.py").read_text(encoding="utf-8")
+    if "def clip_key" not in bench or "read_bytes()).hexdigest()" not in bench:
+        fail("speech_bench.py must key its transcript cache on the clip's audio content, not its "
+             "file name -- two machines numbered the FLEURS clips differently and the full "
+             "instrument scored 200 reused transcripts against the wrong sentences (8 Sep 2026)")
     eval_speech = (REPO / "training" / "evaluate_speech.py").read_text(encoding="utf-8")
     if '"--json"' not in eval_speech and "'--json'" not in eval_speech:
         fail("evaluate_speech.py must write --json so half-2 can gate on WER")

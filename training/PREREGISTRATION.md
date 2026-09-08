@@ -2311,6 +2311,87 @@ above the baseline again, and rule 3 says what that means.
   above" without saying that equal is what the bar permits and why.
 - Any fourth look. Rule 3 is not advice.
 
+## Outcome, 8 September 2026 — Croatian above the baseline on the full instrument; does not ship; whisper-large-v3 is closed
+
+Run: Kaggle T4, `lilly-speech-instrument` version 4. Raw files in
+`training/speech-instrument/` (`speech-gate.json`, `speech-rubric.json`, the
+tee `SPEECHBENCH-instrument.txt`, the transcript cache
+`bench-speech-outputs.json`, `experiment_log.json`). Versions 2 and 3 scored
+no clip: v2 died because the half-2 kernel's Output could no longer be
+attached; v3 because the baseline it read off the published bundle was
+whisper-large-v3, not whisper-small. Both were fixed at the cause (`4cf60f4`,
+`5d36fa5`): the two listeners now arrive as private Kaggle datasets uploaded
+from the Mac, and the notebook checks each against the fingerprint the gate
+printed — `a76342f6ab59b382` for `listen-previous`, `e6bb58483586b06c` for
+`listen` — before a clip is scored. Both matched.
+
+The clip set was the registered one: `--clips all`, 925 clips, 349 sentences,
+581 targets across 442 clips, 177 of them with a Croatian contrast. Both
+listeners in one process; the bootstrap paired over sentences.
+
+**Gate rows** (`--decode app`, the product's path):
+
+| threshold | re-measured `listen-previous` | `listen` (large-v3) | |
+|---|---|---|---|
+| word error, strictly below | 52.4%  (9,865 of 18,836) | 33.0%  (6,209) | pass |
+| term recall, not below | 49.6%  [45.5, 53.6] | 72.1%  [68.3, 75.6]  (+22.5, p = 0.0000) | pass |
+| Croatian substitution, not above | 1.1%  (1 of 87 decided) | **6.1%  (8 of 131 decided)**  (+5.0, p = 0.018) | **fails** |
+
+The words: `listen-previous` wrote Croatian once (*vjerovatno*); `listen` wrote
+*evropom* five times and *vjerovatno* three. Serbian substitution, reported and
+not a bar: 4.2% (9 of 215) → 1.9% (6 of 314), −2.3, p = 0.081.
+
+**Rubric WER** (greedy, temperature 0, Whisper's `BasicTextNormalizer`,
+18,468 words) — `training/RUBRIC.md`'s definition, computed for the first
+time for any listener: `listen-previous` **39.5%** (7,299 wrong), `listen`
+**14.1%** (2,611 wrong). On the rubric's scale the candidate sits in band 8
+and the shipped small model in band 3 (the zero-shot baseline that separates
+2 from 3 has not been measured on 925). The term rows on that decode are the
+same 925 clips through a different decode, not the gate's instrument: recall
+55.8% → 88.6%; Croatian 3.0% (3 of 99) → 6.2% (10 of 161), p = 0.023;
+Serbian 4.1% → 1.8%, p = 0.046.
+
+**By "Both, not either": it does not ship. By rule 3: whisper-large-v3 is
+closed.** Not re-run on another split, not re-scored with a different
+normaliser, not revisited when a new term list is mined. Equal was what the
+bar permitted; 6.1% against 1.1% is not equal, the greedy decode says the same
+on its own transcripts, and the 200-clip gate said it with fewer words. The
+bundle keeps whisper-small. The 23-point fall in word error and the 22.5-point
+rise in term recall are recorded beside that and change nothing about it.
+
+**A defect in the run, found afterwards and reported in full** because it
+changes what the two passing rows are made of and does not change the verdict.
+The notebook reused the Mac's transcript cache "by weight fingerprint" — but
+the bench keyed each clip inside that cache by its *file name*, and the FLEURS
+download on Kaggle numbered the clips one off from the Mac's (Kaggle's
+`00005.wav` is the Mac's `00004.wav`; 919 of 925 shifted the same way,
+established by matching the T4's own greedy transcripts against the Mac's
+references). So for the app-decode rows, 200 of 925 clips (names 00000–00199,
+both listeners) were the Mac's transcripts of *other sentences*, scored
+against Kaggle's references: about 116% word error for either listener on
+those 200, against 35.7% and 11.4% on the 725 the box transcribed itself. The
+52.4% / 33.0% above are that mixture. The greedy rows had no cached entries
+and are clean. The deciding row is not rescued by this: a transcript of the
+wrong sentence contains that clip's target words only by accident and adds to
+no column, so the eight Croatian decisions that fail the candidate come from
+real transcripts, and the clean decode agrees. The 725-clip figures are a
+diagnostic of the defect, not a gate row; the 200 clips' correct app-decode
+transcripts do not exist and nobody re-scores them. Fixed at the cause the
+same night: `training/speech_bench.py` keys the cache on the clip's audio
+content (`clip_key`), and preflight refuses a bench that does not. The Kaggle
+cache is kept as a record and did **not** replace `bench/speech/.outputs.json`,
+whose names mean different audio on this Mac.
+
+Whether a run with this defect counts as "the last look" is the owner's ruling,
+not an agent's. By the letter of rule 3 the line is closed as of this run, and
+nothing in the deciding row suggests a re-execution would land elsewhere. Until
+the owner rules otherwise, closed is what stands.
+
+Two things this leaves with the owner: the published bundle has carried this
+closed candidate as `listen/` since the 4 September publish (`d36a67f`,
+`6cf069b`), and putting whisper-small back is a publish act; and the README's
+speech table, which this outcome makes current.
+
 ---
 
 # v3 — picture — test-v2b, drawn before any photograph in it has been looked at
