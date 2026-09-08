@@ -89,7 +89,10 @@ def list_corrections(status="pending"):
 
 
 def set_status(correction_id, status):
-    assert status in ("pending", "approved", "rejected")
+    # Not an assert: python -O strips those, and an unknown status would then
+    # be written into the column every export filters on.
+    if status not in ("pending", "approved", "rejected"):
+        raise ValueError(f"status must be pending, approved or rejected, not {status!r}")
     with _connect() as conn:
         conn.execute("UPDATE corrections SET status = ? WHERE id = ?",
                      (status, correction_id))

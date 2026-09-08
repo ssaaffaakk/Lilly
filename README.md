@@ -111,6 +111,9 @@ prints which parts are installed.
 
 Startup is instant because each model loads on first use. Once
 `fetch_models.py` has finished, nothing reaches the network again.
+`python3 -m pytest tests` checks the parts that need no model: the sentence
+splitter, the batch grouping, the correction store and the server's answers
+to bad input.
 
 ---
 

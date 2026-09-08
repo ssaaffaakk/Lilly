@@ -64,11 +64,13 @@ _read_lock = threading.Lock()
 # Two engines behind one door (read_regions): same paragraph grouping, same
 # triples out, so training/evaluate_ocr.py scores either on the same
 # photographs by the same code. PaddleOCR is the app's reader since 4 Sep 2026
-# (docs/OCR-ROADMAP.md, step 6): untrained, it read 67.7% of a photograph's
-# words against the fine-tuned EasyOCR reader's 54.5% on the 40, and 60.0%
-# against 34.6% on the 132 held-out photographs of test-v2
-# (training/RESULTS-ocr-bakeoff.md, RESULTS-ocr-test-v2.md). EasyOCR stays as
-# LILLY_READER=easyocr: the way back, and the "before" build.
+# (docs/OCR-ROADMAP.md, step 6). At the confidence floor of 0.9 that ships it
+# reads 67.0% of a photograph's words with 65 invented against the fine-tuned
+# EasyOCR reader's 54.5% / 182 on the 40, and 57.8% / 450 against 34.6% / 2,071
+# on the 132 held-out photographs of test-v2 (training/RESULTS-ocr-paddle-
+# floor.md; the bake-off's floor-0 figures, 67.7% and 60.0%, are in
+# RESULTS-ocr-bakeoff.md). EasyOCR stays as LILLY_READER=easyocr: the way
+# back, and the "before" build.
 #
 # LILLY_READER names the engine; unset means the app's reader:
 #   paddle    PaddleOCR PP-OCRv6 (LILLY_PADDLE_VERSION=PP-OCRv5 for the other)
@@ -658,8 +660,9 @@ def _cyrillic_enabled() -> bool:
     round.
 
     The plumbing stays because it is correct and because the route that should
-    work needs it: fine-tuning cyrillic_g2 on the 276 Cyrillic crops now
-    transcribed, the same move that took the Latin reader from 36.0% to 54.7%.
+    work needs it: fine-tuning cyrillic_g2 on the 272 Cyrillic crops now
+    transcribed (HANDOFF.md counted them three ways; 276 was a miscount), the
+    same move that took the Latin reader from 36.0% to 54.7%.
     An untrained second model arbitrated at read time is not that.
     """
     return reader_choice() == "cyrillic"
