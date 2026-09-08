@@ -2552,6 +2552,33 @@ Abbreviations — *npr.*, *dr.*, *tzv.* — still split as they did before. That
 a separate rule, it is not changed here, and a number from this run says
 nothing about it. Nothing about the model, the corpus or the build changes.
 
+### Amendment, 8 September 2026, evening — moved to Kaggle, before any number exists
+
+The Mac run was started at 17:03 and stopped at the owner's instruction after
+a third of the base pass: heavy compute goes to Kaggle (`.claude/CLAUDE.md`),
+and the section above allowed that "as its own measurement notebook". The
+notebook is `training/Lilly_Ordinals_Kaggle.ipynb` (built by
+`training/build_ordinals_notebook.py`, job `ordinals-remeasure`). Two things
+change in how the measurement is taken, neither in what it decides:
+
+1. **Both splitters run on the same box.** The old translations on the Mac
+   were made on its CPU; a new-splitter pass on a T4 compared against them
+   would mix the splitter with the device. So the notebook runs the rule as
+   it was before 8 September (patched onto `app.translate` for that process
+   only, the exact old expression) and the rule as it is now, both builds,
+   all 2,009 pairs, on the T4. **The deciding comparison is old-against-new on
+   that box, per build**, with `compare_hypotheses.py`'s paired bootstrap.
+2. **The device drift is a separate row, reported and never folded in:**
+   the Mac's old-splitter translations (`app-hypotheses-armB.json`) against
+   the box's old-splitter translations, per build.
+
+The builds are the same two bytes-for-bytes, uploaded from the Mac and checked
+by digest (`1aedcc11…`, `348a984c…`) before a sentence is translated. The
+figures that replace 42.49 / 67.69 and 42.18 / 67.47 are the box's
+new-splitter figures, stated with the device beside them and the drift row
+under them. The bar, the exception for a rule that joins real sentences, and
+the expected size are unchanged.
+
 ---
 
 # v4 — listen — one language token per clip, written before any run

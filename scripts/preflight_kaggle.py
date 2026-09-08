@@ -14,6 +14,7 @@ OCR_PADDLE = REPO / "training" / "Lilly_OCR_Paddle_Kaggle.ipynb"
 OUTSIDE = REPO / "training" / "Lilly_Outside_Baseline_Kaggle.ipynb"
 SPEECH_INSTR = REPO / "training" / "Lilly_Speech_Instrument_Kaggle.ipynb"
 TRANSLATION = REPO / "training" / "Lilly_Translation_Kaggle.ipynb"
+ORDINALS = REPO / "training" / "Lilly_Ordinals_Kaggle.ipynb"
 
 
 def read_nb(path: Path) -> str:
@@ -322,6 +323,27 @@ def check_speech_instrument(text: str) -> None:
              "Output stopped being attachable on 7 September and version 2 died at the attach cell")
 
 
+def check_ordinals(text: str) -> None:
+    """A measurement with no weights to ship: the guards are the count, the
+    builds, both splitters on one box, and the gate before the zip."""
+    if "/kaggle/working/stdout.txt" not in text or "Popen" not in text:
+        fail("ordinals: run() must Popen+tee into /kaggle/working/stdout.txt")
+    if "/kaggle/temp" not in text:
+        fail("ordinals: must clone to /kaggle/temp")
+    if "!= 2009" not in text:
+        fail("ordinals: must assert 2,009 FLORES pairs before measuring")
+    if "1aedcc11231cdf50817ff12f99ff0d1e" not in text or "348a984c324510cee218dfce8a7228e8" not in text:
+        fail("ordinals: must check both builds by fingerprint before a sentence is translated")
+    if "translate.SENTENCE_BREAK = re.compile" not in text or "app-hypotheses-oldsplit-kaggle.json" not in text:
+        fail("ordinals: must run the old splitter on the same box, not compare a GPU run to the Mac alone")
+    if "compare_hypotheses.py" not in text or "compare-device-drift" not in text:
+        fail("ordinals: must run compare_hypotheses.py for the splitter AND the device drift")
+    if "empty translations" not in text or "check_trainproof" not in text:
+        fail("ordinals: must refuse empty translations and scan the tee before packaging")
+    if "train_translation.py" in text:
+        fail("ordinals: is a measurement; it must not train")
+
+
 def check_translation(text: str) -> None:
     """Both directions train from one notebook; what differs must be passed
     down, not assumed. Version 2 of the en-bs run died in build_training_mix.py
@@ -354,7 +376,8 @@ def main() -> int:
                      (OCR, check_ocr), (OCR_PADDLE, check_ocr_paddle),
                      (OUTSIDE, check_outside),
                      (SPEECH_INSTR, check_speech_instrument),
-                     (TRANSLATION, check_translation)):
+                     (TRANSLATION, check_translation),
+                     (ORDINALS, check_ordinals)):
         if not path.is_file():
             fail(f"missing {path}")
         fn(read_nb(path))
@@ -376,6 +399,8 @@ def main() -> int:
         fail("kaggle_train.py must carry the arm each translation job launches and check the "
              "notebook's ARM against it -- an arm that does not match its pre-registration "
              "trains to the end and returns a model nobody registered")
+    if '"needs_translator_builds": True' not in kaggle_train or "push_translator_builds" not in kaggle_train:
+        fail("kaggle_train.py must upload both served builds (checked by fingerprint) for ordinals-remeasure")
     if "could not be added" not in kaggle_train:
         fail("kaggle_train.py confirm_push must refuse a push whose attachment Kaggle "
              "'could not be added' -- that run starts without its data and dies cells later")
@@ -409,7 +434,7 @@ def main() -> int:
     offload = (REPO / "training" / "kaggle_offload.py").read_text(encoding="utf-8")
     if "experiment_log.json" not in offload or "scan_trainproof" not in offload:
         fail("training/kaggle_offload.py must write experiment_log.json and scan the tee")
-    print("preflight ok: speech half-1 + half-2 + instrument, OCR, outside-baseline, translation notebooks")
+    print("preflight ok: speech half-1 + half-2 + instrument, OCR, outside-baseline, translation, ordinals notebooks")
     return 0
 
 

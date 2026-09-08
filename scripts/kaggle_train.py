@@ -113,6 +113,14 @@ JOBS = {
                     "slug": "lilly-outside-baseline",
                     "title": "Lilly outside baseline",
                     "needs_weights": False, "needs_corpus": False},
+    # The ordinal-splitter re-measurement (PREREGISTRATION.md, "v4 -- translate
+    # -- ordinals"): both served builds, both splitters, all 2,009 FLORES pairs,
+    # on one box. A measurement; it attaches the two builds from the Mac.
+    "ordinals-remeasure": {"notebook": "Lilly_Ordinals_Kaggle.ipynb",
+                    "slug": "lilly-ordinals-remeasure",
+                    "title": "Lilly ordinals remeasure",
+                    "needs_weights": False, "needs_corpus": False,
+                    "needs_translator_builds": True},
     "speech":      {"notebook": "Lilly_Speech_Kaggle.ipynb",
                     "slug": "lilly-speech", "title": "Lilly speech",
                     "needs_weights": False, "needs_corpus": False},
@@ -259,6 +267,71 @@ def push_listen_previous(user: str) -> str:
     run(KAGGLE, "datasets", "create", "-p", stage, "-r", "zip")
     wait_until_ready(slug)
     return slug
+
+
+TRANSLATOR_BUILDS = {
+    # dataset name -> (directory on the Mac, blake2b digest it must have, what it is)
+    "lilly-translator-scored": (REPO_ROOT / "models" / "lilly" / "translator",
+                               "1aedcc11231cdf50817ff12f99ff0d1e",
+                               "the fine-tune every published served-path number was scored on "
+                               "(training/RESULTS-product.md)"),
+    "lilly-translator-base": (REPO_ROOT / "models" / "lilly" / "translator-base",
+                             "348a984c324510cee218dfce8a7228e8",
+                             "the untuned int8 build the fine-tune is measured against"),
+}
+
+
+def translator_build_fingerprint(build: Path) -> str:
+    """Identical to training/evaluate_app.py's build_fingerprint."""
+    digest = hashlib.blake2b(digest_size=16)
+    for name in sorted(f.name for f in build.iterdir()
+                       if f.is_file() and f.name != "dataset-metadata.json"):
+        if name == "built.json":
+            continue
+        digest.update(name.encode("utf-8"))
+        with open(build / name, "rb") as f:
+            for chunk in iter(lambda: f.read(1 << 20), b""):
+                digest.update(chunk)
+    return digest.hexdigest()
+
+
+def push_translator_builds(user: str) -> list:
+    """The two served builds, as datasets, each checked by content first.
+
+    Uploaded rather than rebuilt on the box: a CTranslate2 conversion made on
+    a different CPU is not guaranteed byte-identical, and the measurement is
+    about these bytes -- the ones the published numbers were scored on.
+    """
+    slugs = []
+    for name, (source, want, what) in TRANSLATOR_BUILDS.items():
+        if not (source / "model.bin").is_file():
+            raise SystemExit(f"no build at {source} -- {what}")
+        got = translator_build_fingerprint(source)
+        if got != want:
+            raise SystemExit(f"{source} is build {got}, not {want}: {what}. "
+                             "Not uploading a build the numbers do not describe.")
+        slug = f"{user}/{name}"
+        stage = STAGING / "dataset" / name
+        stage.mkdir(parents=True, exist_ok=True)
+        for f in source.iterdir():
+            if f.is_file():
+                target = stage / f.name
+                if not target.exists() or target.stat().st_size != f.stat().st_size:
+                    target.write_bytes(f.read_bytes())
+        (stage / "dataset-metadata.json").write_text(json.dumps({
+            "title": "Lilly " + name.replace("lilly-", "").replace("-", " "), "id": slug,
+            "licenses": [{"name": "other"}]}, indent=1))
+        existing = subprocess.run([KAGGLE, "datasets", "status", slug],
+                                  text=True, capture_output=True)
+        if "ready" in existing.stdout.lower():
+            print(f"dataset already there: {slug} (build {got})")
+        else:
+            mb = sum(f.stat().st_size for f in stage.iterdir()) / 1048576
+            print(f"uploading {mb:.0f} MB to {slug} (build {got})")
+            run(KAGGLE, "datasets", "create", "-p", stage, "-r", "zip")
+            wait_until_ready(slug)
+        slugs.append(slug)
+    return slugs
 
 
 def push_listen_candidate(user: str) -> str:
@@ -820,6 +893,13 @@ def main() -> int:
             print("    speech-instrument.md is the raw report. Then write the outcome")
             print("    into RESULTS-speech.md and PREREGISTRATION.md whichever way it")
             print("    fell. DOES NOT SHIP means rule 3: large-v3 is closed.")
+        elif args.job == "ordinals-remeasure":
+            print("  unzip lilly-ordinals.zip beside training/: the two hypotheses files,")
+            print("    the two RESULTS-product-*-kaggle.md, the four compare-*.json. Commit them,")
+            print("    then apply the pre-registered rule (PREREGISTRATION.md, 'v4 -- translate")
+            print("    -- ordinals'): the re-measured figures replace 42.49 / 67.69 and")
+            print("    42.18 / 67.47 in README.md, RESULTS-product.md and the model card,")
+            print("    whichever way they moved, with the interval and the device-drift row.")
         elif args.job == "outside-baseline":
             print("  unzip lilly-outside-baseline.zip; the JSON goes to")
             print("    training/outside/ and training/form-rate/, the markdown to")
@@ -900,6 +980,8 @@ def main() -> int:
         datasets.append(push_ocr_sign_letters(user))
     if job.get("needs_listen_candidate"):
         datasets.append(push_listen_candidate(user))
+    if job.get("needs_translator_builds"):
+        datasets.extend(push_translator_builds(user))
     if job.get("needs_listen_previous"):
         datasets.append(push_listen_previous(user))
     if job.get("needs_ocr_harvest"):

@@ -41,6 +41,11 @@ def kaggle_user() -> str:
 def jobs() -> dict:
     user = kaggle_user()
     return {
+        # The ordinal re-measurement: a small zip of JSON and markdown.
+        "ordinals-remeasure": {
+            "slug": f"{user}/lilly-ordinals-remeasure",
+            "done_names": ("lilly-ordinals.zip",),
+        },
         "speech": {
             "slug": f"{user}/lilly-speech",
             "done_names": ("lilly-listen.zip", "lilly-listen-trained.zip",
