@@ -287,18 +287,19 @@ This section exists because a README that only lists wins is not worth trusting.
   project builds on and did not train. And NLLB-600M is the distilled small
   variant: Google, DeepL, the 3.3B NLLB and the large general models were not
   tested, so none of this is a claim about the state of the art.
-- **English → Bosnian is not fine-tuned.** The reply direction runs on the
-  untuned base: 29.57 BLEU / 58.96 chrF2 on FLORES-200. No fine-tune has been
-  launched for it — the bars it would have to clear are written and its
-  baselines are measured (`training/PREREGISTRATION.md`, "v3 — reply";
-  `docs/en-bs-launch.md`), and nothing has been trained against them yet.
-  Untuned is not the same as un-Bosnian, and the distinction is now measured:
-  on 338 audited bench targets the base writes the Bosnian form rather than its
-  Croatian or Serbian counterpart **94.3% of the time** it commits to either
-  (`training/RESULTS-en-bs-formrate.md`). The `>>bos_Latn<<` label is doing that
-  work — under `>>hrv<<` the same sentences come back at 72.5%. What the reply
-  direction lacks is fluency, not Bosnian-ness, and `tc-base` is a smaller model
-  than the forward direction's base, so the two are not of comparable quality.
+- **English → Bosnian: fine-tuned, cleared its gate, not yet published.** The
+  published bundle still serves the untuned base (29.57 BLEU / 58.96 chrF2 on
+  FLORES-200). On 8 September a LoRA fine-tune of that base cleared all four
+  bars written before it ran (`training/PREREGISTRATION.md`, "v3 — reply";
+  `docs/en-bs-launch.md`): chrF2 **58.96 → 60.00**, BLEU **29.57 → 30.73** on
+  the same 2,009 pairs (both re-scored here from the committed translations);
+  the Bosnian form rate on 338 audited bench targets **94.3% → 99.2%** (244 of
+  246 decided; `training/RESULTS-en-bs-formrate.md`); and the `>>bos_Latn<<`
+  label still steers — the gap against `>>hrv<<` went 21.8 → 22.5 points, so the
+  adapter did not deafen the decoder to its selector. The served build was
+  rebuilt with the adapter merged; publishing it is the owner's act and has not
+  happened. `tc-base` remains a smaller model than the forward direction's base,
+  so the two directions are still not of comparable quality.
 - **The photograph scores are recognition, not phone reality.** The evaluated
   images come from Wikimedia Commons. Real photographs taken on a phone in
   Bosnia would be the honest test, and there is not a labelled set of them yet.
@@ -370,7 +371,7 @@ list of failures already paid for: [`docs/kaggle-fail-stop.md`](docs/kaggle-fail
 - [x] Translate, listen, speak, read, web app, correction pipeline
 - [x] Published weights and model card with every score and every limit
 - [x] Pre-registered thresholds and hash-bound results
-- [ ] English → Bosnian fine-tune — bars and baselines written, launch pending
+- [x] English → Bosnian fine-tune — all four pre-registered bars cleared 8 Sep (chrF2 +1.04, BLEU +1.16, form rate 99.2%, label gap 22.5); built, **not yet published**
 - [ ] Larger speech model — trained (11.9% word error); refused by one word at the gate; found in the published bundle since 5 Sep, ungated; last look pre-registered; owner to reconcile
 - [ ] A labelled set of real phone photographs from Bosnia
 
