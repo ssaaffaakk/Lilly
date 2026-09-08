@@ -20,6 +20,9 @@ camera at a sign and it reads that. The English comes back written, and out loud
 if you want it.
 
 Everything runs here. No API is called and nothing you send leaves this machine.
+The weights are fetched when the Space starts, so the first visit after it has
+been asleep can take a few minutes; the large listener on two CPU cores takes
+up to a minute for a ten-second clip.
 
 ## What it is
 
@@ -29,7 +32,7 @@ Four models under one roof, published at
 | | |
 |---|---|
 | translator | OPUS-MT, fine-tuned, quantised to int8 |
-| listen | Whisper small, fine-tuned on Bosnian speech |
+| listen | Whisper large-v3, fine-tuned on Bosnian speech; shipped 8 Sep 2026 by the owner's decision after it was refused at its pre-registered gate (the gated whisper-small stays the baseline) |
 | read | PaddleOCR PP-OCRv6, off the shelf, chosen by a pre-registered rule over the fine-tuned EasyOCR one |
 | speak | Kokoro-82M, as published |
 

@@ -1,0 +1,5 @@
+libgl1
+libglib2.0-0
+libgomp1
+libsndfile1
+espeak-ng
