@@ -41,7 +41,7 @@ the model card carries the full tables and the method.
 | | the first builds (unrecorded) | first recorded | today |
 |---|---|---|---|
 | Translation, BLEU on FLORES devtest, as the user sees it | **< 30** | 37.72, language tag leaked into 308 of 1,012 outputs | **42.49**, leaked into **0** |
-| Speech, word error on 200 held-out clips | **> 55%** | 38.5% | **34.9%** gated · **11.9%** large-v3, in the bundle since 5 Sep before its gate |
+| Speech, word error on 200 held-out clips | **> 55%** | 38.5% | **34.9%** gated · **11.9%** large-v3, closed 8 Sep by its last look, still in the bundle |
 | Photographs, words found per photograph, 40 real Commons photographs | **< 30%** | 36.0% | **67.0%** |
 | Photographs, words invented that are on no sign | **> 280** | 224 | **65** |
 
@@ -63,11 +63,12 @@ text; the first real photograph read 36%, and that number was never real. Nobody
 has yet measured a photograph taken on a phone in Bosnia.
 
 And the 11.9% listener cleared two of the three pre-registered gate rows by a
-wide margin and missed the third by one word — yet it is the `listen/` this
-bundle has carried since 5 September, swept in by the reader publish before any
-gate was run on it. That is recorded, not tidied. A last, larger measurement is
-pre-registered; it ships it or closes it, and the owner decides whether the
-bundle rolls back to the gated whisper-small meanwhile.
+wide margin and failed the third twice — by one word on 200 clips, then by
+1.1% → 6.1% Croatian substitution (p = 0.018) on all 925, the same two words
+each time. By the rule written before either run it is **closed**. Yet it is
+the `listen/` this bundle has carried since 5 September, swept in by the reader
+publish before any gate was run on it. That is recorded, not tidied; reverting
+it to the gated whisper-small is the owner's act.
 
 ## The correction box
 

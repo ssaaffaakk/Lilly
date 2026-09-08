@@ -179,7 +179,7 @@ was recorded, with the file it lives in. The last is today.
 | Photographs — words found per photograph, the 40 | **< 30%** | 36.0% (`training/RESULTS-ocr.md`) | **67.0%** |
 | Photographs — words found, pooled | **< 10%** | 16.9% (63 of 373) | **69.4%** |
 | Photographs — words invented that are on no sign | **> 280** | 224 | **65** |
-| Speech — word error, 200 held-out clips | **> 55%** | 38.5% (`training/RESULTS-speech.md`) | **34.9%** the gated listener · **11.9%** large-v3, in the published bundle since 5 Sep **before its gate**, which it then missed by one word (see below) |
+| Speech — word error, 200 held-out clips | **> 55%** | 38.5% (`training/RESULTS-speech.md`) | **34.9%** the gated listener · **11.9%** large-v3 — **closed 8 Sep** by its pre-registered last look, yet in the published bundle since 5 Sep (see below) |
 | Translation — BLEU on FLORES devtest, as the user sees it | **< 30** | 37.72, with the model's language tag leaked into 308 of 1,012 outputs (`training/RESULTS-devtest.md`) | **42.49**, leaked into **0** |
 
 One recorded moment says what the early period was like: the reader scored
@@ -189,18 +189,23 @@ number. Everything after that was measured on real photographs, real audio and
 held-out sentences, and the tables below are those measurements.
 
 The speech row's second figure is a whisper-large-v3 fine-tune that reads 11.9%
-word error against the gated listener's 34.9% on the same clips
+word error against the gated listener's 34.9% on the same 200 clips
 (`training/SPEECHBENCH-gate.txt`). Its pre-registered gate, run 7 September,
-refused it: the Croatian-substitution row came in one word above the
-re-measured baseline and the rule is "both, not either". **And it is in the
-published bundle anyway** — the 4–5 September reader publish swept the Mac's
-`models/lilly/listen`, which was already large-v3, into `Safak11/lilly` before
-any gate had been run on it (`listen/model.bin`, 1,558,949,857 bytes). That is
-the failure the fail-stop rules exist to prevent, and it is recorded here rather
-than tidied. The owner decides whether the bundle rolls back to the gated
-whisper-small or waits for the last, larger measurement that is pre-registered
-(`training/PREREGISTRATION.md`, "the full instrument"), which ships it or closes
-it.
+refused it by one word on the Croatian-substitution row, and the pre-registered
+**last look** — all 925 clips, both listeners, 8 September
+(`training/speech-instrument/`) — refused it again, and this time not by one
+word: Croatian substitution **1.1% → 6.1%** (1 of 87 against 8 of 131 decided,
+p = 0.018), the same two words over and over (*Europom* for *evropom*,
+*vjerojatno* for *vjerovatno*), while word error and term recall passed by wide
+margins. By rule 3 of that pre-registration **whisper-large-v3 is closed** — no
+other split, normaliser or instrument. On the project's own scale
+(`training/RUBRIC.md`, computed for the first time in that run) the two
+listeners read **39.5%** and **14.1%**: band 3 against band 8. **And the closed
+listener is in the published bundle anyway** — the 4–5 September reader publish
+swept the Mac's `models/lilly/listen`, already large-v3, into `Safak11/lilly`
+before any gate had run (`listen/model.bin`, 1,558,949,857 bytes). That is the
+failure the fail-stop rules exist to prevent; it is recorded here, not tidied,
+and reverting `listen/` to the gated whisper-small is the owner's publish act.
 
 Every number below compares Lilly against the untuned model it is built on, on
 data held out of training, run through the app's own code path so the only
@@ -228,7 +233,7 @@ the first builds, under 30 BLEU, did not manage.
 
 | | the first builds (unrecorded) | first recorded | today |
 | --- | --- | --- | --- |
-| Word error rate | **> 55%** | 38.5% (stock Whisper-small, `training/RESULTS-speech.md`) | **34.9%** gated · **11.9%** large-v3, published before its gate (see above) |
+| Word error rate | **> 55%** | 38.5% (stock Whisper-small, `training/RESULTS-speech.md`) | **34.9%** gated · **11.9%** large-v3, closed 8 Sep by rule 3 (see above) |
 | Bosnian term recall | — | 65.9% | **68.2%** |
 | Wrong-variety substitutions | — | 5.1% | **3.3%** |
 
@@ -374,7 +379,7 @@ list of failures already paid for: [`docs/kaggle-fail-stop.md`](docs/kaggle-fail
 - [x] Published weights and model card with every score and every limit
 - [x] Pre-registered thresholds and hash-bound results
 - [x] English → Bosnian fine-tune — all four pre-registered bars cleared 8 Sep (chrF2 +1.04, BLEU +1.16, form rate 99.2%, label gap 22.5); built, **not yet published**
-- [ ] Larger speech model — trained (11.9% word error); refused by one word at the gate; found in the published bundle since 5 Sep, ungated; last look pre-registered; owner to reconcile
+- [ ] Larger speech model — trained (11.9% word error); refused at the gate 7 Sep and at the pre-registered last look 8 Sep (Croatian 1.1% → 6.1%, p = 0.018); **closed by rule 3**; still in the published bundle, ungated — owner to revert `listen/`
 - [ ] A labelled set of real phone photographs from Bosnia
 
 ---

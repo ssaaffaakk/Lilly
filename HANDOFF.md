@@ -58,10 +58,11 @@ how Lilly scores.
    modified 5 September. The 4–5 September reader publish swept the Mac's
    `models/lilly/listen` — already the large-v3 candidate — into the bundle
    before any gate had run on it; the gate ran 7 September and refused it by
-   one word. Two options, both the owner's: roll `listen/` back to the gated
-   whisper-small (`listen-previous`, fingerprint `a76342f6ab59b382`) now, or
-   leave it until the pre-registered last look (`speech-instrument`) ships it or
-   closes it. Either way the README, STORY and Space card already say what is
+   one word, and the pre-registered last look (`speech-instrument`, 8 September,
+   all 925 clips) refused it again — Croatian 1.1% → 6.1%, p = 0.018 — so by
+   rule 3 **whisper-large-v3 is closed**. The only option consistent with the
+   rule is to roll `listen/` back to the gated whisper-small (`listen-previous`,
+   fingerprint `a76342f6ab59b382`); it is a publish act and the owner's. Either way the README, STORY and Space card already say what is
    in the bundle. `scripts/publish_to_hf.py` now refuses any `listen/` but the
    gated one unless `--allow-listen <fingerprint>` names another on the command
    line — the check that did not exist on 4 September.
