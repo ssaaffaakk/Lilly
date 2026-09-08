@@ -215,9 +215,12 @@ for fp, name in ((SCORED, "translator"), (BASE, "translator-base")):
 
 CELL_SMOKE = '''\
 # 6. Smoke: eight pairs through the whole path, before the real run
+# SCRATCH, not a literal path: the box may have no /kaggle/temp, and version 1
+# died here writing to one that did not exist while the clone sat in /tmp.
+SMOKE = SCRATCH / "smoke.json"
 run(sys.executable, "training/evaluate_app.py", "--fresh", "--limit", "8",
-    "--saved", "/kaggle/temp/smoke.json", "--out", "/kaggle/temp/smoke.md")
-smoke = json.loads(Path("/kaggle/temp/smoke.json").read_text(encoding="utf-8"))
+    "--saved", str(SMOKE), "--out", str(SCRATCH / "smoke.md"))
+smoke = json.loads(SMOKE.read_text(encoding="utf-8"))
 assert smoke["n"] == 8, smoke["n"]
 assert all(h.strip() for h in smoke["base"] + smoke["lilly"]), "empty translations"
 assert smoke["lilly_build"] == SCORED and smoke["base_build"] == BASE, (smoke["lilly_build"], smoke["base_build"])
