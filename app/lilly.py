@@ -54,9 +54,44 @@ OPTIONAL = {
 }
 
 
+def required_parts() -> tuple:
+    """What this install has to have, given which reader is configured.
+
+    The app reads photographs with PaddleOCR by default, and PaddleX keeps
+    those weights in its own cache rather than under models/lilly/, so read/
+    -- the EasyOCR way back -- is required only when LILLY_READER names an
+    EasyOCR engine. REQUIRED stays the full list: it is what a complete bundle
+    holds, and scripts/publish_to_hf.py publishes all four.
+    """
+    from app.ocr import reader_choice
+    return tuple(d for d in REQUIRED if d is not READ_DIR or reader_choice() != "paddle")
+
+
 def missing() -> list:
     """Which required parts of the model folder are not on this machine."""
-    return [d.name for d in REQUIRED if not d.is_dir()]
+    return [d.name for d in required_parts() if not d.is_dir()]
+
+
+def describe_listener() -> str:
+    """Which listener this is, against the one that cleared its gate.
+
+    The bundle has carried an ungated whisper-large-v3 under listen/ since
+    the 4-5 September 2026 publish, and nothing a user runs said so. This
+    does, in the same words scripts/fetch_models.py uses at download time.
+    """
+    if not (LISTEN_DIR / "model.bin").is_file():
+        return "listen: not installed"
+    try:
+        from scripts.fetch_models import (GATED_LISTEN_FINGERPRINT, listen_base,
+                                          listen_fingerprint)
+    except ImportError:
+        return "listen: gate status unknown (scripts/fetch_models.py is not beside app/)"
+    actual = listen_fingerprint(LISTEN_DIR)
+    base = listen_base(LISTEN_DIR) or "unknown base"
+    if actual == GATED_LISTEN_FINGERPRINT:
+        return f"listen: {base}, fingerprint {actual} -- the listener that cleared its gate"
+    return (f"listen: {base}, fingerprint {actual} -- NOT the gated listener "
+            f"{GATED_LISTEN_FINGERPRINT}; refused at its gate, training/RESULTS-speech.md")
 
 
 def missing_optional() -> dict:
@@ -125,15 +160,21 @@ def main() -> int:
         print(f"missing from {MODELS}: {', '.join(gaps)}", file=sys.stderr)
         return 1
     print(f"model folder: {MODELS}")
-    for part in [d.name for d in REQUIRED] + [d.name for d in OPTIONAL if d.is_dir()]:
+    for part in [d.name for d in REQUIRED if d.is_dir()] + [d.name for d in OPTIONAL if d.is_dir()]:
         size = sum(f.stat().st_size for f in (MODELS / part).rglob("*") if f.is_file())
         print(f"  {part:<18} {size / 1048576:>6.0f} MB")
     for name, why in missing_optional().items():
         print(f"  {name:<18} not installed — {why}")
+    from app.ocr import reader_identity
+    print(f"  reader: {reader_identity()}")
+    print(f"  {describe_listener()}")
     if len(sys.argv) > 1:
         print(lilly.translate(" ".join(sys.argv[1:])))
     return 0
 
 
 if __name__ == "__main__":
+    # Run as a script, sys.path[0] is app/ and `from app.ocr import ...` inside
+    # the functions above would not resolve. The repository goes first.
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
     raise SystemExit(main())

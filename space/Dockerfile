@@ -45,9 +45,10 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY --chown=lilly scripts/ scripts/
 USER lilly
 
-# 900 MB, fetched at build time so the first visitor does not wait for it.
+# The bundle, fetched at build time so the first visitor does not wait for it.
+# The reader's own weights are fetched further down, once app/ is in the image.
 ARG LILLY_MODELS_REPO=Safak11/lilly
-RUN LILLY_MODELS_REPO=${LILLY_MODELS_REPO} python3 scripts/fetch_models.py
+RUN LILLY_MODELS_REPO=${LILLY_MODELS_REPO} python3 scripts/fetch_models.py --skip-reader-warmup
 
 COPY --chown=lilly app/ app/
 

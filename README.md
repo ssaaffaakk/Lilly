@@ -84,15 +84,20 @@ a photographed sign come back the same way a typed one does.
 ```bash
 uv venv .venv --python 3.12
 uv pip install --python .venv/bin/python -r requirements.txt
-.venv/bin/python scripts/fetch_models.py        # pulls the weights bundle
-.venv/bin/python scripts/build_translator.py
+.venv/bin/python scripts/fetch_models.py        # the bundle, then the reader's own weights
 .venv/bin/uvicorn app.server:app --port 8000
 ```
 
 Open http://localhost:8000. Allow the microphone, or photograph something with a
 **đ** in it.
 
-That gives you the four abilities in the published bundle. The reply direction
+That gives you the four abilities in the published bundle. The translator
+arrives already fine-tuned and quantised, so there is nothing to build for the
+forward direction. The fetch also pulls PP-OCRv6 into PaddleX's cache through
+the app's own reader, so the first photograph does not wait on a download, and
+it says which listener the bundle handed over: today that is the closed
+whisper-large-v3 (see [Speech](#speech)), and the script says so out loud
+rather than letting you find out from the transcripts. The reply direction
 (English in, Bosnian out, the swap button in the UI) is built locally from an
 upstream base rather than shipped in the bundle, so it takes two more commands:
 
@@ -104,8 +109,8 @@ upstream base rather than shipped in the bundle, so it takes two more commands:
 Without them the app runs fine and `/api/reply` answers 503. `python3 app/lilly.py`
 prints which parts are installed.
 
-Startup is instant because each model loads on first use. Once the weights are
-on disk, nothing reaches the network again.
+Startup is instant because each model loads on first use. Once
+`fetch_models.py` has finished, nothing reaches the network again.
 
 ---
 
