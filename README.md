@@ -18,6 +18,7 @@
   <a href="#see-it-work">Examples</a> ·
   <a href="#run-it">Run it</a> ·
   <a href="#whats-inside">Inside</a> ·
+  <a href="#the-journey-so-far">Journey</a> ·
   <a href="#how-well-it-works">Numbers</a> ·
   <a href="#what-it-cannot-do-yet">Limits</a> ·
   <a href="#training">Training</a>
@@ -165,10 +166,34 @@ attribution and licenses are in [`models/lilly/NOTICE.md`](models/lilly/NOTICE.m
 
 ## How well it works
 
-### At a glance
+### The journey so far
 
-Every "Lilly today" figure is measured on data the model never trained on,
-through the app's own code path, against the untuned model it is built on. The
+The first builds were worse than anything below. No measurement of them was
+kept in the repository — the habit of committing a number before changing
+anything came later, and is now the rule — so the first column comes from the
+owner's own notes from that time, written as a bound. The next column is the
+first number that was recorded, with the file it lives in. The last is today.
+
+| | the first builds (unrecorded) | first recorded | today |
+| --- | --- | --- | --- |
+| Photographs — words found per photograph, the 40 | **< 30%** | 36.0% (`training/RESULTS-ocr.md`) | **67.0%** |
+| Photographs — words found, pooled | **< 10%** | 16.9% (63 of 373) | **69.4%** |
+| Photographs — words invented that are on no sign | **> 280** | 224 | **65** |
+| Speech — word error, 200 held-out clips | **> 55%** | 38.5% (`training/RESULTS-speech.md`) | **34.9%** (the shipped listener) |
+| Translation — BLEU on FLORES devtest, as the user sees it | **< 30** | 37.72, with the language tag leaked into 308 of 1,012 outputs (`training/RESULTS-devtest.md`) | **42.49**, leaked into **0** |
+| Reply, English → Bosnian — chrF2 on FLORES-200 | — | 58.96, the base as downloaded (`training/RESULTS-en-bs.md`) | **60.00**, fine-tuned 8 Sep, not yet published |
+
+One recorded moment says what the early period was like: the reader scored
+about 75% on synthetic text and **36% the first time it was pointed at real
+photographs** (`training/RESULTS-ocr-dataset.md`). The 75% was never a real
+number. Everything after that was measured on real photographs, real audio and
+held-out sentences.
+
+### Where the credit goes
+
+The fairest thing to measure a change against is the untuned model it is built
+on. Every "Lilly today" figure below is measured on data the model never
+trained on, through the app's own code path, against exactly that base. The
 pass marks were written down before each run (see
 [thresholds](#thresholds-are-written-before-the-run)).
 
@@ -192,31 +217,8 @@ pass marks were written down before each run (see
   signs that the reader read correctly, and how many words it produced that are
   on no sign at all. The second number matters as much as the first, because
   recall can always be bought by guessing more.
-- **The base**: the same model before any training here. It is the fairest thing
-  to measure a change against. It is not where the project started; that is the
-  next section.
-
-### Where it started
-
-The first builds were worse than anything in the tables. No measurement of them
-was kept in the repository — the habit of committing a number before changing
-anything came later, and is now the rule — so the earliest column comes from the
-owner's own notes from that time, written as a bound. The next column is the
-first number that was recorded, with the file it lives in. The last is today.
-
-| | the first builds (unrecorded) | first recorded | today |
-| --- | --- | --- | --- |
-| Photographs — words found per photograph, the 40 | **< 30%** | 36.0% (`training/RESULTS-ocr.md`) | **67.0%** |
-| Photographs — words found, pooled | **< 10%** | 16.9% (63 of 373) | **69.4%** |
-| Photographs — words invented that are on no sign | **> 280** | 224 | **65** |
-| Speech — word error, 200 held-out clips | **> 55%** | 38.5% (`training/RESULTS-speech.md`) | **34.9%** (the shipped listener) |
-| Translation — BLEU on FLORES devtest, as the user sees it | **< 30** | 37.72, with the language tag leaked into 308 of 1,012 outputs (`training/RESULTS-devtest.md`) | **42.49**, leaked into **0** |
-
-One recorded moment says what the early period was like: the reader scored
-about 75% on synthetic text and **36% the first time it was pointed at real
-photographs** (`training/RESULTS-ocr-dataset.md`). The 75% was never a real
-number. Everything after that was measured on real photographs, real audio and
-held-out sentences.
+- **Not yet published**: the fine-tune passed, the served build on this machine
+  carries it, and the public bundle does not until the owner publishes it.
 
 ### Translation
 
