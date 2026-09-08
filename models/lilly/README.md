@@ -21,16 +21,19 @@ base_model:
   - PaddlePaddle/PP-OCRv6_medium_rec
 ---
 
-# Lilly — Bosnian to English, four models in one folder
+# Lilly — Bosnian and English, five models in one folder
 
 The weights the [Lilly](https://github.com/ssaaffaakk/Lilly) app runs on. Lilly turns
 Bosnian into English three ways — typed text, spoken Bosnian, and photographs of Bosnian
-text — and reads the English back aloud.
+text — reads the English back aloud, and gives you the Bosnian to say in reply.
 
-This is **a bundle, not a new architecture**. Three of the four folders are open models
-redistributed unchanged, credited below. One — the translator — is fine-tuned by this
-project, and is the only part with scores of its own on this page. Everything the app
-needs is here, so it never reaches the network at runtime.
+This is **a bundle, not a new architecture**. Three of the five folders are fine-tuned
+by this project — both translators and the listener — and each carries its own scores
+on this page, measured against the untuned model it is built on. The voice is stock.
+The EasyOCR reader in `read/` is fine-tuned too, but the app reads photographs with
+PaddleOCR PP-OCRv6, chosen by a rule written before the comparison ran; it is fetched
+by the app at install time and is not in this bundle. Every upstream model is credited
+below. Once installed, nothing reaches the network at runtime.
 
 Two directions. Bosnian → English is the shipped direction and carries the scores
 below. English → Bosnian (`translator-en-bs/`, the reply the app offers under the swap
@@ -63,6 +66,26 @@ lilly.read("sign.jpg")                # photo          -> Bosnian text
 ```
 
 ---
+
+# Where it started
+
+The first builds were worse than anything on this page. No measurement of them was
+kept — the habit of committing a number before changing anything came later, and is
+now the rule — so the first column is the owner's own notes from that time, written as
+a bound. The next column is the first number that was recorded, with the file it lives
+in. The last is today.
+
+| | the first builds (unrecorded) | first recorded | today |
+|---|---|---|---|
+| Photographs — words found per photograph, the 40 | **< 30%** | 36.0% (`training/RESULTS-ocr.md`) | **67.0%** |
+| Photographs — words found, pooled | **< 10%** | 16.9% (63 of 373) | **69.4%** |
+| Photographs — words invented that are on no sign | **> 280** | 224 | **65** |
+| Speech — word error, 200 held-out clips | **> 55%** | 38.5% (`training/RESULTS-speech.md`) | **11.9%** (whisper-large-v3, shipped by the owner's decision, refused at its gate; the gated whisper-small reads 34.9%) |
+| Translation — BLEU on FLORES devtest, as the user sees it | **< 30** | 37.72, with the language tag leaked into 308 of 1,012 outputs (`training/RESULTS-devtest.md`) | **42.49**, leaked into **0** |
+| Reply, English → Bosnian — chrF2 on FLORES-200 | — | 58.96, the base as downloaded (`training/RESULTS-en-bs.md`) | **60.00**, fine-tuned and published 8 Sep 2026 |
+
+Every number after the first column was measured on real photographs, real audio and
+held-out sentences, and the rest of this page is those measurements.
 
 # The reply direction — English → Bosnian
 

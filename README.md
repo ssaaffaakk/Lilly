@@ -187,7 +187,7 @@ first number that was recorded, with the file it lives in. The last is today.
 | Photographs — words found per photograph, the 40 | **< 30%** | 36.0% (`training/RESULTS-ocr.md`) | **67.0%** |
 | Photographs — words found, pooled | **< 10%** | 16.9% (63 of 373) | **69.4%** |
 | Photographs — words invented that are on no sign | **> 280** | 224 | **65** |
-| Speech — word error, 200 held-out clips | **> 55%** | 38.5% (`training/RESULTS-speech.md`) | **11.9%** (whisper-large-v3, shipped by the owner's decision, refused at its gate; the gated whisper-small reads 34.9%) |
+| Speech — word error, 200 held-out clips | **> 55%** | 38.5% (`training/RESULTS-speech.md`) | **11.9%** (whisper-large-v3, shipped by decision, refused at its gate; the gated whisper-small reads 34.9%) |
 | Translation — BLEU on FLORES devtest, as the user sees it | **< 30** | 37.72, with the language tag leaked into 308 of 1,012 outputs (`training/RESULTS-devtest.md`) | **42.49**, leaked into **0** |
 | Reply, English → Bosnian — chrF2 on FLORES-200 | — | 58.96, the base as downloaded (`training/RESULTS-en-bs.md`) | **60.00**, fine-tuned and published 8 Sep |
 
@@ -279,7 +279,7 @@ of comparable quality.
 | Bosnian term recall | — | 65.9% | **68.2%** |
 | Wrong-variety substitutions | — | 5.1% | **3.3%** |
 
-**The larger listener, and why it is not shipped.** A whisper-large-v3
+**The larger listener: refused at its gate, shipped by decision.** A whisper-large-v3
 fine-tune reads 11.9% word error against the shipped listener's 34.9% on the
 same 200 clips (`training/SPEECHBENCH-gate.txt`). It has to clear three rows,
 not one: word error, Bosnian term recall, and Croatian substitution — how often
