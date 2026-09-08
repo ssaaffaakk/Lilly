@@ -299,13 +299,27 @@ of comparable quality.
 
 ### Speech
 
-200 held-out FLEURS Bosnian clips, the same clips in every column.
+200 held-out FLEURS Bosnian clips, the same clips in every column. "Today" is
+the listener the bundle ships, whisper-large-v3, shipped by the owner's
+decision and refused at its gate; the gated whisper-small stays beside it as
+the baseline.
 
 | | the first builds (unrecorded) | first recorded | today |
 | --- | --- | --- | --- |
-| Word error rate | **> 55%** | 38.5% (stock Whisper-small, `training/RESULTS-speech.md`) | **34.9%** |
-| Bosnian term recall | — | 65.9% | **68.2%** |
-| Wrong-variety substitutions | — | 5.1% | **3.3%** |
+| Word error rate | **> 55%** | 38.5% (stock Whisper-small, `training/RESULTS-speech.md`) | **11.9%** (whisper-large-v3, shipped by decision, refused at its gate; the gated whisper-small reads 34.9%) |
+
+The two listeners against each other on the same 200 clips, one scorer, one
+process (`training/SPEECHBENCH-gate.txt`, 7 September):
+
+| | whisper-small, the gated listener | whisper-large-v3, shipped |
+| --- | --- | --- |
+| Word error | 34.9% | **11.9%** |
+| Bosnian term recall | 60.0% | **89.1%** (+29.1, p = 0.0000) |
+| Croatian form written where Bosnian was said | **5.3%** | 6.5% (+1.2, p = 0.48; on all 925 clips 1.1% → 6.1%, p = 0.018) |
+
+The gated small's own fine-tune, stock to tuned on those clips under the
+earlier scorer: word error 38.5% → 34.9%, Bosnian term recall 65.9% → 68.2%,
+wrong-variety substitutions 5.1% → 3.3%.
 
 **The larger listener: refused at its gate, shipped by decision.** A whisper-large-v3
 fine-tune reads 11.9% word error against the shipped listener's 34.9% on the
