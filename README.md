@@ -201,40 +201,39 @@ difference between the columns is the fine-tuning. That base is not where the
 project started — the section above is — it is the fairest thing to measure a
 change against.
 
-**Translation** — 2,009 held-out FLORES-200 Bosnian–English pairs, paired
-bootstrap for significance.
+**Translation** — held-out FLORES-200 Bosnian–English, through the app's own
+path, as the user sees it.
 
-| | Base | Lilly | Change |
+| | the first builds (unrecorded) | first recorded | today |
 | --- | --- | --- | --- |
-| BLEU | 40.81 | **42.18** | **+1.37**, p = 0.001 |
-| chrF2 | 67.34 | 67.47 | +0.14, p = 0.104 — not significant |
-| Outputs with the model's language tag leaked into them | 572 of 2,009 (28.5%) | **0** | the defect a reader actually sees |
+| BLEU, 1,012 devtest pairs | **< 30** | 37.72 — the model's language tag leaked into 308 of 1,012 outputs (`training/RESULTS-devtest.md`) | **42.49**, leaked into **0** |
+| chrF2, 1,012 devtest pairs | — | 67.15 | **67.69** |
 
-Read that honestly: the fine-tuning buys word-level accuracy and removes a
-visible defect. It does not improve chrF2 — it stopped costing anything there,
-which an earlier version of this same fine-tune did not manage.
+The "first recorded" column is the untuned model as downloaded. Scored with its
+leaked tags stripped so the defect cannot take credit, the fine-tuning is worth
+**+1.37 BLEU** at p = 0.001 and **+0.14 chrF2** at p = 0.104 (not significant)
+over all 2,009 pairs (`training/app-hypotheses-armB.json`, rescored
+7 September). It buys word-level accuracy and removes a defect in every third
+output; it does not improve chrF2 — it stopped costing anything there, which
+the first builds, under 30 BLEU, did not manage.
 
-**Speech** — 200 held-out FLEURS Bosnian clips, the same clips for both
-columns. The first listeners, by the owner's notes, were above 55% word error;
-the stock checkpoint is the first number kept.
+**Speech** — 200 held-out FLEURS Bosnian clips, the same clips in every column.
 
-| | Stock checkpoint | Now |
-| --- | --- | --- |
-| Word error rate | 38.5% (stock Whisper-small) | **34.9%** |
-| Bosnian term recall | 65.9% | **68.2%** |
-| Wrong-variety substitutions | 5.1% | **3.3%** |
+| | the first builds (unrecorded) | first recorded | today |
+| --- | --- | --- | --- |
+| Word error rate | **> 55%** | 38.5% (stock Whisper-small, `training/RESULTS-speech.md`) | **34.9%** shipped · **11.9%** trained, not yet published (see above) |
+| Bosnian term recall | — | 65.9% | **68.2%** |
+| Wrong-variety substitutions | — | 5.1% | **3.3%** |
 
 **Photographs** — two sets of Bosnian signs from Wikimedia Commons, each
 transcribed by two readers independently, seeing neither each other's work nor
 any model's guess; only words both of them saw are in the answer key. The 40 are
 the original set (373 agreed words); `test-v2` is 280 photographs drawn from the
 same pool, 132 with text, 2,907 agreed words, never trained on by anything.
-The first reader read **36.0%** of the words on the 40 and invented 224
-(`training/RESULTS-ocr.md`); the builds before it, by the owner's notes, read
-under 30% and invented more than 280. Everything in this table came after.
-
 | | the 40 | `test-v2` (132 photographs) |
 | --- | --- | --- |
+| **the first builds (unrecorded)** | **< 30% found, > 280 invented** | — |
+| **first recorded** — the first reader (`training/RESULTS-ocr.md`) | **36.0% found, 224 invented** | — |
 | EasyOCR, stock | 48.0% found, 188 invented | 30.0% found |
 | EasyOCR fine-tuned on real crops (the reader until 5 Sep 2026) | 54.5% found, 182 invented | 34.6% found, 2,071 invented |
 | **PaddleOCR PP-OCRv6, untrained, confidence floor 0.9 — the reader now** | **67.0% found, 65 invented** | **57.8% found, 450 invented** |

@@ -30,7 +30,7 @@ Four models under one roof, published at
 |---|---|
 | translator | OPUS-MT, fine-tuned, quantised to int8 |
 | listen | Whisper small, fine-tuned on Bosnian speech |
-| read | EasyOCR's recogniser, fine-tuned on Bosnian letters |
+| read | PaddleOCR PP-OCRv6, off the shelf, chosen by a pre-registered rule over the fine-tuned EasyOCR one |
 | speak | Kokoro-82M, as published |
 
 ## How well it works
@@ -38,21 +38,33 @@ Four models under one roof, published at
 Measured, not estimated. Every number has a test set and most have a p-value;
 the model card carries the full tables and the method.
 
-| | before | after |
-|---|---|---|
-| Translation, BLEU on 2,009 FLORES pairs | 40.81 | **42.18** |
-| Speech, word error on 200 held-out clips | 38.5% | **35.5%** |
-| Photographs, whole words read correctly | 47.1% | **75.0%** |
+| | the first builds (unrecorded) | first recorded | today |
+|---|---|---|---|
+| Translation, BLEU on FLORES devtest, as the user sees it | **< 30** | 37.72, language tag leaked into 308 of 1,012 outputs | **42.49**, leaked into **0** |
+| Speech, word error on 200 held-out clips | **> 55%** | 38.5% | **34.9%** shipped · **11.9%** trained, at a pre-registered gate |
+| Photographs, words found per photograph, 40 real Commons photographs | **< 30%** | 36.0% | **67.0%** |
+| Photographs, words invented that are on no sign | **> 280** | 224 | **65** |
 
-Two things the numbers do not say, which the model card says at length.
+The first column is the owner's notes from before any measurement was committed.
+The second is the first number that was written down. The repository README
+("Where it started") and the model card carry the full tables and the method.
+
+Three things the numbers do not say, which the model card says at length.
 
 The fine-tuning does **not** measurably improve understanding of Bosnian-specific
 terms — a benchmark built to test exactly that claim returns 91.7% against 92.2%
 at p = 0.360. The base model is already trained across South Slavic languages and
 arrives there on its own.
 
-And every photograph the reader was trained and scored on is synthesised. Nobody
-has yet measured what it does on a photograph taken in Bosnia.
+The photograph numbers are on real photographs from Wikimedia Commons — the 40,
+and a second held-out set of 280 (57.8% on its 132 with text) — transcribed by
+eye, never trained on. An earlier version of this card quoted 75% from synthetic
+text; the first real photograph read 36%, and that number was never real. Nobody
+has yet measured a photograph taken on a phone in Bosnia.
+
+And the 11.9% listener is trained and unpublished: it cleared two of the three
+pre-registered gate rows by a wide margin and missed the third by one word. A
+last, larger measurement is pre-registered; it ships or it closes.
 
 ## The correction box
 
