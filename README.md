@@ -179,7 +179,7 @@ was recorded, with the file it lives in. The last is today.
 | Photographs — words found per photograph, the 40 | **< 30%** | 36.0% (`training/RESULTS-ocr.md`) | **67.0%** |
 | Photographs — words found, pooled | **< 10%** | 16.9% (63 of 373) | **69.4%** |
 | Photographs — words invented that are on no sign | **> 280** | 224 | **65** |
-| Speech — word error, 200 held-out clips | **> 55%** | 38.5% (`training/RESULTS-speech.md`) | **34.9%** shipped · **11.9%** trained, not yet published (see below) |
+| Speech — word error, 200 held-out clips | **> 55%** | 38.5% (`training/RESULTS-speech.md`) | **34.9%** the gated listener · **11.9%** large-v3, in the published bundle since 5 Sep **before its gate**, which it then missed by one word (see below) |
 | Translation — BLEU on FLORES devtest, as the user sees it | **< 30** | 37.72, with the model's language tag leaked into 308 of 1,012 outputs (`training/RESULTS-devtest.md`) | **42.49**, leaked into **0** |
 
 One recorded moment says what the early period was like: the reader scored
@@ -189,11 +189,18 @@ number. Everything after that was measured on real photographs, real audio and
 held-out sentences, and the tables below are those measurements.
 
 The speech row's second figure is a whisper-large-v3 fine-tune that reads 11.9%
-word error against the shipped listener's 34.9% on the same clips
-(`training/SPEECHBENCH-gate.txt`). It did not ship: its Croatian-substitution
-row came in one word above the re-measured baseline and the pre-registered gate
-is "both, not either". A last, larger measurement is pre-registered
-(`training/PREREGISTRATION.md`, "the full instrument"); it ships or it closes.
+word error against the gated listener's 34.9% on the same clips
+(`training/SPEECHBENCH-gate.txt`). Its pre-registered gate, run 7 September,
+refused it: the Croatian-substitution row came in one word above the
+re-measured baseline and the rule is "both, not either". **And it is in the
+published bundle anyway** — the 4–5 September reader publish swept the Mac's
+`models/lilly/listen`, which was already large-v3, into `Safak11/lilly` before
+any gate had been run on it (`listen/model.bin`, 1,558,949,857 bytes). That is
+the failure the fail-stop rules exist to prevent, and it is recorded here rather
+than tidied. The owner decides whether the bundle rolls back to the gated
+whisper-small or waits for the last, larger measurement that is pre-registered
+(`training/PREREGISTRATION.md`, "the full instrument"), which ships it or closes
+it.
 
 Every number below compares Lilly against the untuned model it is built on, on
 data held out of training, run through the app's own code path so the only
@@ -221,7 +228,7 @@ the first builds, under 30 BLEU, did not manage.
 
 | | the first builds (unrecorded) | first recorded | today |
 | --- | --- | --- | --- |
-| Word error rate | **> 55%** | 38.5% (stock Whisper-small, `training/RESULTS-speech.md`) | **34.9%** shipped · **11.9%** trained, not yet published (see above) |
+| Word error rate | **> 55%** | 38.5% (stock Whisper-small, `training/RESULTS-speech.md`) | **34.9%** gated · **11.9%** large-v3, published before its gate (see above) |
 | Bosnian term recall | — | 65.9% | **68.2%** |
 | Wrong-variety substitutions | — | 5.1% | **3.3%** |
 
@@ -364,7 +371,7 @@ list of failures already paid for: [`docs/kaggle-fail-stop.md`](docs/kaggle-fail
 - [x] Published weights and model card with every score and every limit
 - [x] Pre-registered thresholds and hash-bound results
 - [ ] English → Bosnian fine-tune — bars and baselines written, launch pending
-- [ ] Larger speech model — trained (11.9% word error); refused by one word at the gate; last look pre-registered
+- [ ] Larger speech model — trained (11.9% word error); refused by one word at the gate; found in the published bundle since 5 Sep, ungated; last look pre-registered; owner to reconcile
 - [ ] A labelled set of real phone photographs from Bosnia
 
 ---
