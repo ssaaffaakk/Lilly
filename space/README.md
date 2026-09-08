@@ -40,8 +40,8 @@ the model card carries the full tables and the method.
 
 | | the first builds (unrecorded) | first recorded | today |
 |---|---|---|---|
-| Translation, BLEU on FLORES devtest, as the user sees it | **< 30** | 37.72, language tag leaked into 308 of 1,012 outputs | **42.49**, leaked into **0** |
-| Speech, word error on 200 held-out clips | **> 55%** | 38.5% | **34.9%** gated · **11.9%** large-v3, closed 8 Sep by its last look, still in the bundle |
+| Translation, BLEU on FLORES devtest, as the user sees it | **< 30** | 37.72, language tag leaked into 308 of 1,012 outputs | **43.25**, leaked into **0** (re-measured 8 Sep on a T4 after the ordinal splitter fix) |
+| Speech, word error on 200 held-out clips | **> 55%** | 38.5% | **11.9%**, whisper-large-v3, shipped 8 Sep by the owner's decision, refused at its gate (Croatian forms 1.1% → 6.1%); the gated whisper-small reads 34.9% |
 | Photographs, words found per photograph, 40 real Commons photographs | **< 30%** | 36.0% | **67.0%** |
 | Photographs, words invented that are on no sign | **> 280** | 224 | **65** |
 
@@ -65,10 +65,12 @@ has yet measured a photograph taken on a phone in Bosnia.
 And the 11.9% listener cleared two of the three pre-registered gate rows by a
 wide margin and failed the third twice — by one word on 200 clips, then by
 1.1% → 6.1% Croatian substitution (p = 0.018) on all 925, the same two words
-each time. By the rule written before either run it is **closed**. Yet it is
-the `listen/` this bundle has carried since 5 September, swept in by the reader
-publish before any gate was run on it. That is recorded, not tidied; reverting
-it to the gated whisper-small is the owner's act.
+each time. By the rule written before either run it gets no further look. The
+owner then shipped it anyway, on 8 September, for what it gets right (14.1%
+against 39.5% of words wrong on 925 clips) and accepting what it gets wrong;
+that decision and its reason are written down beside the gate's result, the
+failed row is on the model card, and the gated whisper-small stays the
+baseline every listener is measured against.
 
 ## The correction box
 

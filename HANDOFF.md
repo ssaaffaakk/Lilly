@@ -11,16 +11,19 @@ when it stops being true; a stale handoff is worse than none.
 
 | | measured | on what | means |
 |---|---|---|---|
-| Translation | chrF2 **67.47** | FLORES-200 dev+devtest, 2,009 pairs, through `app.translate.Engine`, tag stripped | level of NLLB-200-3.3B (67.2), best of 30 published systems on this pair |
+| Translation | chrF2 **67.81** (BLEU 43.03) | FLORES-200 dev+devtest, 2,009 pairs, through `app.translate.Engine`, tag stripped; re-measured 8 Sep on a Kaggle T4 after the ordinal splitter fix (`training/RESULTS-product.md`) | level of NLLB-200-3.3B (67.2), best of 30 published systems on this pair |
 | Photographs | **57.8%** of words per photo, 450 invented | `test-v2`: 132 held-out Commons photographs with text, 2,907 agreed words from two blind transcribers at 88.2% agreement; PaddleOCR PP-OCRv6 at confidence floor 0.9, the reader since 5 Sep 2026 | the fine-tuned EasyOCR reader reads 34.6% / 2,071 on the same 132 — its published 54.7% was the 40's number, and the 40 are 28 photographs with text (`training/RESULTS-ocr-test-v2.md`, `RESULTS-ocr-paddle-floor.md`) |
-| Speech | **34.9%** word error | 200 held-out FLEURS Bosnian clips, measured here | the listener it replaced reads 35.5% on the same clips through the same code. Kaggle measured the same model at 33.9% on a T4 — quote the local pair for the like-for-like gain, the Kaggle pair (38.4% → 33.9%) only against untrained whisper-small |
+| Speech | **11.9%** word error, whisper-large-v3 — shipped 8 Sep by the owner's decision, refused at its gate (Croatian forms 1.1% → 6.1%, p = 0.018) | 200 held-out FLEURS Bosnian clips; on all 925 the rubric WER is 14.1% against the gated small's 39.5% | the gated whisper-small reads 34.9% on the same clips and stays the baseline every listener is measured against (`training/RESULTS-speech.md`, `training/PREREGISTRATION.md` "The owner's decision") |
 
 *Corrected 28 Aug: the translation row read "chrF2 67.34, FLORES-200 devtest,
 1,012 pairs". That figure is the BASE model's score on the full 2,009-pair set —
 it was the model Lilly is measured against, printed as if it were Lilly, with
 the wrong split named beside it. The installed build is Arm B: 42.18 BLEU /
-**67.47** chrF2 on 2,009 pairs, 67.69 on the devtest half alone. See
-`training/PREREGISTRATION.md`, "Outcome — Arm B wins".*
+**67.47** chrF2 on 2,009 pairs, 67.69 on the devtest half alone, under the
+splitter as it was; re-measured 8 Sep on Kaggle after the ordinal fix it reads
+**43.03 / 67.81** on 2,009 and **43.25 / 68.10** on devtest
+(`training/RESULTS-product.md`). See `training/PREREGISTRATION.md`,
+"Outcome — Arm B wins" and "v4 — translate — ordinals".*
 
 **And the frame that changes how the whole row reads.** The base is
 `Helsinki-NLP/opus-mt-tc-big-zls-en` — a Marian model, NOT NLLB; the NLLB
