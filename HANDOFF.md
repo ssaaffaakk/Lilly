@@ -13,9 +13,12 @@ when it stops being true; a stale handoff is worse than none.
 > `models/lilly/speak-bs/`, Piper's Serbian voice, fetched from
 > `rhasspy/piper-voices` by `scripts/fetch_speak_bs.py` (and by
 > `fetch_models.py`), never from the bundle. Nothing about English hearing or
-> reading is measured; the README says so. Owner decisions open: which of the
-> voice's two speakers (`built.json`, `--speaker`), and whether a Serbian voice
-> is acceptable for the Bosnian side at all.
+> reading is measured; the README says so. On main since 9 Sep. Speaker 0 is
+> kept: on 12 sentences / 104 words through the shipped listener it was heard
+> with 28 words wrong, speaker 1 with 34 -- inside the noise, so the default
+> stands (`scripts/fetch_speak_bs.py`). Both sit near 27% where real Bosnian
+> speech reads 11.9%: that is the voice's accent, measured. Open: whether that
+> voice is acceptable at all, or the spoken reply should be switched off.
 
 ## The three numbers
 

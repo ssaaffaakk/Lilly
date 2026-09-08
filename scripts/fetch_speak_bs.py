@@ -19,6 +19,13 @@ run alone:
 
     python3 scripts/fetch_speak_bs.py
     python3 scripts/fetch_speak_bs.py --speaker 1     # the voice has two speakers; 0 is the default
+
+Speaker 0 is the default because it measured no worse: 12 Bosnian sentences,
+104 words, both speakers played to the shipped listener through /api/speech
+(9 Sep 2026) -- speaker 0 was heard with 28 words wrong, speaker 1 with 34. Six
+words on 104 is inside the noise, so this is "keep the first", not "0 is
+better". The 27% either way, against 11.9% on real Bosnian speech, is the
+accent the module docstring warns about, measured.
     python3 scripts/fetch_speak_bs.py --force         # fetch again over what is here
 
 The files land under fixed names -- voice.onnx, voice.onnx.json -- so app/tts.py
