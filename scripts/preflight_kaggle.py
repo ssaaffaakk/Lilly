@@ -309,6 +309,13 @@ def check_speech_instrument(text: str) -> None:
              "app.speech defaults to CPU int8 and 925 clips x large-v3 misses the wall")
     if "rule 3" not in text:
         fail("speech instrument: the report must name rule 3 -- a refusal closes large-v3")
+    if "lilly-listen-small-previous" not in text or "a76342f6ab59b382" not in text or "e6bb58483586b06c" not in text:
+        fail("speech instrument: the baseline must be the gate's listen-previous from the "
+             "lilly-listen-small-previous dataset, and both listeners must be checked against the "
+             "gate's fingerprints (training/SPEECHBENCH-gate.txt) before scoring")
+    if "scripts/fetch_models.py" in text:
+        fail("speech instrument: must not read either listener off the Hugging Face bundle -- "
+             "its listen/ has been whisper-large-v3 since 4 September; version 3 died on it")
     if "lilly-listen-large-v3" not in text or "lilly-listen.zip" not in text:
         fail("speech instrument: must find the candidate as half-2's lilly-listen.zip OR as the "
              "lilly-listen-large-v3 dataset (built.json beside model.bin) -- the half-2 kernel "
@@ -349,6 +356,8 @@ def main() -> int:
     if '"needs_listen_candidate": True' not in kaggle_train or "push_listen_candidate" not in kaggle_train:
         fail("kaggle_train.py must attach the large-v3 candidate as the lilly-listen-large-v3 dataset "
              "for speech-instrument -- the lilly-speech-half2 kernel Output is no longer attachable")
+    if '"needs_listen_previous": True' not in kaggle_train or "push_listen_previous" not in kaggle_train:
+        fail("kaggle_train.py must attach the gate's baseline listener as lilly-listen-small-previous")
     if "could not be added" not in kaggle_train:
         fail("kaggle_train.py confirm_push must refuse a push whose attachment Kaggle "
              "'could not be added' -- that run starts without its data and dies cells later")

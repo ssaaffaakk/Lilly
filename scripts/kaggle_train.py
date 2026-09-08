@@ -46,6 +46,14 @@ WEIGHTS_EN_BS = REPO_ROOT / "models" / "lilly" / "translate-en-bs"
 # build the gate scored on 200 clips; the instrument must score that build and
 # no other.
 LISTEN_CANDIDATE = REPO_ROOT / "models" / "kaggle-output" / "speech-half2" / "lilly-listen.zip"
+# The baseline the instrument compares against: the whisper-small build the gate
+# re-measured at 34.9% (training/SPEECHBENCH-gate.txt). It used to be read off
+# the published Hugging Face bundle, whose listen/ turned out to have been
+# whisper-large-v3 since the 4 September publish -- the instrument's identity
+# check refused it (version 3, 8 September). The store is this directory plus
+# the fingerprints below, which are what the gate itself printed.
+LISTEN_PREVIOUS = REPO_ROOT / "models" / "lilly" / "listen-previous"
+GATE_FINGERPRINTS = {"listen-previous": "a76342f6ab59b382", "listen": "e6bb58483586b06c"}
 READ_PASS1 = REPO_ROOT / "models" / "lilly" / "read" / "lilly.pth"
 OCR_CROPS = REPO_ROOT / "data" / "ocr" / "crops"
 OCR_CROPS2 = REPO_ROOT / "data" / "ocr" / "crops2"
@@ -113,7 +121,8 @@ JOBS = {
                     # the push said "not valid kernel sources" and ran anyway, and
                     # version 2 died at the attach cell. The candidate now comes
                     # from a dataset built out of the zip fetched on 1 September.
-                    "needs_listen_candidate": True},
+                    "needs_listen_candidate": True,
+                    "needs_listen_previous": True},
     "speech-half2": {"notebook": "Lilly_Speech_Kaggle_Half2.ipynb",
                     "slug": "lilly-speech-half2", "title": "Lilly speech half2",
                     "needs_weights": False, "needs_corpus": False,
@@ -190,6 +199,61 @@ def push_weights(user: str, weights=WEIGHTS, name="lilly-translate-base") -> str
     return slug
 
 
+def listener_fingerprint(build: Path) -> str:
+    """Identical to training/speech_bench.fingerprint: md5 over the build's files,
+    name then bytes, sorted. The bench keys its transcription cache on it, so a
+    listener that matches the gate's fingerprint is byte for byte the one the
+    gate scored. dataset-metadata.json is staging only and is skipped."""
+    h = hashlib.md5()
+    for name in sorted(f.name for f in build.iterdir()
+                       if f.is_file() and f.name != "dataset-metadata.json"):
+        h.update(name.encode())
+        h.update((build / name).read_bytes())
+    return h.hexdigest()[:16]
+
+
+def push_listen_previous(user: str) -> str:
+    """The gate's baseline listener (whisper-small, `listen-previous`), as a dataset.
+
+    Not the published bundle: what Hugging Face serves under listen/ changes
+    whenever anything is published from a Mac whose models/lilly/listen holds
+    something else, and it did. The comparison the pre-registration names is
+    against the re-measured listen-previous, so the weights come from here and
+    are checked against the fingerprint the gate printed.
+    """
+    slug = f"{user}/lilly-listen-small-previous"
+    stage = STAGING / "dataset" / "lilly-listen-small-previous"
+    if not (LISTEN_PREVIOUS / "model.bin").is_file():
+        raise SystemExit(f"no baseline listener at {LISTEN_PREVIOUS}")
+    built = json.loads((LISTEN_PREVIOUS / "built.json").read_text(encoding="utf-8"))
+    if "whisper-small" not in str(built.get("base", "")):
+        raise SystemExit(f"{LISTEN_PREVIOUS} built.json says {built} -- not whisper-small")
+    got = listener_fingerprint(LISTEN_PREVIOUS)
+    if got != GATE_FINGERPRINTS["listen-previous"]:
+        raise SystemExit(f"{LISTEN_PREVIOUS} fingerprint {got} is not the gate's "
+                         f"{GATE_FINGERPRINTS['listen-previous']} (training/SPEECHBENCH-gate.txt); "
+                         f"these are not the weights the gate re-measured")
+    stage.mkdir(parents=True, exist_ok=True)
+    for f in LISTEN_PREVIOUS.iterdir():
+        if f.is_file():
+            target = stage / f.name
+            if not target.exists() or target.stat().st_size != f.stat().st_size:
+                target.write_bytes(f.read_bytes())
+    (stage / "dataset-metadata.json").write_text(json.dumps({
+        "title": "Lilly listen small previous", "id": slug,
+        "licenses": [{"name": "other"}]}, indent=1))
+    existing = subprocess.run([KAGGLE, "datasets", "status", slug],
+                              text=True, capture_output=True)
+    if "ready" in existing.stdout.lower():
+        print(f"dataset already there: {slug} (fingerprint {got})")
+        return slug
+    mb = sum(f.stat().st_size for f in stage.iterdir()) / 1048576
+    print(f"uploading {mb:.0f} MB to {slug} (fingerprint {got})")
+    run(KAGGLE, "datasets", "create", "-p", stage, "-r", "zip")
+    wait_until_ready(slug)
+    return slug
+
+
 def push_listen_candidate(user: str) -> str:
     """The large-v3 candidate, unpacked, as a dataset the instrument can attach.
 
@@ -216,6 +280,10 @@ def push_listen_candidate(user: str) -> str:
     built = json.loads((stage / "built.json").read_text(encoding="utf-8"))
     if built.get("base") != "openai/whisper-large-v3":
         raise SystemExit(f"{LISTEN_CANDIDATE} built.json says {built} -- not whisper-large-v3; wrong zip")
+    got = listener_fingerprint(stage)
+    if got != GATE_FINGERPRINTS["listen"]:
+        raise SystemExit(f"candidate fingerprint {got} is not the gate's {GATE_FINGERPRINTS['listen']} "
+                         f"(training/SPEECHBENCH-gate.txt); this is not the build the gate refused")
     (stage / "dataset-metadata.json").write_text(json.dumps({
         "title": "Lilly listen large v3", "id": slug,
         "licenses": [{"name": "other"}]}, indent=1))
@@ -821,6 +889,8 @@ def main() -> int:
         datasets.append(push_ocr_sign_letters(user))
     if job.get("needs_listen_candidate"):
         datasets.append(push_listen_candidate(user))
+    if job.get("needs_listen_previous"):
+        datasets.append(push_listen_previous(user))
     if job.get("needs_ocr_harvest"):
         hv = push_ocr_harvest(user)
         if hv is None:
