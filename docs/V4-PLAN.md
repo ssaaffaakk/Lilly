@@ -31,9 +31,10 @@ counts and intervals beside every delta; heavy compute on Kaggle
   (`training/RUBRIC.md`); test-v2 has 132. The lever is the test set, not the
   model.
 - **Speech.** Bosnian speech data is 3,091 FLEURS clips. Common Voice has no
-  Bosnian. The candidate that reads 11.9% against 34.9% is at its last look,
-  and rule 3 closes it if the Croatian row fails. After that the lever is
-  audio supply, not another epoch.
+  Bosnian. The candidate that reads 11.9% against 34.9% had its last look on
+  8 September: the Croatian row failed (1.1% → 6.1%, p = 0.018), rule 3 closed
+  it, and the owner shipped it by decision that evening with the failed row on
+  record. The lever now is audio supply, not another epoch.
 - **Translation.** Against NLLB-200 the base supplies +3.78 chrF2 and the
   fine-tune −0.79 (`training/RESULTS-outside-baseline.md`). The lever is data
   quality and real Bosnian targets, not parameters.

@@ -118,9 +118,14 @@ with. That is tiny by speech standards. Croatian and Serbian are selectable as p
 (`--lang hr_hr`, `--lang sr_rs`), and recording your own Bosnian is what would help most.
 
 Measured baseline, so you know what you are aiming at: the listener the app ships with
-scores **42% word error rate** on 50 of those held-out clips. The mistakes are not
-acoustic — it hears the sound and guesses a word that does not exist, `pjevači` coming
-back as `pivač`. That is the kind of error more Bosnian data fixes.
+(whisper-large-v3, shipped 8 Sep 2026 by the owner's decision, refused at its gate on
+the Croatian row) reads **11.9% word error** on the 200 held-out clips; the gated
+whisper-small reads 34.9%, from 38.5% the first time the number was written down and
+above 55% in the first builds (`RESULTS-speech.md`, `PREREGISTRATION.md`). The early
+listeners' mistakes were not acoustic — they heard the sound and guessed a word that
+does not exist, `pjevači` coming back as `pivač`. That is the kind of error more
+Bosnian data fixes; the large listener's remaining error is Croatian spelling
+(`Europom`, `vjerojatno`), which is the row that refused it.
 
 **Done when** word error rate on held-out clips is lower than the listener you
 replaced. If the number does not move, the fine-tune did not work, however cleanly

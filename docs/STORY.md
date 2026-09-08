@@ -40,14 +40,17 @@ So I decided to build it myself.
 I trained on real Bosnian, deliberately. I measured it. I tested it. And I
 published the numbers — including the ones that didn’t flatter me:
 
-- **chrF2 67.47** on 2,009 FLORES pairs, from a base that leaked its own
-  language tag into 572 of them — now 0
-- **34.9% WER** on held-out Bosnian speech, from listeners that began above 55%;
-  a whisper-large-v3 I trained reads **11.9%** — and failed the Bosnian-ness gate
-  I wrote before training it, twice, so by my own rule it is closed; it was found
-  in the published bundle anyway, swept in before the gate ran, taken out the
-  day it was closed, and put back that evening by my own decision with the
-  failed row written beside it; all of that is written down, not hidden
+- **43.25 BLEU** on the FLORES devtest, as the user sees it, from under 30 in
+  the first builds and 37.72 the first time I wrote it down — when the model's
+  own language tag still leaked into 308 of 1,012 outputs; now 0
+- **11.9% WER** on held-out Bosnian speech, from listeners that began above 55%
+  and 38.5% the first time I wrote it down. That listener, a whisper-large-v3 I
+  trained, failed the Bosnian-ness gate I wrote before training it, twice, so by
+  my own rule it gets no further look; it was found in the published bundle
+  anyway, swept in before the gate ran, taken out the day it was closed, and put
+  back that evening by my own decision with the failed row written beside it.
+  The gated whisper-small reads 34.9% and stays the baseline. All of that is
+  written down, not hidden
 - **67.0%** of words read correctly per photograph, from under 30% at the start
   and 36% the first time I wrote the number down
 

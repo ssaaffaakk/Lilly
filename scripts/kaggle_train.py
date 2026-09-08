@@ -897,8 +897,8 @@ def main() -> int:
             print("  unzip lilly-ordinals.zip beside training/: the two hypotheses files,")
             print("    the two RESULTS-product-*-kaggle.md, the four compare-*.json. Commit them,")
             print("    then apply the pre-registered rule (PREREGISTRATION.md, 'v4 -- translate")
-            print("    -- ordinals'): the re-measured figures replace 42.49 / 67.69 and")
-            print("    42.18 / 67.47 in README.md, RESULTS-product.md and the model card,")
+            print("    -- ordinals'): the re-measured figures replace the served-path numbers")
+            print("    in README.md, RESULTS-product.md and the model card (done 8 Sep: 43.25 / 68.10),")
             print("    whichever way they moved, with the interval and the device-drift row.")
         elif args.job == "outside-baseline":
             print("  unzip lilly-outside-baseline.zip; the JSON goes to")

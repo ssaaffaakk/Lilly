@@ -31,8 +31,8 @@ ENV HOME=/home/lilly \
     LILLY_DB=/tmp/feedback.db \
     PORT=7860
 # /app has to exist AND belong to lilly before WORKDIR touches it. WORKDIR
-# creates a missing directory as root, and fetch_models.py then writes 900 MB of
-# weights into /app/models as user 1000 — which fails on permission, during the
+# creates a missing directory as root, and fetch_models.py then writes about 2.3 GB
+# of weights into /app/models as user 1000 — which fails on permission, during the
 # build, after the dependencies have already installed.
 RUN mkdir -p /app && chown lilly:lilly /app
 WORKDIR /app
@@ -66,6 +66,7 @@ RUN python3 -c "from app.ocr import get_paddle_reader; get_paddle_reader()" \
     && python3 -c "import cv2; assert cv2.__version__ == '4.10.0', cv2.__version__"
 
 EXPOSE 7860
-# One worker on purpose — a second would load its own copy of 900 MB of weights,
-# and the free tier's 16 GB is generous but not free of consequence.
+# One worker on purpose — a second would load its own copy of the weights (about
+# 2.3 GB with the large listener), and the free tier's 16 GB is generous but
+# not free of consequence.
 CMD ["sh", "-c", "uvicorn app.server:app --host 0.0.0.0 --port ${PORT} --workers 1"]

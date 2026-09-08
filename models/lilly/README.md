@@ -322,7 +322,7 @@ earlier scorer: word error 38.5% → 34.9%, Bosnian term recall 65.9% → 68.2%,
 wrong-variety substitutions 5.1% → 3.3%.
 
 **The larger listener: refused at its gate, shipped by decision.** A whisper-large-v3
-fine-tune reads 11.9% word error against the shipped listener's 34.9% on the
+fine-tune reads 11.9% word error against the gated whisper-small's 34.9% on the
 same 200 clips (`training/SPEECHBENCH-gate.txt`). It has to clear three rows,
 not one: word error, Bosnian term recall, and Croatian substitution — how often
 it writes the Croatian form of a word where the Bosnian one was said.
@@ -404,8 +404,9 @@ This section exists because a README that only lists wins is not worth trusting.
   measured here separates *learned better Bosnian* from *adapted to news style*.
 - **Against an outside system Lilly wins, and mostly not on its own merit.**
   `facebook/nllb-200-distilled-600M` on the same 2,009 FLORES-200 pairs scores
-  36.49 BLEU bs→en against Lilly's 42.14, and 26.07 en→bs against 29.57 — a
-  model 2.6× and 8× larger, beaten in both directions
+  36.49 BLEU bs→en against Lilly's 42.14 (whole rows through
+  `training/evaluate.py`, not the served path), and 26.07 en→bs against 29.57 —
+  a model 2.6× and 8× larger, beaten in both directions
   (`training/RESULTS-outside-baseline.md`). But the untouched Helsinki base
   already accounts for +5.11 of that +5.65 BLEU. What the fine-tune itself adds
   is small and its sign depends on the path: −0.79 chrF2 on whole rows, **+0.15
@@ -413,16 +414,16 @@ This section exists because a README that only lists wins is not worth trusting.
   41.77 / 67.66 on all 2,009 pairs, re-measured 8 September;
   `training/RESULTS-product.md`). Its clearest win is not in either column:
   **308 of 1,012 base outputs leaked the model's language tag into the text, and
-  0 do after.** In the reply direction the published bundle has no fine-tune
-  yet, so that margin is the base's. **The win belongs largely to OPUS-MT**,
+  0 do after.** In the reply direction that row was measured on the base
+  (29.57 BLEU / 58.96 chrF2), before the 8 September fine-tune (30.73 / 60.00),
+  so that margin is the base's. **The win belongs largely to OPUS-MT**,
   which this project builds on and did not train. And NLLB-600M is the distilled
   small variant: Google, DeepL, the 3.3B NLLB and the large general models were
   not tested, so none of this is a claim about the state of the art.
-- **English → Bosnian is not published yet, and stays the weaker direction.**
-  The fine-tune cleared its bars (above) but the bundle serves the untuned base
-  until the owner publishes. Even fine-tuned, it starts from a smaller base than
-  the forward direction and reads 60.00 chrF2 where the forward direction reads
-  68.10.
+- **English → Bosnian stays the weaker direction.** The fine-tune cleared its
+  bars (above) and has been in the bundle since 8 September, but it starts from
+  a smaller base than the forward direction and reads 60.00 chrF2 where the
+  forward direction reads 68.10.
 - **The photograph scores are recognition, not phone reality.** The evaluated
   images come from Wikimedia Commons. Real photographs taken on a phone in
   Bosnia would be the honest test, and there is not a labelled set of them yet.
@@ -455,7 +456,7 @@ in [`docs/V2-BOUNDARIES.md`](https://github.com/ssaaffaakk/Lilly/blob/main/docs/
 | --- | --- | --- |
 | Translation | LoRA or full fine-tune, either direction → adapter zip | pre-registered bars on FLORES, form rate and label steering |
 | Speech half 1 | one epoch → `lilly-listen-half1.zip` | training exits 0; no quality claim here |
-| Speech half 2 | resumes for epoch 2, then scores WER → `lilly-listen.zip` | WER must beat the shipped listener |
+| Speech half 2 | resumes for epoch 2, then scores WER → `lilly-listen.zip` | AFTER WER on the 200 held-out clips, never skipped; shipping is decided by the instrument below |
 | Speech instrument | scores two listeners on all 925 clips | the three gate rows, both not either |
 | OCR | harvest, real crops, synthetic crops → `lilly-read.zip` | install gate must pass; the line is paused, see the roadmap |
 

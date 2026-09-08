@@ -91,14 +91,14 @@ real-input number, commit `training/highres/`, and the cloud reads it back. It
 changes no weights; it reframes the number, upward, and validates the reader for
 the photos a user actually takes.
 
-**Docs to reconcile (found 7 Sep, needs the owner's publish knowledge):** the app
-defaults to PP-OCRv6 (step 6, committed), but the root `README.md` "built from"
-table and the (gitignored) model card still list the reader as EasyOCR and the
-listener as whisper-small. The published HF bundle still carries whisper-small
-(248 MB `listen/model.bin`), so the whisper-large-v3 listener (WER 11.8%, half 2,
-1 Sep) is **Mac-local and unpublished** — the shipped listener is still small
-(WER ~35%). Reconciling these needs the owner's knowledge of what is actually
-published, so it is flagged here rather than guessed.
+**Docs reconciled 8 Sep.** The root `README.md`, the model card (now tracked as
+`models/lilly/README.md`, generated from the README by
+`scripts/sync_model_card.py`) and the published bundle agree: the reader is
+PP-OCRv6 (step 6), and the listener is whisper-large-v3 (11.9% word error on the
+200 held-out clips), shipped 8 Sep by the owner's decision after it was refused
+at its pre-registered gate on the Croatian row; the gated whisper-small (34.9%)
+stays the baseline. The record is in `training/PREREGISTRATION.md`, "The owner's
+decision".
 `training/RESULTS-ocr-detection.md`, `training/PREREGISTRATION.md`.
 
 ---
