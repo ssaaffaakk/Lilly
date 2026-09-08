@@ -13,9 +13,10 @@ Every weight Lilly needs lives under models/lilly/ and is read straight off
 this disk — nothing is fetched over the network. Each ability loads the first
 time it is used, so starting Lilly costs nothing and unused parts stay unread.
 
-reply() is the one ability that can be absent on a working install. Its weights
-are not in the published bundle — they are built locally from an upstream base
-(see OPTIONAL below) — so a fresh clone has the other four and not this one.
+reply() is the one ability that can be absent on a working install. The
+published bundle has carried its weights (translator-en-bs/) since 8 September
+2026 and fetch_models.py pulls them, but an install fetched before that, or one
+built from the upstream base by hand (see OPTIONAL below), may not have them.
 That is a missing download, not a broken install, and the two are reported
 differently: missing() is fatal, missing_optional() is a sentence.
 """
@@ -42,13 +43,16 @@ class BadInput(ValueError):
 
 
 # What a working install must have, and what it may not. The reply direction is
-# in the second group because it is not in the published bundle: fetch_models.py
-# cannot bring it, and it is built here from an upstream base instead. Putting it
-# in the first group would make a perfectly good four-ability install exit 1.
+# in the second group because the app worked without it for two weeks and older
+# fetches do not have it: the bundle carries it since 8 September 2026 and
+# fetch_models.py pulls it, but a four-ability install is still a good install
+# and must not exit 1.
 REQUIRED = (TRANSLATOR_DIR, LISTEN_DIR, SPEAK_DIR, READ_DIR)
 OPTIONAL = {
     TRANSLATOR_EN_BS_DIR: (
-        "the reply direction (English -> Bosnian). Build it with:\n"
+        "the reply direction (English -> Bosnian). Fetch it with:\n"
+        "    python3 scripts/fetch_models.py\n"
+        "or build it from the upstream base:\n"
         "    python3 scripts/fetch_translate_base.py --direction en-bs\n"
         "    python3 scripts/build_translator.py --direction en-bs"),
 }

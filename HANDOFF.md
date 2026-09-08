@@ -51,8 +51,10 @@ how Lilly scores.
 
 ## Open, in order of urgency
 
-0. **The published bundle carries an ungated listener, and the owner has to
-   decide what happens to it.** Verified 8 September from the Hugging Face API:
+0. **Resolved 8 September, 11:31 UTC: the bundle's `listen/` is the gated
+   whisper-small again (248,203,797 bytes, fingerprint a76342f6ab59b382), and
+   `scripts/publish_to_hf.py` refuses any other listener by fingerprint. What
+   follows is the record of how it got there.** Verified 8 September from the Hugging Face API:
    `Safak11/lilly` `listen/model.bin` is 1,558,949,857 bytes (LFS sha
    `8b756776…`), `listen/built.json` says `openai/whisper-large-v3`, last
    modified 5 September. The 4–5 September reader publish swept the Mac's

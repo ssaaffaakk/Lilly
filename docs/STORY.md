@@ -45,8 +45,8 @@ published the numbers — including the ones that didn’t flatter me:
 - **34.9% WER** on held-out Bosnian speech, from listeners that began above 55%;
   a whisper-large-v3 I trained reads **11.9%** — and failed the Bosnian-ness gate
   I wrote before training it, twice, so by my own rule it is closed; it was found
-  in the published bundle anyway, swept in before the gate ran, and that is
-  written down, not hidden
+  in the published bundle anyway, swept in before the gate ran, taken out the
+  day it was closed, and that is written down, not hidden
 - **67.0%** of words read correctly per photograph, from under 30% at the start
   and 36% the first time I wrote the number down
 

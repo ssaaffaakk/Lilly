@@ -317,5 +317,7 @@ with the greedy decode (3.0% → 6.2%, p = 0.023). The cause — a cache keyed o
 file name — is fixed in `training/speech_bench.py`; the Kaggle cache was not
 installed over this Mac's.
 
-Left with the owner: the published bundle has carried this listener, ungated,
-since 4 September; reverting `listen/` to whisper-small is a publish act.
+The published bundle carried this listener, ungated, from 4 to 8 September;
+`listen/` went back to whisper-small (fingerprint a76342f6ab59b382) with the
+8 September publish, 11:31 UTC, and `scripts/publish_to_hf.py` now refuses any
+listener but the gated one.

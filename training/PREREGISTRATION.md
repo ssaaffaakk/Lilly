@@ -2040,9 +2040,11 @@ Controls, reported and unable to move the decision:
 
 What happened next: `scripts/build_translator.py --direction en-bs` merged the
 adapter and rebuilt the served model — `models/lilly/translator-en-bs`,
-`built.json` `fine_tuned: true`, 77 MB int8. **Not published.** Publishing is
-the owner's act, and the served build has not yet been scored through its own
-path (the sentence splitter and int8), which is a separate measurement.
+`built.json` `fine_tuned: true`, 77 MB int8. Published by the owner the same
+day, 11:31 UTC, as `translator-en-bs/` in `Safak11/lilly`, bound to the build
+digest in `training/RESULTS-en-bs-formrate.md`. The served build has not yet
+been scored through its own path (the sentence splitter and int8), which is a
+separate measurement.
 
 What this does not settle, restated: the ceiling of `tc-base`. And nothing
 here makes the two directions comparable — the forward direction reads 67.47
@@ -2387,10 +2389,12 @@ not an agent's. By the letter of rule 3 the line is closed as of this run, and
 nothing in the deciding row suggests a re-execution would land elsewhere. Until
 the owner rules otherwise, closed is what stands.
 
-Two things this leaves with the owner: the published bundle has carried this
-closed candidate as `listen/` since the 4 September publish (`d36a67f`,
-`6cf069b`), and putting whisper-small back is a publish act; and the README's
-speech table, which this outcome makes current.
+Two things this left with the owner, both done the same day: the published
+bundle had carried this closed candidate as `listen/` since the 4 September
+publish (`d36a67f`, `6cf069b`), and the 11:31 UTC publish put the gated
+whisper-small (a76342f6ab59b382) back, with `scripts/publish_to_hf.py`
+refusing any other listener by fingerprint; and the README's speech table was
+rewritten to this outcome.
 
 ---
 

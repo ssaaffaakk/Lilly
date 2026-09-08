@@ -100,4 +100,5 @@ Run, fetched, re-measured, decided: every bar above holds (chrF2 60.00, BLEU
 the adapter (`built.json` `fine_tuned: true`); the notebook's cell 0 is back
 on `bs-en` / `fullft`. Numbers and controls: `training/PREREGISTRATION.md`,
 "Outcome, 8 September 2026 — the LoRA fine-tune clears all four bars".
-Publishing the bundle is the owner's step and has not been done.
+Published 8 September 2026 (Hugging Face commit 11:31 UTC): `translator-en-bs/`
+is in the bundle and `scripts/fetch_models.py` pulls it.

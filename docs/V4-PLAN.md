@@ -18,10 +18,10 @@ counts and intervals beside every delta; heavy compute on Kaggle
 
 | lane | state | next |
 |---|---|---|
-| speech instrument (last look at large-v3) | **done, does not ship; rule 3: large-v3 closed** — Croatian 6.1% (8/131) against 1.1% (1/87), p = 0.018; word error and term recall pass; rubric WER 39.5% / 14.1% | **owner**: revert the bundle's `listen/` to whisper-small; README speech table |
-| en-bs LoRA | **ships by the rule** — re-measured on the Mac: chrF2 60.00, BLEU 30.73, form rate 99.2%, label gap 22.5 points, all four bars hold; served build rebuilt with the adapter | **owner**: publish the bundle; then runs A and B below |
+| speech instrument (last look at large-v3) | **done, does not ship; rule 3: large-v3 closed** — Croatian 6.1% (8/131) against 1.1% (1/87), p = 0.018; word error and term recall pass; rubric WER 39.5% / 14.1% | bundle reverted to whisper-small with the 8 Sep publish; README rewritten |
+| en-bs LoRA | **ships by the rule** — re-measured on the Mac: chrF2 60.00, BLEU 30.73, form rate 99.2%, label gap 22.5 points, all four bars hold; served build rebuilt with the adapter | published 8 Sep (`translator-en-bs/` in the bundle); next: runs A and B below |
 | test-v2b | 160 photographs on the Mac, attribution committed, blind sheets written and empty | two blind passes, then `build_truth`, then one score on test-v2 ∪ test-v2b |
-| published bundle | `Safak11/lilly` `listen/` has been whisper-large-v3 since the 4 September publish, before the gate refused it | **owner**: reconcile with the 7 September decision |
+| published bundle | `listen/` was whisper-large-v3 from the 4 September publish until 8 Sep 11:31 UTC | reverted; `publish_to_hf.py` now refuses an ungated listener and binds the reply build to its numbers |
 
 ## What the evidence says before anything is launched
 
@@ -117,8 +117,8 @@ from use rather than from corpora.
 
 ## Decisions that belong to the owner
 
-1. Publish or not: large-v3 (if the instrument passes) and the en-bs adapter
-   (if the four bars hold). The bundle currently carries large-v3 already.
+1. ~~Publish or not~~ — decided 8 Sep: large-v3 closed and taken out of the
+   bundle; the en-bs build published.
 2. test-v2b blind passes: vision agents, people, or both.
 3. Shop signs in scope? Decides whether the 20,240 Mapillary photographs can
    ever become training data.
