@@ -1,7 +1,10 @@
 #!/bin/zsh
 # Send the Space to Hugging Face. Run from the repository root:
 #
-#     HF_TOKEN='hf_...' zsh space/push.sh Safak11/lilly-demo
+#     zsh space/push.sh Safak11/lilly-demo
+#
+# The token is the one `hf auth login` stored (huggingface_hub's get_token()),
+# so nothing is pasted on a command line; HF_TOKEN in the environment overrides.
 #
 # A Space is a git repository, so this stages exactly the files it needs —
 # the Space Dockerfile as ./Dockerfile, the card as ./README.md, and the app
@@ -18,9 +21,18 @@
 set -eu
 REPO=${1:?usage: push.sh <user>/<space-name> [--dry-run]}
 DRY=${2:-}
-[ "$DRY" = "--dry-run" ] || : ${HF_TOKEN:?HF_TOKEN is not set}
-
 ROOT=$(cd "$(dirname "$0")/.." && pwd)
+# The repository's own interpreter: huggingface_hub lives in .venv, and the
+# system python3 does not have it.
+PY_BIN="$ROOT/.venv/bin/python"
+[ -x "$PY_BIN" ] || PY_BIN=python3
+# The token `hf auth login` stored, unless HF_TOKEN is already set. Never printed.
+if [ "$DRY" != "--dry-run" ] && [ -z "${HF_TOKEN:-}" ]; then
+  HF_TOKEN=$("$PY_BIN" -c 'from huggingface_hub import get_token; print(get_token() or "")')
+  export HF_TOKEN
+fi
+[ "$DRY" = "--dry-run" ] || : ${HF_TOKEN:?no token: run .venv/bin/hf auth login, or set HF_TOKEN}
+
 STAGE=$(mktemp -d)
 trap 'rm -rf "$STAGE"' EXIT
 
@@ -46,10 +58,6 @@ find "$STAGE" -type f | sed "s|$STAGE/|  |" | sort | head -20
 
 # A git push does not create a Space; without this the remote simply is not
 # there and the push fails with "Repository not found" after staging everything.
-# The repository's own interpreter: huggingface_hub lives in .venv, and the
-# system python3 does not have it.
-PY_BIN="$ROOT/.venv/bin/python"
-[ -x "$PY_BIN" ] || PY_BIN=python3
 "$PY_BIN" - "$REPO" "$DRY" <<'PYTHON'
 import os, sys
 from huggingface_hub import HfApi
