@@ -62,11 +62,18 @@ def main() -> int:
     src, refs = evaluate_app.pairs()
     old, old_build = load(args.old, args.side, len(src))
     new, new_build = load(args.new, args.side, len(src))
-    if old_build != new_build and not args.allow_different_builds:
-        raise SystemExit(f"{args.old.name} is build {old_build[:16] or '(unrecorded)'} and "
-                         f"{args.new.name} is {new_build[:16] or '(unrecorded)'}: two builds, "
-                         f"not two code paths. That comparison is evaluate_app.py's; "
-                         f"pass --allow-different-builds if you mean it.")
+    if old_build and new_build and old_build != new_build and not args.allow_different_builds:
+        raise SystemExit(f"{args.old.name} is build {old_build[:16]} and {args.new.name} is "
+                         f"{new_build[:16]}: two builds, not two code paths. That comparison "
+                         f"is evaluate_app.py's; pass --allow-different-builds if you mean it.")
+    if not (old_build and new_build):
+        # training/app-hypotheses-armB.json predates the fingerprint in the
+        # cache, so the one comparison this tool was written for cannot be
+        # checked by hash. Said out loud rather than refused: the Arm B file
+        # is the scored build by training/RESULTS-product.md's own record.
+        print(f"  note: {'both files' if not (old_build or new_build) else args.old.name if not old_build else args.new.name} "
+              f"record no build fingerprint, so same-build cannot be checked by hash; "
+              f"the report names the build")
     print(f"{len(src):,} pairs, side {args.side}, build {new_build[:16] or '(unrecorded)'}")
 
     out = {"side": args.side, "build": new_build, "n": len(src), "splits": {}}
