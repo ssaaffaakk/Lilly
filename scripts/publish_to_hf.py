@@ -38,8 +38,19 @@ BUNDLE = REPO_ROOT / "models" / "lilly"
 PUBLISH_DIRS = {
     "translator": {
         "what": "Bosnian text -> English text (CTranslate2, int8)",
+        # Every file build_translator.py writes. Two of the three this list used
+        # to omit are load-critical, tested rather than assumed (8 Sep 2026):
+        # without shared_vocabulary.json ctranslate2.Translator raises "Cannot
+        # load the target vocabulary from the model directory", and without
+        # tokenizer_config.json AutoTokenizer falls through to AutoConfig and
+        # raises "Unrecognized model ... should have a model_type key".
+        # special_tokens_map.json loads without complaint but is part of the
+        # build the digest names, so it belongs here too. The old six-name list
+        # called itself "what the app cannot start without" and was not; and
+        # translator-en-bs/ was published FROM it -- see REPLY_DIR.
         "needs": ("built.json", "config.json", "model.bin",
-                  "source.spm", "target.spm", "vocab.json"),
+                  "shared_vocabulary.json", "source.spm", "special_tokens_map.json",
+                  "target.spm", "tokenizer_config.json", "vocab.json"),
     },
     "listen": {
         "what": "spoken Bosnian -> Bosnian text (CTranslate2, int8)",
@@ -93,8 +104,15 @@ LISTEN_FINGERPRINT = "a76342f6ab59b382"
 # must say fine_tuned with the adapter the numbers were measured on.
 REPLY_DIR = {
     "what": "English text -> Bosnian text (CTranslate2, int8), the reply direction",
+    # The same nine as translator/, and for the same tested reason. The six-name
+    # version of this list was used as the UPLOAD list on 8 September, so the
+    # published translator-en-bs/ arrived without shared_vocabulary.json,
+    # tokenizer_config.json and special_tokens_map.json and could not be loaded
+    # at all: /api/reply answered 500 on every fresh install. check_reply now
+    # uploads the directory, like every other published folder.
     "needs": ("built.json", "config.json", "model.bin",
-              "source.spm", "target.spm", "vocab.json"),
+              "shared_vocabulary.json", "source.spm", "special_tokens_map.json",
+              "target.spm", "tokenizer_config.json", "vocab.json"),
 }
 REPLY_RECORD = REPO_ROOT / "training" / "RESULTS-en-bs-formrate.md"
 
@@ -185,6 +203,27 @@ def size_of(rels) -> int:
     return sum((BUNDLE / r).stat().st_size for r in rels)
 
 
+def fingerprint_of(rels) -> str:
+    """build_fingerprint over an explicit list of bundle-relative paths.
+
+    The point is that the digest is taken of the files that are about to be
+    uploaded, not of the directory they happen to sit in. Hashing the directory
+    while uploading a subset is how translator-en-bs/ went up incomplete on
+    8 September with a digest that matched the record: the guard said "these are
+    the scored weights" about files the upload did not carry.
+    """
+    digest = hashlib.blake2b(digest_size=16)
+    for rel in sorted(rels, key=lambda r: Path(r).name):
+        name = Path(rel).name
+        if name == "built.json":
+            continue
+        digest.update(name.encode("utf-8"))
+        with open(BUNDLE / rel, "rb") as f:
+            for chunk in iter(lambda: f.read(1 << 20), b""):
+                digest.update(chunk)
+    return digest.hexdigest()
+
+
 def listen_fingerprint(build: Path) -> str:
     """training/speech_bench.py's fingerprint(), first 16 hex digits -- kept
     identical on purpose so the publisher and the gate name a build the same way."""
@@ -246,15 +285,21 @@ def check_reply(publish: dict, problems: list) -> None:
     if built.get("adapter_md5") != want_adapter:
         problems.append(f"translator-en-bs was built from adapter {built.get('adapter_md5')}, "
                         f"not {want_adapter}, the one the numbers were measured on")
-    actual = build_fingerprint(directory)
+    # The whole directory, exactly like translator/ and every other published
+    # folder that is not marked "only". Never a hand-written subset: a name
+    # forgotten here is a file missing from the bundle, and the app finds out
+    # at the first request.
+    found = files_under(directory)
+    publish["translator-en-bs"] = found
+    # ... and the digest is taken of that list, so a short upload cannot pass
+    # the check that says these are the weights the numbers were measured on.
+    actual = fingerprint_of(found)
     if actual != want_build:
-        problems.append(f"translator-en-bs is build {actual}, but the results name "
-                        f"{want_build}; publishing it would put one model's weights behind "
-                        "another's numbers")
+        problems.append(f"the translator-en-bs files about to be uploaded are build {actual}, "
+                        f"but the results name {want_build}; publishing them would put one "
+                        "model's weights behind another's numbers")
     else:
         print(f"translator-en-bs matches the recorded served build: {actual}")
-    publish["translator-en-bs"] = [Path("translator-en-bs") / n for n in REPLY_DIR["needs"]
-                                   if (directory / n).is_file()]
 
 
 def preflight(allow_listen: str | None = None, with_reply: bool = False) -> tuple:
@@ -610,6 +655,16 @@ def main() -> int:
     refuse_secrets(BUNDLE)
 
     problems, publish = preflight(args.allow_listen, args.with_reply)
+    # refuse_unmeasured_weights above hashed the directory; this hashes the
+    # files the upload will actually carry. They agree unless the publish list
+    # is short, which is the failure this pair exists to catch.
+    if "translator" in publish:
+        expected = scored_build()
+        sending = fingerprint_of(publish["translator"])
+        if expected and sending != expected:
+            problems.append(f"the translator files about to be uploaded are build {sending}, "
+                            f"but the scored build is {expected}: the upload list is not the "
+                            "directory that was scored")
     if problems:
         print("\nnot ready to publish:", file=sys.stderr)
         for problem in problems:

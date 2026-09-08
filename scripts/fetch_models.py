@@ -65,6 +65,31 @@ CARD_FILES = ("README.md", "NOTICE.md")
 # results file that says a different listener ships.
 GATED_LISTEN_FINGERPRINT = "a76342f6ab59b382"
 
+# What a served translator directory cannot be loaded without. Tested, not
+# assumed (8 Sep 2026): drop shared_vocabulary.json and ctranslate2.Translator
+# raises "Cannot load the target vocabulary from the model directory"; drop
+# tokenizer_config.json and AutoTokenizer falls through to AutoConfig and
+# raises "Unrecognized model ... should have a model_type key". Checked here
+# because a bundle can be published incomplete -- translator-en-bs/ was, on
+# 8 September, and the first anyone knew of it was /api/reply answering 500 on
+# a running Space. An install that cannot serve a folder it fetched says so
+# here instead.
+TRANSLATOR_FILES = ("config.json", "model.bin", "shared_vocabulary.json",
+                    "source.spm", "target.spm", "tokenizer_config.json", "vocab.json")
+
+
+def incomplete_translators() -> dict:
+    """{folder: [missing files]} for every translator build that is here but broken."""
+    out = {}
+    for part in ("translator",) + OPTIONAL:
+        build = DEST / part
+        if not build.is_dir():
+            continue
+        missing = [n for n in TRANSLATOR_FILES if not (build / n).is_file()]
+        if missing:
+            out[part] = missing
+    return out
+
 
 def listen_fingerprint(build: Path) -> str:
     """training/speech_bench.py's fingerprint(), first 16 hex digits: md5 over
@@ -178,6 +203,17 @@ def main() -> int:
             print(f"{part}/: {'present' if (DEST / part).is_dir() else 'not in this bundle (optional)'}")
         size = sum(f.stat().st_size for f in DEST.rglob("*") if f.is_file())
         print(f"ready: {size / 1073741824:.2f} GB in {DEST}")
+
+    broken = incomplete_translators()
+    if broken:
+        for part, missing in broken.items():
+            print(f"\n{part}/ is in this bundle but cannot be loaded: missing "
+                  f"{', '.join(missing)}", file=sys.stderr)
+        print("The published bundle is incomplete, not this machine: fetching it again "
+              "will fetch the same files. Whoever published it should run "
+              "scripts/publish_to_hf.py again (it uploads the whole directory since "
+              "8 Sep 2026) and this install should then be re-fetched.", file=sys.stderr)
+        return 1
 
     gated = check_listener(DEST / "listen")
     if not args.skip_reader_warmup:
