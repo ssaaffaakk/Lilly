@@ -27,7 +27,7 @@ GITHUB = "https://github.com/ssaaffaakk/Lilly/blob/main/"
 RAW = "https://raw.githubusercontent.com/ssaaffaakk/Lilly/main/"
 # Sections of the existing card that are not in the README and must stay.
 TAIL_START = "# Credits and licenses"
-LAYOUT_START, LAYOUT_END = "## Layout", "# Where it started"
+LAYOUT_START = "## Layout"
 
 
 def yaml_header(card_text: str) -> str:
@@ -38,12 +38,18 @@ def yaml_header(card_text: str) -> str:
 
 
 def section(card_text: str, start: str, end: str | None) -> str:
+    """From `start` up to `end`, or -- when end is None -- to the end of the
+    card. For the layout section `end` is the next H1 heading, whatever it is,
+    so the tool can re-read the card it wrote (where Credits follows Layout)."""
     a = card_text.find(start)
     if a < 0:
         raise SystemExit(f"the existing card has no {start!r} section")
-    b = card_text.find(end, a) if end else len(card_text)
-    if b < 0:
-        raise SystemExit(f"the existing card has no {end!r} after {start!r}")
+    if end is None:
+        b = len(card_text)
+    else:
+        b = card_text.find(end, a)
+        if b < 0:
+            raise SystemExit(f"the existing card has no {end!r} after {start!r}")
     return card_text[a:b].rstrip("\n") + "\n"
 
 
@@ -61,7 +67,7 @@ def render() -> str:
     card_text = CARD.read_text(encoding="utf-8")
     body = README.read_text(encoding="utf-8")
     header = yaml_header(card_text)
-    layout = section(card_text, LAYOUT_START, LAYOUT_END)
+    layout = section(card_text, LAYOUT_START, "\n# ")
     tail = section(card_text, TAIL_START, None)
     note = ("\n> This card is the project's README, mirrored here so the numbers live in one "
             "place (`scripts/sync_model_card.py`). The folder layout and the licenses that "
