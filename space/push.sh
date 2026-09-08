@@ -66,7 +66,7 @@ else
   # The same card, under the Gradio SDK's front matter: the body of
   # space/README.md is everything after its own front matter.
   {
-    printf '%s\n' '---' 'title: Lilly' 'emoji: 🇧🇦' 'colorFrom: blue' 'colorTo: gray' \
+    printf '%s\n' '---' 'title: Lilly' 'emoji: 🌉' 'colorFrom: blue' 'colorTo: gray' \
       'sdk: gradio' 'sdk_version: 6.18.0' 'python_version: "3.12"' 'app_file: lilly_space.py' \
       'pinned: false' 'license: other' 'models:' '  - Safak11/lilly' '---'
     awk 'seen >= 2 { print } /^---$/ { seen++ }' "$ROOT/space/README.md"
