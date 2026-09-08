@@ -66,6 +66,17 @@ DIRECTIONS = {
               "reads": "English", "writes": "Bosnian"},
 }
 
+# The base model prints its own language tag -- ">>bos_Latn<<", ">>eng<<" --
+# into the text of every third translation (308 of 1,012 FLORES devtest
+# outputs); the fine-tuned model into none. A tag is never part of a
+# translation, so the served path strips it whatever build is loaded: a future
+# build that leaked again would otherwise hand the defect straight to the
+# reader. The instrument keeps the count -- training/evaluate_app.py asks for
+# translate(strip_tags=False) and reports how many outputs leaked, then scores
+# both ways -- so stripping here changes what a user sees and not what is
+# measured. The pattern is evaluate_app.py's, applied per sentence.
+LANGUAGE_TAG = re.compile(r"^\s*(>>[a-zA-Z_]+<<\s*)+")
+
 _engines = {}
 _engine_lock = threading.Lock()
 # Translation is CPU-bound and the server hands requests to a wide threadpool.
@@ -114,7 +125,7 @@ class Engine:
         tuned = json.loads(built.read_text())["fine_tuned"] if built.exists() else False
         self.name = "Lilly (fine-tuned)" if tuned else "base model (not fine-tuned yet)"
 
-    def translate(self, text: str, truncate: bool = False) -> str:
+    def translate(self, text: str, truncate: bool = False, strip_tags: bool = True) -> str:
         """Source language in, target language out, per this engine's direction.
 
         The model silently drops sentences when fed several at once, so the text
@@ -125,6 +136,9 @@ class Engine:
         truncate=True quietly drops the overflow instead of refusing. That is for
         text the caller never typed — a photo of a dense page, a long recording —
         where a refusal would be baffling.
+
+        strip_tags=False returns the model's output with any leaked language
+        tag left in. Only a measurement wants that (LANGUAGE_TAG above).
         """
         sentences = [s for s in SENTENCE_BREAK.split(text.strip()) if s.strip()] or [text]
         # Every sentence carries the label, not just the first one: the splitter
@@ -157,7 +171,10 @@ class Engine:
                     group, beam_size=4, max_decoding_length=MAX_SENTENCE_TOKENS)
             for result in results:
                 ids = self.tokenizer.convert_tokens_to_ids(result.hypotheses[0])
-                out.append(self.tokenizer.decode(ids, skip_special_tokens=True))
+                decoded = self.tokenizer.decode(ids, skip_special_tokens=True)
+                if strip_tags:
+                    decoded = LANGUAGE_TAG.sub("", decoded).strip()
+                out.append(decoded)
         return " ".join(out)
 
     @staticmethod
