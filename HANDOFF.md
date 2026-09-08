@@ -17,8 +17,16 @@ when it stops being true; a stale handoff is worse than none.
 > kept: on 12 sentences / 104 words through the shipped listener it was heard
 > with 28 words wrong, speaker 1 with 34 -- inside the noise, so the default
 > stands (`scripts/fetch_speak_bs.py`). Both sit near 27% where real Bosnian
-> speech reads 11.9%: that is the voice's accent, measured. Open: whether that
-> voice is acceptable at all, or the spoken reply should be switched off.
+> speech reads 11.9%: that is the voice's accent, measured.
+>
+> **9 Sep, 01:30 CEST: `speak-bs` launched on Kaggle** (`afaksrmeli/lilly-speak-bs`
+> version 1, T4, commit b67ae2a) -- a Bosnian voice trained from the FLEURS
+> train clips, pre-registered as "v5 -- speak" in `training/PREREGISTRATION.md`
+> before the launch. About seven hours. On COMPLETE: `scripts/kaggle_train.py
+> speak-bs --fetch`, then `training/RESULTS-speak-bs.md` and the outcome under
+> the pre-registration whichever way it fell; `lilly-speak-bs.zip` exists only
+> if it cleared bar 1, and then goes over `models/lilly/speak-bs/`. Do not
+> relaunch the same recipe if it fails; a second run needs its own section.
 
 ## The three numbers
 
