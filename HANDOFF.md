@@ -51,8 +51,22 @@ how Lilly scores.
 
 ## Open, in order of urgency
 
-0. **The model card on the Mac (`models/lilly/README.md`, not in git) needs the
-   "Where it started" paragraph before the next `scripts/publish_to_hf.py`.** The
+0. **The published bundle carries an ungated listener, and the owner has to
+   decide what happens to it.** Verified 8 September from the Hugging Face API:
+   `Safak11/lilly` `listen/model.bin` is 1,558,949,857 bytes (LFS sha
+   `8b756776…`), `listen/built.json` says `openai/whisper-large-v3`, last
+   modified 5 September. The 4–5 September reader publish swept the Mac's
+   `models/lilly/listen` — already the large-v3 candidate — into the bundle
+   before any gate had run on it; the gate ran 7 September and refused it by
+   one word. Two options, both the owner's: roll `listen/` back to the gated
+   whisper-small (`listen-previous`, fingerprint `a76342f6ab59b382`) now, or
+   leave it until the pre-registered last look (`speech-instrument`) ships it or
+   closes it. Either way the README, STORY and Space card already say what is
+   in the bundle. `scripts/publish_to_hf.py` now refuses any `listen/` but the
+   gated one unless `--allow-listen <fingerprint>` names another on the command
+   line — the check that did not exist on 4 September.
+   **Also:** the model card on the Mac (`models/lilly/README.md`, not in git) needs the
+   "Where it started" paragraph before the next `scripts/publish_to_hf.py`. The
    repository README ("Where it started") and `space/README.md` carry the text
    and the numbers: the owner's first builds (< 30% found, > 280 invented,
    > 55% word error, < 30 BLEU), the first recorded numbers, and today's. The

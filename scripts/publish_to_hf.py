@@ -71,6 +71,22 @@ PUBLISH_DIRS = {
 # week while every document quoted 54.7%.
 READER_MD5 = "2010a2d417e6c253195fa3d95ff11d33"
 
+# The listener the published numbers were measured on. Same shape of failure
+# as the reader's, and it happened: the 4-5 September reader publish swept the
+# Mac's models/lilly/listen -- by then the whisper-large-v3 candidate, installed
+# 1 September, gate never run -- into Safak11/lilly (listen/model.bin
+# 1,558,949,857 bytes, LFS sha 8b756776...). The gate ran 7 September and refused
+# that build by one word. Nothing here had checked listen/. Now it does.
+#
+# The value is the fingerprint training/speech_bench.py printed for
+# listen-previous, the whisper-small the gate scored at 34.9%:
+# training/SPEECHBENCH-gate.txt, "listen-previous: weights a76342f6ab59b382".
+# The hash is speech_bench.fingerprint() -- md5 over every file in the
+# directory, sorted by name, name then bytes -- so the two agree by
+# construction and a build whose weights changed cannot match. Update this in
+# the same commit as the results file that says a different listener ships.
+LISTEN_FINGERPRINT = "a76342f6ab59b382"
+
 # Documentation that must go up with the weights. NOTICE.md is not optional:
 # CC-BY-4.0 on the translation weights and Apache-2.0 on two of the others
 # require the attribution to travel with what is redistributed.
@@ -143,6 +159,16 @@ def size_of(rels) -> int:
     return sum((BUNDLE / r).stat().st_size for r in rels)
 
 
+def listen_fingerprint(build: Path) -> str:
+    """training/speech_bench.py's fingerprint(), first 16 hex digits -- kept
+    identical on purpose so the publisher and the gate name a build the same way."""
+    h = hashlib.md5()
+    for name in sorted(p.name for p in build.iterdir() if p.is_file()):
+        h.update(name.encode())
+        h.update((build / name).read_bytes())
+    return h.hexdigest()[:16]
+
+
 def md5_of(path: Path) -> str:
     digest = hashlib.md5()
     with open(path, "rb") as f:
@@ -159,8 +185,12 @@ def excuse(name: str):
     return None
 
 
-def preflight() -> tuple:
+def preflight(allow_listen: str | None = None) -> tuple:
     """Everything wrong with the bundle, and the files that would go up.
+
+    `allow_listen` is the owner's explicit, named override for listen/: the
+    16-hex fingerprint of a listener that has cleared its pre-registered gate
+    since LISTEN_FINGERPRINT was written. It is printed, never defaulted.
 
     Returns (problems, publish_map). A non-empty problems list stops the run
     even when --upload was asked for: publishing half a bundle produces a
@@ -206,6 +236,30 @@ def preflight() -> tuple:
                                 "scored 54.7% / 180 (training/RESULTS-ocr-weights.md). Install that "
                                 "one before publishing; a different reader under the same name is "
                                 "exactly what this check exists to stop")
+        # The listener is the other file whose wrong version loads and scores
+        # without an error. Refuse any listen/ but the gated one, unless the
+        # owner names a different fingerprint on the command line -- which is
+        # the decision that publishing a listener is, made where it can be seen.
+        if name == "listen":
+            actual = listen_fingerprint(directory)
+            built = directory / "built.json"
+            base = ""
+            if built.is_file():
+                try:
+                    base = str(json.loads(built.read_text(encoding="utf-8")).get("base", ""))
+                except ValueError:
+                    base = "(built.json unreadable)"
+            print(f"listen/: fingerprint {actual}  base {base or '(no built.json)'}")
+            wanted = allow_listen or LISTEN_FINGERPRINT
+            if actual != wanted:
+                problems.append(
+                    f"listen/ is fingerprint {actual} ({base or 'unknown base'}), not {wanted}"
+                    + ("" if allow_listen else
+                       " -- the whisper-small the gate scored at 34.9% (training/SPEECHBENCH-gate.txt). "
+                       "A listener that has since cleared its pre-registered gate is published with "
+                       "--allow-listen <its fingerprint>, named on the command line, never by default. "
+                       "This check did not exist on 4 September and an ungated whisper-large-v3 went "
+                       "up under listen/; it exists now."))
 
     return problems, publish
 
@@ -449,6 +503,10 @@ def main() -> int:
     ap.add_argument("--public", action="store_true",
                     help="create the repository public; the default is private")
     ap.add_argument("--commit-message", default="Lilly model bundle")
+    ap.add_argument("--allow-listen", default=None, metavar="FINGERPRINT",
+                    help="publish a listen/ other than the gated whisper-small: the 16-hex "
+                         "fingerprint speech_bench.py printed for a listener that has cleared "
+                         "its pre-registered gate. Named here, never assumed.")
     args = ap.parse_args()
 
     print(f"bundle:  {BUNDLE}")
@@ -462,7 +520,7 @@ def main() -> int:
     check_card_metadata(BUNDLE / "README.md")
     refuse_secrets(BUNDLE)
 
-    problems, publish = preflight()
+    problems, publish = preflight(args.allow_listen)
     if problems:
         print("\nnot ready to publish:", file=sys.stderr)
         for problem in problems:
