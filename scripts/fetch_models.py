@@ -21,6 +21,11 @@ DEST = Path(__file__).resolve().parents[1] / "models" / "lilly"
 # and it is deliberately left out of the release. Expecting it here made a fresh
 # clone download the whole bundle and then fail with "still missing: translate".
 PARTS = ("translator", "listen", "speak", "read")
+# The reply direction (English -> Bosnian) is published only once its fine-tune
+# has cleared its pre-registered bars and the owner has put it in the bundle
+# (scripts/publish_to_hf.py --with-reply). Pulled when the repository has it;
+# its absence is not a failure, the app answers 503 on /api/reply and says why.
+OPTIONAL = ("translator-en-bs",)
 
 
 def main() -> int:
@@ -44,6 +49,8 @@ def main() -> int:
     if missing:
         print(f"still missing: {', '.join(missing)}", file=sys.stderr)
         return 1
+    for part in OPTIONAL:
+        print(f"{part}/: {'present' if (DEST / part).is_dir() else 'not in this bundle (optional)'}")
     size = sum(f.stat().st_size for f in DEST.rglob("*") if f.is_file())
     print(f"ready: {size / 1073741824:.2f} GB in {DEST}")
     return 0

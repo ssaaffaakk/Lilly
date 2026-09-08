@@ -131,10 +131,17 @@ def main() -> int:
 
     # Record what went in, so the app can say honestly which model it is serving
     # rather than guessing from whether an adapter folder happens to exist.
+    import hashlib
     import json
-    (dest / "built.json").write_text(json.dumps(
-        {"fine_tuned": source == merged_dir, "quantization": args.quantization,
-         "direction": args.direction}))
+    record = {"fine_tuned": source == merged_dir, "quantization": args.quantization,
+              "direction": args.direction}
+    if source == merged_dir:
+        # Which adapter went in, by content: the publisher binds a served build
+        # to the results measured on that adapter, and a folder name cannot
+        # carry that (models/lilly/ holds several adapters a word apart).
+        weights = adapter / "adapter_model.safetensors"
+        record["adapter_md5"] = hashlib.md5(weights.read_bytes()).hexdigest()
+    (dest / "built.json").write_text(json.dumps(record))
 
     if source == merged_dir:
         shutil.rmtree(merged_dir, ignore_errors=True)

@@ -207,3 +207,20 @@ outcome note in `training/PREREGISTRATION.md` says what follows from that.
     .venv/bin/python3 training/bosnian_form_rate.py --adapter models/lilly/adapter-en-bs --label tuned
     .venv/bin/python3 training/bosnian_form_rate.py --adapter models/lilly/adapter-en-bs --label tuned-hrv --tag ">>hrv<<"
     .venv/bin/python3 training/bosnian_form_rate.py --diagnose training/form-rate/tuned.json training/form-rate/tuned-hrv.json
+
+## The served build, bound to these numbers
+
+`scripts/build_translator.py --direction en-bs` merged the adapter measured
+above into `opus-mt-tc-base-en-sh` and quantised it to int8. The build records
+which adapter went in, by content, and the publisher refuses to upload any
+other build under this card.
+
+Adapter: md5 `c28a02c603f026eaa5e8b605465123b5` (`adapter_model.safetensors`).
+Served build: `6f240bb14aa56ea7ae1c8a19cb25faab` (blake2b over
+`models/lilly/translator-en-bs/`, `built.json` excluded, the same digest
+`scripts/publish_to_hf.py` and `training/evaluate_app.py` use).
+
+What has not been done: scoring this int8 build through the app's own path
+(`app.translate.Engine`, the sentence splitter). The numbers on this page are
+the adapter's, through `training/evaluate.py`; the forward direction's
+`training/RESULTS-product.md` shows the two paths can differ by a few tenths.

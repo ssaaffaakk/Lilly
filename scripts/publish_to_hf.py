@@ -87,6 +87,17 @@ READER_MD5 = "2010a2d417e6c253195fa3d95ff11d33"
 # the same commit as the results file that says a different listener ships.
 LISTEN_FINGERPRINT = "a76342f6ab59b382"
 
+# The reply direction, published only on request (--with-reply). It is bound
+# the same way the forward translator is: the build's digest must be the one
+# training/RESULTS-en-bs-formrate.md names as the served build, and built.json
+# must say fine_tuned with the adapter the numbers were measured on.
+REPLY_DIR = {
+    "what": "English text -> Bosnian text (CTranslate2, int8), the reply direction",
+    "needs": ("built.json", "config.json", "model.bin",
+              "source.spm", "target.spm", "vocab.json"),
+}
+REPLY_RECORD = REPO_ROOT / "training" / "RESULTS-en-bs-formrate.md"
+
 # Documentation that must go up with the weights. NOTICE.md is not optional:
 # CC-BY-4.0 on the translation weights and Apache-2.0 on two of the others
 # require the attribution to travel with what is redistributed.
@@ -185,7 +196,53 @@ def excuse(name: str):
     return None
 
 
-def preflight(allow_listen: str | None = None) -> tuple:
+def reply_record() -> tuple:
+    """(served build digest, adapter md5) the results file names, or ('', '')."""
+    if not REPLY_RECORD.exists():
+        return "", ""
+    text = REPLY_RECORD.read_text(encoding="utf-8")
+    build = re.search(r"Served build: `([0-9a-f]{32})`", text)
+    adapter = re.search(r"Adapter: md5 `([0-9a-f]{32})`", text)
+    return (build.group(1) if build else ""), (adapter.group(1) if adapter else "")
+
+
+def check_reply(publish: dict, problems: list) -> None:
+    """translator-en-bs/ goes up only as the build the results describe."""
+    directory = BUNDLE / "translator-en-bs"
+    if not directory.is_dir():
+        problems.append("--with-reply: no translator-en-bs/ -- build it with "
+                        "scripts/build_translator.py --direction en-bs")
+        return
+    for needed in REPLY_DIR["needs"]:
+        if not (directory / needed).is_file():
+            problems.append(f"missing translator-en-bs/{needed}")
+    try:
+        built = json.loads((directory / "built.json").read_text(encoding="utf-8"))
+    except (OSError, ValueError) as exc:
+        problems.append(f"translator-en-bs/built.json unreadable: {exc}")
+        return
+    want_build, want_adapter = reply_record()
+    if not want_build or not want_adapter:
+        problems.append(f"{REPLY_RECORD.name} names no served build / adapter for en-bs; "
+                        "nothing to bind these weights to")
+        return
+    if not built.get("fine_tuned") or built.get("direction") != "en-bs":
+        problems.append(f"translator-en-bs/built.json says {built} -- not the fine-tuned en-bs build")
+    if built.get("adapter_md5") != want_adapter:
+        problems.append(f"translator-en-bs was built from adapter {built.get('adapter_md5')}, "
+                        f"not {want_adapter}, the one the numbers were measured on")
+    actual = build_fingerprint(directory)
+    if actual != want_build:
+        problems.append(f"translator-en-bs is build {actual}, but the results name "
+                        f"{want_build}; publishing it would put one model's weights behind "
+                        "another's numbers")
+    else:
+        print(f"translator-en-bs matches the recorded served build: {actual}")
+    publish["translator-en-bs"] = [Path("translator-en-bs") / n for n in REPLY_DIR["needs"]
+                                   if (directory / n).is_file()]
+
+
+def preflight(allow_listen: str | None = None, with_reply: bool = False) -> tuple:
     """Everything wrong with the bundle, and the files that would go up.
 
     `allow_listen` is the owner's explicit, named override for listen/: the
@@ -261,6 +318,20 @@ def preflight(allow_listen: str | None = None) -> tuple:
                        "This check did not exist on 4 September and an ungated whisper-large-v3 went "
                        "up under listen/; it exists now."))
 
+    # The card and the upload must agree about the reply direction: a card that
+    # describes translator-en-bs/ over a bundle without it is a promise the
+    # bundle does not keep, and the reverse hides a model behind no numbers.
+    card = BUNDLE / "README.md"
+    card_says = card.is_file() and "translator-en-bs/" in card.read_text(encoding="utf-8")
+    if with_reply:
+        check_reply(publish, problems)
+        if not card_says:
+            problems.append("--with-reply, but the model card never mentions translator-en-bs/; "
+                            "the reply direction needs its own card entry before it is published")
+    elif card_says:
+        problems.append("the model card describes translator-en-bs/ but this publish does not "
+                        "include it (no --with-reply); fix one or the other")
+
     return problems, publish
 
 
@@ -279,13 +350,13 @@ def describe_translator() -> str:
             f"quantisation {data.get('quantization', 'unrecorded')}")
 
 
-def report_left_behind() -> list:
+def report_left_behind(published=()) -> list:
     """Print what is not going up, and return the names nothing accounts for."""
     unrecognised = []
     rows = []
     for entry in sorted(BUNDLE.iterdir()):
         name = entry.name
-        if name in PUBLISH_DIRS or name in PUBLISH_FILES or is_junk(Path(name)):
+        if name in PUBLISH_DIRS or name in PUBLISH_FILES or is_junk(Path(name)) or name in published:
             continue
         reason = excuse(name)
         if reason is None:
@@ -503,6 +574,9 @@ def main() -> int:
     ap.add_argument("--public", action="store_true",
                     help="create the repository public; the default is private")
     ap.add_argument("--commit-message", default="Lilly model bundle")
+    ap.add_argument("--with-reply", action="store_true",
+                    help="also publish translator-en-bs/ (English -> Bosnian), bound to the served "
+                         "build training/RESULTS-en-bs-formrate.md names; the card must describe it")
     ap.add_argument("--allow-listen", default=None, metavar="FINGERPRINT",
                     help="publish a listen/ other than the gated whisper-small: the 16-hex "
                          "fingerprint speech_bench.py printed for a listener that has cleared "
@@ -520,7 +594,7 @@ def main() -> int:
     check_card_metadata(BUNDLE / "README.md")
     refuse_secrets(BUNDLE)
 
-    problems, publish = preflight(args.allow_listen)
+    problems, publish = preflight(args.allow_listen, args.with_reply)
     if problems:
         print("\nnot ready to publish:", file=sys.stderr)
         for problem in problems:
@@ -534,7 +608,10 @@ def main() -> int:
         size = size_of(publish[name])
         total += size
         print(f"  {name:24} {human(size):>9}   1 file")
-    for name, spec in PUBLISH_DIRS.items():
+    dirs = dict(PUBLISH_DIRS)
+    if args.with_reply:
+        dirs["translator-en-bs"] = REPLY_DIR
+    for name, spec in dirs.items():
         group = publish[name]
         size = size_of(group)
         total += size
@@ -547,7 +624,7 @@ def main() -> int:
     if detail:
         print(detail)
 
-    unrecognised = report_left_behind()
+    unrecognised = report_left_behind(published=("translator-en-bs",) if args.with_reply else ())
     if unrecognised:
         print(f"\nstopped: {len(unrecognised)} entr"
               f"{'ies are' if len(unrecognised) > 1 else 'y is'} unaccounted for "
