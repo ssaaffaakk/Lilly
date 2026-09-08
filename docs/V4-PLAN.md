@@ -19,7 +19,7 @@ counts and intervals beside every delta; heavy compute on Kaggle
 | lane | state | next |
 |---|---|---|
 | speech instrument (last look at large-v3) | v4 launching on Kaggle; v2 died on an expired kernel Output, v3 on a baseline that was not the gate's | watch; fetch; write the outcome whichever way it falls |
-| en-bs LoRA | COMPLETE on Kaggle (v4); on-box FLORES BLEU 30.73 / chrF2 60.00 against 29.57 / 58.96 | the local re-measurement, form rate, and label control decide; then `build_translator --direction en-bs` only if every bar holds |
+| en-bs LoRA | **ships by the rule** — re-measured on the Mac: chrF2 60.00, BLEU 30.73, form rate 99.2%, label gap 22.5 points, all four bars hold; served build rebuilt with the adapter | **owner**: publish the bundle; then runs A and B below |
 | test-v2b | 160 photographs on the Mac, attribution committed, blind sheets written and empty | two blind passes, then `build_truth`, then one score on test-v2 ∪ test-v2b |
 | published bundle | `Safak11/lilly` `listen/` has been whisper-large-v3 since the 4 September publish, before the gate refused it | **owner**: reconcile with the 7 September decision |
 

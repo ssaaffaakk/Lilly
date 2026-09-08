@@ -8,6 +8,8 @@ Source label: **>>bos_Latn<<**. The references are Bosnian either way. This base
 |-------|----------|-------|------|-------|
 | Base (untuned) | in-house | 1500 | 31.94 | 58.74 |
 | Base (untuned) | FLORES-200 | 2009 | 29.57 | 58.96 |
+| Lilly (fine-tuned) | in-house | 1500 | 34.06 | 60.11 |
+| Lilly (fine-tuned) | FLORES-200 | 2009 | 30.73 | 60.00 |
 
 ## Which number to believe
 
@@ -17,12 +19,18 @@ Source label: **>>bos_Latn<<**. The references are Bosnian either way. This base
 
 A single average over a mixed set hides where a gain came from. SETIMES is clean news text; WikiMatrix is web-mined and roughly a sixth of it is misaligned, so a gain there may be style-fitting rather than translation quality.
 
-| Corpus | Pairs | Base BLEU | Base chrF2 |
-|--------|-------|-----------|-----------|
-| SETIMES | 604 | 41.59 | 67.33 |
-| TED2020 | 56 | 22.05 | 53.97 |
-| Tatoeba | 3 | 48.99 | 74.75 |
-| WikiMatrix | 837 | 23.48 | 51.13 |
+| Corpus | Pairs | Base BLEU | Base chrF2 | Lilly BLEU | Lilly chrF2 |
+|--------|-------|-----------|-----------|------------|-------------|
+| SETIMES | 604 | 41.59 | 67.33 | 43.91 | 68.64 |
+| TED2020 | 56 | 22.05 | 53.97 | 23.20 | 55.63 |
+| Tatoeba | 3 | 48.99 | 74.75 | 25.86 | 68.53 |
+| WikiMatrix | 837 | 23.48 | 51.13 | 25.28 | 52.50 |
+
+## Is the difference real
+
+On FLORES-200 the gap is **+1.16 BLEU**, paired bootstrap **p = 0.0010**, 95% interval **[+0.67, +1.65]**, and 100% of resamples favour Lilly.
+
+Read that as it is: at p = 0.0010 the gap clears the usual 0.05 bar and the 95% interval excludes zero, so on this test set the BLEU difference is *measured*, not merely leaned towards. It is still a small gap — the interval's low end is +0.67 BLEU — so the honest claim is that Lilly is better than the base model here, by a little.
 
 ---
 

@@ -92,3 +92,12 @@ than the forward direction's, Helsinki publishes nothing big out of English into
 this family, and a null here is what says whether a bigger base is the next move.
 Nothing in any write-up may imply the two directions are of comparable quality;
 on the evidence they are not, and the README already says so.
+
+## Outcome — 8 September 2026
+
+Run, fetched, re-measured, decided: every bar above holds (chrF2 60.00, BLEU
+30.73, form rate 99.2%, label gap 22.5 points). The served build now carries
+the adapter (`built.json` `fine_tuned: true`); the notebook's cell 0 is back
+on `bs-en` / `fullft`. Numbers and controls: `training/PREREGISTRATION.md`,
+"Outcome, 8 September 2026 — the LoRA fine-tune clears all four bars".
+Publishing the bundle is the owner's step and has not been done.

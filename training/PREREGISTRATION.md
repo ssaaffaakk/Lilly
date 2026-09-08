@@ -1990,6 +1990,68 @@ leaks its language tag into **0 of 2,009** outputs, where the bs-en base leaks
 it in 433 of 1,012. A fine-tune that starts leaking it would be introducing a
 defect the base does not have, and that belongs in the write-up if it happens.
 
+### Outcome, 8 September 2026 — the LoRA fine-tune clears all four bars; it ships
+
+Run: Kaggle T4, `lilly-translation-en-bs` version 4, the pre-registered recipe
+(`ARM = "lora"`, r=16, same corpus, same band, same seed as the forward
+direction). Version 2 died in `build_training_mix.py`'s step-6 drift check —
+it counted every pair through the forward base's tokenizer orientation, which
+under this base put Bosnian text through the English `source.spm` and "found"
+4,067 over-length pairs. Fixed at the cause in `4dfcc18`: the cap is measured
+the way the trainer feeds this direction, and under this tokenizer it drops
+**656** pairs (the forward base's column, 753, is untouched); steps 1–5, the
+band and the seed are identical to the forward corpus. That is the one place
+the run's corpus differs from the forward one, and it is the 128-token cap
+doing what it is for.
+
+Re-measured on the Mac with `training/evaluate.py` and
+`training/bosnian_form_rate.py` — the same code, the same 2,009 pairs and the
+same 338 targets as the base rows above. The on-box numbers reproduce to the
+second decimal.
+
+| | base | bar | LoRA | |
+|---|---|---|---|---|
+| chrF2, FLORES-200 | 58.96 | **above 58.96** | **60.00**  (+1.04, paired bootstrap p < 0.001, n = 1000) | pass |
+| BLEU, FLORES-200 | 29.57 | **not below 29.57** | **30.73**  (+1.16, p < 0.001, 95% +0.67 … +1.65) | pass |
+| Bosnian form rate, output side | 94.3%  (231 / 245 decided, 93 silent) | **not below 94.3%** | **99.2%**  (244 / 246 decided, 92 silent; Wilson 97.1 – 99.8) | pass |
+| `>>bos_Latn<<` against `>>hrv<<` | 94.3% → 72.5%, a 21.8-point gap | **not collapsed toward zero** | 99.2% → 76.7%, a **22.5-point** gap (171 / 223 decided under `>>hrv<<`, 115 silent) | pass |
+
+**Both, not either:** chrF2 rose and the model writes *more* Bosnian, not less.
+By the rule written above before any of these numbers existed, the fine-tune
+ships.
+
+Controls, reported and unable to move the decision:
+
+- The label still tokenises as one piece (id 5941), checked on the box before
+  training started.
+- Outputs identical under the two labels: 61 of 338 (18.0%), against the
+  base's 38 (11.2%). More sentences where the label makes no difference, while
+  the form-rate gap under the label is a point *wider* — the decoder still
+  hears its selector. Targets flipped Bosnian → counterpart by the label
+  alone: 46 (base 53).
+- The two-way matcher's floor on Croatian third-form drift: 3 targets (base
+  6) — *porodice* → *obiteljima*, *bezbjednosti* → *sigurnosti*,
+  *zahtijevajući* → a rephrase. A floor, not a measurement, as the amendment
+  says.
+- Language tag leaked into the output: **0 of 2,009** (base 0). The defect the
+  forward base has, this direction still does not.
+- In-house 1,500 pairs: 31.94 / 58.74 → 34.06 / 60.11. Flatters both models
+  and decides nothing; its Tatoeba row is three sentences.
+
+What happened next: `scripts/build_translator.py --direction en-bs` merged the
+adapter and rebuilt the served model — `models/lilly/translator-en-bs`,
+`built.json` `fine_tuned: true`, 77 MB int8. **Not published.** Publishing is
+the owner's act, and the served build has not yet been scored through its own
+path (the sentence splitter and int8), which is a separate measurement.
+
+What this does not settle, restated: the ceiling of `tc-base`. And nothing
+here makes the two directions comparable — the forward direction reads 67.47
+chrF2 on FLORES where this one now reads 60.00.
+
+Raw: `training/RESULTS-en-bs.md`, `training/hypotheses-en-bs.json`,
+`training/form-rate/tuned.json`, `training/form-rate/tuned-hrv.json`,
+`training/RESULTS-en-bs-formrate.md`.
+
 ### Outcome, 7 September 2026 — whisper-large-v3 at "The gate", and a tension in this file
 
 Both listeners scored in one process, same 200 clips, same code

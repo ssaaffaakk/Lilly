@@ -173,3 +173,37 @@ never did.
 
     .venv/bin/python3 data/scripts/download_flores.py
     .venv/bin/python3 training/verify_base_flores.py --direction en-bs
+
+# The fine-tune, measured against it — 8 September 2026
+
+The LoRA adapter from Kaggle run `lilly-translation-en-bs` version 4
+(`models/lilly/adapter-en-bs`), read by the same scorer, same 338 targets,
+same matcher, both labels. Nothing in the rule above was touched between the
+base number and this one.
+
+| | base | LoRA |
+|---|---|---|
+| attempted / decided / silent | 338 / 245 / 93 | 338 / 246 / 92 |
+| wrote the Bosnian form | 231 | **244** |
+| wrote the counterpart | 14 | **2** |
+| **Bosnian form rate** | 94.3%  (Wilson 90.6 – 96.6) | **99.2%**  (Wilson 97.1 – 99.8) |
+
+| control | base | LoRA |
+|---|---|---|
+| form rate under `>>hrv<<` | 72.5%  (169 / 233) | 76.7%  (171 / 223, 115 silent) |
+| gap, `>>bos_Latn<<` against `>>hrv<<` | 21.8 points | **22.5 points** |
+| outputs identical under the two labels | 38 / 338 (11.2%) | 61 / 338 (18.0%) |
+| targets flipped Bosnian → counterpart by the label alone | 53 | 46 |
+| Croatian third form, the matcher's floor | 6 | 3 |
+| language tag leaked into the output, 2,009 FLORES | 0 | 0 |
+
+Read with the asterisk above still attached: 92 silent targets are mostly a
+different case ending, lost from both columns alike, and the floor of 3 is a
+floor. The two numbers that decide are on the deciding set, in
+`training/RESULTS-en-bs.md`: chrF2 58.96 → 60.00 and BLEU 29.57 → 30.73, both
+at paired-bootstrap p < 0.001 over 1,000 resamples. All four bars hold; the
+outcome note in `training/PREREGISTRATION.md` says what follows from that.
+
+    .venv/bin/python3 training/bosnian_form_rate.py --adapter models/lilly/adapter-en-bs --label tuned
+    .venv/bin/python3 training/bosnian_form_rate.py --adapter models/lilly/adapter-en-bs --label tuned-hrv --tag ">>hrv<<"
+    .venv/bin/python3 training/bosnian_form_rate.py --diagnose training/form-rate/tuned.json training/form-rate/tuned-hrv.json
