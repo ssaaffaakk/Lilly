@@ -91,6 +91,12 @@ counts and intervals beside every delta; heavy compute on Kaggle
   cache defect on 200 of 925 clips, recorded in the outcome note; the deciding
   row and the clean greedy decode agree, and the cause is fixed in
   `speech_bench.py`.)
+- **Before new audio, the recipe (added 8 September, evening).** Every Croatian
+  clip in the mix was trained under `<|bs|>`, which is the mechanism behind the
+  Croatian row that closed large-v3. The mix now carries one language token per
+  clip and the trainer honours it; the run is pre-registered in
+  `training/PREREGISTRATION.md`, "v4 — listen — one language token per clip",
+  and the base it runs on is the owner's decision under rule 3.
 - After that, only new audio moves anything: ParlaSpeech-HR (1,800 h Croatian,
   CC BY-SA, owner approval pending in `docs/WHITE-PAPER.md`) behind the term
   recall and Croatian substitution gate; or a small human-transcribed Bosnian
@@ -105,9 +111,12 @@ from use rather than from corpora.
 
 ### 6. Infrastructure debt seen on 7–8 September
 
-- `training/Lilly_Translation_Kaggle.ipynb` clones into `/kaggle/working` and
-  its `run()` does not tee; both are on the fail-stop list. Fix in the same
-  commit as the next translation notebook change, with preflight.
+- ~~`training/Lilly_Translation_Kaggle.ipynb` clones into `/kaggle/working` and
+  its `run()` does not tee; both are on the fail-stop list.~~ Fixed 8 September
+  2026: clone to `/kaggle/temp`, teed `run()`, `Offload` + `check_trainproof`,
+  `python -u`; preflight applies `check_offload` to it, and
+  `scripts/kaggle_train.py` checks the notebook's `ARM` against the arm each
+  job's pre-registration names, as it already checked `DIRECTION`.
 - Kernel Outputs expire; artefacts the next job needs live in Kaggle datasets
   (`lilly-listen-large-v3`, `lilly-listen-small-previous`) or on Hugging Face,
   never only in an Output.

@@ -110,7 +110,16 @@ data/signs/*
 !data/signs/sign-text.tsv
 data/speech/
 data/feedback.db
-models/
+# models/ is weights, backups and training leftovers, none of it for git. Two
+# exceptions: the model card and the attribution notice, prose the weights
+# travel with and that nothing recreates. Both lived only on the Mac and on
+# Hugging Face until 8 September 2026, and README.md linked to a NOTICE.md
+# that GitHub did not have. Opened one level at a time, as data/ocr/ is above.
+models/*
+!models/lilly/
+models/lilly/*
+!models/lilly/README.md
+!models/lilly/NOTICE.md
 
 # Local agent / overnight runs — not source of truth
 logs/*

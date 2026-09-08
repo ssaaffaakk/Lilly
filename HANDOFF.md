@@ -68,8 +68,12 @@ how Lilly scores.
    in the bundle. `scripts/publish_to_hf.py` now refuses any `listen/` but the
    gated one unless `--allow-listen <fingerprint>` names another on the command
    line — the check that did not exist on 4 September.
-   **Also:** the model card on the Mac (`models/lilly/README.md`, not in git) needs the
-   "Where it started" paragraph before the next `scripts/publish_to_hf.py`. The
+   **Also:** the model card on the Mac (`models/lilly/README.md`) needs the
+   "Where it started" paragraph before the next `scripts/publish_to_hf.py`.
+   *8 Sep, cloud:* the published card and `NOTICE.md` are now tracked in git,
+   fetched from Hugging Face as published; `.gitignore` opens exactly those two
+   files. If the Mac's copy carries edits, git will refuse to overwrite it on
+   checkout -- merge by hand, then commit the card with the publish. The
    repository README ("Where it started") and `space/README.md` carry the text
    and the numbers: the owner's first builds (< 30% found, > 280 invented,
    > 55% word error, < 30 BLEU), the first recorded numbers, and today's. The

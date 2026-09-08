@@ -1,9 +1,9 @@
 # Lilly, ready to serve. Build:  docker build -t lilly .
 #                        Run:    docker run -p 8000:8000 -v lilly-data:/data lilly
 #
-# The image carries the code and the dependencies; the 1.3 GB of weights are
-# fetched during the build, and corrections are written to a volume so they
-# survive the next deploy.
+# The image carries the code and the dependencies; the weights are fetched
+# during the build, and corrections are written to a volume so they survive
+# the next deploy.
 FROM python:3.12-slim
 
 # opencv needs libGL and glib, paddlepaddle's CPU build needs libgomp, soundfile
@@ -20,12 +20,16 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY scripts/ scripts/
 ARG LILLY_MODELS_REPO=Safak11/lilly
-RUN LILLY_MODELS_REPO=${LILLY_MODELS_REPO} python3 scripts/fetch_models.py
+# The four folders the app serves from, plus the card. Not the trainable
+# float32 base, which is training's business, and not the reader's own
+# weights, which are fetched below once app/ is in the image -- so an edit to
+# app/ does not re-download the weights. The script also says which listener
+# the bundle handed over, against the one that cleared its gate.
+RUN LILLY_MODELS_REPO=${LILLY_MODELS_REPO} python3 scripts/fetch_models.py --skip-reader-warmup
 
-# Quantise the translator: 1.8 GB of float32 becomes 670 MB and runs about twice
-# as fast, for a chrF2 that matches to two decimals. Folds in the fine-tuning if
-# there is any. The float32 copy is only needed for training, so it goes.
-RUN python3 scripts/build_translator.py && rm -rf models/lilly/translate
+# Nothing to build: translator/ in the bundle is already the fine-tuned,
+# int8-quantised CTranslate2 model (translator/built.json says so), built by
+# scripts/build_translator.py on the machine that trained it.
 
 COPY app/ app/
 

@@ -40,7 +40,20 @@ MAX_SENTENCE_TOKENS = 256
 # the opening clause entirely. Measured on exactly that sign: the prohibition
 # vanished from the translation, so the reader never saw that entry was
 # forbidden. The lines are the sentence boundaries the punctuation is missing.
-SENTENCE_BREAK = re.compile(r"(?<=[.!?])\s+|\s*\n+\s*")
+#
+# An ordinal is not a full stop. Bosnian writes ordinal numbers and dates with
+# a trailing period -- "5. maja 1990. godine", "u 19. stoljeću", "od 8. do 16.
+# sati" -- so a splitter that ends a sentence at every "digit, period, space"
+# cut a date into three pieces and translated each alone: "Rođen je 5." /
+# "maja 1990." / "godine u Sarajevu." A period after a digit therefore ends a
+# sentence only when what follows does not start with a lowercase letter,
+# which is what a real boundary after a number looks like ("... u 9.30. Dođite
+# ranije!"). Every served-path number published before this rule was produced
+# with the pieces; the re-measurement is pre-registered
+# (training/PREREGISTRATION.md, "v4 -- translate -- ordinals").
+LOWERCASE = "a-zčćđšž"
+SENTENCE_BREAK = re.compile(
+    rf"(?<=[.!?])(?:(?<!\d\.)\s+|\s+(?![{LOWERCASE}]))|\s*\n+\s*")
 
 # Each direction is its own build, its own tokenizer and its own target label.
 # The label is not decoration: this base decodes five South Slavic languages and
@@ -52,6 +65,17 @@ DIRECTIONS = {
     "en-bs": {"dir": TRANSLATOR_EN_BS_DIR, "tag": ">>bos_Latn<<",
               "reads": "English", "writes": "Bosnian"},
 }
+
+# The base model prints its own language tag -- ">>bos_Latn<<", ">>eng<<" --
+# into the text of every third translation (308 of 1,012 FLORES devtest
+# outputs); the fine-tuned model into none. A tag is never part of a
+# translation, so the served path strips it whatever build is loaded: a future
+# build that leaked again would otherwise hand the defect straight to the
+# reader. The instrument keeps the count -- training/evaluate_app.py asks for
+# translate(strip_tags=False) and reports how many outputs leaked, then scores
+# both ways -- so stripping here changes what a user sees and not what is
+# measured. The pattern is evaluate_app.py's, applied per sentence.
+LANGUAGE_TAG = re.compile(r"^\s*(>>[a-zA-Z_]+<<\s*)+")
 
 _engines = {}
 _engine_lock = threading.Lock()
@@ -101,7 +125,7 @@ class Engine:
         tuned = json.loads(built.read_text())["fine_tuned"] if built.exists() else False
         self.name = "Lilly (fine-tuned)" if tuned else "base model (not fine-tuned yet)"
 
-    def translate(self, text: str, truncate: bool = False) -> str:
+    def translate(self, text: str, truncate: bool = False, strip_tags: bool = True) -> str:
         """Source language in, target language out, per this engine's direction.
 
         The model silently drops sentences when fed several at once, so the text
@@ -112,6 +136,9 @@ class Engine:
         truncate=True quietly drops the overflow instead of refusing. That is for
         text the caller never typed — a photo of a dense page, a long recording —
         where a refusal would be baffling.
+
+        strip_tags=False returns the model's output with any leaked language
+        tag left in. Only a measurement wants that (LANGUAGE_TAG above).
         """
         sentences = [s for s in SENTENCE_BREAK.split(text.strip()) if s.strip()] or [text]
         # Every sentence carries the label, not just the first one: the splitter
@@ -144,7 +171,10 @@ class Engine:
                     group, beam_size=4, max_decoding_length=MAX_SENTENCE_TOKENS)
             for result in results:
                 ids = self.tokenizer.convert_tokens_to_ids(result.hypotheses[0])
-                out.append(self.tokenizer.decode(ids, skip_special_tokens=True))
+                decoded = self.tokenizer.decode(ids, skip_special_tokens=True)
+                if strip_tags:
+                    decoded = LANGUAGE_TAG.sub("", decoded).strip()
+                out.append(decoded)
         return " ".join(out)
 
     @staticmethod

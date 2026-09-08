@@ -68,6 +68,13 @@ def get_model(build=None):
         with _model_lock:
             model = _models.get(key)
             if model is None:
+                # A path with no model.bin is not a build. Handed to
+                # WhisperModel it is taken for a Hugging Face model name and
+                # answered with a download error that says nothing about
+                # models/lilly/listen.
+                if not (Path(key) / "model.bin").is_file():
+                    raise FileNotFoundError(
+                        f"no listener at {key} -- run scripts/fetch_models.py")
                 _models.clear()
                 from faster_whisper import WhisperModel
                 # The product runs int8 on CPU, and that is the path every
@@ -101,13 +108,17 @@ def transcribe(audio_path: str, language: str = "bs", build=None,
     --decode rubric passes beam_size=1, temperature=0.0 to measure that. The
     server never passes either, so its path is unchanged.
     """
+    # Loaded outside the try below on purpose. That except turns anything
+    # that goes wrong into "that file is not audio we can read", a 400 that
+    # blames the caller -- and a missing or corrupt listener used to land in
+    # it, so a broken install told every user their recording was bad.
+    # Loading is our side of the line; only decoding the upload is theirs.
+    model = get_model(build)
     with _transcribe_lock:
         try:
             extra = {} if temperature is None else {"temperature": temperature}
-            segments, info = get_model(build).transcribe(audio_path,
-                                                         language=language,
-                                                         beam_size=beam_size,
-                                                         **extra)
+            segments, info = model.transcribe(audio_path, language=language,
+                                              beam_size=beam_size, **extra)
             # segments is a generator: it has to be drained inside the lock
             return " ".join(seg.text.strip() for seg in segments).strip()
         except BadInput:

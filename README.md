@@ -84,18 +84,22 @@ a photographed sign come back the same way a typed one does.
 ```bash
 uv venv .venv --python 3.12
 uv pip install --python .venv/bin/python -r requirements.txt
-.venv/bin/python scripts/fetch_models.py        # pulls the weights bundle
-.venv/bin/python scripts/build_translator.py
+.venv/bin/python scripts/fetch_models.py        # the bundle, then the reader's own weights
 .venv/bin/uvicorn app.server:app --port 8000
 ```
 
 Open http://localhost:8000. Allow the microphone, or photograph something with a
 **đ** in it.
 
-That gives you all five abilities: the bundle has carried the reply direction
-(English in, Bosnian out, the swap button in the UI) since 8 September 2026, and
-`fetch_models.py` pulls it as `translator-en-bs/`. To rebuild that direction
-yourself from the upstream base instead:
+That gives you all five abilities. The translator arrives already fine-tuned
+and quantised, so there is nothing to build for the forward direction, and the
+bundle has carried the reply direction (English in, Bosnian out, the swap
+button in the UI) since 8 September 2026, so `fetch_models.py` pulls it as
+`translator-en-bs/`. The fetch also pulls PP-OCRv6 into PaddleX's cache
+through the app's own reader, so the first photograph does not wait on a
+download, and it checks the listener it was handed against the gated one,
+saying so out loud if an older fetch left the closed whisper-large-v3 behind.
+To rebuild the reply direction yourself from the upstream base instead:
 
 ```bash
 .venv/bin/python scripts/fetch_translate_base.py --direction en-bs
@@ -105,8 +109,11 @@ yourself from the upstream base instead:
 Without `translator-en-bs/` the app still runs and `/api/reply` answers 503.
 `python3 app/lilly.py` prints which parts are installed.
 
-Startup is instant because each model loads on first use. Once the weights are
-on disk, nothing reaches the network again.
+Startup is instant because each model loads on first use. Once
+`fetch_models.py` has finished, nothing reaches the network again.
+`python3 -m pytest tests` checks the parts that need no model: the sentence
+splitter, the batch grouping, the correction store and the server's answers
+to bad input.
 
 ---
 
@@ -238,6 +245,15 @@ significant (`training/app-hypotheses-armB.json`, rescored 7 September). In
 plain terms: it makes word-level accuracy better, it removes a defect from every
 third output, and it does not move chrF2. The first builds, under 30 BLEU, did
 not manage any of that.
+
+**One caveat on every served-path number above.** They were measured through
+`app.translate.Engine` as it split sentences until 8 September 2026, when the
+splitter learned that a Bosnian ordinal (*5. maja 1990. godine*) is not a full
+stop; before that a date was cut into pieces and each piece translated alone.
+Both builds went through the same splitter, so the comparisons stand. The
+absolute figures are re-measured under a pre-registration
+(`training/PREREGISTRATION.md`, "v4 — translate — ordinals"), and the new ones
+replace these when that run lands.
 
 **The reply direction** (English → Bosnian) was fine-tuned on 8 September and
 cleared all four of its pre-registered bars on the same 2,009 pairs: chrF2
@@ -435,6 +451,7 @@ of failures already paid for: [`docs/kaggle-fail-stop.md`](docs/kaggle-fail-stop
 - [x] English → Bosnian fine-tune — all four pre-registered bars cleared 8 Sep (chrF2 +1.04, BLEU +1.16, form rate 99.2%, label gap 22.5); built and **published 8 Sep**
 - [ ] Larger speech model — trained (11.9% word error); refused at the gate 7 Sep and at the pre-registered last look 8 Sep (Croatian 1.1% → 6.1%, p = 0.018); **closed by rule 3**; was in the published bundle ungated 4–8 Sep, reverted with the 8 Sep publish, and the publisher now refuses it
 - [ ] A valid photograph score: `test-v2b`'s 160 photographs transcribed blind, then one score on the union
+- [ ] Re-measure the served translation path after the ordinal splitter fix of 8 Sep (pre-registered; `training/compare_hypotheses.py`)
 - [ ] A labelled set of real phone photographs from Bosnia
 
 ---

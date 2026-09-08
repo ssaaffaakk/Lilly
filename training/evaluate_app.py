@@ -41,10 +41,16 @@ SAVED = REPO_ROOT / "training" / "app-hypotheses.json"
 REPORT = REPO_ROOT / "training" / "RESULTS-product.md"
 
 # The base model writes its language tag into the text of many translations.
-# That is a real defect a user sees, so the score is reported both ways: with the
-# tags, which is what arrives on screen, and without, which is the translation
-# quality underneath. Reporting only the first credits the fine-tuning with
-# fixing a bug; only the second hides that it did.
+# That is a real defect, so the score is reported both ways: with the tags,
+# which is what the model emits, and without, which is the translation quality
+# underneath. Reporting only the first credits the fine-tuning with fixing a
+# bug; only the second hides that it did. Since 8 September 2026 the app strips
+# a leaked tag itself (app.translate.LANGUAGE_TAG, per sentence), so a reader
+# now sees the second table's output whatever build is loaded; this file asks
+# the engine for the raw output (strip_tags=False) so the count of leaks stays
+# measurable. A tag leaked mid-row -- a later sentence of a multi-sentence row
+# -- is stripped by the app and not by the row-level pattern below; the
+# shipped build leaks none, so the two tables agree on it.
 LANGUAGE_TAG = re.compile(r"^\s*(>>[a-zA-Z_]+<<\s*)+")
 
 
@@ -104,7 +110,7 @@ def translate_all(build: Path, src: list, label: str) -> list:
     engine = Engine(directory=build)
     out, started = [], time.time()
     for i, text in enumerate(src):
-        out.append(engine.translate(text, truncate=True))
+        out.append(engine.translate(text, truncate=True, strip_tags=False))
         if (i + 1) % 200 == 0:
             print(f"  {label} {i + 1}/{len(src)}  ({time.time() - started:.0f}s)",
                   flush=True)
@@ -294,8 +300,8 @@ def main() -> int:
           f"({100 * leaked_t / len(tuned):.1f}%)")
 
     tables = {}
-    for title, strip in (("as the user sees it", False),
-                         ("with the language tag stripped", True)):
+    for title, strip in (("as the model emits it, tag and all", False),
+                         ("with the language tag stripped -- what the app serves", True)):
         r = table(refs, base, tuned, strip)
         print(f"\n{title}")
         print(f"  {'':<6} {'BLEU':>7} {'chrF2':>7} {'length':>8}")
@@ -355,10 +361,11 @@ def write_report(n, leaked_base, leaked_tuned, tables, fingerprint,
         f"The base model prints its language tag into the translation itself — "
         f"`>>eng<<` and friends — in {leaked_base:,} of {n:,} outputs "
         f"({100 * leaked_base / n:.1f}%). Lilly does it in {leaked_tuned:,} "
-        f"({100 * leaked_tuned / n:.1f}%). That is a defect a reader sees, so the "
-        f"scores are given both with it and without: with, because it is what "
-        f"arrives on screen; without, because otherwise the fine-tuning gets credit "
-        f"for translation quality it did not gain.", "",
+        f"({100 * leaked_tuned / n:.1f}%). That is a defect in what the model emits, "
+        f"so the scores are given both with it and without: with, because it is what "
+        f"the model learned to write; without, because otherwise the fine-tuning gets "
+        f"credit for translation quality it did not gain. The app strips a leaked tag "
+        f"before answering (since 8 September 2026), so a reader sees the second table.", "",
     ]
     for title, r in tables.items():
         lines += [f"## {title.capitalize()}", "",

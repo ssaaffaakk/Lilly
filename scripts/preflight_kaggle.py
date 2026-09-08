@@ -326,7 +326,21 @@ def check_translation(text: str) -> None:
     """Both directions train from one notebook; what differs must be passed
     down, not assumed. Version 2 of the en-bs run died in build_training_mix.py
     because step 6 counted the pair the forward way round under the reverse
-    base's tokenizer (7 September 2026)."""
+    base's tokenizer (7 September 2026).
+
+    The same offload contract as every other notebook: it cloned into
+    /kaggle/working and its run() did not tee until 8 September 2026
+    (docs/V4-PLAN.md, section 6), the two holes items 2 and 15 of
+    docs/kaggle-fail-stop.md name."""
+    check_offload(text, "translation")
+    if "/kaggle/working/Lilly" in text or 'os.chdir("/kaggle/working")' in text:
+        fail("translation must clone to /kaggle/temp — a clone in /kaggle/working "
+             "floods Output and the adapter zip never downloads")
+    if "/kaggle/temp" not in text:
+        fail("translation must clone to /kaggle/temp")
+    if 'run("python3", "-u", "training/train_translation.py"' not in text:
+        fail("translation must run train_translation.py unbuffered (python -u) so the tee "
+             "sees the loss as it happens")
     if '"data/scripts/build_training_mix.py", "--direction", DIRECTION' not in text:
         fail("translation: build_training_mix.py must be called with --direction DIRECTION -- "
              "the 128-token cap is measured under this run's tokenizer, fed the way the "
@@ -358,6 +372,10 @@ def main() -> int:
              "for speech-instrument -- the lilly-speech-half2 kernel Output is no longer attachable")
     if '"needs_listen_previous": True' not in kaggle_train or "push_listen_previous" not in kaggle_train:
         fail("kaggle_train.py must attach the gate's baseline listener as lilly-listen-small-previous")
+    if '"arm": "fullft"' not in kaggle_train or '"arm": "lora"' not in kaggle_train:
+        fail("kaggle_train.py must carry the arm each translation job launches and check the "
+             "notebook's ARM against it -- an arm that does not match its pre-registration "
+             "trains to the end and returns a model nobody registered")
     if "could not be added" not in kaggle_train:
         fail("kaggle_train.py confirm_push must refuse a push whose attachment Kaggle "
              "'could not be added' -- that run starts without its data and dies cells later")
