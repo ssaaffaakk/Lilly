@@ -84,10 +84,17 @@ ACCELERATOR = "NvidiaTeslaT4"
 # Two jobs can go to Kaggle. Translation needs the base weights uploaded as a
 # dataset; speech fetches its own audio, so it needs nothing but a GPU.
 JOBS = {
+    # "arm" is the training mode each job's pre-registration names, and the
+    # notebook's cell 0 has to say the same before a launch. bs-en: the full
+    # fine-tune arm (PREREGISTRATION.md, "v2 -- read -- read-egitim"; the LoRA
+    # arm is Arm B, already measured and not re-run). en-bs: LoRA, the recipe
+    # "v3 -- reply" fixed and the 8 September run used. A different arm is a
+    # different experiment: change it here in the same commit as its
+    # pre-registration, not in the notebook alone.
     "translation": {"notebook": "Lilly_Translation_Kaggle.ipynb",
                     "slug": "lilly-translation", "title": "Lilly translation",
                     "needs_weights": True, "needs_corpus": True,
-                    "direction": "bs-en"},
+                    "direction": "bs-en", "arm": "fullft"},
     # Same notebook, other direction. Its own slug: sharing lilly-translation
     # would push a reverse run over the forward run's kernel and its Output,
     # and the two are not interchangeable in either place.
@@ -95,7 +102,7 @@ JOBS = {
                     "slug": "lilly-translation-en-bs",
                     "title": "Lilly translation en-bs",
                     "needs_weights": True, "needs_corpus": True,
-                    "direction": "en-bs",
+                    "direction": "en-bs", "arm": "lora",
                     "weights": WEIGHTS_EN_BS,
                     "weights_slug": "lilly-translate-en-bs-base"},
     # A measurement job, not a training pass: it loads no Lilly weights, ships
@@ -859,17 +866,21 @@ def main() -> int:
                     f'scripts/fetch_translate_base.py --direction {job["direction"]}')
             print(f"no weights at {weights} — run {hint} first", file=sys.stderr)
             return 1
-        # The notebook carries the direction it trains, committed, and this
-        # launcher carries the base it uploads. If they disagree the run still
-        # completes and returns a model trained the wrong way round, so they are
-        # compared here rather than discovered in a benchmark afterwards.
-        want = f'DIRECTION = "{job["direction"]}"'
+        # The notebook carries the direction and the arm it trains, committed,
+        # and this launcher carries the base it uploads and the arm the job's
+        # pre-registration names. If they disagree the run still completes and
+        # returns a model trained the wrong way round, or under a recipe nobody
+        # registered, so they are compared here rather than discovered in a
+        # benchmark afterwards.
         nb_text = (REPO_ROOT / "training" / job["notebook"]).read_text()
-        if want.replace('"', '\\"') not in nb_text and want not in nb_text:
-            print(f'{job["notebook"]} does not set {want}. The notebook trains '
-                  f'whichever direction is committed in it; edit cell 0 and '
-                  f'commit before launching {job["slug"]}.', file=sys.stderr)
-            return 1
+        for want in (f'DIRECTION = "{job["direction"]}"', f'ARM = "{job["arm"]}"'):
+            if want.replace('"', '\\"') not in nb_text and want not in nb_text:
+                print(f'{job["notebook"]} does not set {want}. The notebook trains '
+                      f'whichever direction and arm are committed in it; edit cell 0 '
+                      f'and commit before launching {job["slug"]} -- or, for a '
+                      f'different arm, change the job in scripts/kaggle_train.py in '
+                      f'the same commit as its pre-registration.', file=sys.stderr)
+                return 1
         datasets.append(push_weights(
             user, weights, job.get("weights_slug", "lilly-translate-base")))
     if job["needs_corpus"]:

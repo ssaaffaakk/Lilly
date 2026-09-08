@@ -105,9 +105,12 @@ from use rather than from corpora.
 
 ### 6. Infrastructure debt seen on 7–8 September
 
-- `training/Lilly_Translation_Kaggle.ipynb` clones into `/kaggle/working` and
-  its `run()` does not tee; both are on the fail-stop list. Fix in the same
-  commit as the next translation notebook change, with preflight.
+- ~~`training/Lilly_Translation_Kaggle.ipynb` clones into `/kaggle/working` and
+  its `run()` does not tee; both are on the fail-stop list.~~ Fixed 8 September
+  2026: clone to `/kaggle/temp`, teed `run()`, `Offload` + `check_trainproof`,
+  `python -u`; preflight applies `check_offload` to it, and
+  `scripts/kaggle_train.py` checks the notebook's `ARM` against the arm each
+  job's pre-registration names, as it already checked `DIRECTION`.
 - Kernel Outputs expire; artefacts the next job needs live in Kaggle datasets
   (`lilly-listen-large-v3`, `lilly-listen-small-previous`) or on Hugging Face,
   never only in an Output.
