@@ -462,7 +462,35 @@ def stored_token() -> str:
     return get_token() or ""
 
 
-def upload(repo_id: str, publish: dict, public: bool, message: str) -> int:
+def stale_in_repo(repo_id: str, publish: dict) -> tuple:
+    """(files the repository holds that this release does not, or None if unknown).
+
+    upload_folder adds and replaces; it never removes. So a file that was part
+    of an older release stays in the repository for ever, sitting inside a
+    folder whose name says it is something else. It has happened twice: a
+    float32 translate/ from 22 August lived in the bundle for a fortnight, and
+    listen/vocabulary.txt -- the untrained large-v3's token list -- is in the
+    published listener now. That one is inert (ctranslate2 reads
+    vocabulary.json when both are there, tested 8 Sep: byte-identical
+    transcripts), but it changes what the directory hashes to, so every fresh
+    install computes a listener fingerprint that no document names.
+
+    Names starting with a dot are the Hub's own (.gitattributes) and are left.
+    """
+    try:
+        from huggingface_hub import HfApi
+        api = HfApi(token=os.environ.get("HF_TOKEN") or stored_token() or None)
+        if not api.repo_exists(repo_id, repo_type="model"):
+            return (), None
+        remote = {s.rfilename for s in api.repo_info(repo_id, repo_type="model").siblings}
+    except Exception as exc:                       # noqa: BLE001 -- report, don't raise
+        return (), f"could not check {repo_id} for files this release does not carry: {exc}"
+    sending = {str(rel) for group in publish.values() for rel in group}
+    return tuple(sorted(f for f in remote - sending if not f.startswith("."))), None
+
+
+def upload(repo_id: str, publish: dict, public: bool, message: str,
+           prune: tuple = ()) -> int:
     token = os.environ.get("HF_TOKEN") or stored_token()
     if not token:
         print("\nNo Hugging Face token. Either log in once:\n"
@@ -505,8 +533,11 @@ def upload(repo_id: str, publish: dict, public: bool, message: str) -> int:
         repo_id=repo_id,
         repo_type="model",
         allow_patterns=paths,
+        delete_patterns=list(prune) or None,
         commit_message=message,
     )
+    for gone in prune:
+        print(f"removed from the repository: {gone}")
     print(f"done: https://huggingface.co/{repo_id}")
     if not public:
         print("the repository is private — make it public from its Settings page "
@@ -652,6 +683,10 @@ def main() -> int:
     ap.add_argument("--with-reply", action="store_true",
                     help="also publish translator-en-bs/ (English -> Bosnian), bound to the served "
                          "build training/RESULTS-en-bs-formrate.md names; the card must describe it")
+    ap.add_argument("--prune", action="store_true",
+                    help="also DELETE files the repository holds that this release does not "
+                         "carry -- leftovers from an older publish. Listed first, never "
+                         "guessed, and only with --upload.")
     ap.add_argument("--allow-listen", default=None, metavar="FINGERPRINT",
                     help="publish a listen/ other than the gated whisper-small: the 16-hex "
                          "fingerprint speech_bench.py printed for a listener that has cleared "
@@ -715,6 +750,23 @@ def main() -> int:
     if detail:
         print(detail)
 
+    stale, why_not = stale_in_repo(args.repo_id, publish)
+    if why_not:
+        print(f"\n{why_not}")
+    elif stale:
+        print("\nalready in the repository and NOT part of this release")
+        for name in stale:
+            print(f"  {name}")
+        print("  Left there, upload_folder keeps them for ever: they sit inside a folder "
+              "whose name says it is something else, and they change what that folder "
+              "hashes to. Add --prune to delete them in this commit.")
+        if args.upload and not args.prune:
+            print("\nstopped: publish with --prune to remove them, or take them out of the "
+                  "repository first. Nothing was uploaded.", file=sys.stderr)
+            return 1
+    else:
+        print("\nthe repository carries nothing this release does not")
+
     unrecognised = report_left_behind(published=("translator-en-bs",) if args.with_reply else ())
     if unrecognised:
         print(f"\nstopped: {len(unrecognised)} entr"
@@ -729,7 +781,8 @@ def main() -> int:
         print("\ndry run — nothing was sent. Add --upload to publish.")
         return 0
 
-    return upload(args.repo_id, publish, args.public, args.commit_message)
+    return upload(args.repo_id, publish, args.public, args.commit_message,
+                  prune=stale if args.prune else ())
 
 
 if __name__ == "__main__":
