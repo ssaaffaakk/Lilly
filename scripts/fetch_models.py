@@ -12,11 +12,13 @@ does not:
     finished nothing reaches the network again -- not on the first photograph
     either.
   * the listener. models/lilly/listen is checked against the fingerprint of
-    the listener that cleared its pre-registered gate. The bundle carried a
-    different one from the 4-5 September 2026 publish until 8 September,
-    11:31 UTC -- a whisper-large-v3 that its gate then refused -- and a clone
-    fetched in that window deserves to be told what it was handed rather than
-    to find out from the transcripts.
+    the listener that cleared its pre-registered gate (whisper-small) and says
+    which one it was handed. Since the evening of 8 September 2026 the bundle
+    carries whisper-large-v3 by the owner's explicit decision: it reads far
+    fewer words wrong (14.1% against 39.5% on 925 clips) and it failed the
+    gate's Croatian-substitution row (1.1% -> 6.1%), and both facts are on
+    the model card. This script says so rather than letting a fresh clone
+    find out from the transcripts.
   * the reply direction. translator-en-bs/ (English -> Bosnian) is in the
     bundle since 8 September 2026 and is pulled when present; its absence is
     not a failure, the app answers 503 on /api/reply and says why.
@@ -102,13 +104,12 @@ def check_listener(build: Path) -> bool:
     print(f"\nlisten/: {base}, fingerprint {actual} -- NOT the gated listener "
           f"({GATED_LISTEN_FINGERPRINT}).", file=sys.stderr)
     if "large-v3" in base:
-        print("""  The bundle carried this by mistake from the 4-5 September 2026 publish until
-  8 September 11:31 UTC: an ungated whisper-large-v3 swept into listen/, whose
-  pre-registered gate then refused it twice (training/RESULTS-speech.md; on all 925
-  clips Croatian substitution 1.1% -> 6.1%, p = 0.018). It reads far fewer words wrong
-  than the gated whisper-small and writes Croatian forms where Bosnian was said more
-  often, which is the row it failed. A fetch made in that window has it; delete
-  models/lilly/listen and run this script again to get the gated listener.""", file=sys.stderr)
+        print("""  This is the listener the owner chose to ship on 8 September 2026, knowing its
+  pre-registered gate refused it: on all 925 test clips it reads 14.1% of words wrong
+  against the gated whisper-small's 39.5%, and it writes the Croatian form of a
+  Bosnian-specific word more often (6.1% of decided targets against 1.1%, p = 0.018 --
+  the row it failed). Both numbers are on the model card; the decision and its reason
+  are in training/PREREGISTRATION.md and training/RESULTS-speech.md.""", file=sys.stderr)
     else:
         print("""  Not the build the published speech numbers were measured on. A candidate that has
   since cleared its pre-registered gate is fine here; one that has not is not the
@@ -164,7 +165,7 @@ def main() -> int:
             print("pip install huggingface_hub first", file=sys.stderr)
             return 1
         print(f"fetching {REPO} -> {DEST}: {', '.join(PARTS)}, {', '.join(OPTIONAL)} "
-              f"if published, and the model card (about 1 GB)")
+              f"if published, and the model card (about 2.3 GB)")
         DEST.mkdir(parents=True, exist_ok=True)
         snapshot_download(repo_id=REPO, repo_type="model", local_dir=str(DEST),
                           allow_patterns=[f"{p}/*" for p in PARTS + OPTIONAL] + list(CARD_FILES),

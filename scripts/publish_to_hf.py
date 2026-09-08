@@ -143,8 +143,15 @@ EXCLUDE_RULES = (
     # pre-registered last look (8 Sep): closed by rule 3, kept on this machine
     # as the record of what was refused. It is never published; the gated
     # whisper-small is LISTEN_FINGERPRINT above.
-    ("listen-large-v3*", "the whisper-large-v3 listener closed by rule 3 on 8 Sep 2026 "
-                         "(Croatian substitution 1.1% -> 6.1%); kept as the record, never published"),
+    ("listen-large-v3*", "a whisper-large-v3 listener kept aside; whatever sits under listen/ is "
+                         "what is published, and only the gated one goes without --allow-listen"),
+    # The whisper-small that cleared its gate (LISTEN_FINGERPRINT), kept beside
+    # listen/ while the owner ships a different listener by explicit override
+    # (8 Sep 2026 evening: large-v3, refused at its gate on Croatian
+    # substitution, published with --allow-listen e6bb58483586b06c and the
+    # failed row written on the card).
+    ("listen-small*", "the gated whisper-small (fingerprint a76342f6ab59b382), kept as the "
+                      "baseline every listener is measured against"),
 )
 
 # Never interesting, at any depth.

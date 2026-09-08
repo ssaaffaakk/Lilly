@@ -15,7 +15,7 @@ tags:
 base_model:
   - Helsinki-NLP/opus-mt-tc-big-zls-en
   - Helsinki-NLP/opus-mt-tc-base-en-sh
-  - Systran/faster-whisper-small
+  - openai/whisper-large-v3
   - hexgrad/Kokoro-82M
   - PaddlePaddle/PP-OCRv6_medium_det
   - PaddlePaddle/PP-OCRv6_medium_rec
@@ -44,7 +44,7 @@ comparable quality — on the evidence they are not.
 |---|---|---|---|---|
 | `translator/` | Bosnian text → English text | OPUS-MT `opus-mt-tc-big-zls-en` | CTranslate2, int8 | **yes** — LoRA merged into the weights |
 | `translator-en-bs/` | English text → Bosnian text (the reply) | OPUS-MT `opus-mt-tc-base-en-sh` | CTranslate2, int8 | **yes** — LoRA merged into the weights, 8 Sep 2026 |
-| `listen/` | spoken Bosnian → Bosnian text | `faster-whisper-small` (Whisper small) | CTranslate2, int8 | **yes** — LoRA, word error 38.5% → 35.5% (34.9% on the bench's scorer). **Between 4 September and this publish `listen/` held a whisper-large-v3 fine-tune by mistake**, swept in by the reader publish before its gate had run; the gate (7 Sep) and the pre-registered last look on all 925 clips (8 Sep) both refused it on Croatian substitution, 1.1% → 6.1%, and it is closed. The small model is what ships. |
+| `listen/` | spoken Bosnian → Bosnian text | `whisper-large-v3` (OpenAI), converted to CTranslate2 here | CTranslate2, int8 | **yes** — LoRA. **Shipped by the owner's decision on 8 September 2026, knowing its pre-registered gate refused it:** on all 925 test clips it reads **14.1%** of words wrong against the gated whisper-small's 39.5%, recovers 72% of Bosnian-specific words against 50%, and writes the Croatian form of a Bosnian-specific word in **6.1%** of decided targets against 1.1% (p = 0.018), the row it failed. Details under "Measured quality". |
 | `read/` | photo of Bosnian text → text | EasyOCR (CRAFT detector + Latin recogniser) | PyTorch checkpoints | **yes** — recogniser only, words 69.5% → 88.3%. **Since 5 Sep 2026 the app does not read with these weights: it reads with PaddleOCR PP-OCRv6** (Baidu's published weights, untrained, at a recogniser confidence floor of 0.9), fetched at run time by PaddleX from its Hugging Face mirror and **not part of this bundle**. `read/` is the way back — `LILLY_READER=easyocr` — and the "before" build every comparison is measured against. |
 | `speak/` | English text → spoken English | Kokoro-82M | PyTorch checkpoint + one voice | no — stock weights |
 
@@ -250,22 +250,26 @@ only, so nothing here says how it behaves on Croatian, Serbian, Slovenian or Mac
 **`speak/` carries no score on this page.** It is stock Kokoro-82M; for how it performs,
 see upstream.
 
-**`listen/` — speech.** Word error rate on 200 held-out FLEURS Bosnian clips, same clips
-before and after: **38.5% → 35.5%**. Whisper-small with a LoRA adapter, three epochs, and
-the validation loss fell at every epoch. Kaggle's own run of the same measurement read
-38.4% → 35.1%; the numbers published here are the ones reproduced locally. On the
-project's own scale (`training/RUBRIC.md`: all 925 test clips, greedy, Whisper's
-normaliser) this listener reads **39.5%**.
+**`listen/` — speech.** Whisper large-v3 with a LoRA adapter, trained on Kaggle in
+two halves on FLEURS Bosnian plus Croatian audio, converted to CTranslate2 int8. It is
+the listener the owner chose to ship on 8 September 2026 **knowing its pre-registered
+gate refused it**, and both sides of that are here.
 
-A whisper-large-v3 fine-tune of the same data reads 11.9% on the 200 clips and 14.1% on
-the 925, and it does **not** ship: it has to clear three rows, not one, and on the third
-— how often it writes the Croatian form of a word where the Bosnian one was said — it
-went from the small model's 1.1% (1 of 87 decided targets) to 6.1% (8 of 131, p = 0.018),
-the same two words over and over (*Europom* for *evropom*, *vjerojatno* for
-*vjerovatno*). By rule 3 of its pre-registration it is closed. It sat in this
-repository's `listen/` from 4 September until this publish, ungated, because a reader
-publish swept it in; the publisher now refuses any `listen/` but the gated one.
-Everything about it is in `training/speech-instrument/` and `training/RESULTS-speech.md`.
+| 925 FLEURS bs_ba test clips | whisper-small, the gated listener | **whisper-large-v3, shipped** |
+|---|---|---|
+| word error, greedy, Whisper's normaliser (`training/RUBRIC.md`) | 39.5% | **14.1%** |
+| Bosnian-specific words recovered (581 targets) | 49.6% | **72.1%** |
+| Croatian form written where Bosnian was said | **1.1%** (1 of 87 decided) | 6.1% (8 of 131), p = 0.018 |
+
+On the 200-clip prefix the two read 34.9% and 11.9% word error. The gate has three
+rows and says all three must pass; the third failed, on two words written the
+Croatian way (*Europom* for *evropom*, *vjerojatno* for *vjerovatno*), and by rule 3
+of its pre-registration this model gets no further look on any other split, normaliser
+or term list. The owner then shipped it for what it gets right and accepted what it
+gets wrong; the reason is written in `training/PREREGISTRATION.md` and the record in
+`training/RESULTS-speech.md` and `training/speech-instrument/`. The gated whisper-small
+(38.5% → 35.5% on the 200 clips by `training/evaluate_speech.py`, 34.9% by the bench's
+scorer) is not in this bundle; it is the baseline every listener is measured against.
 
 **`translator-en-bs/` — the reply direction.** See "The reply direction" below.
 
@@ -324,7 +328,7 @@ repository. Licenses were checked against each project's own page, not assumed.
 | Folder | Source | Author | License |
 |---|---|---|---|
 | `translator/` | [opus-mt-tc-big-zls-en](https://huggingface.co/Helsinki-NLP/opus-mt-tc-big-zls-en) | Helsinki-NLP / the OPUS-MT project, University of Helsinki | [CC-BY-4.0](https://creativecommons.org/licenses/by/4.0/) |
-| `listen/` | [faster-whisper-small](https://huggingface.co/Systran/faster-whisper-small), a CTranslate2 conversion of [Whisper](https://github.com/openai/whisper) | SYSTRAN (conversion); Whisper by OpenAI | MIT (both) |
+| `listen/` | [Whisper large-v3](https://huggingface.co/openai/whisper-large-v3), converted to CTranslate2 int8 by this project | OpenAI | MIT |
 | `read/` | [EasyOCR](https://github.com/JaidedAI/EasyOCR); detector from [CRAFT](https://github.com/clovaai/CRAFT-pytorch) | JaidedAI; CRAFT by Clova AI Research, NAVER Corp. | Apache-2.0 (EasyOCR); MIT (CRAFT) |
 | *(engine, not bundled)* | [PaddleOCR PP-OCRv6](https://github.com/PaddlePaddle/PaddleOCR) — what the app reads with since 5 Sep 2026, fetched at run time | PaddlePaddle Authors, Baidu | Apache-2.0 |
 | `speak/` | [Kokoro-82M](https://huggingface.co/hexgrad/Kokoro-82M) | hexgrad | Apache-2.0 |
@@ -372,7 +376,7 @@ NOTICE.md was written when the translation folder was named `translate/`; its
 - `translator-en-bs/` — the OPUS-MT `tc-base-en-sh` weights with this project's LoRA
   fine-tuning merged in, then converted to CTranslate2 int8. Not byte-identical to
   upstream, by design.
-- `listen/` — the Whisper-small weights fine-tuned on Bosnian audio, then converted to
+- `listen/` — the Whisper large-v3 weights fine-tuned on Bosnian audio (LoRA merged), then converted to
   CTranslate2 int8. Not byte-identical to upstream.
 - `read/`, `speak/` — weight files byte-identical to the originals. Two files in
   `speak/` were renamed so the app can load them by a stable path:

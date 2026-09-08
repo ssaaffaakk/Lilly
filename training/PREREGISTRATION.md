@@ -2396,6 +2396,33 @@ whisper-small (a76342f6ab59b382) back, with `scripts/publish_to_hf.py`
 refusing any other listener by fingerprint; and the README's speech table was
 rewritten to this outcome.
 
+### The owner's decision, 8 September 2026, evening — it ships by explicit override; the gate's result stands
+
+The same evening the owner, shown the rows above and the 7 September decision,
+chose to ship the large-v3 listener anyway. This is the outward-facing act the
+7 September note said belongs to the owner and gets written down with its
+reason. The reason, in the owner's terms: on every measure but one it is far
+better — 14.1% against 39.5% of words wrong, 72.1% against 49.6% of
+Bosnian-specific words recovered — and the one it fails is two Croatian
+spellings (*Europom*, *vjerojatno*) in 8 of 131 decided targets, which the
+translation downstream renders the same either way. The owner weighed that
+cost and took it.
+
+What does not change: the bar, the verdict on this run ("does not ship by the
+rule"), and rule 3 — no further look at whisper-large-v3 on any other split,
+normaliser or term list. What is reversed: the 7 September decision that the
+bundle keeps whisper-small. Both decisions and both reasons are on record;
+neither is edited.
+
+Mechanics, so the override stays visible: `models/lilly/listen` is fingerprint
+`e6bb58483586b06c`; the gated whisper-small (`a76342f6ab59b382`) is kept as
+`models/lilly/listen-small-gated` and remains the baseline every listener is
+measured against; `scripts/publish_to_hf.py` refuses this listener unless
+`--allow-listen e6bb58483586b06c` is named on the command line; and
+`scripts/fetch_models.py` and `app/lilly.py` tell every install that the
+listener it has is not the gated one. The model card carries the failed row
+beside the word-error figure.
+
 ---
 
 # v3 — picture — test-v2b, drawn before any photograph in it has been looked at

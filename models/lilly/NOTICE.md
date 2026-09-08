@@ -16,11 +16,15 @@ are cited in README.md.
 
 ---
 
-**listen/** — `faster-whisper-small`, a CTranslate2 conversion of OpenAI Whisper
-Copyright © SYSTRAN (conversion) and OpenAI (original Whisper model).
+**listen/** — OpenAI Whisper large-v3, fine-tuned by this project and converted to
+CTranslate2 int8 by this project with the CTranslate2 converter.
+Copyright © OpenAI (original Whisper model).
 License: MIT
-<https://huggingface.co/Systran/faster-whisper-small>
+<https://huggingface.co/openai/whisper-large-v3>
 <https://github.com/openai/whisper>
+(Until 8 September 2026 this folder held SYSTRAN's `faster-whisper-small`
+conversion, MIT, <https://huggingface.co/Systran/faster-whisper-small>, fine-tuned
+here; it remains the baseline the published numbers compare against.)
 
 ---
 

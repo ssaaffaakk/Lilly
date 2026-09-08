@@ -51,10 +51,12 @@ how Lilly scores.
 
 ## Open, in order of urgency
 
-0. **Resolved 8 September, 11:31 UTC: the bundle's `listen/` is the gated
-   whisper-small again (248,203,797 bytes, fingerprint a76342f6ab59b382), and
-   `scripts/publish_to_hf.py` refuses any other listener by fingerprint. What
-   follows is the record of how it got there.** Verified 8 September from the Hugging Face API:
+0. **8 September, evening: the owner decided to ship large-v3 anyway, refused row
+   and all (`training/PREREGISTRATION.md`, "The owner's decision"); `listen/` is
+   `e6bb58483586b06c` under `--allow-listen`, the gated whisper-small
+   (a76342f6ab59b382) is kept beside it as the baseline. At 11:31 UTC that day the
+   bundle had been put back to the gated small; what follows is the record of
+   how it got to large-v3 by accident in the first place.** Verified 8 September from the Hugging Face API:
    `Safak11/lilly` `listen/model.bin` is 1,558,949,857 bytes (LFS sha
    `8b756776…`), `listen/built.json` says `openai/whisper-large-v3`, last
    modified 5 September. The 4–5 September reader publish swept the Mac's

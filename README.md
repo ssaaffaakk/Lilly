@@ -166,7 +166,7 @@ attribution and licenses are in [`models/lilly/NOTICE.md`](models/lilly/NOTICE.m
 | --- | --- | --- |
 | Translate | OPUS-MT [`opus-mt-tc-big-zls-en`](https://huggingface.co/Helsinki-NLP/opus-mt-tc-big-zls-en) (Helsinki-NLP), CTranslate2 int8 | yes — LoRA merged into the weights |
 | Reply | OPUS-MT [`opus-mt-tc-base-en-sh`](https://huggingface.co/Helsinki-NLP/opus-mt-tc-base-en-sh) (Helsinki-NLP), CTranslate2 int8 | yes — LoRA merged into the weights; cleared its gate and published 8 Sep 2026 |
-| Listen | [`faster-whisper-small`](https://huggingface.co/Systran/faster-whisper-small) (SYSTRAN conversion of OpenAI Whisper) | yes — LoRA |
+| Listen | [`whisper-large-v3`](https://huggingface.co/openai/whisper-large-v3) (OpenAI), converted to CTranslate2 int8 here | yes — LoRA. **Shipped by the owner's decision, refused at its gate** (see [Speech](#speech)); the gated [`faster-whisper-small`](https://huggingface.co/Systran/faster-whisper-small) fine-tune stays the baseline |
 | Read | [PaddleOCR PP-OCRv6](https://github.com/PaddlePaddle/PaddleOCR) (`PP-OCRv6_medium_det` + `_medium_rec`, PaddlePaddle), fetched at run time; [EasyOCR](https://github.com/JaidedAI/EasyOCR) + CRAFT stays as the `LILLY_READER=easyocr` way back | no — stock, chosen by a pre-registered rule; the EasyOCR fallback is fine-tuned |
 | Speak | [Kokoro-82M](https://huggingface.co/hexgrad/Kokoro-82M) (hexgrad) | no — stock weights |
 
@@ -187,7 +187,7 @@ first number that was recorded, with the file it lives in. The last is today.
 | Photographs — words found per photograph, the 40 | **< 30%** | 36.0% (`training/RESULTS-ocr.md`) | **67.0%** |
 | Photographs — words found, pooled | **< 10%** | 16.9% (63 of 373) | **69.4%** |
 | Photographs — words invented that are on no sign | **> 280** | 224 | **65** |
-| Speech — word error, 200 held-out clips | **> 55%** | 38.5% (`training/RESULTS-speech.md`) | **34.9%** (the shipped listener) |
+| Speech — word error, 200 held-out clips | **> 55%** | 38.5% (`training/RESULTS-speech.md`) | **11.9%** (whisper-large-v3, shipped by the owner's decision, refused at its gate; the gated whisper-small reads 34.9%) |
 | Translation — BLEU on FLORES devtest, as the user sees it | **< 30** | 37.72, with the language tag leaked into 308 of 1,012 outputs (`training/RESULTS-devtest.md`) | **42.49**, leaked into **0** |
 | Reply, English → Bosnian — chrF2 on FLORES-200 | — | 58.96, the base as downloaded (`training/RESULTS-en-bs.md`) | **60.00**, fine-tuned and published 8 Sep |
 
@@ -209,8 +209,8 @@ pass marks were written down before each run (see
 | --- | --- | --- | --- | --- |
 | **Translate**, Bosnian → English | 1,012 FLORES devtest sentences, as the user sees them | 37.72 BLEU, and the model's language tag leaked into 308 of 1,012 outputs | **42.49 BLEU**, **0** leaks | shipped |
 | **Reply**, English → Bosnian | 2,009 FLORES-200 pairs | 29.57 BLEU / 58.96 chrF2 | **30.73 / 60.00**; writes the Bosnian form of a contested word **99.2%** of the time (base 94.3%) | cleared all four bars 8 Sep; **in the bundle since 8 Sep** |
-| **Listen**, whisper-small | 200 held-out FLEURS clips | 38.5% word error | **34.9%** word error; Bosnian term recall 65.9% → 68.2% | shipped |
-| **Listen**, whisper-large-v3 | the same 200, then all 925 | — | 11.9% word error on the 200; **14.1%** on 925 against small's 39.5% | **closed 8 Sep**: writes Croatian forms more often (1.1% → 6.1%); was in the bundle by mistake 4–8 Sep, see below |
+| **Listen**, whisper-small | 200 held-out FLEURS clips | 38.5% word error | **34.9%** word error; Bosnian term recall 65.9% → 68.2% | the listener that cleared its gate; kept as the baseline |
+| **Listen**, whisper-large-v3 | the same 200, then all 925 | — | 11.9% word error on the 200; **14.1%** on 925 against small's 39.5% | **shipped since 8 Sep by the owner's decision, refused at its gate**: writes Croatian forms more often (1.1% → 6.1%); closed to further looks, see below |
 | **Read** | 40 Commons photographs; `test-v2`, 132 with text | first reader: 36.0% of sign words found, 224 invented | **67.0% found, 65 invented** on the 40; **57.8% found, 450 invented** on `test-v2` | shipped (PP-OCRv6, untrained) |
 
 ### How to read the numbers
@@ -227,7 +227,8 @@ pass marks were written down before each run (see
   recall can always be bought by guessing more.
 - **Published**: the public bundle `Safak11/lilly` carries exactly the builds
   these numbers were measured on. The publisher checks each one by content
-  fingerprint and refuses any other.
+  fingerprint and refuses any other; the listener goes up only under a
+  fingerprint named on the command line, because it did not clear its gate.
 
 ### Translation
 
@@ -294,15 +295,25 @@ it writes the Croatian form of a word where the Bosnian one was said.
 - On the project's own scale (`training/RUBRIC.md`, computed for the first time
   in that run) the two listeners read **39.5%** and **14.1%**: band 3 against
   band 8.
-- By rule 3 of that pre-registration **whisper-large-v3 is closed**: no other
-  split, normaliser or instrument.
-- **The closed listener was in the published bundle for four days.** The 4–5
-  September reader publish swept the Mac's `models/lilly/listen`, already
-  large-v3, into `Safak11/lilly` before any gate had run (`listen/model.bin`,
-  1,558,949,857 bytes). That is the failure the fail-stop rules exist to
-  prevent. It is recorded here, not tidied: `listen/` went back to the gated
-  whisper-small with the 8 September publish, and the publisher now refuses
-  any listener but the gated one, by fingerprint.
+- By rule 3 of that pre-registration **whisper-large-v3 is closed to any
+  further look**: no other split, normaliser or instrument. That closes the
+  question of whether it passes. What ships is a separate decision.
+- **The owner's decision, 8 September, evening: it ships anyway.** With both
+  readings on the table, the owner chose the larger listener for what it gets
+  right, 14.1% against 39.5% of words wrong and 72% against 50% of
+  Bosnian-specific words recovered, and accepted what it gets wrong: two
+  Croatian spellings, *Europom* and *vjerojatno*, in 8 of 131 decided targets.
+  The gate's result stands as written, in `training/PREREGISTRATION.md` with
+  the reason. The bundle carries this listener only under its fingerprint
+  named on the publish command (`--allow-listen e6bb58483586b06c`), every
+  fresh install is told it is not the gated listener, and the gated
+  whisper-small (34.9%) stays beside it as the baseline every listener is
+  measured against.
+- **How it got there, not tidied.** The 4–5 September reader publish swept the
+  Mac's `models/lilly/listen`, already large-v3, into `Safak11/lilly` before
+  any gate had run. That is the failure the fail-stop rules exist to prevent.
+  It was taken out at 11:31 UTC on 8 September and put back that evening by
+  the decision above, with the numbers on the table this time.
 
 ### Photographs
 
@@ -449,7 +460,7 @@ of failures already paid for: [`docs/kaggle-fail-stop.md`](docs/kaggle-fail-stop
 - [x] Published weights and model card with every score and every limit
 - [x] Pre-registered thresholds and hash-bound results
 - [x] English → Bosnian fine-tune — all four pre-registered bars cleared 8 Sep (chrF2 +1.04, BLEU +1.16, form rate 99.2%, label gap 22.5); built and **published 8 Sep**
-- [ ] Larger speech model — trained (11.9% word error); refused at the gate 7 Sep and at the pre-registered last look 8 Sep (Croatian 1.1% → 6.1%, p = 0.018); **closed by rule 3**; was in the published bundle ungated 4–8 Sep, reverted with the 8 Sep publish, and the publisher now refuses it
+- [x] Larger speech model — trained (11.9% word error); refused at the gate 7 Sep and at the pre-registered last look 8 Sep (Croatian 1.1% → 6.1%, p = 0.018); closed to further looks by rule 3; **shipped 8 Sep evening by the owner's decision**, refused row and all, under a fingerprint named on the publish command
 - [ ] A valid photograph score: `test-v2b`'s 160 photographs transcribed blind, then one score on the union
 - [ ] Re-measure the served translation path after the ordinal splitter fix of 8 Sep (pre-registered; `training/compare_hypotheses.py`)
 - [ ] A labelled set of real phone photographs from Bosnia

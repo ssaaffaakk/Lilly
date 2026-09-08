@@ -321,3 +321,15 @@ The published bundle carried this listener, ungated, from 4 to 8 September;
 `listen/` went back to whisper-small (fingerprint a76342f6ab59b382) with the
 8 September publish, 11:31 UTC, and `scripts/publish_to_hf.py` now refuses any
 listener but the gated one.
+
+## Decision, 8 September 2026, evening — shipped by the owner's override
+
+The verdict above stands and the line stays closed to further looks. The
+owner, with both readings on the table, chose to publish the large-v3
+listener for what it gets right (14.1% against 39.5% word error; 72.1%
+against 49.6% Bosnian-specific words recovered) and accepted what it gets
+wrong (two Croatian spellings in 8 of 131 decided targets). The reason is in
+`training/PREREGISTRATION.md`, "The owner's decision, 8 September 2026,
+evening". The bundle carries it under `--allow-listen e6bb58483586b06c`, the
+gated whisper-small stays as the baseline, and every install is told which
+listener it has.
