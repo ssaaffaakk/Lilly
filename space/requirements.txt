@@ -1,10 +1,10 @@
 # What the app imports, and nothing else.
 #
 # The repository's requirements.txt also carries the training and publishing
-# stack — peft, accelerate, sacrebleu, pyarrow, kaggle. None of it is imported
-# by anything under app/, and a public demo has no business shipping a Kaggle
-# client. Checked by reading every import in app/*.py rather than by trimming
-# what looked unnecessary.
+# stack — peft, sacrebleu, pyarrow, kaggle. None of it is imported by anything
+# under app/, and a public demo has no business shipping a Kaggle client.
+# Checked by reading every import in app/*.py rather than by trimming what
+# looked unnecessary.
 --extra-index-url https://download.pytorch.org/whl/cpu
 torch
 
@@ -26,7 +26,18 @@ faster-whisper
 kokoro
 soundfile
 
-# photographs
+# photographs. The app reads with PaddleOCR PP-OCRv6 (docs/OCR-ROADMAP.md,
+# decision 5) and app/ocr.py imports paddleocr on the first photo; a Space
+# built from a list without it answered every photo with a 500. EasyOCR stays
+# as the way back (LILLY_READER=easyocr). The four pins are the repository
+# root's, for the reason given there: paddleocr and easyocr each pull a
+# different opencv distribution into the same cv2/ directory, PaddleX
+# segfaults under 5.0.0 and runs under 4.10.0, and every bake-off number was
+# measured under 4.10.0.84.
+paddleocr==3.7.0
+paddlepaddle==3.3.1
+opencv-contrib-python==4.10.0.84
+opencv-python-headless==4.10.0.84
 easyocr
 pillow
 numpy

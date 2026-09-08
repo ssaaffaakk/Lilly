@@ -15,10 +15,11 @@
 #      explicitly instead of landing in /root and failing at first request.
 FROM python:3.12-slim
 
-# easyocr pulls in opencv (libGL, glib), soundfile needs libsndfile, and the
-# voice needs espeak-ng for words its dictionary does not carry.
+# opencv needs libGL and glib, paddlepaddle's CPU build needs libgomp1,
+# soundfile needs libsndfile, and the voice needs espeak-ng for words its
+# dictionary does not carry.
 RUN apt-get update && apt-get install -y --no-install-recommends \
-        libgl1 libglib2.0-0 libsndfile1 espeak-ng \
+        libgl1 libglib2.0-0 libgomp1 libsndfile1 espeak-ng \
     && rm -rf /var/lib/apt/lists/*
 
 # The user a Space actually runs as. Created before anything is installed so
@@ -49,6 +50,19 @@ ARG LILLY_MODELS_REPO=Safak11/lilly
 RUN LILLY_MODELS_REPO=${LILLY_MODELS_REPO} python3 scripts/fetch_models.py
 
 COPY --chown=lilly app/ app/
+
+# The reader is PaddleOCR PP-OCRv6 (docs/OCR-ROADMAP.md, step 6), and PaddleX
+# fetches its weights on first use. That first use has to be this build step,
+# not the first visitor's photograph: a Space cut off from the network at
+# request time would answer every photo with a 500, and one with network would
+# make the first visitor sit through the download. The mirror is Hugging Face,
+# the host the bundle itself came from; the bcebos.com default refuses some
+# networks. The cache lands under HOME, which the Space's user owns, so it is
+# baked into the image. The cv2 assert is the same one the repository's
+# Dockerfile makes: PaddleX segfaults under opencv 5.
+ENV PADDLE_PDX_MODEL_SOURCE=huggingface
+RUN python3 -c "from app.ocr import get_paddle_reader; get_paddle_reader()" \
+    && python3 -c "import cv2; assert cv2.__version__ == '4.10.0', cv2.__version__"
 
 EXPOSE 7860
 # One worker on purpose — a second would load its own copy of 900 MB of weights,
