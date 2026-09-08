@@ -292,7 +292,9 @@ This section exists because a README that only lists wins is not worth trusting.
   FLORES-200). On 8 September a LoRA fine-tune of that base cleared all four
   bars written before it ran (`training/PREREGISTRATION.md`, "v3 — reply";
   `docs/en-bs-launch.md`): chrF2 **58.96 → 60.00**, BLEU **29.57 → 30.73** on
-  the same 2,009 pairs (both re-scored here from the committed translations);
+  the same 2,009 pairs (both re-scored here from the committed translations; a
+  paired bootstrap over sentences puts the gains at +1.04 [+0.70, +1.35] chrF2
+  and +1.16 [+0.70, +1.62] BLEU, 0 of 1,000 resamples at or below zero);
   the Bosnian form rate on 338 audited bench targets **94.3% → 99.2%** (244 of
   246 decided; `training/RESULTS-en-bs-formrate.md`); and the `>>bos_Latn<<`
   label still steers — the gap against `>>hrv<<` went 21.8 → 22.5 points, so the
