@@ -179,9 +179,15 @@ def main() -> int:
     args.out.parent.mkdir(parents=True, exist_ok=True)
     args.out.write_text(
         "".join(f"{clip}\t{text}\t{lang}\n" for clip, text, lang in mixed), encoding="utf-8")
-    print(f"\nwrote {args.out.relative_to(REPO_ROOT)}")
+    # Shown relative to the repository when it is inside it; an --out elsewhere
+    # used to crash this line after the file had already been written.
+    try:
+        shown = args.out.resolve().relative_to(REPO_ROOT)
+    except ValueError:
+        shown = args.out
+    print(f"\nwrote {shown}")
     print(f"  train with: python3 training/train_speech.py "
-          f"--data {args.out.relative_to(REPO_ROOT)} --valid data/speech/valid.tsv")
+          f"--data {shown} --valid data/speech/valid.tsv")
     return 0
 
 
