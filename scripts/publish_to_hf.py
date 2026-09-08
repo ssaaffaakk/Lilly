@@ -448,11 +448,26 @@ def report_left_behind(published=()) -> list:
     return unrecognised
 
 
+def stored_token() -> str:
+    """The token `hf auth login` saved, or ''.
+
+    HF_TOKEN in the environment still wins. The fallback exists because the
+    alternative is typing a write token into a terminal, which on 8 September
+    produced two 401s from placeholder text pasted in its place.
+    """
+    try:
+        from huggingface_hub import get_token
+    except ImportError:
+        return ""
+    return get_token() or ""
+
+
 def upload(repo_id: str, publish: dict, public: bool, message: str) -> int:
-    token = os.environ.get("HF_TOKEN")
+    token = os.environ.get("HF_TOKEN") or stored_token()
     if not token:
-        print("\nHF_TOKEN is not set. Create a write token at "
-              "https://huggingface.co/settings/tokens and export it:\n"
+        print("\nNo Hugging Face token. Either log in once:\n"
+              "    .venv/bin/hf auth login\n"
+              "or export a write token from https://huggingface.co/settings/tokens:\n"
               "    export HF_TOKEN=...\n"
               "Do not pass it as an argument and do not put it in a file.",
               file=sys.stderr)
@@ -646,8 +661,14 @@ def main() -> int:
     print(f"bundle:  {BUNDLE}")
     print(f"target:  {args.repo_id} ({'public' if args.public else 'private'})")
     print(f"mode:    {'UPLOAD' if args.upload else 'dry run (default) — nothing is sent'}")
-    print(f"HF_TOKEN: {'set' if os.environ.get('HF_TOKEN') else 'not set'}"
-          f"{'' if args.upload else '  (a dry run does not need it)'}")
+    if os.environ.get("HF_TOKEN"):
+        source = "HF_TOKEN"
+    elif stored_token():
+        source = "the login hf auth login stored"
+    else:
+        source = "none"
+    print(f"token:   {source}"
+          f"{'' if args.upload else '  (a dry run does not need one)'}")
 
     # Before anything else: are these the weights the published scores describe?
     refuse_unmeasured_weights(BUNDLE)
