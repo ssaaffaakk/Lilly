@@ -8,10 +8,21 @@ convert the result back into the format the app loads.
     audio + transcripts  ->  fine-tune  ->  convert  ->  models/lilly/listen/
 
 Data: a TSV with two columns, an audio file path and what is actually said in
-it. Paths may be absolute or relative to the TSV.
+it, and optionally a third, the language token the clip trains under. Paths
+may be absolute or relative to the TSV.
 
     recordings/001.wav<TAB>Dobar dan, kako ste?
-    recordings/002.wav<TAB>Gdje je autobuska stanica?
+    recordings/002.wav<TAB>Gdje je autobuska stanica?<TAB>bs
+    croatian/017.wav<TAB>Gdje je kolodvor?<TAB>hr
+
+The third column matters when neighbour-language audio is in the mix. Whisper
+writes the spelling its language token names, and until 8 September 2026 every
+row here -- the Croatian half of the mix included -- was trained under <|bs|>,
+which taught the listener that Bosnian is spelled *Europom* and *vjerojatno*:
+the row that closed whisper-large-v3 (training/RESULTS-speech.md). Rows without
+the column train under --language; data/scripts/build_speech_mix.py writes it
+per source. training/PREREGISTRATION.md, "v4 -- listen -- one language token per
+clip".
 
 Usage:
     python3 training/train_speech.py --data data/speech/train.tsv
@@ -23,6 +34,7 @@ sources are recordings you collect yourself, or Croatian/Serbian speech as a
 proxy — the three are close enough acoustically that it helps.
 """
 import argparse
+import collections
 import json
 import math
 import os
@@ -78,32 +90,84 @@ def load_audio(path: Path) -> np.ndarray:
     return audio
 
 
-def read_tsv(path: Path) -> list:
+def read_tsv(path: Path, with_language: bool = False) -> list:
+    """Rows as (clip, text), or (clip, text, language) with with_language=True.
+
+    Two columns is the format every TSV in this project has always had, and
+    every caller but the trainer still gets two-tuples. A third column names
+    the language token the clip trains under ("bs", "hr"); a row without one
+    carries None here and --language in main(). A line with any other shape
+    is skipped, as it always was.
+    """
     rows = []
     for line in path.read_text(encoding="utf-8").splitlines():
         parts = line.split("\t")
-        if len(parts) == 2 and parts[1].strip():
-            clip = Path(parts[0])
-            rows.append(((clip if clip.is_absolute() else path.parent / clip),
-                         parts[1].strip()))
+        if len(parts) not in (2, 3) or not parts[1].strip():
+            continue
+        clip = Path(parts[0])
+        clip = clip if clip.is_absolute() else path.parent / clip
+        text = parts[1].strip()
+        if with_language:
+            lang = parts[2].strip().lower() if len(parts) == 3 else ""
+            rows.append((clip, text, lang or None))
+        else:
+            rows.append((clip, text))
     return rows
 
 
 class ClipDataset(Dataset):
-    def __init__(self, rows, processor, language):
+    """Clips with their transcripts, each tokenised under its own language.
+
+    `tokenizers` maps a language code to a tokenizer whose prefix tokens name
+    that language; `language` is the default, served by the processor's own
+    tokenizer. The collator strips <|startoftranscript|>, so a label begins
+    with the language token -- which is the whole point.
+    """
+
+    def __init__(self, rows, processor, language, tokenizers=None):
         self.rows = rows
         self.processor = processor
         self.language = language
+        self.tokenizers = tokenizers or {}
 
     def __len__(self):
         return len(self.rows)
 
+    def tokenizer_for(self, language):
+        language = language or self.language
+        if language == self.language:
+            return self.processor.tokenizer
+        return self.tokenizers[language]
+
     def __getitem__(self, idx):
-        clip, text = self.rows[idx]
+        clip, text, *rest = self.rows[idx]
         features = self.processor.feature_extractor(
             load_audio(clip), sampling_rate=SAMPLE_RATE).input_features[0]
-        labels = self.processor.tokenizer(text).input_ids
+        labels = self.tokenizer_for(rest[0] if rest else None)(text).input_ids
         return {"input_features": features, "labels": labels}
+
+
+def language_tokenizers(processor, base: str, default: str, rows: list) -> dict:
+    """One tokenizer per language token the rows ask for, built up front.
+
+    Built here, before training, for two reasons. An unknown code fails on
+    the first row that carries it, which under the Trainer is hours in;
+    Whisper's tokenizer raises on a language it does not know the moment its
+    prefix tokens are read, so they are read now. And a tokenizer is built
+    once per language, not once per row.
+    """
+    counts = collections.Counter((row[2] if len(row) > 2 else None) or default for row in rows)
+    print("rows by language token: "
+          + ", ".join(f"<|{code}|> {n:,}" for code, n in sorted(counts.items())))
+    _ = processor.tokenizer.prefix_tokens          # validates --language itself
+    tokenizers = {}
+    for code in sorted(counts):
+        if code == default:
+            continue
+        tok = type(processor.tokenizer).from_pretrained(base, language=code, task="transcribe")
+        _ = tok.prefix_tokens                     # raises on a code Whisper lacks
+        tokenizers[code] = tok
+    return tokenizers
 
 
 @dataclass
@@ -335,7 +399,9 @@ def main() -> int:
                     help="held-out clips watched during training; the run keeps the "
                          "epoch that scores best on these, not the last one")
     ap.add_argument("--base", default=BASE_MODEL)
-    ap.add_argument("--language", default="bs")
+    ap.add_argument("--language", default="bs",
+                    help="the token rows without a language column train under, and "
+                         "the token the app decodes with; rows with a column use their own")
     ap.add_argument("--epochs", type=float, default=3.0)
     ap.add_argument("--batch-size", type=int, default=2)
     ap.add_argument("--grad-accum", type=int, default=8)
@@ -387,7 +453,7 @@ def main() -> int:
               file=sys.stderr)
         return 1
 
-    rows = read_tsv(args.data)
+    rows = read_tsv(args.data, with_language=True)
     if not rows:
         print(f"no usable rows in {args.data}", file=sys.stderr)
         return 1
@@ -395,6 +461,7 @@ def main() -> int:
 
     processor = WhisperProcessor.from_pretrained(args.base, language=args.language,
                                                  task="transcribe")
+    tokenizers = language_tokenizers(processor, args.base, args.language, rows)
     model = WhisperForConditionalGeneration.from_pretrained(args.base)
     model.generation_config.language = args.language
     model.generation_config.task = "transcribe"
@@ -422,7 +489,8 @@ def main() -> int:
 
     # Without this the run keeps whatever the last epoch produced, even if it
     # was already overfitting — and nothing warns you until you measure at the end.
-    valid_rows = read_tsv(args.valid) if args.valid and args.valid.exists() else []
+    valid_rows = (read_tsv(args.valid, with_language=True)
+                  if args.valid and args.valid.exists() else [])
     if valid_rows and args.quick_test:
         valid_rows = valid_rows[:4]
     print(f"held-out clips watched during training: {len(valid_rows):,}"
@@ -461,8 +529,9 @@ def main() -> int:
     )
     Seq2SeqTrainer(
         model=model, args=train_args,
-        train_dataset=ClipDataset(rows, processor, args.language),
-        eval_dataset=ClipDataset(valid_rows, processor, args.language) if valid_rows else None,
+        train_dataset=ClipDataset(rows, processor, args.language, tokenizers),
+        eval_dataset=(ClipDataset(valid_rows, processor, args.language, tokenizers)
+                      if valid_rows else None),
         data_collator=Collator(processor),
         callbacks=[EncoderGradientCheck(), FiniteLossCheck()]).train(
             resume_from_checkpoint=str(args.resume) if args.resume else None)

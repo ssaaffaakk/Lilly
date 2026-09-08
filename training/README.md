@@ -97,12 +97,20 @@ stripped-down version of the same text, and training on that would teach the lis
 drop both — which then reaches the translator and the reader. Scoring normalises either
 side, so the comparison stays fair regardless.
 
-Data is a TSV of an audio path and what is actually said in it:
+Data is a TSV of an audio path and what is actually said in it, with an optional
+third column naming the language token the clip trains under:
 
 ```
 recordings/001.wav	Dobar dan, kako ste?
-recordings/002.wav	Gdje je autobuska stanica?
+recordings/002.wav	Gdje je autobuska stanica?	bs
+croatian/017.wav	Gdje je kolodvor?	hr
 ```
+
+The third column is not optional once neighbour-language audio is in the mix.
+Whisper writes the spelling its token names, and a Croatian clip trained under
+`<|bs|>` teaches the listener Croatian spelling for Bosnian — the row that closed
+the large listener (`RESULTS-speech.md`). `data/scripts/build_speech_mix.py`
+writes the column per source; rows without it train under `--language`.
 
 **The data is small, and that is the real limit.** `download_speech_data.py` pulls a
 read-speech set with human transcripts — 3,091 clips to train on, 925 held back to judge

@@ -22,6 +22,14 @@ so combining two corpora into one relative-path file silently repoints every row
 of one of them at a directory it was never in. The rows do not vanish with an
 error -- they turn into missing files, or worse, into whatever happens to share
 that name.
+
+Every row carries a third column: the language token the clip trains under.
+Until 8 September 2026 the mix had two columns and train_speech.py put every
+row -- the Croatian half included -- under <|bs|>, so the listener was taught
+that Bosnian is spelled *Europom* and *vjerojatno*. That is the row that closed
+whisper-large-v3 (training/RESULTS-speech.md). The token is written here, per
+source, and read there, per row (training/PREREGISTRATION.md, "v4 -- listen --
+one language token per clip").
 """
 import argparse
 import random
@@ -31,6 +39,12 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 BOSNIAN = REPO_ROOT / "data" / "speech" / "train.tsv"
+# The language token each source's clips train under. Whisper's decoder
+# writes the spelling the token names, so a Croatian clip under <|bs|>
+# teaches the model Croatian spelling for Bosnian. A source not listed here
+# stops the run: guessing a language is how the leak happened.
+BOSNIAN_LANGUAGE = "bs"
+SOURCE_LANGUAGE = {"fleurs_hr": "hr", "voxpopuli_hr": "hr", "parlaspeech_hr": "hr"}
 EXTRA_DIR = REPO_ROOT / "data" / "speech-extra"
 OUT = REPO_ROOT / "data" / "speech-extra" / "train-mix.tsv"
 HELD_OUT = (REPO_ROOT / "data" / "speech" / "valid.tsv",
@@ -67,7 +81,8 @@ def transcripts(paths) -> set:
 
 
 def neighbour_rows() -> list:
-    """Every extra corpus the downloader has finished writing.
+    """Every extra corpus the downloader has finished writing, as
+    (absolute clip path, transcript, language token).
 
     Per-source files rather than the combined one the downloader also writes:
     that combined file already has our Bosnian folded into it, and this needs
@@ -78,10 +93,19 @@ def neighbour_rows() -> list:
     for path in sorted(EXTRA_DIR.glob("*/*.tsv")):
         if path.name.startswith("train-mix"):
             continue
+        source = path.parent.name
         found = read(path)
-        if found:
-            rows += found
-            print(f"{path.parent.name}: {len(found):,} clips")
+        if not found:
+            continue
+        if source not in SOURCE_LANGUAGE:
+            raise SystemExit(
+                f"{path}: no language token is registered for the source {source!r} "
+                f"(SOURCE_LANGUAGE in {Path(__file__).name} knows {sorted(SOURCE_LANGUAGE)}). "
+                f"Add it there; a clip trained under a guessed token is the leak this "
+                f"column exists to stop.")
+        lang = SOURCE_LANGUAGE[source]
+        rows += [(clip, text, lang) for clip, text in found]
+        print(f"{source}: {len(found):,} clips, token <|{lang}|>")
     return rows
 
 
@@ -98,11 +122,11 @@ def main() -> int:
         print("--share must be between 0 and 1", file=sys.stderr)
         return 1
 
-    bosnian = read(BOSNIAN)
+    bosnian = [(clip, text, BOSNIAN_LANGUAGE) for clip, text in read(BOSNIAN)]
     if not bosnian:
         print(f"no Bosnian clips at {BOSNIAN}", file=sys.stderr)
         return 1
-    print(f"Bosnian: {len(bosnian):,} clips")
+    print(f"Bosnian: {len(bosnian):,} clips, token <|{BOSNIAN_LANGUAGE}|>")
 
     extra = neighbour_rows()
     if not extra:
@@ -135,8 +159,13 @@ def main() -> int:
     print(f"neighbours                  {len(extra):,} rows")
     print(f"mixed                       {len(mixed):,} rows, {actual:.0%} Bosnian"
           f"  (asked for {args.share:.0%})")
+    by_token = {}
+    for _clip, _text, lang in mixed:
+        by_token[lang] = by_token.get(lang, 0) + 1
+    print("rows by language token      "
+          + ", ".join(f"<|{k}|> {v:,}" for k, v in sorted(by_token.items())))
 
-    missing = sum(1 for clip, _ in mixed[:400] if not clip.exists())
+    missing = sum(1 for clip, _text, _lang in mixed[:400] if not clip.exists())
     if missing:
         print(f"\n{missing} of the first 400 clips do not exist on disk — the "
               f"paths are wrong, not the ratio", file=sys.stderr)
@@ -149,7 +178,7 @@ def main() -> int:
 
     args.out.parent.mkdir(parents=True, exist_ok=True)
     args.out.write_text(
-        "".join(f"{clip}\t{text}\n" for clip, text in mixed), encoding="utf-8")
+        "".join(f"{clip}\t{text}\t{lang}\n" for clip, text, lang in mixed), encoding="utf-8")
     print(f"\nwrote {args.out.relative_to(REPO_ROOT)}")
     print(f"  train with: python3 training/train_speech.py "
           f"--data {args.out.relative_to(REPO_ROOT)} --valid data/speech/valid.tsv")

@@ -2520,3 +2520,108 @@ explained, not a result to be enjoyed.
 Abbreviations — *npr.*, *dr.*, *tzv.* — still split as they did before. That is
 a separate rule, it is not changed here, and a number from this run says
 nothing about it. Nothing about the model, the corpus or the build changes.
+
+---
+
+# v4 — listen — one language token per clip, written before any run
+
+Written 8 September 2026, after the recipe was changed in code and **before**
+it has trained anything. Nothing below is reinterpreted afterwards.
+
+## The defect this recipe corrects
+
+`training/train_speech.py` built one processor with `--language bs` and fed
+every row of the mix through it. The half-1 / half-2 mix was 6,050 Croatian
+rows against 6,182 Bosnian (`RESULTS-speech-half2.md`), so half the training
+labels carried `<|bs|>` in front of Croatian text. Whisper's decoder writes
+the spelling its language token names, and its pretraining gave that token
+little to hold on to — the Whisper paper's appendix E lists **11 hours** of
+Bosnian against **91 hours** of Croatian. The model was taught, by six
+thousand examples, that Bosnian is spelled *Europom* and *vjerojatno*. That is
+the exact row that closed whisper-large-v3: Croatian substitution 1.1% → 6.1%
+on 925 clips, p = 0.018, the same two words each time.
+
+`docs/V4-PLAN.md` (section 4) concluded that after the instrument only new
+audio could move speech. This section records a different reading: the leak
+is a recipe defect, not a data limit, and it costs one column in the mix file.
+
+## What changes, and what does not
+
+- `data/scripts/build_speech_mix.py` writes a third column, the language token
+  per row: `bs` for FLEURS-bs, `hr` for fleurs_hr, voxpopuli_hr and
+  parlaspeech_hr. A source it does not know stops the run.
+- `training/train_speech.py` reads the column and tokenises each row under its
+  own token, building one tokenizer per language before training and refusing
+  a code Whisper lacks. It prints the row counts per token. Rows without the
+  column train under `--language`, as before.
+- Both speech notebooks stop before training if the mix lacks the column or
+  lacks Croatian rows; that mix would not be this experiment.
+- **Unchanged:** the sources, the 0.47 Bosnian share, one epoch per half, the
+  LoRA configuration, the leakage gate, and inference — the app still decodes
+  with `language="bs"`, so the product's path does not move.
+
+## The base is the owner's decision, and rule 3 stands
+
+The "v3 — speech — the full instrument" section closed whisper-large-v3 and
+its rule 3 says "the line ends and the bundle keeps whisper-small,
+permanently". Whether a different recipe on the same base is a new line or
+the closed one is the owner's ruling, not an agent's, and this section does
+not make it. Three bases can carry the recipe without touching that ruling:
+whisper-small (a like-for-like against the gated listener), whisper-medium,
+and whisper-large-v3-turbo. The base chosen goes into the notebooks' cell 7
+and into an amendment under this section **before** the launch, by the owner.
+
+## The measurement that decides
+
+The full instrument, unchanged from the section that closed large-v3:
+`scripts/kaggle_train.py speech-instrument` — all 925 FLEURS bs_ba test
+clips, both listeners in one process, transcripts keyed on audio content,
+the paired bootstrap over sentences. The baseline is the re-measured
+`listen-previous` (whisper-small, fingerprint `a76342f6ab59b382`).
+
+| row | threshold |
+|---|---|
+| word error, `--decode app` | **strictly below** the re-measured `listen-previous` |
+| Bosnian term recall | **not below** its re-measured baseline |
+| Croatian substitution | **not above** its re-measured baseline |
+
+Both, not either. Rubric WER (greedy, `BasicTextNormalizer`) is reported
+beside the rows and decides nothing. The candidate is judged **once**; a
+second look at the same weights on any other split, normaliser or term list is
+what rule 3 forbids and this section inherits.
+
+## Checks that cost no GPU, run before the launch
+
+- `build_speech_mix.py --dry-run` prints rows by language token; both `bs` and
+  `hr` must be present.
+- `train_speech.py` prints "rows by language token" in the first minute; a
+  run whose log shows only `<|bs|>` is the old recipe and is stopped.
+- `tests/test_speech_mix.py` and `tests/test_train_speech_rows.py` pass.
+
+## What failure looks like, stated now
+
+- **Croatian substitution still rises.** The token is not the lever, and
+  V4-PLAN's reading — audio supply — was the right one. Record it, keep the
+  gated listener, stop tuning the recipe.
+- **Word error rises.** Splitting the tokens cost acoustics: the model no
+  longer transfers Croatian sound to the Bosnian token as freely. Report the
+  size, keep the gated listener.
+- **Croatian holds and word error does not fall.** A null; publish it.
+- **All three hold.** It ships by the rule. Publishing is the owner's act,
+  `scripts/publish_to_hf.py --allow-listen <fingerprint>`.
+
+## Expected direction, so a surprise is recognisable
+
+The mechanism predicts Croatian substitution at or below the small
+baseline's, and a smaller word-error gain than the ungated large-v3 showed,
+because part of that gain was Croatian spelling scored against Bosnian
+references on words the two languages share. Written down so that a Croatian
+row that *rises* under this recipe is read as the hypothesis failing, not as
+noise to be re-measured.
+
+## What this run cannot settle
+
+Whether large-v3's 14.1% rubric WER is reachable without Croatian drift —
+unless the owner reopens that base. Anything about Serbian drift, which the
+Serbian column reports and no bar here judges. Whether more Bosnian audio
+would do better still; that is V4-PLAN's lever and it is not touched.
