@@ -135,8 +135,16 @@ EXCLUDE_RULES = (
     # the release is the owner's call and needs its own model-card entry.
     ("translate-en-bs", "untuned float32 English -> Bosnian base, read only by training "
                         "(training/train_translation.py)"),
-    ("translator-en-bs", "English -> Bosnian reply build; OPTIONAL in app/lilly.py, built locally, "
-                         "not in this release"),
+    ("translator-en-bs", "English -> Bosnian reply build; published only with --with-reply, "
+                         "bound to training/RESULTS-en-bs-formrate.md"),
+    ("adapter-en-bs", "raw LoRA adapter for the reply direction; the merged model is published "
+                      "as translator-en-bs/ (--with-reply)"),
+    # The whisper-large-v3 listener refused at its gate (7 Sep) and at the
+    # pre-registered last look (8 Sep): closed by rule 3, kept on this machine
+    # as the record of what was refused. It is never published; the gated
+    # whisper-small is LISTEN_FINGERPRINT above.
+    ("listen-large-v3*", "the whisper-large-v3 listener closed by rule 3 on 8 Sep 2026 "
+                         "(Croatian substitution 1.1% -> 6.1%); kept as the record, never published"),
 )
 
 # Never interesting, at any depth.
