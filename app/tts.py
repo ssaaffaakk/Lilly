@@ -10,7 +10,7 @@ Usage:
 import sys
 import threading
 
-from app.lilly import SPEAK_DIR
+from app.lilly import SPEAK_DIR, BadInput
 
 VOICE = SPEAK_DIR / "voices" / "default.pt"
 # Speech runs at roughly the speed it plays, so the length of the text is the
@@ -37,11 +37,13 @@ def get_pipeline():
 
 
 def speak_to_file(text: str, out_path: str, voice: str = str(VOICE)) -> str:
-    import numpy as np
-    import soundfile as sf
     text = text.strip()[:MAX_CHARS]
     if not text:
-        raise ValueError("nothing to say")
+        # Their side of the line: a body of spaces passes the server's
+        # min_length, and a plain ValueError here was answered as a 500.
+        raise BadInput("nothing to say")
+    import numpy as np
+    import soundfile as sf
     with _speak_lock:
         chunks = [audio for _, _, audio in get_pipeline()(text, voice=voice)]
     sf.write(out_path, np.concatenate(chunks), 24000)

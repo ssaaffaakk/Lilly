@@ -27,9 +27,11 @@ import re
 import tempfile
 from pathlib import Path
 
+from typing import Annotated
+
 from fastapi import FastAPI, UploadFile
 from fastapi.responses import FileResponse, JSONResponse, Response
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, StringConstraints
 from starlette.concurrency import run_in_threadpool
 
 from app import feedback
@@ -48,14 +50,23 @@ SAFE_SUFFIX = re.compile(r"^\.[A-Za-z0-9]{1,8}$")
 app = FastAPI(title="Lilly")
 
 
+# Stripped before the length check: min_length counts spaces, so a body of
+# nothing but whitespace used to reach the model, and the voice answered it
+# with a 500. Blank is empty, and empty is a 422 like any other short field.
+TranslateIn_text = Annotated[str, StringConstraints(strip_whitespace=True,
+                                                     min_length=1, max_length=12_000)]
+SpeakIn_text = Annotated[str, StringConstraints(strip_whitespace=True,
+                                                 min_length=1, max_length=2_000)]
+
+
 class TranslateIn(BaseModel):
     # A cheap first gate. The real limit is in the engine and counts tokens,
     # because cost follows sentence count and length, not characters.
-    text: str = Field(min_length=1, max_length=12_000)
+    text: TranslateIn_text
 
 
 class SpeakIn(BaseModel):
-    text: str = Field(min_length=1, max_length=2_000)
+    text: SpeakIn_text
 
 
 class FeedbackIn(BaseModel):
@@ -159,6 +170,10 @@ async def speech(file: UploadFile):
     tmp_path = await _save_upload(file, "a.webm", MAX_UPLOAD["/api/speech"])
     try:
         bosnian, english = await run_in_threadpool(lilly.translate_audio, tmp_path)
+    except FileNotFoundError as exc:
+        # No listener on this machine. Not the caller's recording and not a
+        # crash: the same 503 the reply direction answers with.
+        return JSONResponse(status_code=503, content={"error": str(exc)})
     finally:
         Path(tmp_path).unlink(missing_ok=True)
     return {"bosnian": bosnian, "english": english}
