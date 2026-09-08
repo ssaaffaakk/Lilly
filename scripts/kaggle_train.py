@@ -162,6 +162,16 @@ JOBS = {
                     "slug": "lilly-ocr-paddle", "title": "Lilly ocr paddle",
                     "needs_weights": False, "needs_corpus": False,
                     "needs_ocr_crops": True},
+    # The Bosnian voice (PREREGISTRATION.md, "v5 -- speak -- a Bosnian voice
+    # from FLEURS"): Piper fine-tuned from its sr_RS checkpoint on the FLEURS
+    # bs_ba train clips, clustered by speaker on the box, and judged through
+    # the shipped listener against the voice the app speaks with today and
+    # against the human recordings. The listener is the same weights the app
+    # ships (e6bb58483586b06c), attached as the lilly-listen-large-v3 dataset.
+    "speak-bs":    {"notebook": "Lilly_Speak_BS_Kaggle.ipynb",
+                    "slug": "lilly-speak-bs", "title": "Lilly speak bs",
+                    "needs_weights": False, "needs_corpus": False,
+                    "needs_listen_shipped": True},
 }
 STAGING = REPO_ROOT / "models" / "kaggle-staging"     # gitignored, under models/
 
@@ -375,6 +385,49 @@ def push_listen_candidate(user: str) -> str:
         return slug
     mb = sum(f.stat().st_size for f in stage.iterdir()) / 1048576
     print(f"uploading {mb:.0f} MB to {slug} -- the slow part, once")
+    run(KAGGLE, "datasets", "create", "-p", stage, "-r", "zip")
+    wait_until_ready(slug)
+    return slug
+
+
+def push_listen_shipped(user: str) -> str:
+    """The listener the app ships, unpacked, as the lilly-listen-large-v3 dataset.
+
+    The voice is judged by the ear the product has, so the judge must be the
+    bytes under models/lilly/listen -- the whisper-large-v3 the owner shipped on
+    8 September, fingerprint e6bb58483586b06c. That is the same build
+    push_listen_candidate staged from half-2's zip, so it goes to the same
+    slug; when the dataset is already there nothing is uploaded, and when it
+    is not, it is staged from the Mac's copy after the fingerprint check.
+    """
+    slug = f"{user}/lilly-listen-large-v3"
+    stage = STAGING / "dataset" / "lilly-listen-large-v3"
+    shipped = REPO_ROOT / "models" / "lilly" / "listen"
+    if not (shipped / "model.bin").is_file():
+        raise SystemExit(f"no listener at {shipped} -- run scripts/fetch_models.py")
+    built = json.loads((shipped / "built.json").read_text(encoding="utf-8"))
+    if built.get("base") != "openai/whisper-large-v3":
+        raise SystemExit(f"{shipped} built.json says {built} -- not the shipped whisper-large-v3")
+    got = listener_fingerprint(shipped)
+    if got != GATE_FINGERPRINTS["listen"]:
+        raise SystemExit(f"{shipped} fingerprint {got} is not the shipped listener's "
+                         f"{GATE_FINGERPRINTS['listen']}; the voice would be judged by another ear")
+    existing = subprocess.run([KAGGLE, "datasets", "status", slug],
+                              text=True, capture_output=True)
+    if "ready" in existing.stdout.lower():
+        print(f"dataset already there: {slug} (the shipped listener, {got})")
+        return slug
+    stage.mkdir(parents=True, exist_ok=True)
+    for f in shipped.iterdir():
+        if f.is_file():
+            target = stage / f.name
+            if not target.exists() or target.stat().st_size != f.stat().st_size:
+                target.write_bytes(f.read_bytes())
+    (stage / "dataset-metadata.json").write_text(json.dumps({
+        "title": "Lilly listen large v3", "id": slug,
+        "licenses": [{"name": "other"}]}, indent=1))
+    mb = sum(f.stat().st_size for f in stage.iterdir()) / 1048576
+    print(f"uploading {mb:.0f} MB to {slug} (fingerprint {got}) -- the slow part, once")
     run(KAGGLE, "datasets", "create", "-p", stage, "-r", "zip")
     wait_until_ready(slug)
     return slug
@@ -893,6 +946,13 @@ def main() -> int:
             print("    speech-instrument.md is the raw report. Then write the outcome")
             print("    into RESULTS-speech.md and PREREGISTRATION.md whichever way it")
             print("    fell. DOES NOT SHIP means rule 3: large-v3 is closed.")
+        elif args.job == "speak-bs":
+            print("  unzip lilly-speak-bs-results.zip into training/speak-bs/ (the test and")
+            print("    valid JSON, speakers.json, metrics.csv, the report) and write the outcome")
+            print("    into RESULTS-speak-bs.md and PREREGISTRATION.md whichever way it fell.")
+            print("  lilly-speak-bs.zip exists only if the voice cleared its bar: then")
+            print("    unzip it over models/lilly/speak-bs/ (voice.onnx, voice.onnx.json,")
+            print("    built.json) and the app speaks with it. No zip means it did not ship.")
         elif args.job == "ordinals-remeasure":
             print("  unzip lilly-ordinals.zip beside training/: the two hypotheses files,")
             print("    the two RESULTS-product-*-kaggle.md, the four compare-*.json. Commit them,")
@@ -980,6 +1040,8 @@ def main() -> int:
         datasets.append(push_ocr_sign_letters(user))
     if job.get("needs_listen_candidate"):
         datasets.append(push_listen_candidate(user))
+    if job.get("needs_listen_shipped"):
+        datasets.append(push_listen_shipped(user))
     if job.get("needs_translator_builds"):
         datasets.extend(push_translator_builds(user))
     if job.get("needs_listen_previous"):

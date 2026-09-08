@@ -472,6 +472,7 @@ python3 scripts/kaggle_train.py ocr             # in parallel if a GPU slot is f
 python3 scripts/kaggle_train.py speech-half2    # only after half 1 is COMPLETE
 python3 scripts/kaggle_train.py speech-instrument   # 925 clips, both listeners: the last look at large-v3
 python3 scripts/kaggle_train.py translation-en-bs   # the reply direction, LoRA, pre-registered bars
+python3 scripts/kaggle_train.py speak-bs            # a Bosnian voice from FLEURS (Piper, warm-started), judged through the listener
 python3 scripts/kaggle_train.py outside-baseline    # NLLB-200 on the same FLORES pairs
 python3 scripts/kaggle_poll.py                  # CANCEL or ERROR counts as failure
 ```

@@ -70,6 +70,15 @@ def jobs() -> dict:
             "done_names": ("lilly-read-paddle.zip",),
             "min_bytes": 1_000_000,
         },
+        # The Bosnian voice. The results zip is written after the judgment
+        # whichever way it fell and is what "done" means; the voice zip
+        # (lilly-speak-bs.zip) exists only when the bar was cleared and is
+        # never the done signal -- a refused voice leaves no installable file.
+        "speak-bs": {
+            "slug": f"{user}/lilly-speak-bs",
+            "done_names": ("lilly-speak-bs-results.zip",),
+            "min_bytes": 20_000,
+        },
     }
 
 

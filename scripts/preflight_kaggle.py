@@ -15,6 +15,7 @@ OUTSIDE = REPO / "training" / "Lilly_Outside_Baseline_Kaggle.ipynb"
 SPEECH_INSTR = REPO / "training" / "Lilly_Speech_Instrument_Kaggle.ipynb"
 TRANSLATION = REPO / "training" / "Lilly_Translation_Kaggle.ipynb"
 ORDINALS = REPO / "training" / "Lilly_Ordinals_Kaggle.ipynb"
+SPEAK_BS = REPO / "training" / "Lilly_Speak_BS_Kaggle.ipynb"
 
 
 def read_nb(path: Path) -> str:
@@ -323,6 +324,56 @@ def check_speech_instrument(text: str) -> None:
              "Output stopped being attachable on 7 September and version 2 died at the attach cell")
 
 
+def check_speak_bs(text: str) -> None:
+    """The Bosnian voice: pre-registered data, judge, bar and package order
+    (PREREGISTRATION.md, "v5 -- speak -- a Bosnian voice from FLEURS")."""
+    check_offload(text, "speak-bs")
+    if "/kaggle/temp" not in text or "/kaggle/working/Lilly" in text:
+        fail("speak-bs: must clone to /kaggle/temp")
+    if "!= 3091" not in text or "!= 400" not in text or "!= 925" not in text:
+        fail("speak-bs: must assert all three FLEURS bs_ba splits arrived whole (3091 / 400 / 925)")
+    if "e6bb58483586b06c" not in text or "lilly-listen-large-v3" not in text:
+        fail("speak-bs: the judge is the shipped listener (e6bb58483586b06c) from the "
+             "lilly-listen-large-v3 dataset, checked by fingerprint before a clip is heard")
+    if "3dd3439e5c550d8201a9e7a2b1300a5b" not in text or "warmstart_ckpt" not in text:
+        fail("speak-bs: must warm-start from the sr_RS checkpoint, checked by md5, "
+             "and count the copied parameters before training")
+    if "02c6e27ac7b4dfa84272df89edca9feb" not in text:
+        fail("speak-bs: the 'before' voice must be the bytes the app speaks with today (md5)")
+    if "cluster_speakers.py" not in text or "prepare_speak_data.py" not in text:
+        fail("speak-bs: speakers come from cluster_speakers.py and the training file from "
+             "prepare_speak_data.py -- not from code inlined in a cell")
+    if '"--data.espeak_voice", "bs"' not in text:
+        fail("speak-bs: the phonemizer is espeak-ng's bs (numbers read 'dvije', not 'dve')")
+    if "max_time" not in text:
+        fail("speak-bs: training must carry a wall-clock cap; the 12h wall is not a stop rule")
+    if "pip install torch" in text or '"torch",' in text or '"torch"]' in text:
+        fail("speak-bs: must not pip-install torch (Kaggle's CUDA build stays)")
+    if "evaluate_speak.py" not in text or '"--clips", "first200"' not in text or '"--human"' not in text:
+        fail("speak-bs: the judgment is evaluate_speak.py on the first200 prefix with the human row")
+    if "speak-bs-valid.json" not in text or '"--tsv", str(VALID)' not in text:
+        fail("speak-bs: the served speaker is chosen on the valid split, never on the test prefix")
+    if "LILLY_SPEECH_DEVICE" not in text:
+        fail("speak-bs: the listener must be put on the GPU by env for the scoring cells")
+    if "lilly-speak-bs-results.zip" not in text or "lilly-speak-bs.zip" not in text:
+        fail("speak-bs: results zip always after the judgment; voice zip only on SHIPS")
+    judged = text.find("speak-bs-test.json")
+    if judged < 0 or text.find("VOICE_ZIP = ") < judged:
+        fail("speak-bs: the voice zip must be written after the judgment, never before")
+    if "p_value" not in text and '["p"]' not in text:
+        fail("speak-bs: the ship bar reads the paired bootstrap p, not the point delta alone")
+    if "training/export_piper_onnx.py" not in text or '"-m", "piper.train.export_onnx"' in text:
+        fail("speak-bs: export through training/export_piper_onnx.py (TorchScript exporter); "
+             "piper.train.export_onnx dies in the dynamo exporter on torch >= 2.9")
+    if "core.pyx" not in text or "8640b303683823a4a1259179547ef476999b1cbb2e46ff656b970763cfbc1157" not in text \
+            or "maximum_path" not in text:
+        fail("speak-bs: must build Piper's monotonic_align extension from the pinned core.pyx and "
+             "prove the import before training -- the wheel does not carry it built")
+    if '"uninstall", "-y", "-q", "typing"' not in text:
+        fail("speak-bs: must remove the `typing` backport resemblyzer installs -- it shadows the "
+             "standard library from site-packages")
+
+
 def check_ordinals(text: str) -> None:
     """A measurement with no weights to ship: the guards are the count, the
     builds, both splitters on one box, and the gate before the zip."""
@@ -377,7 +428,8 @@ def main() -> int:
                      (OUTSIDE, check_outside),
                      (SPEECH_INSTR, check_speech_instrument),
                      (TRANSLATION, check_translation),
-                     (ORDINALS, check_ordinals)):
+                     (ORDINALS, check_ordinals),
+                     (SPEAK_BS, check_speak_bs)):
         if not path.is_file():
             fail(f"missing {path}")
         fn(read_nb(path))
@@ -401,6 +453,12 @@ def main() -> int:
              "trains to the end and returns a model nobody registered")
     if '"needs_translator_builds": True' not in kaggle_train or "push_translator_builds" not in kaggle_train:
         fail("kaggle_train.py must upload both served builds (checked by fingerprint) for ordinals-remeasure")
+    if '"needs_listen_shipped": True' not in kaggle_train or "push_listen_shipped" not in kaggle_train:
+        fail("kaggle_train.py must attach the shipped listener (fingerprint-checked) for speak-bs")
+    poller_speak = (REPO / "scripts" / "kaggle_poll.py").read_text(encoding="utf-8")
+    speak_job = poller_speak.split('"speak-bs":', 1)[1][:400] if '"speak-bs":' in poller_speak else ""
+    if "lilly-speak-bs-results.zip" not in speak_job or '"lilly-speak-bs.zip"' in speak_job:
+        fail("speak-bs poller: done is the results zip; the voice zip is never the done signal")
     if "could not be added" not in kaggle_train:
         fail("kaggle_train.py confirm_push must refuse a push whose attachment Kaggle "
              "'could not be added' -- that run starts without its data and dies cells later")
@@ -434,7 +492,7 @@ def main() -> int:
     offload = (REPO / "training" / "kaggle_offload.py").read_text(encoding="utf-8")
     if "experiment_log.json" not in offload or "scan_trainproof" not in offload:
         fail("training/kaggle_offload.py must write experiment_log.json and scan the tee")
-    print("preflight ok: speech half-1 + half-2 + instrument, OCR, outside-baseline, translation, ordinals notebooks")
+    print("preflight ok: speech half-1 + half-2 + instrument, OCR, outside-baseline, translation, ordinals, speak-bs notebooks")
     return 0
 
 

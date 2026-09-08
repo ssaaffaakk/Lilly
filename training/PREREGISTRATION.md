@@ -2716,3 +2716,133 @@ Whether large-v3's 14.1% rubric WER is reachable without Croatian drift —
 unless the owner reopens that base. Anything about Serbian drift, which the
 Serbian column reports and no bar here judges. Whether more Bosnian audio
 would do better still; that is V4-PLAN's lever and it is not touched.
+
+---
+
+# v5 — speak — a Bosnian voice from FLEURS, written before any run
+
+Written 9 September 2026, after the reverse direction shipped with Piper's
+`sr_RS-serbski_institut-medium` as the Bosnian voice and **before** anything
+has trained. Nothing below is reinterpreted afterwards.
+
+## Why
+
+The voice the app speaks Bosnian with is filed under Serbian by Piper and, by
+its own card, trained on the Sorbian Institute's Lower Sorbian recordings. It
+is intelligible and accented: on 12 sentences / 104 words played to the
+shipped listener it was heard with 28 words wrong (speaker 0) against the
+listener's 11.9% on real Bosnian speech. The owner asked whether a voice
+trained on Bosnian recordings can close that gap ("ötekiyle aynı puanda olsun")
+and said no new recording would be made: the material is what exists.
+
+## The data, seen before the run
+
+FLEURS bs_ba (google/fleurs, CC-BY-4.0), already the listener's training and
+test material: train 3,091 clips / 9.99 h, valid 400 / 1.34 h, test 925 /
+3.16 h, all 16 kHz, with raw transcripts. FLEURS names no speakers, so
+`training/cluster_speakers.py` embeds every clip (resemblyzer GE2E) and
+clusters by cosine distance. On the Mac, at distance **0.30**: 8 clusters, 7 of
+them holding 54–103 minutes (592.5 minutes together), cohesion 0.83–0.89, and
+14.9% of same-sentence clip pairs (291 of 1,952) in one cluster — FLEURS reads
+a sentence with several people, so that share is the clustering's own error,
+measured from the data with no listening. The picture is flat from 0.25 to
+0.30 and breaks up at 0.20 (19 clusters) and 0.35 (5); 0.30 is fixed here.
+
+Fixed rules, the script's defaults: distance 0.30; a cluster trains if it
+holds **at least 20 minutes**; at most **8** clusters, the largest by minutes;
+above **50%** collisions the run stops. Kaggle numbers the clips one off from
+the Mac, so the box recomputes the clusters with the same code and constants;
+its table is printed and packaged.
+
+- **train** clips of the selected speakers train the voice — nothing else.
+- **valid** (400 clips) chooses the served speaker and is never trained on.
+- **test**'s first 200 clips (167 distinct sentences, `--clips first200`, the
+  prefix behind every published speech number) judge. No test clip is seen by
+  training in any form.
+
+## The recipe
+
+Piper 1.8.0's own trainer (`python -m piper.train fit`), **warm-started** from
+Piper's `sr_RS-serbski_institut-medium` checkpoint (`epoch=1899-step=178600.ckpt`,
+md5 `3dd3439e5c550d8201a9e7a2b1300a5b`): checked on the Mac, 804 of 804
+tensors of that checkpoint match the trainer's model shape for shape; only the
+2×512 speaker table restarts when there are more speakers. Multi-speaker (one
+speaker per selected cluster, `gin_channels` 512), **espeak-ng's `bs`** as the
+phonemizer — it reads č ć đ š ž as `sr` does and spells 2026 as *dvije hiljade
+dvadeset šest* where `sr` says *dve* — 22.05 kHz, batch 16, fp32, Piper's
+default learning rates (the checkpoint's own recipe), validation split 2%,
+**at most 60 epochs or 5 h 30 min of wall-clock, whichever first.** The
+**last** checkpoint is exported. Not the best-by-loss, not a checkpoint anybody
+listened to: a GAN's mel loss saturates early and a picked checkpoint is a
+second look.
+
+A run with a non-finite loss in `metrics.csv`, non-finite weights, fewer than
+500 optimizer steps, a voice that renders a two-clause probe in under a
+second, or a cluster table that trips its own stops, exports nothing.
+
+## The instrument, and what it can and cannot say
+
+`training/evaluate_speak.py`: each sentence is synthesized by each voice with
+the engine the app uses (Piper, onnxruntime) and heard by **the shipped
+listener** — `models/lilly/listen`, fingerprint `e6bb58483586b06c`, through
+`app.speech.transcribe`, the product's decode, this project's normaliser
+(`training/evaluate_speech.py`), on the GPU by env as the speech instrument
+was. Word error rate over the sentence's words; the paired bootstrap resamples
+sentences (`training/speech_bench.paired_bootstrap`, 2,000 draws, seed 11).
+A VITS voice draws its noise inside the graph, so the same sentence is never
+the same audio twice; onnxruntime's seed is fixed at 11 before every voice is
+loaded, so the judgment is repeatable and no voice is re-drawn until it wins.
+
+Three rows, one listener, one process: the **before** voice (the sr_RS bytes
+the app fetches, md5 `02c6e27ac7b4dfa84272df89edca9feb`, speaker 0), the
+**candidate** (this run's voice, its served speaker), the **human recordings**
+(the 200 test clips themselves).
+
+**Selection.** The served speaker is the one heard best on **120 distinct
+valid sentences**; ties to the lower index. It is chosen before any test
+sentence is synthesized and cannot change afterwards.
+
+**Bar 1 — ships:** the candidate's word error on the test prefix is **strictly
+below the before voice's**, paired bootstrap **p < 0.05**. Both, not either.
+
+**Bar 2 — the owner's ask, reported, not required:** the candidate is **at or
+below the human recordings'** word error on the same prefix. Reached or not
+reached is written on the card either way.
+
+**Stated now, not discovered later.** The listener was fine-tuned on the
+FLEURS train speakers, the same voices this candidate learns from. That makes
+the instrument kinder to the candidate than to the before voice, whose speaker
+the listener has never heard. It is reported as a limit on the number, not
+corrected: there is one instrument, the product's ear, and the candidate is
+judged by it once. Nothing here measures naturalness; a voice can be perfectly
+understood and still sound wrong, and no Bosnian speaker has listened.
+
+## What failure looks like
+
+- **Bar 1 fails.** The FLEURS line is a null: crowd recordings of eight people
+  through a warm-started voice do not beat a studio voice with an accent. The
+  sr_RS voice stays. No relaunch with more epochs, another threshold, another
+  speaker, or another judge — a second run needs its own section.
+- **Bar 1 passes, bar 2 not reached.** It ships as the better voice; the card
+  says how far from human it is.
+- **Both pass.** It ships; the card says the instrument is kind to it.
+
+## Expected direction
+
+The candidate below the before voice, by more than the interval, because the
+listener's own accent is the one it will be asked to hear; not at the human
+row, because 600 minutes of crowd audio is not a studio hour. Written so that
+a candidate *above* the before voice is read as the hypothesis failing.
+
+## What this run cannot settle
+
+Naturalness. Whether one speaker's 103 minutes alone would beat seven
+speakers' 592. Whether a clean hour from a native speaker would reach the
+human row — that path was declined for now, not closed.
+
+## Where the numbers go
+
+`training/speak-bs/` (the JSON, `speakers.json`, `metrics.csv`, the report),
+`training/RESULTS-speak-bs.md`, and the outcome under this section, whichever
+way it fell. If it ships: `models/lilly/speak-bs/` on the Mac, the README's
+Speak row, and publishing is the owner's act.
