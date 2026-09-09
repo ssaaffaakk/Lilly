@@ -53,7 +53,7 @@ when it stops being true; a stale handoff is worse than none.
 > same pipeline warm-started on the sr_RS voice's own public recordings, which
 > should stay near 22.3% — before any more data goes through this recipe.
 >
-> **10 Sep, 16:05 CEST: the control launched** (`afaksrmeli/lilly-speak-control`
+> **10 Sep, 00:55 CEST: the control launched** (`afaksrmeli/lilly-speak-control`
 > version 1, T4, commit c61293f), pre-registered as "v7 -- speak -- the control":
 > the checkpoint's own 747 Sorbian utterances (pinned in
 > `training/speak-control/sources.json`), three arms of 3,000 steps -- `sr`
