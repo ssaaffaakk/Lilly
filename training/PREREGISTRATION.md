@@ -3037,3 +3037,100 @@ Two corpora, one ceiling near 52%, the mel loss parked at 0.42–0.43 in both:
 before any more data goes through this recipe, the control it never had — the
 same pipeline warm-started on the sr_RS voice's own public recordings, which
 should stay near 22.3% — is the section to write next. It is not written here.
+
+
+---
+
+# v7 — speak — the control, written before any run
+
+Written 10 September 2026, after two voice lines were refused — FLEURS (v5)
+at 53.9% and the Croatian parliament (v6) at 51.9%, both fine-tuned from
+Piper's `sr_RS-serbski_institut-medium`, which is itself heard at 22.3% — and
+**before** anything has trained on the checkpoint's own recordings. Nothing
+below is reinterpreted afterwards. This run ships nothing, by construction.
+
+## The question
+
+Two corpora with nothing in common landed on one ceiling near 52%, the mel
+loss parked at 0.42–0.43 in both, the synthetic audio a third shorter than
+the before voice's in both. A ceiling that does not move with the data points
+at the recipe. The recipe has never been shown to preserve a voice it is
+handed: does a short fine-tune, from the checkpoint, **on the checkpoint's own
+training utterances**, leave the voice where it was?
+
+## The data
+
+The checkpoint repository carries the voice's training list
+(`dataset.jsonl.gz`: 747 utterances, 408 Lower Sorbian as speaker `dsb` = 0,
+339 Upper Sorbian as `hsb` = 1, each with its text and the phonemes it was
+trained with). The recordings are the Sorbian Institute's public MaryTTS data
+(CC BY-NC-SA 4.0), releases v0.2.1, one FLAC and one YAML per language, pinned
+by sha256 in `training/speak-control/sources.json`. All 747 are found by prompt
+code with identical text (checked on the Mac).
+`data/scripts/prepare_sorbian_control.py` cuts them at the YAML's start and
+end: **164.2 minutes**, mean 13.2 s, median 11.3 s, longest 56.5 s — 145
+utterances over 20 s, all kept: this is the voice's own data, nothing is chosen.
+
+**Seen before the run, on the Mac:** phonemized with this project's espeak-ng
+(Piper 1.8.0's bundled data), the stored phoneme lists are reproduced
+**identically for 538 of 747 utterances with `sr` (72.0%) and for 32 of 747
+with `bs` (4.3%)**. The two refused lines trained with `bs`: on nearly every
+sentence the text encoder was handed a phoneme string the checkpoint had never
+seen for that text. That is the first suspect, and arm B tests it.
+
+## The arms
+
+Each arm: `training/train_piper.py`, warm start from the sr_RS checkpoint
+(md5 `3dd3439e…`, 804 of 804 tensors copied — two speakers, so the speaker
+table too), 22.05 kHz, **batch 2** (the utterances run to 56 s and VITS pays
+for the whole padded batch), fp32, validation split 2%, **3,000 steps** (a
+wall-clock cap of 1 h 15 min per arm that must not bind; under 2,500 steps
+stops the run), last checkpoint, speaker 0 (`dsb`) exported.
+
+- **A** — espeak-ng `sr`, Piper's default rates (2e-4 / 1e-4). The closest
+  reproduction of the checkpoint's own recipe.
+- **B** — espeak-ng `bs`, Piper's default rates. What v5 and v6 did.
+- **C** — espeak-ng `bs`, a gentle fresh optimizer: learning rates 2e-5 / 1e-5,
+  two warm-up epochs. The second suspect: a fresh Adam at 2e-4 with no
+  warm-up on a converged adversarial model.
+
+## The reading
+
+`training/evaluate_speak.py` on the FLEURS test prefix (200 clips, 167
+sentences) through the shipped listener `e6bb58483586b06c`: the before voice
+(speaker 0 as fetched, md5 `02c6e27a…`), speaker 0 of each arm, the human
+recordings; paired bootstrap over sentences against the before voice. The
+before voice reads 22.3% on this prefix (v5, v6).
+
+Per arm, fixed now: **sound** if the arm is under **+5 points** from the
+before voice; **BROKEN** if **+10 or more at p < 0.05**; **inconclusive**
+between. Three thousand steps is a short fine-tune — the refused lines ran
+33,000 and 47,000 — so a sound A does not prove that a long run stays sound;
+a broken A proves the recipe damages a voice it is handed, on its own data,
+in an hour.
+
+## What each outcome means for the next line, written now
+
+- **A sound, B broken:** the phonemizer is the fault. The next voice line
+  trains with `sr` (or with the checkpoint's phoneme set folded into `bs`),
+  on the parliament data already selected; nothing else changes.
+- **A broken:** the optimizer restart or the trainer itself damages the
+  voice. If C is sound, the gentle optimizer is the fix and the next line
+  uses it; if C is broken too, the fault is deeper than the learning rate and
+  no voice line relaunches until it is found in a run shorter than this one.
+- **A, B, C all sound:** a short fine-tune preserves the voice and the ceiling
+  is not explained here; the suspects left are the long run and the data's
+  own quality, and the FLEURS and parliament refusals stand as data verdicts.
+- **B sound, A broken:** unexpected; written up, no line relaunches on it.
+
+## What this run cannot settle
+
+Anything about Bosnian: the data is Sorbian, the arms are heard reading
+Bosnian sentences exactly as the before voice is, and the number is a
+comparison with that voice, not a claim about a language. Naturalness.
+
+## Where the numbers go
+
+`training/speak-control/` (the JSON, the manifest, one `metrics.csv` per arm,
+the report), `training/RESULTS-speak-control.md`, the outcome under this
+section, whichever way it fell. Nothing is installed from a control.

@@ -17,6 +17,7 @@ TRANSLATION = REPO / "training" / "Lilly_Translation_Kaggle.ipynb"
 ORDINALS = REPO / "training" / "Lilly_Ordinals_Kaggle.ipynb"
 SPEAK_BS = REPO / "training" / "Lilly_Speak_BS_Kaggle.ipynb"
 SPEAK_PARLA = REPO / "training" / "Lilly_Speak_Parla_Kaggle.ipynb"
+SPEAK_CONTROL = REPO / "training" / "Lilly_Speak_Control_Kaggle.ipynb"
 
 
 def read_nb(path: Path) -> str:
@@ -434,6 +435,46 @@ def check_speak_parla(text: str) -> None:
         fail("speak-parla: the ship bar reads the paired bootstrap p")
 
 
+def check_speak_control(text: str) -> None:
+    """The control (PREREGISTRATION.md, "v7 -- speak"): the voice's own data,
+    pinned by sha256; three arms; the same judge; no voice zip, ever."""
+    check_offload(text, "speak-control")
+    if "/kaggle/temp" not in text or "/kaggle/working/Lilly" in text:
+        fail("speak-control: must clone to /kaggle/temp")
+    if "!= 925" not in text:
+        fail("speak-control: must assert the whole FLEURS test split arrived (925)")
+    if "training/speak-control/sources.json" not in text or "prepare_sorbian_control.py" not in text \
+            or 'manifest["speakers"] != {"dsb": 408, "hsb": 339}' not in text:
+        fail("speak-control: the data is the voice's own 747 utterances, from releases pinned in "
+             "training/speak-control/sources.json, cut by prepare_sorbian_control.py, counted")
+    if not (REPO / "training" / "speak-control" / "sources.json").is_file():
+        fail("speak-control: training/speak-control/sources.json must be committed before a launch")
+    if "e6bb58483586b06c" not in text or "lilly-listen-large-v3" not in text:
+        fail("speak-control: the judge is the shipped listener, checked by fingerprint")
+    if "3dd3439e5c550d8201a9e7a2b1300a5b" not in text or "warmstart_ckpt" not in text:
+        fail("speak-control: must warm-start from the md5-checked sr_RS checkpoint")
+    if "02c6e27ac7b4dfa84272df89edca9feb" not in text:
+        fail("speak-control: the before voice must be the bytes the app speaks with today (md5)")
+    for needle in ('"A": ("sr", [])', '"B": ("bs", [])', '"--model.learning_rate", "2e-5"', '"--model.warmup_epochs", "2"',
+                   'STEPS_EACH, MAX_TIME_EACH = "3000"', '"--model.num_speakers", "2"', '"--data.batch_size", "2"'):
+        if needle not in text:
+            fail(f"speak-control: the three pre-registered arms and 3,000 steps each ({needle!r} missing)")
+    if '"training/train_piper.py", "fit"' not in text or '"-m", "piper.train", "fit"' in text:
+        fail("speak-control: train through training/train_piper.py")
+    if "core.pyx" not in text or "maximum_path" not in text:
+        fail("speak-control: must build the monotonic_align extension before training")
+    if "training/export_piper_onnx.py" not in text:
+        fail("speak-control: export through training/export_piper_onnx.py")
+    if "evaluate_speak.py" not in text or '"--clips", "first200"' not in text or '"--human"' not in text:
+        fail("speak-control: the reading is evaluate_speak.py on the first200 prefix with the human row")
+    if "LILLY_SPEECH_DEVICE" not in text:
+        fail("speak-control: the listener must be put on the GPU by env")
+    if "lilly-speak-control-results.zip" not in text or "lilly-speak-control.zip" in text or "VOICE_ZIP" in text:
+        fail("speak-control: results zip only; a control never writes a voice zip")
+    if 'delta < 5' not in text or 'delta >= 10 and pval < 0.05' not in text:
+        fail("speak-control: the reading rule (sound < +5; BROKEN >= +10 at p < 0.05) must be in the notebook")
+
+
 def check_ordinals(text: str) -> None:
     """A measurement with no weights to ship: the guards are the count, the
     builds, both splitters on one box, and the gate before the zip."""
@@ -490,7 +531,8 @@ def main() -> int:
                      (TRANSLATION, check_translation),
                      (ORDINALS, check_ordinals),
                      (SPEAK_BS, check_speak_bs),
-                     (SPEAK_PARLA, check_speak_parla)):
+                     (SPEAK_PARLA, check_speak_parla),
+                     (SPEAK_CONTROL, check_speak_control)):
         if not path.is_file():
             fail(f"missing {path}")
         fn(read_nb(path))
@@ -523,6 +565,9 @@ def main() -> int:
     parla_job = poller_speak.split('"speak-parla":', 1)[1][:400] if '"speak-parla":' in poller_speak else ""
     if "lilly-speak-parla-results.zip" not in parla_job or '"lilly-speak-parla.zip"' in parla_job:
         fail("speak-parla poller: done is the results zip; the voice zip is never the done signal")
+    control_job = poller_speak.split('"speak-control":', 1)[1][:400] if '"speak-control":' in poller_speak else ""
+    if "lilly-speak-control-results.zip" not in control_job:
+        fail("speak-control poller: done is the results zip")
     if "could not be added" not in kaggle_train:
         fail("kaggle_train.py confirm_push must refuse a push whose attachment Kaggle "
              "'could not be added' -- that run starts without its data and dies cells later")
@@ -556,7 +601,7 @@ def main() -> int:
     offload = (REPO / "training" / "kaggle_offload.py").read_text(encoding="utf-8")
     if "experiment_log.json" not in offload or "scan_trainproof" not in offload:
         fail("training/kaggle_offload.py must write experiment_log.json and scan the tee")
-    print("preflight ok: speech half-1 + half-2 + instrument, OCR, outside-baseline, translation, ordinals, speak-bs, speak-parla notebooks")
+    print("preflight ok: speech half-1 + half-2 + instrument, OCR, outside-baseline, translation, ordinals, speak-bs, speak-parla, speak-control notebooks")
     return 0
 
 

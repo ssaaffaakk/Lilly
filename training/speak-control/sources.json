@@ -1,0 +1,26 @@
+{
+ "why": "The sr_RS voice's own training recordings, for the control (PREREGISTRATION.md, 'v7 -- speak'). Sorbian Institute, CC BY-NC-SA 4.0; releases v0.2.1 of the two MaryTTS data repositories, pinned by sha256 on 10 September 2026. The voice's training list is dataset.jsonl.gz in rhasspy/piper-checkpoints (sr/sr_RS/serbski_institut/medium); every one of its 747 utterances is found in these YAMLs by prompt code with identical text.",
+ "files": {
+  "dsb.flac": {
+   "url": "https://github.com/marytts/serbski-institut-dsb-data/releases/download/v0.2.1/serbski-institut-dsb-data.flac",
+   "sha256": "9f706bcddde9de51ba22a2fb3c0483da2e5ea2679d2540fc208af953166f28ec",
+   "bytes": 439852355
+  },
+  "dsb.yaml": {
+   "url": "https://github.com/marytts/serbski-institut-dsb-data/releases/download/v0.2.1/serbski-institut-dsb-data.yaml",
+   "sha256": "b4994153e96a7b4cd53e208b37b719552d848b15fd6e2048e5884ea9dc9c9281",
+   "bytes": 2134489
+  },
+  "hsb.flac": {
+   "url": "https://github.com/marytts/serbski-institut-hsb-data/releases/download/v0.2.1/serbski-institut-hsb-data.flac",
+   "sha256": "ad4e4bc9f64280699b527a46d7335dcb81a5410b2698f5dca75c591bea1c17eb",
+   "bytes": 280496334
+  },
+  "hsb.yaml": {
+   "url": "https://github.com/marytts/serbski-institut-hsb-data/releases/download/v0.2.1/serbski-institut-hsb-data.yaml",
+   "sha256": "cf87e48f79a789481409685467b65722eda3e5dd9243dae81460523f56e4d4ad",
+   "bytes": 1624084
+  }
+ },
+ "license": "CC BY-NC-SA 4.0 (Sorbian Institute, 2022); used for a measurement of the pipeline, nothing trained on it ships"
+}

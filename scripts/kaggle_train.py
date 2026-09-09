@@ -181,6 +181,14 @@ JOBS = {
                     "slug": "lilly-speak-parla", "title": "Lilly speak parla",
                     "needs_weights": False, "needs_corpus": False,
                     "needs_listen_shipped": True},
+    # The control (PREREGISTRATION.md, "v7 -- speak -- the control"): the same
+    # pipeline on the sr_RS voice's own 747 utterances, three arms, 3,000 steps
+    # each, judged by the same listener. A measurement of the recipe; it ships
+    # nothing and has no voice zip.
+    "speak-control": {"notebook": "Lilly_Speak_Control_Kaggle.ipynb",
+                    "slug": "lilly-speak-control", "title": "Lilly speak control",
+                    "needs_weights": False, "needs_corpus": False,
+                    "needs_listen_shipped": True},
 }
 STAGING = REPO_ROOT / "models" / "kaggle-staging"     # gitignored, under models/
 
@@ -955,6 +963,10 @@ def main() -> int:
             print("    speech-instrument.md is the raw report. Then write the outcome")
             print("    into RESULTS-speech.md and PREREGISTRATION.md whichever way it")
             print("    fell. DOES NOT SHIP means rule 3: large-v3 is closed.")
+        elif args.job == "speak-control":
+            print("  unzip lilly-speak-control-results.zip into training/speak-control/ and write")
+            print("    RESULTS-speak-control.md and the outcome under v7 whichever way it fell.")
+            print("  Nothing is installed from a control run.")
         elif args.job == "speak-parla":
             print("  unzip lilly-speak-parla-results.zip into training/speak-parla/ and write the")
             print("    outcome into RESULTS-speak-parla.md and PREREGISTRATION.md whichever way it fell.")
