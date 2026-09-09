@@ -28,12 +28,15 @@ when it stops being true; a stale handoff is worse than none.
 > checkpoint callback; version 3 (03:45 CEST, 9d6beca) runs the same recipe
 > through `training/train_piper.py` (one callback, last.ckpt, the fit's own
 > exit code). Two amendments under "v5 -- speak", both before any number
-> existed. About seven hours.
-> On COMPLETE: `scripts/kaggle_train.py
-> speak-bs --fetch`, then `training/RESULTS-speak-bs.md` and the outcome under
-> the pre-registration whichever way it fell; `lilly-speak-bs.zip` exists only
-> if it cleared bar 1, and then goes over `models/lilly/speak-bs/`. Do not
-> relaunch the same recipe if it fails; a second run needs its own section.
+> existed. **Version 3 COMPLETE 10:05 CEST: DOES NOT SHIP.** On the test
+> prefix through the shipped listener: candidate 53.9% (1,754 / 3,256 words
+> wrong), the sr_RS voice 22.3% (726), the human recordings 11.7% (456);
+> +31.57 points, p = 0.0000, worse on 151 of 167 sentences
+> (`training/RESULTS-speak-bs.md`, files in `training/speak-bs/`, the outcome
+> under v5 in the pre-registration). The sr_RS voice stays; no voice zip
+> exists; this recipe is not relaunched. A new section would be needed for the
+> largest cluster alone, a much longer run, or a clean hour from a native
+> speaker.
 
 ## The three numbers
 
