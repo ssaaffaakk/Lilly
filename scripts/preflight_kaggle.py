@@ -347,6 +347,13 @@ def check_speak_bs(text: str) -> None:
         fail("speak-bs: the phonemizer is espeak-ng's bs (numbers read 'dvije', not 'dve')")
     if "max_time" not in text:
         fail("speak-bs: training must carry a wall-clock cap; the 12h wall is not a stop rule")
+    if '"training/train_piper.py", "fit"' not in text or '"-m", "piper.train", "fit"' in text:
+        fail("speak-bs: train through training/train_piper.py -- piper.train's own checkpoint "
+             "callbacks raise on val_mos at the first validation end (version 2, 9 Sep)")
+    launcher = (REPO / "training" / "train_piper.py").read_text(encoding="utf-8")
+    if "save_top_k=0" not in launcher or "save_last=True" not in launcher or "os._exit(0)" not in launcher:
+        fail("train_piper.py must keep only last.ckpt and leave with the fit's own exit code "
+             "(the Mac's teardown segfault turned a finished fit into exit 139)")
     if '"--data.batch_size", "8"' not in text or "expandable_segments" not in text \
             or '"--max-seconds", "20"' not in text:
         fail("speak-bs: batch 8, clips over 20 s left out, expandable CUDA segments -- batch 16 "

@@ -321,9 +321,13 @@ CELL_TRAIN = '''# 11. TRAIN -- Piper's own trainer, warm-started from sr_RS, pho
 # back: a NaN anywhere, or non-finite weights, and nothing is exported.
 # Batch 8 in fp32: batch 16 filled the T4's 14.6 GB at the first batches
 # (version 1, 9 Sep) -- the amendment under the pre-registration says so.
+# training/train_piper.py is piper.train's own CLI with one checkpoint callback
+# (last.ckpt): piper.train's default callbacks watch val_mos, which is never
+# logged with the MOS predictor off, and Lightning raised at the first
+# validation end (version 2, epoch 5).
 EPOCHS, MAX_TIME = "60", "00:05:30:00"
 RUN = PIPER / "run"
-run(sys.executable, "-m", "piper.train", "fit",
+run(sys.executable, "training/train_piper.py", "fit",
     "--data.csv_path", str(CSV), "--data.cache_dir", str(PIPER / "cache"),
     "--data.config_path", str(PIPER / "config.json"), "--data.voice_name", "bs_BA-fleurs-medium",
     "--data.espeak_voice", "bs", "--data.batch_size", "8", "--data.validation_split", "0.02",

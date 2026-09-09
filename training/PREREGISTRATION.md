@@ -2863,3 +2863,21 @@ out** of training (the Mac counts 72 of the 3,057 selected clips, 2.4%,
 expandable_segments:True` against fragmentation. The epoch and wall-clock
 caps, the learning rates, the phonemizer, the speaker rule, the selection and
 the bars stand as written. Version 2 is the run this section judges.
+
+### Amendment, 9 September 2026, 03:20 — the checkpoint callback, before any number exists
+
+Version 2 (`ccc0aa2`) trained: batch 8 fit the card, and it reached the end
+of epoch 5 — about 1,865 steps in 16 minutes — where Lightning's checkpoint
+callback for `val_mos` raised `MisconfigurationException`: piper.train keeps
+its best checkpoints by `val_mel` and by `val_mos`, the MOS predictor is off
+in this recipe (it would fetch a model over the network), so `val_mos` is
+never logged, and this Lightning version raises rather than warns once
+validation has run. The local smoke never reached a validation end, which is
+why it only warned. No checkpoint survived; no number exists.
+
+One thing changes: the trainer is started through `training/train_piper.py`,
+piper.train's own CLI, model and data module with one checkpoint callback
+that keeps `last.ckpt` — the only checkpoint this section exports. Validation
+still runs every 5 epochs and `val_*` is logged. Data, caps, phonemizer,
+speaker rule, selection and bars stand. Version 3 is the run this section
+judges.
