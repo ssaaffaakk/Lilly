@@ -3013,3 +3013,27 @@ what this line ships. Whether the remaining 1,300 clean hours would help.
 way it fell. If it ships: `models/lilly/speak-bs/`, the README's Speak row,
 `models/lilly/NOTICE.md` with the corpus and the five names; publishing is the
 owner's act.
+
+## Outcome, 10 September 2026 — does not ship; the parliament line is a null
+
+Version 1 (`afaksrmeli/lilly-speak-parla`, commit `59beecd`, T4) ran the
+recipe as written, with no amendment: 5,697 segments / 900 minutes of five
+speakers fetched by row group (7.1 GB), 46,818 steps / 35 epochs in the 9-hour
+cap, last checkpoint exported with the mean speaker. On the test prefix, one
+listener, one process (`training/RESULTS-speak-parla.md`):
+
+| voice | word error | wrong / words |
+|---|---|---|
+| before (Piper sr_RS, as fetched) | **22.3%** | 726 / 3,256 |
+| candidate (the mean voice) | **51.9%** | 1,690 / 3,256 |
+| human recordings | **11.7%** | 456 / 3,901 |
+| for the record: the five speakers | 51.6% – 65.7% | |
+
+Candidate against before **+29.61 points** (interval +26.2 to +32.9), p =
+0.0000; worse on 153 of 167 sentences, better on 7. **Bar 1 fails. Bar 2 not
+reached.** By "What failure looks like": the sr_RS voice stays, no voice zip
+exists, no member of parliament is served, and this recipe is not relaunched.
+Two corpora, one ceiling near 52%, the mel loss parked at 0.42–0.43 in both:
+before any more data goes through this recipe, the control it never had — the
+same pipeline warm-started on the sr_RS voice's own public recordings, which
+should stay near 22.3% — is the section to write next. It is not written here.

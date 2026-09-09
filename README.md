@@ -423,10 +423,13 @@ This section exists because a README that only lists wins is not worth trusting.
   numbers spelled out in the Serbian form. Nobody has yet measured how a
   Bosnian speaker hears it. Through Lilly's own listener it is heard with
   22.3% of words wrong on the 200-clip test prefix, against 11.7% for the
-  human recordings — and a voice trained on the FLEURS recordings themselves
-  (9 September, pre-registered, `training/RESULTS-speak-bs.md`) was heard at
-  53.9% and did not ship. The recordings that exist are not enough for a
-  voice; a clean hour from a native speaker is the untested path.
+  human recordings. Two voices trained here did not ship: one on the FLEURS
+  recordings themselves (53.9%, `training/RESULTS-speak-bs.md`) and one on
+  fifteen hours of the Croatian parliament served as the mean of five
+  speakers (51.9%, `training/RESULTS-speak-parla.md`), both pre-registered,
+  both judged by the same ear. Two corpora and one ceiling point at the
+  recipe rather than the recordings, and the next step is a control run, not
+  more data.
 - **English → Bosnian stays the weaker direction.** The fine-tune cleared its
   bars (above) and has been in the bundle since 8 September, but it starts from
   a smaller base than the forward direction and reads 60.00 chrF2 where the

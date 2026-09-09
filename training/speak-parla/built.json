@@ -1,0 +1,33 @@
+{
+  "base": "rhasspy/piper-checkpoints sr/sr_RS/serbski_institut/medium epoch=1899-step=178600.ckpt (md5 3dd3439e5c550d8201a9e7a2b1300a5b)",
+  "engine": "piper",
+  "language": "bs (espeak-ng bs)",
+  "speaker": 5,
+  "speaker_cluster": "mean",
+  "voice_md5": "16f5e407dd6ae3f3851271c33d5b36d4",
+  "trained_on": {
+    "data": "ParlaSpeech-HR (classla/ParlaSpeech-HR, CC BY-SA 4.0), the segments in training/speak-parla/selection.json",
+    "clips": 5697,
+    "speakers": 5,
+    "minutes": 899.7,
+    "steps": 46818,
+    "epochs": 35
+  },
+  "kaggle": {
+    "kernel": "lilly-speak-parla",
+    "gpu": "Tesla T4",
+    "git": "59beecdb06ce9c396c5391d8a15bcef91ccf2585"
+  },
+  "measured": {
+    "test_first200": {
+      "before": 22.3,
+      "candidate": 51.9,
+      "human": 11.69,
+      "paired_p": 0.0,
+      "listener": "e6bb58483586b06c"
+    },
+    "ships": false,
+    "reached_human": false
+  },
+  "license": "voice: CC BY-SA 4.0 (derived from ParlaSpeech-HR); served speaker is the mean of the trained speakers, no member of parliament's own voice"
+}

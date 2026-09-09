@@ -1,0 +1,34 @@
+{
+ "rows": 5697,
+ "csv": "/tmp/parla/metadata.csv",
+ "speakers": {
+  "0": {
+   "name": "Bulj, Miro",
+   "clips": 1187,
+   "minutes": 179.9
+  },
+  "1": {
+   "name": "Pernar, Ivan",
+   "clips": 1119,
+   "minutes": 179.9
+  },
+  "2": {
+   "name": "Maras, Gordan",
+   "clips": 1176,
+   "minutes": 179.9
+  },
+  "3": {
+   "name": "Bunjac, Branimir",
+   "clips": 1118,
+   "minutes": 180.0
+  },
+  "4": {
+   "name": "Grmoja, Nikola",
+   "clips": 1097,
+   "minutes": 179.9
+  }
+ },
+ "minutes": 899.7,
+ "transferred_mb": 7262,
+ "seconds": 1315
+}

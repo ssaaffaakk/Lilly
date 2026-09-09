@@ -45,9 +45,13 @@ when it stops being true; a stale handoff is worse than none.
 > served voice the MEAN of their embeddings, same trainer, same judge, same
 > bars, up to 100 epochs or 9 h. About 10.5 h. On COMPLETE:
 > `scripts/kaggle_train.py speak-parla --fetch`, `training/RESULTS-speak-parla.md`,
-> the outcome under v6; `lilly-speak-parla.zip` only if the mean voice cleared
-> bar 1, then over `models/lilly/speak-bs/` with CC BY-SA 4.0 and the five names
-> in NOTICE.md. Do not relaunch this recipe if it fails.
+> the outcome under v6. **COMPLETE 10 Sep 00:40 CEST: DOES NOT SHIP.** Mean
+> voice 51.9% (1,690 / 3,256), the five speakers 51.6–65.7%, the sr_RS voice
+> 22.3%, humans 11.7%; +29.61 points, p = 0.0000 (`training/RESULTS-speak-parla.md`).
+> The sr_RS voice stays; no voice zip; no relaunch. Two corpora, one ceiling
+> near 52% and the same mel plateau: **the next section is a control** — the
+> same pipeline warm-started on the sr_RS voice's own public recordings, which
+> should stay near 22.3% — before any more data goes through this recipe.
 
 ## The three numbers
 
