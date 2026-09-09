@@ -2881,3 +2881,26 @@ that keeps `last.ckpt` — the only checkpoint this section exports. Validation
 still runs every 5 epochs and `val_*` is logged. Data, caps, phonemizer,
 speaker rule, selection and bars stand. Version 3 is the run this section
 judges.
+
+## Outcome, 9 September 2026 — does not ship; the FLEURS line is a null
+
+Version 3 (`afaksrmeli/lilly-speak-bs`, commit `9d6beca`, T4) ran the recipe as
+amended: 2,985 clips of 7 speakers, 32,962 steps / 47 epochs in 5.6 h (the
+wall-clock cap, not the epoch cap), last checkpoint exported, served speaker 2
+(cluster 6) chosen on 120 valid sentences at 51.8%. On the test prefix, one
+listener, one process (`training/RESULTS-speak-bs.md`):
+
+| voice | word error | wrong / words |
+|---|---|---|
+| before (Piper sr_RS, as fetched) | **22.3%** | 726 / 3,256 |
+| candidate | **53.9%** | 1,754 / 3,256 |
+| human recordings | **11.7%** | 456 / 3,901 |
+
+Candidate against before **+31.57 points**, paired bootstrap p = 0.0000; worse
+on 151 of 167 sentences, better on 6. **Bar 1 fails. Bar 2 not reached.** By
+"What failure looks like": the sr_RS voice stays, no voice zip exists, and this
+recipe is not relaunched with more epochs, another threshold, another speaker
+or another judge. The human row reproduces the published 11.9% at 11.7% on the
+same prefix through the same ear, so the instrument did what it was built to
+do. What would need its own section: the largest cluster alone, a run several
+times longer, or a clean hour from a native speaker.

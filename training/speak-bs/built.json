@@ -1,0 +1,33 @@
+{
+  "base": "rhasspy/piper-checkpoints sr/sr_RS/serbski_institut/medium epoch=1899-step=178600.ckpt (md5 3dd3439e5c550d8201a9e7a2b1300a5b)",
+  "engine": "piper",
+  "language": "bs (espeak-ng bs)",
+  "speaker": 2,
+  "speaker_cluster": "6",
+  "voice_md5": "86171afa53c77db0bc6ddc7b8e1ef1bb",
+  "trained_on": {
+    "data": "FLEURS bs_ba train (google/fleurs, CC-BY-4.0)",
+    "clips": 2985,
+    "speakers": 7,
+    "minutes": 592.5,
+    "steps": 32962,
+    "epochs": 47
+  },
+  "kaggle": {
+    "kernel": "lilly-speak-bs",
+    "gpu": "Tesla T4",
+    "git": "9d6becadc8a252c193fe2b4ccc51801523b1ef6a"
+  },
+  "measured": {
+    "test_first200": {
+      "before": 22.3,
+      "candidate": 53.87,
+      "human": 11.69,
+      "paired_p": 0.0,
+      "listener": "e6bb58483586b06c"
+    },
+    "ships": false,
+    "reached_human": false
+  },
+  "license": "voice: MIT (Piper); training recordings: CC-BY-4.0 (FLEURS)"
+}
