@@ -16,6 +16,7 @@ SPEECH_INSTR = REPO / "training" / "Lilly_Speech_Instrument_Kaggle.ipynb"
 TRANSLATION = REPO / "training" / "Lilly_Translation_Kaggle.ipynb"
 ORDINALS = REPO / "training" / "Lilly_Ordinals_Kaggle.ipynb"
 SPEAK_BS = REPO / "training" / "Lilly_Speak_BS_Kaggle.ipynb"
+SPEAK_PARLA = REPO / "training" / "Lilly_Speak_Parla_Kaggle.ipynb"
 
 
 def read_nb(path: Path) -> str:
@@ -385,6 +386,54 @@ def check_speak_bs(text: str) -> None:
              "standard library from site-packages")
 
 
+def check_speak_parla(text: str) -> None:
+    """The parliament voice line (PREREGISTRATION.md, "v6 -- speak"): the same
+    guards as the FLEURS line, the selection file as the only data source, the
+    mean speaker as the only served voice."""
+    check_offload(text, "speak-parla")
+    if "/kaggle/temp" not in text or "/kaggle/working/Lilly" in text:
+        fail("speak-parla: must clone to /kaggle/temp")
+    if "!= 925" not in text:
+        fail("speak-parla: must assert the whole FLEURS test split arrived (925) before judging on its prefix")
+    if "training/speak-parla/selection.json" not in text or "download_parlaspeech_voice.py" not in text:
+        fail("speak-parla: the training audio is exactly what training/speak-parla/selection.json names, "
+             "fetched by data/scripts/download_parlaspeech_voice.py -- no other source")
+    if not (REPO / "training" / "speak-parla" / "selection.json").is_file():
+        fail("speak-parla: training/speak-parla/selection.json must be committed before a launch")
+    if "cluster_speakers.py" in text or "FLEURS bs_ba train" in text:
+        fail("speak-parla: must not train on FLEURS bs_ba train -- that line refused (RESULTS-speak-bs.md)")
+    if "e6bb58483586b06c" not in text or "lilly-listen-large-v3" not in text:
+        fail("speak-parla: the judge is the shipped listener, checked by fingerprint")
+    if "3dd3439e5c550d8201a9e7a2b1300a5b" not in text or "warmstart_ckpt" not in text:
+        fail("speak-parla: must warm-start from the md5-checked sr_RS checkpoint")
+    if "02c6e27ac7b4dfa84272df89edca9feb" not in text:
+        fail("speak-parla: the 'before' voice must be the bytes the app speaks with today (md5)")
+    if '"--data.espeak_voice", "bs"' not in text:
+        fail("speak-parla: the phonemizer is espeak-ng's bs")
+    if '"training/train_piper.py", "fit"' not in text or '"-m", "piper.train", "fit"' in text:
+        fail("speak-parla: train through training/train_piper.py")
+    if '"--data.batch_size", "8"' not in text or "expandable_segments" not in text or "max_time" not in text:
+        fail("speak-parla: batch 8, expandable segments, a wall-clock cap")
+    if '"--add-mean-speaker"' not in text or 'cfg["speaker_id_map"]["mean"] = MEAN' not in text \
+            or "candidate={CAND / 'voice.onnx'}:{MEAN}" not in text:
+        fail("speak-parla: the served and judged voice is the mean speaker -- no member of parliament's own voice")
+    if "core.pyx" not in text or "maximum_path" not in text:
+        fail("speak-parla: must build the monotonic_align extension before training")
+    if "training/export_piper_onnx.py" not in text or '"-m", "piper.train.export_onnx"' in text:
+        fail("speak-parla: export through training/export_piper_onnx.py")
+    if "evaluate_speak.py" not in text or '"--clips", "first200"' not in text or '"--human"' not in text:
+        fail("speak-parla: the judgment is evaluate_speak.py on the first200 prefix with the human row")
+    if "LILLY_SPEECH_DEVICE" not in text:
+        fail("speak-parla: the listener must be put on the GPU by env")
+    if "lilly-speak-parla-results.zip" not in text or "lilly-speak-parla.zip" not in text:
+        fail("speak-parla: results zip always after the judgment; voice zip only on SHIPS")
+    judged = text.find("speak-parla-test.json")
+    if judged < 0 or text.find("VOICE_ZIP = ") < judged:
+        fail("speak-parla: the voice zip must be written after the judgment, never before")
+    if '["p"]' not in text:
+        fail("speak-parla: the ship bar reads the paired bootstrap p")
+
+
 def check_ordinals(text: str) -> None:
     """A measurement with no weights to ship: the guards are the count, the
     builds, both splitters on one box, and the gate before the zip."""
@@ -440,7 +489,8 @@ def main() -> int:
                      (SPEECH_INSTR, check_speech_instrument),
                      (TRANSLATION, check_translation),
                      (ORDINALS, check_ordinals),
-                     (SPEAK_BS, check_speak_bs)):
+                     (SPEAK_BS, check_speak_bs),
+                     (SPEAK_PARLA, check_speak_parla)):
         if not path.is_file():
             fail(f"missing {path}")
         fn(read_nb(path))
@@ -470,6 +520,9 @@ def main() -> int:
     speak_job = poller_speak.split('"speak-bs":', 1)[1][:400] if '"speak-bs":' in poller_speak else ""
     if "lilly-speak-bs-results.zip" not in speak_job or '"lilly-speak-bs.zip"' in speak_job:
         fail("speak-bs poller: done is the results zip; the voice zip is never the done signal")
+    parla_job = poller_speak.split('"speak-parla":', 1)[1][:400] if '"speak-parla":' in poller_speak else ""
+    if "lilly-speak-parla-results.zip" not in parla_job or '"lilly-speak-parla.zip"' in parla_job:
+        fail("speak-parla poller: done is the results zip; the voice zip is never the done signal")
     if "could not be added" not in kaggle_train:
         fail("kaggle_train.py confirm_push must refuse a push whose attachment Kaggle "
              "'could not be added' -- that run starts without its data and dies cells later")
@@ -503,7 +556,7 @@ def main() -> int:
     offload = (REPO / "training" / "kaggle_offload.py").read_text(encoding="utf-8")
     if "experiment_log.json" not in offload or "scan_trainproof" not in offload:
         fail("training/kaggle_offload.py must write experiment_log.json and scan the tee")
-    print("preflight ok: speech half-1 + half-2 + instrument, OCR, outside-baseline, translation, ordinals, speak-bs notebooks")
+    print("preflight ok: speech half-1 + half-2 + instrument, OCR, outside-baseline, translation, ordinals, speak-bs, speak-parla notebooks")
     return 0
 
 

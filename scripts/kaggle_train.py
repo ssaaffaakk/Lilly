@@ -172,6 +172,15 @@ JOBS = {
                     "slug": "lilly-speak-bs", "title": "Lilly speak bs",
                     "needs_weights": False, "needs_corpus": False,
                     "needs_listen_shipped": True},
+    # The second voice line (PREREGISTRATION.md, "v6 -- speak -- a voice from
+    # ParlaSpeech-HR"): the same recipe on the parliament segments named by
+    # training/speak-parla/selection.json, served as the mean of the trained
+    # speakers, judged by the same listener on the same prefix. The FLEURS
+    # line refused (RESULTS-speak-bs.md) and is not relaunched.
+    "speak-parla": {"notebook": "Lilly_Speak_Parla_Kaggle.ipynb",
+                    "slug": "lilly-speak-parla", "title": "Lilly speak parla",
+                    "needs_weights": False, "needs_corpus": False,
+                    "needs_listen_shipped": True},
 }
 STAGING = REPO_ROOT / "models" / "kaggle-staging"     # gitignored, under models/
 
@@ -946,6 +955,11 @@ def main() -> int:
             print("    speech-instrument.md is the raw report. Then write the outcome")
             print("    into RESULTS-speech.md and PREREGISTRATION.md whichever way it")
             print("    fell. DOES NOT SHIP means rule 3: large-v3 is closed.")
+        elif args.job == "speak-parla":
+            print("  unzip lilly-speak-parla-results.zip into training/speak-parla/ and write the")
+            print("    outcome into RESULTS-speak-parla.md and PREREGISTRATION.md whichever way it fell.")
+            print("  lilly-speak-parla.zip exists only if the mean voice cleared its bar: then unzip it")
+            print("    over models/lilly/speak-bs/ (built.json names the served speaker, the mean).")
         elif args.job == "speak-bs":
             print("  unzip lilly-speak-bs-results.zip into training/speak-bs/ (the test and")
             print("    valid JSON, speakers.json, metrics.csv, the report) and write the outcome")

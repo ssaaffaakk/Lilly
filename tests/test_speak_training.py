@@ -128,3 +128,34 @@ def test_prepare_leaves_the_longest_clips_out_when_asked(tmp_path):
     manifest = prepare_speak_data.write_csv(tmp_path / "m.csv", kept, 1, 20)
     assert manifest["dropped_long"] == 1 and manifest["max_seconds"] == 20
     assert len(prepare_speak_data.build_rows(rows, speakers, tmp_path)) == 3
+
+
+def test_parliament_selection_takes_one_gender_in_dataset_order():
+    from training import select_parlaspeech_voice as sel
+    scan = {"repo": "x", "rule": {"min_sec": 3, "max_sec": 20, "max_chars": 300},
+            "shard_urls": ["u0", "u1"], "shard_sizes": [1, 2],
+            "speakers": [{"name": "A", "gender": "M", "hours_clean": 10, "hours_total": 20},
+                         {"name": "B", "gender": "F", "hours_clean": 9, "hours_total": 20},
+                         {"name": "C", "gender": "M", "hours_clean": 8, "hours_total": 20},
+                         {"name": "D", "gender": "F", "hours_clean": 1, "hours_total": 2}],
+            "segments": {"A": [[1, 5, "a2", 10.0], [0, 3, "a1", 10.0], [0, 9, "a3", 10.0]],
+                         "B": [[0, 1, "b1", 10.0]], "C": [[1, 0, "c1", 10.0]], "D": [[0, 0, "d1", 10.0]]}}
+    out = sel.choose(scan, k=2, hours_each=20 / 3600, top_for_gender=10)   # 20 s per speaker
+    assert out["rule"]["gender"] == "M" and out["speakers"] == {"0": "A", "1": "C"}
+    assert [s[2] for s in out["segments"]] == ["a1", "a3", "c1"]          # A's third clip is over budget; order by (shard, row)
+    assert out["shards_touched"] == 2 and out["minutes_total"] == 0.5
+    with pytest.raises(SystemExit):
+        sel.choose(scan, k=3, hours_each=1, top_for_gender=10)             # only two men
+
+
+def test_fetch_maps_rows_to_row_groups_and_guards_the_text():
+    from data.scripts import download_parlaspeech_voice as dl
+    groups = [(0, 100), (100, 200), (200, 250)]
+    assert dl.group_index(groups, 0) == 0 and dl.group_index(groups, 199) == 1 and dl.group_index(groups, 249) == 2
+    with pytest.raises(SystemExit):
+        dl.group_index(groups, 250)
+    assert dl.clean_text("Hvala | lijepa.", 300) == "Hvala   lijepa."
+    with pytest.raises(SystemExit):
+        dl.clean_text("Godine 2015. je", 300)
+    with pytest.raises(SystemExit):
+        dl.clean_text("[[Pljesak]] hvala", 300)

@@ -2904,3 +2904,112 @@ or another judge. The human row reproduces the published 11.9% at 11.7% on the
 same prefix through the same ear, so the instrument did what it was built to
 do. What would need its own section: the largest cluster alone, a run several
 times longer, or a clean hour from a native speaker.
+
+---
+
+# v6 — speak — a voice from ParlaSpeech-HR, written before any run
+
+Written 9 September 2026, 14:30 CEST, after the FLEURS line ("v5") was refused
+at 53.9% against the sr_RS voice's 22.3%, and **before** anything has trained
+on parliament audio. Nothing below is reinterpreted afterwards.
+
+## Why this data
+
+The owner chose it ("2.") from three ways of getting recordings without
+recording anyone: parliament corpora are the one that is licensed, aligned to
+human transcripts, and large per speaker. ParlaSpeech-HR 2.0
+(`classla/ParlaSpeech-HR`, CC BY-SA 4.0, Ljubešić et al. 2022/2024): the
+Croatian Sabor's YouTube recordings cut at sentence boundaries of the official
+ParlaMint transcript, 867,581 segments, 179 GB, 490 named speakers. Croatian,
+not Bosnian — ijekavian like Bosnian, and espeak-ng's `bs` and `hr` phonemize
+the same text identically apart from number words (checked on five sentences;
+segments with digits are excluded below, so the difference never arises).
+Podium microphones and a hall, spontaneous speech: cleaner than FLEURS's
+crowd recordings in one way, worse in another. The measurement decides.
+
+## The data, seen before the run
+
+`data/scripts/parlaspeech_speakers.py` read every segment's speaker, gender,
+length and transcript (DuckDB over the parquet metadata; no audio) and
+`training/select_parlaspeech_voice.py` applied the rule, committed as
+`training/speak-parla/selection.json` (5,697 segments named by shard, row and
+id; the box checks each shard's size and each row's id before decoding).
+
+- **Clean:** 3–20 s, a normalised transcript of at most 300 characters, no
+  digit, no bracket; unattributed rows ("-", 25 h) never count. 1,335.5 clean
+  hours over the named speakers.
+- **Gender:** the side with more clean hours among the ten largest speakers.
+  Men 209.0 h against women 72.1 h → **men**. The served voice is the mean of
+  the trained speakers' embeddings, and a mean across genders is no one.
+- **Speakers:** the five largest men by clean hours, **3.00 h each**, taken in
+  dataset order: Bulj, Miro (54.7 clean h, 1,187 segments); Pernar, Ivan
+  (28.5 h, 1,119); Maras, Gordan (24.9 h, 1,176); Bunjac, Branimir (22.6 h,
+  1,118); Grmoja, Nikola (21.5 h, 1,097). **900 minutes, 5,697 segments, 54
+  shards.** Members of parliament speaking in public, in a corpus released
+  for research — and still people: **no individual's voice is served**.
+- **valid:** Piper's own 2% split of the same file, for `val_*` only.
+- **test:** FLEURS bs_ba test's first 200 clips (167 sentences), the prefix
+  behind every published speech number, judge; no test clip trains.
+
+## The recipe
+
+As in v5 — Piper 1.8.0 through `training/train_piper.py`, warm start from
+the sr_RS checkpoint (md5 `3dd3439e…`), multi-speaker (5, `gin_channels` 512),
+espeak-ng `bs`, 22.05 kHz, batch 8, fp32, Piper's default learning rates,
+validation split 2% — with two changes: **at most 100 epochs or 9 h of
+wall-clock, whichever first** (the FLEURS run's losses were still creeping at
+5 h 30 min), and the export appends one speaker, **the mean of the five
+embeddings** (`training/export_piper_onnx.py --add-mean-speaker`), named
+`mean` in the config. The last checkpoint is exported; nothing is picked by
+loss or by ear. The same refusals as v5: non-finite loss or weights, fewer
+than 500 steps, a probe under a second.
+
+## The instrument, the bars, and what is stated now
+
+`training/evaluate_speak.py`, the shipped listener `e6bb58483586b06c`, the
+test prefix, this project's normaliser, paired bootstrap over sentences,
+onnxruntime seeded. Rows: the **before** voice (the sr_RS bytes the app
+fetches, speaker 0), the **candidate** = the mean voice, the **human
+recordings**; and, in the same process, each of the five speakers **for the
+record** — heard, written on the card, never served and never the candidate.
+
+**Bar 1 — ships:** the mean voice strictly below the before voice, p < 0.05.
+**Bar 2 — the owner's ask, reported:** at or below the human recordings.
+
+Stated now: the listener's own training mix took about 20 hours of
+ParlaSpeech-HR (`data/scripts/download_extra_speech.py`, the listener line);
+whether any of these 900 minutes were among them is not known and is not
+checked, so the judge may have heard these voices before. As in v5, this makes
+the instrument kinder to the candidate than to the before voice, and it is
+reported, not corrected. Nothing here measures naturalness; nobody Bosnian has
+listened; the voice will sound Croatian, which the card will say.
+
+## What failure looks like
+
+- **Bar 1 fails.** Parliament hall audio through a warm-started voice does not
+  beat a studio voice with an accent either; the sr_RS voice stays; this recipe
+  is not relaunched with more data, more speakers, more hours or another judge.
+  The line that remains open is a clean hour from a native speaker.
+- **Bar 1 passes, bar 2 not reached.** It ships as the mean voice, CC BY-SA
+  4.0, with the five names on the card and the distance from human stated.
+- **Both pass.** It ships; the card says the instrument is kind to it.
+
+## Expected direction
+
+Below the FLEURS candidate's 53.9% by a wide margin — the audio is per-speaker
+clean and there is more of it per voice — and near the before voice's 22.3%
+either way; which side is the question. Not at the human row.
+
+## What this run cannot settle
+
+Naturalness. Whether a single speaker's 3 hours served as that speaker would
+score better than the mean — it is measured for the record, and it is not
+what this line ships. Whether the remaining 1,300 clean hours would help.
+
+## Where the numbers go
+
+`training/speak-parla/` (the JSON, the manifest, `metrics.csv`, the report),
+`training/RESULTS-speak-parla.md`, the outcome under this section, whichever
+way it fell. If it ships: `models/lilly/speak-bs/`, the README's Speak row,
+`models/lilly/NOTICE.md` with the corpus and the five names; publishing is the
+owner's act.

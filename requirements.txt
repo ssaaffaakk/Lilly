@@ -48,8 +48,10 @@ huggingface_hub
 # Driving a training run on Kaggle GPUs without a browser
 kaggle
 
-# Training data preparation
+# Training data preparation. duckdb reads the metadata columns of a remote
+# parquet dataset in one parallel pass (data/scripts/parlaspeech_speakers.py).
 pyarrow
+duckdb
 
 # Web app
 fastapi

@@ -79,6 +79,11 @@ def jobs() -> dict:
             "done_names": ("lilly-speak-bs-results.zip",),
             "min_bytes": 20_000,
         },
+        "speak-parla": {
+            "slug": f"{user}/lilly-speak-parla",
+            "done_names": ("lilly-speak-parla-results.zip",),
+            "min_bytes": 20_000,
+        },
     }
 
 

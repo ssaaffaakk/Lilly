@@ -11,6 +11,14 @@ inference wrapper, opset 15, the same input names and dynamic axes, so the file
 is one the app's PiperVoice loads like any other.
 
     python3 training/export_piper_onnx.py --checkpoint last.ckpt --output-file voice.onnx
+    python3 training/export_piper_onnx.py --checkpoint last.ckpt --output-file voice.onnx --add-mean-speaker
+
+--add-mean-speaker appends one speaker to a multi-speaker voice: the mean of
+the trained speakers' embeddings, at index n_speakers. A voice trained on
+recordings of real people -- members of a parliament, in the ParlaSpeech line
+-- can then be served as nobody in particular rather than as one of them, whose
+consent to be a translation app's voice nobody has. The config written beside
+the ONNX has to name it ("mean": n); the caller does that.
 """
 import argparse
 import logging
@@ -23,13 +31,31 @@ OPSET_VERSION = 15
 _LOGGER = logging.getLogger(__name__)
 
 
-def export(checkpoint: Path, output: Path) -> Path:
+def add_mean_speaker(model_g) -> int:
+    """Append the mean embedding as one more speaker; return its index."""
+    emb = model_g.emb_g
+    if emb is None or emb.weight.shape[0] < 2:
+        raise SystemExit("--add-mean-speaker needs a multi-speaker voice")
+    n, dim = emb.weight.shape
+    new = torch.nn.Embedding(n + 1, dim)
+    with torch.no_grad():
+        new.weight[:n] = emb.weight
+        new.weight[n] = emb.weight.mean(dim=0)
+    model_g.emb_g = new
+    model_g.n_speakers = n + 1
+    return n
+
+
+def export(checkpoint: Path, output: Path, mean_speaker: bool = False) -> Path:
     from piper.train.vits.lightning import VitsModel
     torch.manual_seed(1234)
     output.parent.mkdir(parents=True, exist_ok=True)
     model = VitsModel.load_from_checkpoint(checkpoint, map_location="cpu")
     model_g = model.model_g
     model_g.eval()
+    if mean_speaker:
+        idx = add_mean_speaker(model_g)
+        _LOGGER.info("mean speaker appended at index %d", idx)
     with torch.no_grad():
         model_g.dec.remove_weight_norm()
 
@@ -73,9 +99,10 @@ def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--checkpoint", required=True, type=Path)
     ap.add_argument("--output-file", required=True, type=Path)
+    ap.add_argument("--add-mean-speaker", action="store_true")
     args = ap.parse_args()
     logging.basicConfig(level=logging.INFO)
-    export(args.checkpoint, args.output_file)
+    export(args.checkpoint, args.output_file, mean_speaker=args.add_mean_speaker)
     print(args.output_file)
     return 0
 
