@@ -52,6 +52,18 @@ when it stops being true; a stale handoff is worse than none.
 > near 52% and the same mel plateau: **the next section is a control** — the
 > same pipeline warm-started on the sr_RS voice's own public recordings, which
 > should stay near 22.3% — before any more data goes through this recipe.
+>
+> **10 Sep, 16:05 CEST: the control launched** (`afaksrmeli/lilly-speak-control`
+> version 1, T4, commit c61293f), pre-registered as "v7 -- speak -- the control":
+> the checkpoint's own 747 Sorbian utterances (pinned in
+> `training/speak-control/sources.json`), three arms of 3,000 steps -- `sr`
+> phonemes, `bs` phonemes, `bs` with a gentle optimizer -- speaker 0 of each
+> judged beside the before voice; sound under +5 points, BROKEN at +10 with
+> p < 0.05. Seen before the run: espeak reproduces the voice's own phonemes on
+> 72% of utterances with `sr` and 4% with `bs`, and both refused lines trained
+> with `bs`. About 3 h. Ships nothing. On COMPLETE: `scripts/kaggle_train.py
+> speak-control --fetch`, `training/RESULTS-speak-control.md`, the outcome under
+> v7, and the next voice line follows the reading written there in advance.
 
 ## The three numbers
 
