@@ -37,6 +37,17 @@ when it stops being true; a stale handoff is worse than none.
 > exists; this recipe is not relaunched. A new section would be needed for the
 > largest cluster alone, a much longer run, or a clean hour from a native
 > speaker.
+>
+> **9 Sep, 14:50 CEST: the second voice line, `speak-parla`, launched**
+> (`afaksrmeli/lilly-speak-parla` version 1, T4, commit 59beecd), pre-registered
+> as "v6 -- speak -- a voice from ParlaSpeech-HR": five men of the Croatian
+> Sabor, three clean hours each (`training/speak-parla/selection.json`), the
+> served voice the MEAN of their embeddings, same trainer, same judge, same
+> bars, up to 100 epochs or 9 h. About 10.5 h. On COMPLETE:
+> `scripts/kaggle_train.py speak-parla --fetch`, `training/RESULTS-speak-parla.md`,
+> the outcome under v6; `lilly-speak-parla.zip` only if the mean voice cleared
+> bar 1, then over `models/lilly/speak-bs/` with CC BY-SA 4.0 and the five names
+> in NOTICE.md. Do not relaunch this recipe if it fails.
 
 ## The three numbers
 
