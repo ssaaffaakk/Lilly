@@ -111,3 +111,20 @@ def test_a_silent_rendering_stops_the_run(tmp_path, monkeypatch):
     onnx.write_bytes(b"x"); onnx.with_name("voice.onnx.json").write_text("{}")
     with pytest.raises(SystemExit, match="silent"):
         evaluate_speak.synthesize(onnx, None, ["Dobar dan"], tmp_path / "out")
+
+
+def test_prepare_leaves_the_longest_clips_out_when_asked(tmp_path):
+    audio = tmp_path / "train"
+    audio.mkdir()
+    for i in range(3):
+        (audio / f"{i}.wav").write_bytes(b"RIFF")
+    rows = [("train/0.wav", "kratko"), ("train/1.wav", "dugo"), ("train/2.wav", "srednje")]
+    speakers = {"selected": [1], "clips": {"train/0.wav": {"speaker": 1, "seconds": 9.0},
+                                           "train/1.wav": {"speaker": 1, "seconds": 35.8},
+                                           "train/2.wav": {"speaker": 1, "seconds": 19.9}}}
+    kept = prepare_speak_data.build_rows(rows, speakers, tmp_path, max_seconds=20)
+    assert [k[2] for k in kept] == ["kratko", "srednje"]
+    assert prepare_speak_data.build_rows.dropped_long == 1
+    manifest = prepare_speak_data.write_csv(tmp_path / "m.csv", kept, 1, 20)
+    assert manifest["dropped_long"] == 1 and manifest["max_seconds"] == 20
+    assert len(prepare_speak_data.build_rows(rows, speakers, tmp_path)) == 3

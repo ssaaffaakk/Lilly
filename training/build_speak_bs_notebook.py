@@ -271,7 +271,7 @@ if ckpt_md5 != "3dd3439e5c550d8201a9e7a2b1300a5b":
 from piper.train.vits.lightning import VitsModel
 old = torch.load(CKPT, map_location="cpu", weights_only=False)["state_dict"]
 new = VitsModel(num_speakers=2, gin_channels=512, sample_rate=22050, num_symbols=256,
-                batch_size=16, mos_metric=None).state_dict()
+                batch_size=8, mos_metric=None).state_dict()
 copied = sum(1 for k, v in old.items() if k in new and new[k].shape == v.shape)
 print(f"warm start would copy {copied} of {len(old)} tensors into a 2-speaker model")
 if copied != len(old) or copied < 800:
@@ -300,10 +300,15 @@ CELL_PREPARE = '''# 10. The training file: wav|speaker|text, the selected speake
 PIPER = SCRATCH / "piper"
 PIPER.mkdir(parents=True, exist_ok=True)
 CSV = PIPER / "metadata.csv"
+# Clips over 20 s stay out (the Mac counts 72 of 3,057, 2.4%, 27 minutes): VITS
+# pays memory for the whole padded batch, and version 1 died at its first
+# batches with CUDA out of memory on the T4 with them in.
 run(sys.executable, "training/prepare_speak_data.py", "--tsv", str(TRAIN),
-    "--speakers", str(SPK / "speakers.json"), "--out", str(CSV))
+    "--speakers", str(SPK / "speakers.json"), "--out", str(CSV), "--max-seconds", "20")
 manifest = json.loads(Path(str(CSV) + ".manifest.json").read_text(encoding="utf-8"))
-print("training rows:", manifest["rows"], "| by speaker:", manifest["speakers"])
+print("training rows:", manifest["rows"], "| by speaker:", manifest["speakers"],
+      "| left out over 20 s:", manifest["dropped_long"])
+OFF.metric("dropped_long", manifest["dropped_long"], stage="data")
 if manifest["rows"] < 500:
     raise SystemExit(f"{manifest['rows']} training rows -- not a voice's worth")
 OFF.metric("train_rows", manifest["rows"], stage="data")
@@ -314,12 +319,14 @@ CELL_TRAIN = '''# 11. TRAIN -- Piper's own trainer, warm-started from sr_RS, pho
 # last checkpoint is the candidate: no picking by loss, none by ear
 # (PREREGISTRATION.md, "v5 -- speak"). Losses go to metrics.csv and are read
 # back: a NaN anywhere, or non-finite weights, and nothing is exported.
+# Batch 8 in fp32: batch 16 filled the T4's 14.6 GB at the first batches
+# (version 1, 9 Sep) -- the amendment under the pre-registration says so.
 EPOCHS, MAX_TIME = "60", "00:05:30:00"
 RUN = PIPER / "run"
 run(sys.executable, "-m", "piper.train", "fit",
     "--data.csv_path", str(CSV), "--data.cache_dir", str(PIPER / "cache"),
     "--data.config_path", str(PIPER / "config.json"), "--data.voice_name", "bs_BA-fleurs-medium",
-    "--data.espeak_voice", "bs", "--data.batch_size", "16", "--data.validation_split", "0.02",
+    "--data.espeak_voice", "bs", "--data.batch_size", "8", "--data.validation_split", "0.02",
     "--data.num_test_examples", "0", "--data.num_workers", "2",
     "--model.sample_rate", "22050", "--model.num_speakers", str(max(K, 2)),
     "--model.gin_channels", "512", "--model.warmstart_ckpt", str(CKPT), "--model.mos_metric", "none",
@@ -329,7 +336,7 @@ run(sys.executable, "-m", "piper.train", "fit",
     "--trainer.log_every_n_steps", "25", "--trainer.enable_progress_bar", "false",
     "--trainer.logger", "lightning.pytorch.loggers.CSVLogger",
     "--trainer.logger.save_dir", str(RUN), "--trainer.logger.name", "logs",
-    env={"PYTHONUNBUFFERED": "1"})
+    env={"PYTHONUNBUFFERED": "1", "PYTORCH_ALLOC_CONF": "expandable_segments:True"})
 lasts = sorted(RUN.rglob("last.ckpt"))
 if len(lasts) != 1:
     raise SystemExit(f"expected one last.ckpt under {RUN}, found {lasts}")

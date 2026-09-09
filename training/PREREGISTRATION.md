@@ -2846,3 +2846,20 @@ human row — that path was declined for now, not closed.
 `training/RESULTS-speak-bs.md`, and the outcome under this section, whichever
 way it fell. If it ships: `models/lilly/speak-bs/` on the Mac, the README's
 Speak row, and publishing is the owner's act.
+
+### Amendment, 9 September 2026, 02:15 — memory, before any number exists
+
+Version 1 (`afaksrmeli/lilly-speak-bs`, commit `5dc6ce1`) ran every check
+above and died at its first training batches: `CUDA out of memory`, 13.78 GiB
+allocated by PyTorch of the T4's 14.56, at batch 16 in fp32. FLEURS clips run
+to 35.8 s and VITS pays for the whole padded batch, so one long clip sets the
+cost of every clip beside it. Everything before training had passed on the
+box, and the clusters came out as on the Mac: 8, 7 selected, 592.5 minutes,
+14.9% collisions. No number exists; nothing has been judged.
+
+Three things change, nothing else: **batch 8**; clips **over 20 s are left
+out** of training (the Mac counts 72 of the 3,057 selected clips, 2.4%,
+27 minutes — valid and test are untouched); `PYTORCH_ALLOC_CONF=
+expandable_segments:True` against fragmentation. The epoch and wall-clock
+caps, the learning rates, the phonemizer, the speaker rule, the selection and
+the bars stand as written. Version 2 is the run this section judges.

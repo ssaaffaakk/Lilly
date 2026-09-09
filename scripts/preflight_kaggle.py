@@ -347,6 +347,10 @@ def check_speak_bs(text: str) -> None:
         fail("speak-bs: the phonemizer is espeak-ng's bs (numbers read 'dvije', not 'dve')")
     if "max_time" not in text:
         fail("speak-bs: training must carry a wall-clock cap; the 12h wall is not a stop rule")
+    if '"--data.batch_size", "8"' not in text or "expandable_segments" not in text \
+            or '"--max-seconds", "20"' not in text:
+        fail("speak-bs: batch 8, clips over 20 s left out, expandable CUDA segments -- batch 16 "
+             "filled the T4 at its first batches (version 1, 9 Sep; amendment under v5 -- speak)")
     if "pip install torch" in text or '"torch",' in text or '"torch"]' in text:
         fail("speak-bs: must not pip-install torch (Kaggle's CUDA build stays)")
     if "evaluate_speak.py" not in text or '"--clips", "first200"' not in text or '"--human"' not in text:
