@@ -19,10 +19,13 @@ when it stops being true; a stale handoff is worse than none.
 > stands (`scripts/fetch_speak_bs.py`). Both sit near 27% where real Bosnian
 > speech reads 11.9%: that is the voice's accent, measured.
 >
-> **9 Sep, 01:30 CEST: `speak-bs` launched on Kaggle** (`afaksrmeli/lilly-speak-bs`
-> version 1, T4, commit b67ae2a) -- a Bosnian voice trained from the FLEURS
-> train clips, pre-registered as "v5 -- speak" in `training/PREREGISTRATION.md`
-> before the launch. About seven hours. On COMPLETE: `scripts/kaggle_train.py
+> **9 Sep: `speak-bs` on Kaggle** (`afaksrmeli/lilly-speak-bs`) -- a Bosnian
+> voice trained from the FLEURS train clips, pre-registered as "v5 -- speak"
+> in `training/PREREGISTRATION.md` before the launch. Version 1 (01:30 CEST,
+> b67ae2a) died at its first training batches, CUDA out of memory at batch 16;
+> version 2 (02:20 CEST, ccc0aa2) runs batch 8 with clips over 20 s left out,
+> under the amendment written before any number existed. About seven hours.
+> On COMPLETE: `scripts/kaggle_train.py
 > speak-bs --fetch`, then `training/RESULTS-speak-bs.md` and the outcome under
 > the pre-registration whichever way it fell; `lilly-speak-bs.zip` exists only
 > if it cleared bar 1, and then goes over `models/lilly/speak-bs/`. Do not
