@@ -23,8 +23,12 @@ when it stops being true; a stale handoff is worse than none.
 > voice trained from the FLEURS train clips, pre-registered as "v5 -- speak"
 > in `training/PREREGISTRATION.md` before the launch. Version 1 (01:30 CEST,
 > b67ae2a) died at its first training batches, CUDA out of memory at batch 16;
-> version 2 (02:20 CEST, ccc0aa2) runs batch 8 with clips over 20 s left out,
-> under the amendment written before any number existed. About seven hours.
+> version 2 (02:20 CEST, ccc0aa2, batch 8, clips over 20 s left out) trained
+> to epoch 5 and died at its first validation end on piper.train's val_mos
+> checkpoint callback; version 3 (03:45 CEST, 9d6beca) runs the same recipe
+> through `training/train_piper.py` (one callback, last.ckpt, the fit's own
+> exit code). Two amendments under "v5 -- speak", both before any number
+> existed. About seven hours.
 > On COMPLETE: `scripts/kaggle_train.py
 > speak-bs --fetch`, then `training/RESULTS-speak-bs.md` and the outcome under
 > the pre-registration whichever way it fell; `lilly-speak-bs.zip` exists only
