@@ -104,7 +104,9 @@ shutil.copy(Path(str(CSV) + ".manifest.json"), "/kaggle/working/metadata.csv.man
 '''
 
 CELL_TRAIN = parla.CELL_TRAIN.replace('"bs_BA-parla-medium"', '"bs_BA-youtube-medium"').replace(
-    '(PREREGISTRATION.md, "v6 -- speak")', '(PREREGISTRATION.md, "v8 -- speak")')
+    '(PREREGISTRATION.md, "v6 -- speak")', '(PREREGISTRATION.md, "v8 -- speak")').replace(
+    '"--data.batch_size", "8"', '"--data.batch_size", "4"')
+assert '"--data.batch_size", "4"' in CELL_TRAIN and '"--data.batch_size", "8"' not in CELL_TRAIN
 
 CELL_JUDGE = (parla.CELL_JUDGE
               .replace('/kaggle/working/speak-parla-test.json', '/kaggle/working/speak-youtube-test.json')

@@ -499,8 +499,9 @@ def check_speak_youtube(text: str) -> None:
         fail("speak-youtube: the 'before' voice must be the bytes the app speaks with today (md5)")
     if '"--data.espeak_voice", "bs"' not in text or '"training/train_piper.py", "fit"' not in text:
         fail("speak-youtube: espeak-ng bs, through training/train_piper.py")
-    if '"--data.batch_size", "8"' not in text or "expandable_segments" not in text or "max_time" not in text:
-        fail("speak-youtube: batch 8, expandable segments, a wall-clock cap")
+    if '"--data.batch_size", "4"' not in text or "expandable_segments" not in text or "max_time" not in text:
+        fail("speak-youtube: batch 4 (lecture clips sit near the 20 s cap; batch 8 OOM'd the T4, "
+             "v8 amendment), expandable segments, a wall-clock cap")
     if '"--add-mean-speaker"' not in text or 'cfg["speaker_id_map"]["mean"] = MEAN' not in text \
             or "candidate={CAND / 'voice.onnx'}:{MEAN}" not in text:
         fail("speak-youtube: the served and judged voice is the mean speaker -- no channel's own voice")

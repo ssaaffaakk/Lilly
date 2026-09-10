@@ -3274,3 +3274,17 @@ anyone. Whether a listener that did not write the transcripts would agree.
 report), `training/RESULTS-speak-youtube.md`, the outcome under this
 section, whichever way it fell. If it ships: `models/lilly/speak-bs/`, the
 README's Speak row, `models/lilly/NOTICE.md` with the channels and names.
+
+### Amendment, 10 September 2026 — batch 4, before any number exists
+
+Version 1 (`44ed719`) ran the data pipeline in full: the shipped listener
+transcribed the 22.5 hours and the clip rule kept **8,329 clips / 1,105
+minutes** across all seven speakers — more usable audio than either refused
+line had. Training then hit `CUDA out of memory` at the first batches, batch 8,
+fp32, with `expandable_segments` already set. The parliament line fit at batch
+8 because its clips were pre-cut sentences of mixed length; the lecture
+segments the listener returns here sit near the 20-second cap almost every
+one, so a batch of eight is consistently at the padded maximum. One thing
+changes: **batch 4** (the control ran batch 2 at 56-second clips; batch 4 at
+20 s is comparable). No number existed at the crash; the data, the speaker
+selection, the caps and the bars stand. Version 2 is the run v8 judges.
