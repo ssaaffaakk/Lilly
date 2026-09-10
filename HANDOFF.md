@@ -64,6 +64,12 @@ when it stops being true; a stale handoff is worse than none.
 > with `bs`. About 3 h. Ships nothing. On COMPLETE: `scripts/kaggle_train.py
 > speak-control --fetch`, `training/RESULTS-speak-control.md`, the outcome under
 > v7, and the next voice line follows the reading written there in advance.
+> **COMPLETE 02:38 CEST: all three arms sound** — A 26.6%, B 26.0%, C 25.5%
+> against the checkpoint's 22.3% (each +3 to +4, p = 0.0000; not the +30 of
+> the refused lines). The pipeline is not broken; the phonemizer is cleared;
+> the refusals stand as data verdicts. **No voice line relaunches.** The only
+> line left open is a clean hour from a native Bosnian speaker — the owner's
+> call. The app keeps the sr_RS voice.
 
 ## The three numbers
 

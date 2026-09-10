@@ -1,0 +1,254 @@
+$ git clone -q https://github.com/ssaaffaakk/Lilly.git
+$ /usr/bin/python3 -m pip install -q piper-tts[train] onnxscript resemblyzer setuptools<81 scikit-learn faster-whisper soundfile huggingface_hub pyarrow
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 44.8/44.8 kB 2.5 MB/s eta 0:00:00
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 66.2/66.2 kB 4.4 MB/s eta 0:00:00
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 78.6/78.6 kB 6.5 MB/s eta 0:00:00
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 754.2/754.2 kB 43.4 MB/s eta 0:00:00
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 15.7/15.7 MB 67.5 MB/s eta 0:00:00
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.1/1.1 MB 54.0 MB/s eta 0:00:00
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.1/1.1 MB 48.6 MB/s eta 0:00:00
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 35.8/35.8 MB 60.3 MB/s eta 0:00:00
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 39.6/39.6 MB 53.7 MB/s eta 0:00:00
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 174.8/174.8 kB 11.3 MB/s eta 0:00:00
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 848.6/848.6 kB 27.7 MB/s eta 0:00:00
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 185.8/185.8 kB 15.7 MB/s eta 0:00:00
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 23.1/23.1 MB 69.2 MB/s eta 0:00:00
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.9/1.9 MB 59.1 MB/s eta 0:00:00
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 87.5/87.5 kB 6.7 MB/s eta 0:00:00
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 34.1/34.1 MB 62.3 MB/s eta 0:00:00
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 800.2/800.2 kB 31.9 MB/s eta 0:00:00
+$ /usr/bin/python3 -m pip uninstall -y -q typing
+$ /usr/bin/python3 -c import sys, numpy; from setuptools import setup; from Cython.Build import cythonize; setup(name='monotonic_align', script_args=['build_ext', '--build-lib', sys.argv[1], '--build-temp', sys.argv[2]], ext_modules=cythonize(sys.argv[3], language_level=3), include_dirs=[numpy.get_include()]) /tmp/ma-build/lib /tmp/ma-build/tmp /usr/local/lib/python3.12/dist-packages/piper/train/vits/monotonic_align/monotonic_align/core.pyx
+performance hint: /usr/local/lib/python3.12/dist-packages/piper/train/vits/monotonic_align/monotonic_align/core.pyx:7:5: Exception check on 'maximum_path_each' will always require the GIL to be acquired.
+Possible solutions:
+	1. Declare 'maximum_path_each' as 'noexcept' if you control the definition and you're sure you don't want the function to raise exceptions.
+	2. Use an 'int' return type on 'maximum_path_each' to allow an error code to be returned.
+performance hint: /usr/local/lib/python3.12/dist-packages/piper/train/vits/monotonic_align/monotonic_align/core.pyx:38:6: Exception check on 'maximum_path_c' will always require the GIL to be acquired.
+Possible solutions:
+	1. Declare 'maximum_path_c' as 'noexcept' if you control the definition and you're sure you don't want the function to raise exceptions.
+	2. Use an 'int' return type on 'maximum_path_c' to allow an error code to be returned.
+performance hint: /usr/local/lib/python3.12/dist-packages/piper/train/vits/monotonic_align/monotonic_align/core.pyx:42:21: Exception check after calling 'maximum_path_each' will always require the GIL to be acquired.
+Possible solutions:
+	1. Declare 'maximum_path_each' as 'noexcept' if you control the definition and you're sure you don't want the function to raise exceptions.
+	2. Use an 'int' return type on 'maximum_path_each' to allow an error code to be returned.
+Compiling /usr/local/lib/python3.12/dist-packages/piper/train/vits/monotonic_align/monotonic_align/core.pyx because it changed.
+[1/1] Cythonizing /usr/local/lib/python3.12/dist-packages/piper/train/vits/monotonic_align/monotonic_align/core.pyx
+running build_ext
+building 'piper.train.vits.monotonic_align.monotonic_align.core' extension
+creating /tmp/ma-build/tmp/usr/local/lib/python3.12/dist-packages/piper/train/vits/monotonic_align/monotonic_align
+x86_64-linux-gnu-gcc -fno-strict-overflow -Wsign-compare -DNDEBUG -g -O2 -Wall -g -fstack-protector-strong -Wformat -Werror=format-security -g -fwrapv -O2 -fPIC -I/usr/local/lib/python3.12/dist-packages/numpy/_core/include -I/usr/include/python3.12 -c /usr/local/lib/python3.12/dist-packages/piper/train/vits/monotonic_align/monotonic_align/core.c -o /tmp/ma-build/tmp/usr/local/lib/python3.12/dist-packages/piper/train/vits/monotonic_align/monotonic_align/core.o
+creating /tmp/ma-build/lib/piper/train/vits/monotonic_align/monotonic_align
+x86_64-linux-gnu-gcc -shared -Wl,-O1 -Wl,-Bsymbolic-functions -Wl,-Bsymbolic-functions -g -fwrapv -O2 /tmp/ma-build/tmp/usr/local/lib/python3.12/dist-packages/piper/train/vits/monotonic_align/monotonic_align/core.o -L/usr/lib/x86_64-linux-gnu -o /tmp/ma-build/lib/piper/train/vits/monotonic_align/monotonic_align/core.cpython-312-x86_64-linux-gnu.so
+$ /usr/bin/python3 data/scripts/download_speech_data.py --split test
+bs_ba: 1 file(s), 682 MB total
+  test:
+    downloading 682 MB
+      100 MB (15%)
+      200 MB (29%)
+      300 MB (44%)
+      400 MB (59%)
+      500 MB (73%)
+      600 MB (88%)
+    got 682 MB
+    925 clips -> /tmp/Lilly/data/speech/test
+    transcripts -> /tmp/Lilly/data/speech/test.tsv
+
+925 clips ready. Train with:
+  python3 training/train_speech.py --data data/speech/train.tsv
+$ curl -sSL -o /tmp/sorbian/dsb.flac https://github.com/marytts/serbski-institut-dsb-data/releases/download/v0.2.1/serbski-institut-dsb-data.flac
+$ curl -sSL -o /tmp/sorbian/dsb.yaml https://github.com/marytts/serbski-institut-dsb-data/releases/download/v0.2.1/serbski-institut-dsb-data.yaml
+$ curl -sSL -o /tmp/sorbian/hsb.flac https://github.com/marytts/serbski-institut-hsb-data/releases/download/v0.2.1/serbski-institut-hsb-data.flac
+$ curl -sSL -o /tmp/sorbian/hsb.yaml https://github.com/marytts/serbski-institut-hsb-data/releases/download/v0.2.1/serbski-institut-hsb-data.yaml
+$ /usr/bin/python3 data/scripts/prepare_sorbian_control.py --list /tmp/sr-ckpt/sr/sr_RS/serbski_institut/medium/dataset.jsonl.gz --dsb-flac /tmp/sorbian/dsb.flac --dsb-yaml /tmp/sorbian/dsb.yaml --hsb-flac /tmp/sorbian/hsb.flac --hsb-yaml /tmp/sorbian/hsb.yaml --out /tmp/sorbian-data
+  dsb: 408 utterances cut from dsb.flac
+  hsb: 339 utterances cut from hsb.flac
+747 rows, 164.2 minutes -> /tmp/sorbian-data/metadata.csv
+phonemes identical to the voice's own, by espeak voice: {'sr': {'identical': 538, 'of': 747, 'share': 0.7202}, 'bs': {'identical': 32, 'of': 747, 'share': 0.0428}}
+$ /usr/bin/python3 scripts/fetch_speak_bs.py
+speak-bs/: fetching rhasspy/piper-voices/sr/sr_RS/serbski_institut/medium -> /tmp/Lilly/models/lilly/speak-bs (about 77 MB)
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+speak-bs/: ready, 73 MB, speaker 0
+$ /usr/bin/python3 training/train_piper.py fit --data.csv_path /tmp/sorbian-data/metadata.csv --data.cache_dir /tmp/piper/cache-A --data.config_path /tmp/piper/config-A.json --data.voice_name control-A --data.espeak_voice sr --data.batch_size 2 --data.validation_split 0.02 --data.num_test_examples 0 --data.num_workers 2 --model.sample_rate 22050 --model.num_speakers 2 --model.gin_channels 512 --model.warmstart_ckpt /tmp/sr-ckpt/sr/sr_RS/serbski_institut/medium/epoch=1899-step=178600.ckpt --model.mos_metric none --trainer.accelerator gpu --trainer.devices 1 --trainer.precision 32 --trainer.max_steps 3000 --trainer.max_time 00:01:15:00 --trainer.default_root_dir /tmp/piper/run-A --trainer.check_val_every_n_epoch 10 --trainer.log_every_n_steps 25 --trainer.enable_progress_bar false --trainer.logger lightning.pytorch.loggers.CSVLogger --trainer.logger.save_dir /tmp/piper/run-A --trainer.logger.name logs
+/usr/local/lib/python3.12/dist-packages/lightning/fabric/utilities/seed.py:44: No seed found, seed set to 0
+Seed set to 0
+/usr/local/lib/python3.12/dist-packages/torch/nn/utils/weight_norm.py:144: FutureWarning: `torch.nn.utils.weight_norm` is deprecated in favor of `torch.nn.utils.parametrizations.weight_norm`.
+  WeightNorm.apply(module, name, dim)
+GPU available: True (cuda), used: True
+TPU available: False, using: 0 TPU cores
+💡 Tip: For seamless cloud logging and experiment tracking, try installing [litlogger](https://pypi.org/project/litlogger/) to enable LitLogger, which logs metrics and artifacts automatically to the Lightning Experiments platform.
+INFO:piper.train.vits.dataset:Processing utterances...
+INFO:piper.train.vits.dataset:Processed 747 utterance(s)
+LOCAL_RANK: 0 - CUDA_VISIBLE_DEVICES: [0]
+┏━━━┳━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━┳━━━━━━━┳━━━━━━━┓
+┃   ┃ Name    ┃ Type                     ┃ Params ┃ Mode  ┃ FLOPs ┃
+┡━━━╇━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━╇━━━━━━━╇━━━━━━━┩
+│ 0 │ model_g │ SynthesizerTrn           │ 30.2 M │ train │     0 │
+│ 1 │ model_d │ MultiPeriodDiscriminator │ 46.7 M │ train │     0 │
+└───┴─────────┴──────────────────────────┴────────┴───────┴───────┘
+Trainable params: 77.0 M                                                        
+Non-trainable params: 0                                                         
+Total params: 77.0 M                                                            
+Total estimated model params size (MB): 307.831                                 
+Modules in train mode: 512                                                      
+Modules in eval mode: 0                                                         
+Total FLOPs: 0                                                                  
+INFO:piper.train.vits.lightning:[warmstart] Copied 804 parameters from /tmp/sr-ckpt/sr/sr_RS/serbski_institut/medium/epoch=1899-step=178600.ckpt (0 skipped; new modules such as the MRD start fresh)
+/usr/local/lib/python3.12/dist-packages/lightning/pytorch/utilities/_pytree.py:21: `isinstance(treespec, LeafSpec)` is deprecated, use `isinstance(treespec, TreeSpec) and treespec.is_leaf()` instead.
+`Trainer.fit` stopped: `max_steps=3000` reached.
+$ /usr/bin/python3 training/export_piper_onnx.py --checkpoint /tmp/piper/run-A/logs/version_0/checkpoints/last.ckpt --output-file /tmp/cand/A/voice.onnx
+INFO:numexpr.utils:NumExpr defaulting to 4 threads.
+/usr/local/lib/python3.12/dist-packages/torch/nn/utils/weight_norm.py:144: FutureWarning: `torch.nn.utils.weight_norm` is deprecated in favor of `torch.nn.utils.parametrizations.weight_norm`.
+  WeightNorm.apply(module, name, dim)
+/tmp/Lilly/training/export_piper_onnx.py:82: DeprecationWarning: You are using the legacy TorchScript-based ONNX export. Starting in PyTorch 2.9, the new torch.export-based ONNX exporter has become the default. Learn more about the new export logic: https://docs.pytorch.org/docs/stable/onnx_export.html. For exporting control flow: https://pytorch.org/tutorials/beginner/onnx/export_control_flow_model_to_onnx_tutorial.html
+  torch.onnx.export(
+/usr/local/lib/python3.12/dist-packages/piper/train/vits/attentions.py:235: TracerWarning: Converting a tensor to a Python boolean might cause the trace to be incorrect. We can't record the data flow of Python values, so this value will be treated as a constant in the future. This means that the trace might not generalize to other inputs!
+  t_s == t_t
+/usr/local/lib/python3.12/dist-packages/piper/train/vits/attentions.py:295: TracerWarning: Converting a tensor to a Python boolean might cause the trace to be incorrect. We can't record the data flow of Python values, so this value will be treated as a constant in the future. This means that the trace might not generalize to other inputs!
+  pad_length = max(length - (self.window_size + 1), 0)
+/usr/local/lib/python3.12/dist-packages/piper/train/vits/attentions.py:296: TracerWarning: Converting a tensor to a Python boolean might cause the trace to be incorrect. We can't record the data flow of Python values, so this value will be treated as a constant in the future. This means that the trace might not generalize to other inputs!
+  slice_start_position = max((self.window_size + 1) - length, 0)
+/usr/local/lib/python3.12/dist-packages/piper/train/vits/attentions.py:298: TracerWarning: Converting a tensor to a Python boolean might cause the trace to be incorrect. We can't record the data flow of Python values, so this value will be treated as a constant in the future. This means that the trace might not generalize to other inputs!
+  if pad_length > 0:
+/usr/local/lib/python3.12/dist-packages/piper/train/vits/transforms.py:174: TracerWarning: Converting a tensor to a Python boolean might cause the trace to be incorrect. We can't record the data flow of Python values, so this value will be treated as a constant in the future. This means that the trace might not generalize to other inputs!
+  assert (discriminant >= 0).all(), discriminant
+/usr/local/lib/python3.12/dist-packages/torch/onnx/_internal/torchscript_exporter/jit_utils.py:305: UserWarning: Constant folding - Only steps=1 can be constant folded for opset >= 10 onnx::Slice op. Constant folding not applied. (Triggered internally at /pytorch/torch/csrc/jit/passes/onnx/constant_fold.cpp:178.)
+  _C._jit_pass_onnx_node_shape_type_inference(node, params_dict, opset_version)
+/usr/local/lib/python3.12/dist-packages/torch/onnx/_internal/torchscript_exporter/utils.py:714: UserWarning: Constant folding - Only steps=1 can be constant folded for opset >= 10 onnx::Slice op. Constant folding not applied. (Triggered internally at /pytorch/torch/csrc/jit/passes/onnx/constant_fold.cpp:178.)
+  _C._jit_pass_onnx_graph_shape_type_inference(
+/usr/local/lib/python3.12/dist-packages/torch/onnx/_internal/torchscript_exporter/utils.py:1186: UserWarning: Constant folding - Only steps=1 can be constant folded for opset >= 10 onnx::Slice op. Constant folding not applied. (Triggered internally at /pytorch/torch/csrc/jit/passes/onnx/constant_fold.cpp:178.)
+  _C._jit_pass_onnx_graph_shape_type_inference(
+INFO:__main__:Exported /tmp/piper/run-A/logs/version_0/checkpoints/last.ckpt -> /tmp/cand/A/voice.onnx (2 speakers)
+/tmp/cand/A/voice.onnx
+$ /usr/bin/python3 training/train_piper.py fit --data.csv_path /tmp/sorbian-data/metadata.csv --data.cache_dir /tmp/piper/cache-B --data.config_path /tmp/piper/config-B.json --data.voice_name control-B --data.espeak_voice bs --data.batch_size 2 --data.validation_split 0.02 --data.num_test_examples 0 --data.num_workers 2 --model.sample_rate 22050 --model.num_speakers 2 --model.gin_channels 512 --model.warmstart_ckpt /tmp/sr-ckpt/sr/sr_RS/serbski_institut/medium/epoch=1899-step=178600.ckpt --model.mos_metric none --trainer.accelerator gpu --trainer.devices 1 --trainer.precision 32 --trainer.max_steps 3000 --trainer.max_time 00:01:15:00 --trainer.default_root_dir /tmp/piper/run-B --trainer.check_val_every_n_epoch 10 --trainer.log_every_n_steps 25 --trainer.enable_progress_bar false --trainer.logger lightning.pytorch.loggers.CSVLogger --trainer.logger.save_dir /tmp/piper/run-B --trainer.logger.name logs
+/usr/local/lib/python3.12/dist-packages/lightning/fabric/utilities/seed.py:44: No seed found, seed set to 0
+Seed set to 0
+/usr/local/lib/python3.12/dist-packages/torch/nn/utils/weight_norm.py:144: FutureWarning: `torch.nn.utils.weight_norm` is deprecated in favor of `torch.nn.utils.parametrizations.weight_norm`.
+  WeightNorm.apply(module, name, dim)
+GPU available: True (cuda), used: True
+TPU available: False, using: 0 TPU cores
+💡 Tip: For seamless cloud logging and experiment tracking, try installing [litlogger](https://pypi.org/project/litlogger/) to enable LitLogger, which logs metrics and artifacts automatically to the Lightning Experiments platform.
+INFO:piper.train.vits.dataset:Processing utterances...
+INFO:piper.train.vits.dataset:Processed 747 utterance(s)
+LOCAL_RANK: 0 - CUDA_VISIBLE_DEVICES: [0]
+┏━━━┳━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━┳━━━━━━━┳━━━━━━━┓
+┃   ┃ Name    ┃ Type                     ┃ Params ┃ Mode  ┃ FLOPs ┃
+┡━━━╇━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━╇━━━━━━━╇━━━━━━━┩
+│ 0 │ model_g │ SynthesizerTrn           │ 30.2 M │ train │     0 │
+│ 1 │ model_d │ MultiPeriodDiscriminator │ 46.7 M │ train │     0 │
+└───┴─────────┴──────────────────────────┴────────┴───────┴───────┘
+Trainable params: 77.0 M                                                        
+Non-trainable params: 0                                                         
+Total params: 77.0 M                                                            
+Total estimated model params size (MB): 307.831                                 
+Modules in train mode: 512                                                      
+Modules in eval mode: 0                                                         
+Total FLOPs: 0                                                                  
+INFO:piper.train.vits.lightning:[warmstart] Copied 804 parameters from /tmp/sr-ckpt/sr/sr_RS/serbski_institut/medium/epoch=1899-step=178600.ckpt (0 skipped; new modules such as the MRD start fresh)
+/usr/local/lib/python3.12/dist-packages/lightning/pytorch/utilities/_pytree.py:21: `isinstance(treespec, LeafSpec)` is deprecated, use `isinstance(treespec, TreeSpec) and treespec.is_leaf()` instead.
+`Trainer.fit` stopped: `max_steps=3000` reached.
+$ /usr/bin/python3 training/export_piper_onnx.py --checkpoint /tmp/piper/run-B/logs/version_0/checkpoints/last.ckpt --output-file /tmp/cand/B/voice.onnx
+INFO:numexpr.utils:NumExpr defaulting to 4 threads.
+/usr/local/lib/python3.12/dist-packages/torch/nn/utils/weight_norm.py:144: FutureWarning: `torch.nn.utils.weight_norm` is deprecated in favor of `torch.nn.utils.parametrizations.weight_norm`.
+  WeightNorm.apply(module, name, dim)
+/tmp/Lilly/training/export_piper_onnx.py:82: DeprecationWarning: You are using the legacy TorchScript-based ONNX export. Starting in PyTorch 2.9, the new torch.export-based ONNX exporter has become the default. Learn more about the new export logic: https://docs.pytorch.org/docs/stable/onnx_export.html. For exporting control flow: https://pytorch.org/tutorials/beginner/onnx/export_control_flow_model_to_onnx_tutorial.html
+  torch.onnx.export(
+/usr/local/lib/python3.12/dist-packages/piper/train/vits/attentions.py:235: TracerWarning: Converting a tensor to a Python boolean might cause the trace to be incorrect. We can't record the data flow of Python values, so this value will be treated as a constant in the future. This means that the trace might not generalize to other inputs!
+  t_s == t_t
+/usr/local/lib/python3.12/dist-packages/piper/train/vits/attentions.py:295: TracerWarning: Converting a tensor to a Python boolean might cause the trace to be incorrect. We can't record the data flow of Python values, so this value will be treated as a constant in the future. This means that the trace might not generalize to other inputs!
+  pad_length = max(length - (self.window_size + 1), 0)
+/usr/local/lib/python3.12/dist-packages/piper/train/vits/attentions.py:296: TracerWarning: Converting a tensor to a Python boolean might cause the trace to be incorrect. We can't record the data flow of Python values, so this value will be treated as a constant in the future. This means that the trace might not generalize to other inputs!
+  slice_start_position = max((self.window_size + 1) - length, 0)
+/usr/local/lib/python3.12/dist-packages/piper/train/vits/attentions.py:298: TracerWarning: Converting a tensor to a Python boolean might cause the trace to be incorrect. We can't record the data flow of Python values, so this value will be treated as a constant in the future. This means that the trace might not generalize to other inputs!
+  if pad_length > 0:
+/usr/local/lib/python3.12/dist-packages/piper/train/vits/transforms.py:174: TracerWarning: Converting a tensor to a Python boolean might cause the trace to be incorrect. We can't record the data flow of Python values, so this value will be treated as a constant in the future. This means that the trace might not generalize to other inputs!
+  assert (discriminant >= 0).all(), discriminant
+/usr/local/lib/python3.12/dist-packages/torch/onnx/_internal/torchscript_exporter/jit_utils.py:305: UserWarning: Constant folding - Only steps=1 can be constant folded for opset >= 10 onnx::Slice op. Constant folding not applied. (Triggered internally at /pytorch/torch/csrc/jit/passes/onnx/constant_fold.cpp:178.)
+  _C._jit_pass_onnx_node_shape_type_inference(node, params_dict, opset_version)
+/usr/local/lib/python3.12/dist-packages/torch/onnx/_internal/torchscript_exporter/utils.py:714: UserWarning: Constant folding - Only steps=1 can be constant folded for opset >= 10 onnx::Slice op. Constant folding not applied. (Triggered internally at /pytorch/torch/csrc/jit/passes/onnx/constant_fold.cpp:178.)
+  _C._jit_pass_onnx_graph_shape_type_inference(
+/usr/local/lib/python3.12/dist-packages/torch/onnx/_internal/torchscript_exporter/utils.py:1186: UserWarning: Constant folding - Only steps=1 can be constant folded for opset >= 10 onnx::Slice op. Constant folding not applied. (Triggered internally at /pytorch/torch/csrc/jit/passes/onnx/constant_fold.cpp:178.)
+  _C._jit_pass_onnx_graph_shape_type_inference(
+INFO:__main__:Exported /tmp/piper/run-B/logs/version_0/checkpoints/last.ckpt -> /tmp/cand/B/voice.onnx (2 speakers)
+/tmp/cand/B/voice.onnx
+$ /usr/bin/python3 training/train_piper.py fit --data.csv_path /tmp/sorbian-data/metadata.csv --data.cache_dir /tmp/piper/cache-C --data.config_path /tmp/piper/config-C.json --data.voice_name control-C --data.espeak_voice bs --data.batch_size 2 --data.validation_split 0.02 --data.num_test_examples 0 --data.num_workers 2 --model.sample_rate 22050 --model.num_speakers 2 --model.gin_channels 512 --model.warmstart_ckpt /tmp/sr-ckpt/sr/sr_RS/serbski_institut/medium/epoch=1899-step=178600.ckpt --model.mos_metric none --model.learning_rate 2e-5 --model.learning_rate_d 1e-5 --model.warmup_epochs 2 --trainer.accelerator gpu --trainer.devices 1 --trainer.precision 32 --trainer.max_steps 3000 --trainer.max_time 00:01:15:00 --trainer.default_root_dir /tmp/piper/run-C --trainer.check_val_every_n_epoch 10 --trainer.log_every_n_steps 25 --trainer.enable_progress_bar false --trainer.logger lightning.pytorch.loggers.CSVLogger --trainer.logger.save_dir /tmp/piper/run-C --trainer.logger.name logs
+/usr/local/lib/python3.12/dist-packages/lightning/fabric/utilities/seed.py:44: No seed found, seed set to 0
+Seed set to 0
+/usr/local/lib/python3.12/dist-packages/torch/nn/utils/weight_norm.py:144: FutureWarning: `torch.nn.utils.weight_norm` is deprecated in favor of `torch.nn.utils.parametrizations.weight_norm`.
+  WeightNorm.apply(module, name, dim)
+GPU available: True (cuda), used: True
+TPU available: False, using: 0 TPU cores
+💡 Tip: For seamless cloud logging and experiment tracking, try installing [litlogger](https://pypi.org/project/litlogger/) to enable LitLogger, which logs metrics and artifacts automatically to the Lightning Experiments platform.
+INFO:piper.train.vits.dataset:Processing utterances...
+INFO:piper.train.vits.dataset:Processed 747 utterance(s)
+LOCAL_RANK: 0 - CUDA_VISIBLE_DEVICES: [0]
+┏━━━┳━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━┳━━━━━━━┳━━━━━━━┓
+┃   ┃ Name    ┃ Type                     ┃ Params ┃ Mode  ┃ FLOPs ┃
+┡━━━╇━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━╇━━━━━━━╇━━━━━━━┩
+│ 0 │ model_g │ SynthesizerTrn           │ 30.2 M │ train │     0 │
+│ 1 │ model_d │ MultiPeriodDiscriminator │ 46.7 M │ train │     0 │
+└───┴─────────┴──────────────────────────┴────────┴───────┴───────┘
+Trainable params: 77.0 M                                                        
+Non-trainable params: 0                                                         
+Total params: 77.0 M                                                            
+Total estimated model params size (MB): 307.831                                 
+Modules in train mode: 512                                                      
+Modules in eval mode: 0                                                         
+Total FLOPs: 0                                                                  
+INFO:piper.train.vits.lightning:[warmstart] Copied 804 parameters from /tmp/sr-ckpt/sr/sr_RS/serbski_institut/medium/epoch=1899-step=178600.ckpt (0 skipped; new modules such as the MRD start fresh)
+/usr/local/lib/python3.12/dist-packages/lightning/pytorch/utilities/_pytree.py:21: `isinstance(treespec, LeafSpec)` is deprecated, use `isinstance(treespec, TreeSpec) and treespec.is_leaf()` instead.
+`Trainer.fit` stopped: `max_steps=3000` reached.
+$ /usr/bin/python3 training/export_piper_onnx.py --checkpoint /tmp/piper/run-C/logs/version_0/checkpoints/last.ckpt --output-file /tmp/cand/C/voice.onnx
+INFO:numexpr.utils:NumExpr defaulting to 4 threads.
+/usr/local/lib/python3.12/dist-packages/torch/nn/utils/weight_norm.py:144: FutureWarning: `torch.nn.utils.weight_norm` is deprecated in favor of `torch.nn.utils.parametrizations.weight_norm`.
+  WeightNorm.apply(module, name, dim)
+/tmp/Lilly/training/export_piper_onnx.py:82: DeprecationWarning: You are using the legacy TorchScript-based ONNX export. Starting in PyTorch 2.9, the new torch.export-based ONNX exporter has become the default. Learn more about the new export logic: https://docs.pytorch.org/docs/stable/onnx_export.html. For exporting control flow: https://pytorch.org/tutorials/beginner/onnx/export_control_flow_model_to_onnx_tutorial.html
+  torch.onnx.export(
+/usr/local/lib/python3.12/dist-packages/piper/train/vits/attentions.py:235: TracerWarning: Converting a tensor to a Python boolean might cause the trace to be incorrect. We can't record the data flow of Python values, so this value will be treated as a constant in the future. This means that the trace might not generalize to other inputs!
+  t_s == t_t
+/usr/local/lib/python3.12/dist-packages/piper/train/vits/attentions.py:295: TracerWarning: Converting a tensor to a Python boolean might cause the trace to be incorrect. We can't record the data flow of Python values, so this value will be treated as a constant in the future. This means that the trace might not generalize to other inputs!
+  pad_length = max(length - (self.window_size + 1), 0)
+/usr/local/lib/python3.12/dist-packages/piper/train/vits/attentions.py:296: TracerWarning: Converting a tensor to a Python boolean might cause the trace to be incorrect. We can't record the data flow of Python values, so this value will be treated as a constant in the future. This means that the trace might not generalize to other inputs!
+  slice_start_position = max((self.window_size + 1) - length, 0)
+/usr/local/lib/python3.12/dist-packages/piper/train/vits/attentions.py:298: TracerWarning: Converting a tensor to a Python boolean might cause the trace to be incorrect. We can't record the data flow of Python values, so this value will be treated as a constant in the future. This means that the trace might not generalize to other inputs!
+  if pad_length > 0:
+/usr/local/lib/python3.12/dist-packages/piper/train/vits/transforms.py:174: TracerWarning: Converting a tensor to a Python boolean might cause the trace to be incorrect. We can't record the data flow of Python values, so this value will be treated as a constant in the future. This means that the trace might not generalize to other inputs!
+  assert (discriminant >= 0).all(), discriminant
+/usr/local/lib/python3.12/dist-packages/torch/onnx/_internal/torchscript_exporter/jit_utils.py:305: UserWarning: Constant folding - Only steps=1 can be constant folded for opset >= 10 onnx::Slice op. Constant folding not applied. (Triggered internally at /pytorch/torch/csrc/jit/passes/onnx/constant_fold.cpp:178.)
+  _C._jit_pass_onnx_node_shape_type_inference(node, params_dict, opset_version)
+/usr/local/lib/python3.12/dist-packages/torch/onnx/_internal/torchscript_exporter/utils.py:714: UserWarning: Constant folding - Only steps=1 can be constant folded for opset >= 10 onnx::Slice op. Constant folding not applied. (Triggered internally at /pytorch/torch/csrc/jit/passes/onnx/constant_fold.cpp:178.)
+  _C._jit_pass_onnx_graph_shape_type_inference(
+/usr/local/lib/python3.12/dist-packages/torch/onnx/_internal/torchscript_exporter/utils.py:1186: UserWarning: Constant folding - Only steps=1 can be constant folded for opset >= 10 onnx::Slice op. Constant folding not applied. (Triggered internally at /pytorch/torch/csrc/jit/passes/onnx/constant_fold.cpp:178.)
+  _C._jit_pass_onnx_graph_shape_type_inference(
+INFO:__main__:Exported /tmp/piper/run-C/logs/version_0/checkpoints/last.ckpt -> /tmp/cand/C/voice.onnx (2 speakers)
+/tmp/cand/C/voice.onnx
+$ /usr/bin/python3 training/evaluate_speak.py --tsv /tmp/Lilly/data/speech/test.tsv --clips first200 --voice before=/tmp/Lilly/models/lilly/speak-bs/voice.onnx:0 --voice armA=/tmp/cand/A/voice.onnx:0 --voice armB=/tmp/cand/B/voice.onnx:0 --voice armC=/tmp/cand/C/voice.onnx:0 --human --listener /tmp/Lilly/models/lilly/listen --json /kaggle/working/speak-control-test.json
+200 clips, 167 distinct sentences, listener /tmp/Lilly/models/lilly/listen
+  before: 167 sentences spoken in 142 s
+    heard 50/167
+    heard 100/167
+    heard 150/167
+  before: 22.3% word error (726 of 3256 words)
+  armA: 167 sentences spoken in 130 s
+    heard 50/167
+    heard 100/167
+    heard 150/167
+  armA: 26.6% word error (865 of 3256 words)
+  armB: 167 sentences spoken in 136 s
+    heard 50/167
+    heard 100/167
+    heard 150/167
+  armB: 26.0% word error (846 of 3256 words)
+  armC: 167 sentences spoken in 131 s
+    heard 50/167
+    heard 100/167
+    heard 150/167
+  armC: 25.5% word error (831 of 3256 words)
+    heard 50/200
+    heard 100/200
+    heard 150/200
+    heard 200/200
+  human recordings: 11.7% word error (456 of 3901 words)
+  armA vs before: +4.27 points, p = 0.0000
+  armB vs before: +3.69 points, p = 0.0000
+  armC vs before: +3.22 points, p = 0.0000
+wrote /kaggle/working/speak-control-test.json

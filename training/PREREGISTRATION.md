@@ -3134,3 +3134,27 @@ comparison with that voice, not a claim about a language. Naturalness.
 `training/speak-control/` (the JSON, the manifest, one `metrics.csv` per arm,
 the report), `training/RESULTS-speak-control.md`, the outcome under this
 section, whichever way it fell. Nothing is installed from a control.
+
+## Outcome, 10 September 2026 — all three arms sound; the pipeline is not broken
+
+Version 1 (`afaksrmeli/lilly-speak-control`, commit `c61293f`, T4, 00:55–02:38
+CEST) ran as written. On the test prefix through the shipped listener
+(`training/RESULTS-speak-control.md`):
+
+| voice | word error | vs before | p | reading |
+|---|---|---|---|---|
+| before (the checkpoint, as fetched) | **22.3%** | | | |
+| arm A, `sr` phonemes, Piper's rates | **26.6%** | +4.27 | 0.0000 | sound |
+| arm B, `bs` phonemes, Piper's rates | **26.0%** | +3.69 | 0.0000 | sound |
+| arm C, `bs` phonemes, gentle optimizer | **25.5%** | +3.22 | 0.0000 | sound |
+| human recordings | **11.7%** | | | |
+
+By the reading written in advance: **a short fine-tune preserves the voice;
+the ceiling of v5 and v6 is not explained by the recipe; the FLEURS and
+parliament refusals stand as data verdicts.** The phonemizer (the leading
+suspect at 4.3% agreement) is cleared: B is not worse than A. The optimizer
+restart is cleared at 3,000 steps. Each arm drifts three to four points from
+the checkpoint on its own data, a real and small effect, whose compounding
+over 30,000–47,000 steps this run cannot settle. No voice line relaunches on
+this reading. The one line left open needs a clean hour from a native
+speaker, and that is the owner's call.

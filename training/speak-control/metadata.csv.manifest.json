@@ -1,0 +1,21 @@
+{
+ "rows": 747,
+ "csv": "/tmp/sorbian-data/metadata.csv",
+ "minutes": 164.2,
+ "speakers": {
+  "dsb": 408,
+  "hsb": 339
+ },
+ "phoneme_agreement": {
+  "sr": {
+   "identical": 538,
+   "of": 747,
+   "share": 0.7202
+  },
+  "bs": {
+   "identical": 32,
+   "of": 747,
+   "share": 0.0428
+  }
+ }
+}

@@ -427,9 +427,10 @@ This section exists because a README that only lists wins is not worth trusting.
   recordings themselves (53.9%, `training/RESULTS-speak-bs.md`) and one on
   fifteen hours of the Croatian parliament served as the mean of five
   speakers (51.9%, `training/RESULTS-speak-parla.md`), both pre-registered,
-  both judged by the same ear. Two corpora and one ceiling point at the
-  recipe rather than the recordings, and the next step is a control run, not
-  more data.
+  both judged by the same ear. A control run then fine-tuned the same
+  checkpoint on its own studio recordings and held it within four points
+  (`training/RESULTS-speak-control.md`), so the recipe is not the fault: the
+  recordings were. The one path left is a clean hour from a native speaker.
 - **English → Bosnian stays the weaker direction.** The fine-tune cleared its
   bars (above) and has been in the bundle since 8 September, but it starts from
   a smaller base than the forward direction and reads 60.00 chrF2 where the
