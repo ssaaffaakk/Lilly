@@ -79,6 +79,17 @@ when it stops being true; a stale handoff is worse than none.
 > mean speaker served, same bars. About 11 h. On COMPLETE:
 > `scripts/kaggle_train.py speak-youtube --fetch`, `training/RESULTS-speak-youtube.md`,
 > the outcome under v8; `lilly-speak-youtube.zip` only if it cleared bar 1.
+>
+> **10 Sep: version 1 OOM'd, version 2 is staged but BLOCKED on the weekly GPU
+> quota.** Version 1's data pipeline worked in full -- the listener transcribed
+> 22.5 h and the rule kept **8,329 clips / 1,105 min across all 7 speakers**,
+> more than FLEURS or the parliament -- then training hit CUDA OOM at batch 8
+> (lecture segments all sit near the 20 s cap). Fixed to **batch 4** (commit
+> 6a04676, v8 amendment). The relaunch was refused: **"Maximum weekly GPU quota
+> of 30.00 hours reached."** Nothing is running. When the quota resets (weekly),
+> relaunch: `python3 scripts/kaggle_train.py speak-youtube` -- the dataset
+> `lilly-youtube-voice-c8157ef3` is already uploaded, so it only pushes the
+> notebook. Then watch, fetch, RESULTS-speak-youtube.md, v8 outcome as before.
 
 ## The three numbers
 
