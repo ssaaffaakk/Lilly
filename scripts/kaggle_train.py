@@ -189,7 +189,17 @@ JOBS = {
                     "slug": "lilly-speak-control", "title": "Lilly speak control",
                     "needs_weights": False, "needs_corpus": False,
                     "needs_listen_shipped": True},
+    # The third voice line (PREREGISTRATION.md, "v8 -- speak -- a voice from
+    # Creative-Commons YouTube"): the audio the Mac fetched under CC BY goes up
+    # as a dataset named by its manifest's hash; the box hears, cuts, trains,
+    # serves the mean, and judges with the same listener.
+    "speak-youtube": {"notebook": "Lilly_Speak_YouTube_Kaggle.ipynb",
+                    "slug": "lilly-speak-youtube", "title": "Lilly speak youtube",
+                    "needs_weights": False, "needs_corpus": False,
+                    "needs_listen_shipped": True, "needs_youtube_voice": True},
 }
+YOUTUBE_VOICE = REPO_ROOT / "data" / "speech-extra" / "youtube-voice"
+YOUTUBE_MANIFEST = REPO_ROOT / "training" / "speak-youtube" / "manifest.json"
 STAGING = REPO_ROOT / "models" / "kaggle-staging"     # gitignored, under models/
 
 
@@ -445,6 +455,57 @@ def push_listen_shipped(user: str) -> str:
         "licenses": [{"name": "other"}]}, indent=1))
     mb = sum(f.stat().st_size for f in stage.iterdir()) / 1048576
     print(f"uploading {mb:.0f} MB to {slug} (fingerprint {got}) -- the slow part, once")
+    run(KAGGLE, "datasets", "create", "-p", stage, "-r", "zip")
+    wait_until_ready(slug)
+    return slug
+
+
+def push_youtube_voice(user: str) -> str:
+    """The CC BY audio the Mac fetched, as a dataset named by its manifest's hash.
+
+    A different selection is a different dataset, never a new version of the
+    old one: the notebook finds the manifest under /kaggle/input and refuses
+    it unless it is byte for byte the one committed in the repository, so what
+    trains is what the pre-registration named. Every file is checked here
+    against the manifest's sha256 before it is staged.
+    """
+    if not YOUTUBE_MANIFEST.is_file():
+        raise SystemExit(f"no committed manifest at {YOUTUBE_MANIFEST} -- run "
+                         "data/scripts/download_youtube_voice.py and copy its manifest there")
+    manifest = json.loads(YOUTUBE_MANIFEST.read_text(encoding="utf-8"))
+    local = json.loads((YOUTUBE_VOICE / "manifest.json").read_text(encoding="utf-8")) \
+        if (YOUTUBE_VOICE / "manifest.json").is_file() else None
+    if local != manifest:
+        raise SystemExit(f"{YOUTUBE_VOICE / 'manifest.json'} differs from the committed {YOUTUBE_MANIFEST}")
+    digest = hashlib.sha256(YOUTUBE_MANIFEST.read_bytes()).hexdigest()[:8]
+    name = f"lilly-youtube-voice-{digest}"
+    slug = f"{user}/{name}"
+    stage = STAGING / "dataset" / name
+    stage.mkdir(parents=True, exist_ok=True)
+    total = 0
+    for vid, m in manifest.items():
+        src = Path(m["file"])
+        if not src.is_file():
+            raise SystemExit(f"{vid}: {src} is not on this Mac")
+        h = hashlib.sha256()
+        with src.open("rb") as fh:
+            for chunk in iter(lambda: fh.read(1 << 20), b""):
+                h.update(chunk)
+        if h.hexdigest() != m["sha256"]:
+            raise SystemExit(f"{vid}: {src} does not match the manifest's sha256")
+        target = stage / src.name
+        if not target.exists() or target.stat().st_size != src.stat().st_size:
+            target.write_bytes(src.read_bytes())
+        total += src.stat().st_size
+    (stage / "manifest.json").write_bytes(YOUTUBE_MANIFEST.read_bytes())
+    (stage / "dataset-metadata.json").write_text(json.dumps({
+        "title": f"Lilly youtube voice {digest}", "id": slug,
+        "licenses": [{"name": "CC-BY-4.0"}]}, indent=1))
+    existing = subprocess.run([KAGGLE, "datasets", "status", slug], text=True, capture_output=True)
+    if "ready" in existing.stdout.lower():
+        print(f"dataset already there: {slug}")
+        return slug
+    print(f"uploading {total / 1048576:.0f} MB to {slug} -- the slow part, once")
     run(KAGGLE, "datasets", "create", "-p", stage, "-r", "zip")
     wait_until_ready(slug)
     return slug
@@ -963,6 +1024,11 @@ def main() -> int:
             print("    speech-instrument.md is the raw report. Then write the outcome")
             print("    into RESULTS-speech.md and PREREGISTRATION.md whichever way it")
             print("    fell. DOES NOT SHIP means rule 3: large-v3 is closed.")
+        elif args.job == "speak-youtube":
+            print("  unzip lilly-speak-youtube-results.zip into training/speak-youtube/ and write the")
+            print("    outcome into RESULTS-speak-youtube.md and PREREGISTRATION.md whichever way it fell.")
+            print("  lilly-speak-youtube.zip exists only if the mean voice cleared its bar: then unzip it")
+            print("    over models/lilly/speak-bs/ (built.json names the mean speaker and the channels).")
         elif args.job == "speak-control":
             print("  unzip lilly-speak-control-results.zip into training/speak-control/ and write")
             print("    RESULTS-speak-control.md and the outcome under v7 whichever way it fell.")
@@ -1068,6 +1134,8 @@ def main() -> int:
         datasets.append(push_listen_candidate(user))
     if job.get("needs_listen_shipped"):
         datasets.append(push_listen_shipped(user))
+    if job.get("needs_youtube_voice"):
+        datasets.append(push_youtube_voice(user))
     if job.get("needs_translator_builds"):
         datasets.extend(push_translator_builds(user))
     if job.get("needs_listen_previous"):

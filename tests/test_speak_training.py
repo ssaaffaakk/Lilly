@@ -159,3 +159,14 @@ def test_fetch_maps_rows_to_row_groups_and_guards_the_text():
         dl.clean_text("Godine 2015. je", 300)
     with pytest.raises(SystemExit):
         dl.clean_text("[[Pljesak]] hvala", 300)
+
+
+def test_youtube_segment_rule():
+    from data.scripts import cut_youtube_voice as cy
+    assert cy.passes(0.0, 5.0, "Dobar dan, kako ste?", -0.3, 0.1) == ""
+    assert cy.passes(0.0, 2.0, "Dobar dan.", -0.3, 0.1) == "length"
+    assert cy.passes(0.0, 25.0, "Dobar dan.", -0.3, 0.1) == "length"
+    assert cy.passes(0.0, 5.0, "Godine 2015.", -0.3, 0.1) == "digits_or_brackets"
+    assert cy.passes(0.0, 5.0, "Dobar dan.", -0.9, 0.1) == "logprob"
+    assert cy.passes(0.0, 5.0, "Dobar dan.", -0.3, 0.7) == "no_speech"
+    assert cy.passes(0.0, 5.0, "", -0.3, 0.1) == "chars"

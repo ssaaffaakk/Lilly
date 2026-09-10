@@ -3158,3 +3158,119 @@ the checkpoint on its own data, a real and small effect, whose compounding
 over 30,000–47,000 steps this run cannot settle. No voice line relaunches on
 this reading. The one line left open needs a clean hour from a native
 speaker, and that is the owner's call.
+
+---
+
+# v8 — speak — a voice from Creative-Commons YouTube, written before any run
+
+Written 10 September 2026, after the control (v7) showed the recipe holds a
+voice it is handed on clean single-speaker recordings and loses it on crowd
+and hall audio, and **before** anything has trained on YouTube audio. The
+owner asked ("use like bosnian youtube channels??", then "tamam arastir varsa
+indir vs ise basla"). Nothing below is reinterpreted afterwards.
+
+## What exists, seen before the run
+
+YouTube's own Creative Commons filter over 29 Bosnian searches (`yt-dlp`,
+the Mac, 10 September): 2,437 videos on 200-odd channels. The license of
+every candidate was then read from the video itself: "Creative Commons
+Attribution license (reuse allowed)". Serbian channels (Belgrade lectures,
+ekavian audiobooks) and language-lesson channels were left aside. What is
+Bosnian, monologue and long is almost entirely one genre: religious lectures
+by named scholars, on five channels (Švedska Dawetska Organizacija, Nauči
+islam, Islamska Predavanja, tawus7691, dzindoadis). A 90-second excerpt from
+the middle of 21 videos, heard by the shipped listener: Bosnian at 0.96–0.999
+on every lecture, mean log-probability −0.16 to −0.30 (clear speech), 83–161
+words a minute, ijekavian wherever the dialect gate had a word to judge.
+
+**The speaker is the person named in the title**, merged across the
+spellings the channels use, not a cluster: resemblyzer put the same lecturer
+at 0.90–0.97 between recordings and two lecturers in one hall at 0.62–0.78,
+too close for the threshold that separated FLEURS's eight readers. The seven
+largest named speakers with at least three CC hours, and what
+`training/select_youtube_voice.py` took, longest videos first, up to three
+hours of video each (`training/speak-youtube/selection.json`):
+
+| speaker | CC hours found | taken | videos |
+|---|---|---|---|
+| Safet Kuduzović | 71.4 | 3.13 h | 2 |
+| Hajrudin Ahmetović | 30.3 | 3.48 h | 3 |
+| Elvedin Pezić | 9.4 | 3.49 h | 3 |
+| Dževad Gološ | 7.6 | 3.17 h | 3 |
+| Zuhdija Adilović | 5.5 | 3.11 h | 3 |
+| Zijad Ljakić | 5.4 | 3.03 h | 3 |
+| Adnan Mrkonjić | 4.9 | 3.12 h | 3 |
+
+22.5 hours of video, 20 videos, all men, all CC BY. Their names and channels
+travel with the voice (the manifest, `built.json`), as CC BY asks.
+`data/scripts/download_youtube_voice.py` reads each video's license again
+on the day it fetches and refuses anything else; the manifest it writes —
+id, channel, title, license, duration, sha256 — is committed as
+`training/speak-youtube/manifest.json`, and the box refuses a dataset whose
+manifest is not that file byte for byte, or a file that does not match its
+sha256. YouTube's terms of service disfavour downloading; this is the same
+route ParlaSpeech itself took from the Croatian parliament's channel, on
+content its authors licensed for reuse, and it is written here rather than
+left unsaid.
+
+## The clip rule, on the box
+
+`data/scripts/cut_youtube_voice.py`: the shipped listener hears each video
+(`app.speech`'s own model, Bosnian, beam 5, Whisper's VAD) and its segments
+train if they are **3–20 s**, at most 300 characters, hold no digit and no
+bracket, have a mean log-probability of at least **−0.6** and a no-speech
+probability under 0.5. Per speaker, every kept clip is embedded and clips
+under **0.60** cosine to the speaker's own centroid are dropped (a
+questioner, a recitation, another voice). A speaker left with under 60
+minutes is left out; at most **3 hours** per speaker in video order; fewer
+than **5** speakers or 500 clips stops the run. The transcript is the
+listener's, punctuation and all.
+
+**Stated now:** the transcripts and the judge are the same listener. The
+voice learns the listener's own hearing, mistakes included, and is then
+graded by that hearing. This is the kindest the instrument has been to any
+candidate, and it is reported, not corrected; the human row stays the
+ceiling and the before voice the bar.
+
+## The recipe, the served voice, the bars
+
+As in v6: `training/train_piper.py`, warm start from the sr_RS checkpoint
+(md5 `3dd3439e…`), one speaker per lecturer, `gin_channels` 512, espeak-ng
+`bs`, 22.05 kHz, batch 8, fp32, Piper's default rates, validation split 2%,
+**at most 100 epochs or 9 h**, last checkpoint; the export appends the
+**mean** of the speakers' embeddings and that is the only voice served — no
+lecturer's own voice ships; each is heard for the record. The judgment is
+`training/evaluate_speak.py` on the FLEURS test prefix, the before voice
+(22.3%), the mean voice, the human recordings (11.7%), paired bootstrap over
+sentences.
+
+**Bar 1 — ships:** the mean voice strictly below the before voice, p < 0.05.
+**Bar 2 — the owner's ask, reported:** at or below the human recordings.
+
+## What failure looks like
+
+- **Bar 1 fails.** Lecture-hall audio through the listener's own transcripts
+  is not the studio hour the control carried; the sr_RS voice stays, and no
+  corpus line relaunches — the clean hour from a native speaker is what is
+  left.
+- **Bar 1 passes, bar 2 not reached.** It ships as the mean voice, CC BY 4.0,
+  with the seven names on the card and the distance from human stated.
+- **Both pass.** It ships; the card says the instrument is kind to it.
+
+## Expected direction
+
+Below the two refusals (53.9%, 51.9%) by a wide margin: podium microphones,
+one voice per file, the listener's own transcripts. Near the before voice's
+22.3%; which side is the question. Not at the human row.
+
+## What this run cannot settle
+
+Naturalness, and whether a voice built from seven lecturers sounds like
+anyone. Whether a listener that did not write the transcripts would agree.
+
+## Where the numbers go
+
+`training/speak-youtube/` (the JSON, the manifests, `metrics.csv`, the
+report), `training/RESULTS-speak-youtube.md`, the outcome under this
+section, whichever way it fell. If it ships: `models/lilly/speak-bs/`, the
+README's Speak row, `models/lilly/NOTICE.md` with the channels and names.

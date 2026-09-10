@@ -1,0 +1,182 @@
+{
+ "rule": {
+  "k": 7,
+  "min_hours": 3.0,
+  "raw_hours": 3.0,
+  "channels": [
+   "Švedska Dawetska Organizacija",
+   "Nauči islam",
+   "Islamska Predavanja",
+   "tawus7691",
+   "dzindoadis",
+   "Tevhid Ocagi Sarajevo",
+   "Islam4Peace.com"
+  ]
+ },
+ "speakers": {
+  "Safet Kuduzović": {
+   "cc_hours_found": 71.4,
+   "raw_hours_taken": 3.13,
+   "videos": [
+    {
+     "id": "qccUEln5kUI",
+     "channel": "Islamska Predavanja",
+     "title": "PUT USPJEHA! ¤  Dr.Safet Kuduzović - 2020",
+     "minutes": 96.2
+    },
+    {
+     "id": "OfbSvgTkM18",
+     "channel": "Švedska Dawetska Organizacija",
+     "title": "Tefsir Kur`ana 44 dio sura El Beqara 44 i 45 ajet - Dr. Safet Kuduzović",
+     "minutes": 91.9
+    }
+   ]
+  },
+  "Hajrudin Ahmetović": {
+   "cc_hours_found": 30.3,
+   "raw_hours_taken": 3.48,
+   "videos": [
+    {
+     "id": "mlcSeXbR3nI",
+     "channel": "Švedska Dawetska Organizacija",
+     "title": "Tumačenje ajeta iz sure El-Hudžurat - mr. Hajrudin Ahmetović",
+     "minutes": 90.7
+    },
+    {
+     "id": "lXRNHiE5hKw",
+     "channel": "Švedska Dawetska Organizacija",
+     "title": "Putevi do Dzenneta - Prof. Hajrudin Ahmetovic",
+     "minutes": 75.7
+    },
+    {
+     "id": "-76s89iFVOQ",
+     "channel": "Nauči islam",
+     "title": "Poštivanje učenih ljudi - Hajrudin Ahmetović, prof.",
+     "minutes": 42.6
+    }
+   ]
+  },
+  "Elvedin Pezić": {
+   "cc_hours_found": 9.4,
+   "raw_hours_taken": 3.49,
+   "videos": [
+    {
+     "id": "14Ptk_RDxsw",
+     "channel": "Islamska Predavanja",
+     "title": "Osnovni propisi vezani za žene ¤ Elvedin Pezić - 2021",
+     "minutes": 79.7
+    },
+    {
+     "id": "Xx82S9kFSZ4",
+     "channel": "Nauči islam",
+     "title": "Svjetlo bogobojaznosti - Elvedin Pezić, prof.",
+     "minutes": 79.7
+    },
+    {
+     "id": "sB_kYEY1YRg",
+     "channel": "Švedska Dawetska Organizacija",
+     "title": "Iskušenja, 3 dio - Mr Elvedin Pezić",
+     "minutes": 49.9
+    }
+   ]
+  },
+  "Dževad Gološ": {
+   "cc_hours_found": 7.6,
+   "raw_hours_taken": 3.17,
+   "videos": [
+    {
+     "id": "1tEzW8pCls4",
+     "channel": "Nauči islam",
+     "title": "U susret Ramazanu (Kur'an i ramazan) - Kurra hfz. Dževad Gološ, prof.",
+     "minutes": 66.7
+    },
+    {
+     "id": "EMd-DJwywZc",
+     "channel": "Nauči islam",
+     "title": "Tumačenje sure Kehf 2. dio -  Kurra hfz. Dževad Gološ, prof.",
+     "minutes": 62.8
+    },
+    {
+     "id": "RJl6k--9PgQ",
+     "channel": "Nauči islam",
+     "title": "Tumačenje sure Kehf 1. dio -  Kurra hfz. Dževad Gološ, prof.",
+     "minutes": 60.9
+    }
+   ]
+  },
+  "Zuhdija Adilović": {
+   "cc_hours_found": 5.5,
+   "raw_hours_taken": 3.11,
+   "videos": [
+    {
+     "id": "PdrfGQ7qGf8",
+     "channel": "tawus7691",
+     "title": "Moja pripadnost Islamu - dr. Zuhdija Adilović",
+     "minutes": 101.1
+    },
+    {
+     "id": "wGCCWoNRjB4",
+     "channel": "tawus7691",
+     "title": "Vjerovanje u Allahove meleke - dr. Zuhdija Adilović",
+     "minutes": 43.3
+    },
+    {
+     "id": "O5-S9lqbCM0",
+     "channel": "tawus7691",
+     "title": "Djela koja izvode iz vjere - dr. Zuhdija Adilović",
+     "minutes": 42.1
+    }
+   ]
+  },
+  "Zijad Ljakić": {
+   "cc_hours_found": 5.4,
+   "raw_hours_taken": 3.03,
+   "videos": [
+    {
+     "id": "Dlc7dx5JK0Y",
+     "channel": "Nauči islam",
+     "title": "Najbolji Govor i najbolja Uputa  (Čvrst islamski karakter) - Mr. Zijad Ljakić",
+     "minutes": 71.1
+    },
+    {
+     "id": "t-NB1AOiQNU",
+     "channel": "Nauči islam",
+     "title": "Vrste postača i vrjednosti ramazana - mr. Zijad Ljakić",
+     "minutes": 66.7
+    },
+    {
+     "id": "p2nGMNKuJZY",
+     "channel": "Islamska Predavanja",
+     "title": "VJEROVANJE BEZ KOJEG NEMA ISLAMA   dr  Zijad Ljakić",
+     "minutes": 43.9
+    }
+   ]
+  },
+  "Adnan Mrkonjić": {
+   "cc_hours_found": 4.9,
+   "raw_hours_taken": 3.12,
+   "videos": [
+    {
+     "id": "YMsbyVo9t1M",
+     "channel": "Švedska Dawetska Organizacija",
+     "title": "Sura El-Felek [Predavanje] - mr. Adnan Mrkonjić",
+     "minutes": 71.4
+    },
+    {
+     "id": "halRF_2OTg8",
+     "channel": "Islamska Predavanja",
+     "title": "MOJ UZOR -Adnan Mrkonjić - 2021",
+     "minutes": 64.8
+    },
+    {
+     "id": "ezo5AzRGa1Q",
+     "channel": "Švedska Dawetska Organizacija",
+     "title": "Za čim će čovjek žaliti na Sudnjem danu - Hfz Adnan Mrkonjić",
+     "minutes": 51.3
+    }
+   ]
+  }
+ },
+ "raw_hours_total": 22.5,
+ "videos_total": 20
+}

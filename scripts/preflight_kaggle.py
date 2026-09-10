@@ -18,6 +18,7 @@ ORDINALS = REPO / "training" / "Lilly_Ordinals_Kaggle.ipynb"
 SPEAK_BS = REPO / "training" / "Lilly_Speak_BS_Kaggle.ipynb"
 SPEAK_PARLA = REPO / "training" / "Lilly_Speak_Parla_Kaggle.ipynb"
 SPEAK_CONTROL = REPO / "training" / "Lilly_Speak_Control_Kaggle.ipynb"
+SPEAK_YOUTUBE = REPO / "training" / "Lilly_Speak_YouTube_Kaggle.ipynb"
 
 
 def read_nb(path: Path) -> str:
@@ -475,6 +476,55 @@ def check_speak_control(text: str) -> None:
         fail("speak-control: the reading rule (sound < +5; BROKEN >= +10 at p < 0.05) must be in the notebook")
 
 
+def check_speak_youtube(text: str) -> None:
+    """The YouTube voice line (PREREGISTRATION.md, "v8 -- speak"): CC BY audio
+    named by a committed manifest, heard and cut on the box by the fixed rule,
+    one dominant speaker per channel, the mean speaker served."""
+    check_offload(text, "speak-youtube")
+    if "/kaggle/temp" not in text or "/kaggle/working/Lilly" in text:
+        fail("speak-youtube: must clone to /kaggle/temp")
+    if "!= 925" not in text:
+        fail("speak-youtube: must assert the whole FLEURS test split arrived (925)")
+    if "training/speak-youtube/manifest.json" not in text or "cut_youtube_voice.py" not in text \
+            or "hashlib.sha256(MANIFEST.read_bytes()).hexdigest() != hashlib.sha256(COMMITTED.read_bytes()).hexdigest()" not in text:
+        fail("speak-youtube: the audio is what the committed manifest names, checked byte for byte, "
+             "and cut by cut_youtube_voice.py")
+    if not (REPO / "training" / "speak-youtube" / "manifest.json").is_file():
+        fail("speak-youtube: training/speak-youtube/manifest.json must be committed before a launch")
+    if "e6bb58483586b06c" not in text or "lilly-listen-large-v3" not in text:
+        fail("speak-youtube: the judge is the shipped listener, checked by fingerprint")
+    if "3dd3439e5c550d8201a9e7a2b1300a5b" not in text or "warmstart_ckpt" not in text:
+        fail("speak-youtube: must warm-start from the md5-checked sr_RS checkpoint")
+    if "02c6e27ac7b4dfa84272df89edca9feb" not in text:
+        fail("speak-youtube: the 'before' voice must be the bytes the app speaks with today (md5)")
+    if '"--data.espeak_voice", "bs"' not in text or '"training/train_piper.py", "fit"' not in text:
+        fail("speak-youtube: espeak-ng bs, through training/train_piper.py")
+    if '"--data.batch_size", "8"' not in text or "expandable_segments" not in text or "max_time" not in text:
+        fail("speak-youtube: batch 8, expandable segments, a wall-clock cap")
+    if '"--add-mean-speaker"' not in text or 'cfg["speaker_id_map"]["mean"] = MEAN' not in text \
+            or "candidate={CAND / 'voice.onnx'}:{MEAN}" not in text:
+        fail("speak-youtube: the served and judged voice is the mean speaker -- no channel's own voice")
+    if "core.pyx" not in text or "maximum_path" not in text or "training/export_piper_onnx.py" not in text:
+        fail("speak-youtube: build the alignment extension; export through export_piper_onnx.py")
+    if "evaluate_speak.py" not in text or '"--clips", "first200"' not in text or '"--human"' not in text:
+        fail("speak-youtube: the judgment is evaluate_speak.py on the first200 prefix with the human row")
+    if "LILLY_SPEECH_DEVICE" not in text:
+        fail("speak-youtube: the listener must be put on the GPU by env")
+    if "lilly-speak-youtube-results.zip" not in text or "lilly-speak-youtube.zip" not in text \
+            or 'z.write(MANIFEST, "manifest.json")' not in text:
+        fail("speak-youtube: results zip (with the manifest, CC BY's credit) always after the judgment; voice zip only on SHIPS")
+    judged = text.find("speak-youtube-test.json")
+    if judged < 0 or text.find("VOICE_ZIP = ") < judged:
+        fail("speak-youtube: the voice zip must be written after the judgment, never before")
+    if '["p"]' not in text:
+        fail("speak-youtube: the ship bar reads the paired bootstrap p")
+    cutter = (REPO / "data" / "scripts" / "cut_youtube_voice.py").read_text(encoding="utf-8")
+    for needle in ("LOGPROB = -0.6", "OUTLIER_SIM = 0.60", "MIN_MINUTES = 60.0", "HOURS_EACH = 3.0", "MIN_SPEAKERS = 5",
+                   'if m.get("license") != CC_BY:', "sha256_of(src) != m[\"sha256\"]"):
+        if needle not in cutter:
+            fail(f"cut_youtube_voice.py: the pre-registered rule or the checks changed ({needle!r} missing)")
+
+
 def check_ordinals(text: str) -> None:
     """A measurement with no weights to ship: the guards are the count, the
     builds, both splitters on one box, and the gate before the zip."""
@@ -532,7 +582,8 @@ def main() -> int:
                      (ORDINALS, check_ordinals),
                      (SPEAK_BS, check_speak_bs),
                      (SPEAK_PARLA, check_speak_parla),
-                     (SPEAK_CONTROL, check_speak_control)):
+                     (SPEAK_CONTROL, check_speak_control),
+                     (SPEAK_YOUTUBE, check_speak_youtube)):
         if not path.is_file():
             fail(f"missing {path}")
         fn(read_nb(path))
@@ -568,6 +619,9 @@ def main() -> int:
     control_job = poller_speak.split('"speak-control":', 1)[1][:400] if '"speak-control":' in poller_speak else ""
     if "lilly-speak-control-results.zip" not in control_job:
         fail("speak-control poller: done is the results zip")
+    yt_job = poller_speak.split('"speak-youtube":', 1)[1][:400] if '"speak-youtube":' in poller_speak else ""
+    if "lilly-speak-youtube-results.zip" not in yt_job or '"lilly-speak-youtube.zip"' in yt_job:
+        fail("speak-youtube poller: done is the results zip; the voice zip is never the done signal")
     if "could not be added" not in kaggle_train:
         fail("kaggle_train.py confirm_push must refuse a push whose attachment Kaggle "
              "'could not be added' -- that run starts without its data and dies cells later")
@@ -601,7 +655,7 @@ def main() -> int:
     offload = (REPO / "training" / "kaggle_offload.py").read_text(encoding="utf-8")
     if "experiment_log.json" not in offload or "scan_trainproof" not in offload:
         fail("training/kaggle_offload.py must write experiment_log.json and scan the tee")
-    print("preflight ok: speech half-1 + half-2 + instrument, OCR, outside-baseline, translation, ordinals, speak-bs, speak-parla, speak-control notebooks")
+    print("preflight ok: speech half-1 + half-2 + instrument, OCR, outside-baseline, translation, ordinals, speak-bs, speak-parla, speak-control, speak-youtube notebooks")
     return 0
 
 

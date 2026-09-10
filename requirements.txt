@@ -45,6 +45,12 @@ pillow
 # Fetching the models onto a fresh machine
 huggingface_hub
 
+# Voice data from Creative-Commons YouTube, the Mac side only
+# (data/scripts/download_youtube_voice.py, screen_youtube_voice.py): the audio
+# stream as served, and a bundled ffmpeg for cutting excerpts locally.
+yt-dlp
+imageio-ffmpeg
+
 # Driving a training run on Kaggle GPUs without a browser
 kaggle
 
