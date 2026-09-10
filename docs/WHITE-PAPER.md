@@ -16,7 +16,10 @@ browser-based interface.
 
 On the FLORES-200 benchmark the translator scores 43.25 BLEU / 68.10 chrF2
 (Bosnian → English) and 30.73 BLEU / 60.00 chrF2 (English → Bosnian). The
-speech recogniser achieves 11.9% word error rate on 200 held-out FLEURS clips.
+speech recogniser achieves 11.9% word error rate on 200 held-out FLEURS clips —
+a whisper-large-v3 fine-tune shipped by the owner's decision after it was refused
+at its pre-registered gate (Croatian substitution 1.1% → 6.1%, p = 0.018); the
+gated whisper-small that cleared all three rows reads 34.9%.
 The photograph reader identifies 57.8% of words per photograph on a 132-image
 test set with 450 invented words — stock PaddleOCR PP-OCRv6, chosen over a
 fine-tuned EasyOCR reader by a rule written before the comparison.
@@ -447,7 +450,7 @@ the art.
 |---|---|---|---|
 | whisper-small, stock | 38.5% | — | — |
 | whisper-small, fine-tuned (gated) | **34.9%** | 68.2% | 3.3% |
-| whisper-large-v3, fine-tuned (shipped) | **11.9%** | 89.1% | 6.5% |
+| whisper-large-v3, fine-tuned (refused at gate, shipped by owner's decision) | **11.9%** | 89.1% | 6.5% |
 | Human recordings | 11.7% | — | — |
 
 On all 925 test clips, the large-v3 listener reads 14.1% word error against the
@@ -471,7 +474,8 @@ places speech recognition on a scale anchored to real published systems:
 The gated whisper-small at 34.9% sits at **band 3–4** — marginal above zero-shot.
 The shipped whisper-large-v3 at 14.1% sits at **band 8** — at the level of
 commercial cloud speech APIs on this language. The gap from the first builds
-(> 55% WER) to today (11.9% on the 200-clip prefix) spans six rubric bands.
+(> 55% WER) to today (11.9% on the 200-clip prefix, refused at its gate, shipped
+by the owner's decision) spans six rubric bands.
 
 ### 5.4 Photograph results
 
