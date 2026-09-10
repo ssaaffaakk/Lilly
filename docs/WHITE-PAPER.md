@@ -66,6 +66,28 @@ methodology:
    attempts that never moved the held-out score). A README that only lists wins is
    not worth trusting.
 
+### 1.3 The journey — from first build to today
+
+The first builds were worse than anything below. No measurement of them was kept in
+the repository — the habit of committing a number before changing anything came later,
+and is now the rule — so the first column comes from the author's own notes from that
+time, written as a bound. The next column is the first number that was recorded, with
+the file it lives in. The last is today.
+
+| | the first builds (unrecorded) | first recorded | today |
+|---|---|---|---|
+| Photographs — words found per photograph, the 40 | **< 30%** | 36.0% (`training/RESULTS-ocr.md`) | **67.0%** |
+| Photographs — words found, pooled | **< 10%** | 16.9% (63 of 373) | **69.4%** |
+| Photographs — words invented that are on no sign | **> 280** | 224 | **65** |
+| Speech — word error, 200 held-out clips | **> 55%** | 38.5% (`training/RESULTS-speech.md`) | **11.9%** (whisper-large-v3, shipped by decision, refused at its gate; the gated whisper-small reads 34.9%) |
+| Translation — BLEU on FLORES devtest, as the user sees it | **< 30** | 37.72, with the language tag leaked into 308 of 1,012 outputs (`training/RESULTS-devtest.md`) | **43.25**, leaked into **0** (re-measured 8 Sep on a T4 after the ordinal splitter fix) |
+| Reply, English → Bosnian — chrF2 on FLORES-200 | — | 58.96, the base as downloaded (`training/RESULTS-en-bs.md`) | **60.00**, fine-tuned and published 8 Sep |
+
+One recorded moment says what the early period was like: the reader scored about 75%
+on synthetic text and **36% the first time it was pointed at real photographs**
+(`training/RESULTS-ocr-dataset.md`). The 75% was never a real number. Everything
+after that was measured on real photographs, real audio, and held-out sentences.
+
 ---
 
 ## 2. System Architecture
@@ -345,6 +367,32 @@ the served code path, language tags stripped.
 On the 1,012-pair devtest half: **43.25 BLEU / 68.10 chrF2** against the base's
 42.08 / 67.85.
 
+**Where Lilly stands against published systems.** The project's own rubric
+(`training/RUBRIC.md`) anchors every band to a real system on the OPUS-MT dashboard
+for this language pair. The entire published gap between a free zero-effort download
+and Meta's flagship is 2.7 chrF2 — narrower than BLEU can resolve (Kocmi et al.,
+ACL 2024). Lilly's position on the landscape:
+
+| System | Params | BLEU | chrF2 | Rubric band |
+|---|---|---|---|---|
+| mozilla/tiny_bsen | 17M | — | 57.4 | 2 |
+| NLLB-200-distilled-600M | 600M | 36.49 | 63.80 | 5–6 |
+| NLLB-200-1.3B | 1.3B | — | 66.6 | 9 |
+| NLLB-200-3.3B (best of 30 published) | 3.3B | — | 67.2 | 10 |
+| Lilly's base (Helsinki-NLP, untouched) | ~230M | 41.77 | 67.66 | **10** |
+| **Lilly (fine-tuned)** | **~230M** | **43.03** | **67.81** | **10** |
+
+Lilly at 68.10 chrF2 (devtest) exceeds the best published score on this pair
+(NLLB-200-3.3B at 67.2), at a fraction of the parameters. The base model already
+clears that bar — the fine-tuning's contribution is +0.15 chrF2 (p = 0.074, a
+bootstrap tie) — so the credit belongs largely to Helsinki-NLP's `opus-mt-tc-big-zls-en`.
+
+**Why a 230M specialist beats a 3.3B generalist.** `opus-mt-tc-big-zls-en` translates
+South Slavic into English and nothing else; NLLB-200 covers two hundred languages in
+one set of weights. This is the ordinary shape of that trade-off: the smaller model
+is not better at translation — it is spending 100% of its capacity on this language
+family while NLLB divides its capacity across 200.
+
 **The finding that matters most.** The fine-tuning does not move chrF2: −0.16 at
 p = 0.128 on 2,009 pairs, a bootstrap tie. Its BosnianBench term recall moves
 +0.5 at p = 0.36. What the fine-tuning did achieve: the base model prints its
@@ -368,14 +416,28 @@ p = 0.25).
 | p | 0.001 | 0.001 |
 
 Bosnian form rate: 94.3% → 99.2% (244 of 246 decided targets). `>>bos_Latn<<`
-label steering gap: 21.8 → 22.5 points.
+label steering gap: 21.8 → 22.5 points. Against NLLB-600M (26.07 BLEU / 56.22
+chrF2 en→bs), Lilly leads by +4.66 BLEU / +3.78 chrF2, but 100% of that margin
+is the untouched base's — the en→bs fine-tune was not yet trained when this
+comparison ran.
 
-**Against an outside system.** `facebook/nllb-200-distilled-600M` (600M parameters)
-on the same 2,009 pairs: 36.49 BLEU / 63.80 chrF2 (bs→en) against Lilly's 43.03 /
-67.81, and 26.07 / 56.22 (en→bs) against 30.73 / 60.00. But the untouched Helsinki
-base already accounts for +5.11 of the +5.65 BLEU gap. The win belongs largely to
-OPUS-MT. And NLLB-600M is the distilled small variant; Google, DeepL, the 3.3B NLLB,
-and the large general models were not tested.
+**Against an outside system — full comparison.** `facebook/nllb-200-distilled-600M`
+(600M parameters) on the same 2,009 pairs, same loader, same sacrebleu call:
+
+| Direction | System | Params | BLEU | chrF2 |
+|---|---|---|---|---|
+| bs → en | NLLB-200-distilled-600M | 600M | 36.49 | 63.80 |
+| bs → en | Lilly's base, untouched | ~230M | 41.60 | **67.58** |
+| bs → en | **Lilly, shipped** | **~230M** | **42.14** | 66.79 |
+| en → bs | NLLB-200-distilled-600M | 600M | 26.07 | 56.22 |
+| en → bs | **Lilly, shipped** | **~77M** | **29.57** | **58.96** |
+
+Lilly beats NLLB-600M in both directions against a model 2.6× and 8× its size. But
+the untouched Helsinki base already accounts for +5.11 of the +5.65 BLEU gap bs→en.
+The win belongs largely to OPUS-MT, which this project builds on and did not train.
+NLLB-600M is the distilled small variant; Google, DeepL, the 3.3B NLLB, and the
+large general models were not tested — so none of this is a claim about the state of
+the art.
 
 ### 5.3 Speech results
 
@@ -389,17 +451,51 @@ and the large general models were not tested.
 | Human recordings | 11.7% | — | — |
 
 On all 925 test clips, the large-v3 listener reads 14.1% word error against the
-small's 39.5%. On the project's own rubric scale (`training/RUBRIC.md`), anchored
-to published systems: band 3 (39.5%) against band 8 (14.1%).
+small's 39.5%.
+
+**Where Lilly stands against the industry.** The rubric (`training/RUBRIC.md`)
+places speech recognition on a scale anchored to real published systems:
+
+| WER range | Rubric band | Anchored to |
+|---|---|---|
+| > 34% + baseline | 1 | worse than doing nothing |
+| ±2.5 of baseline | 2 | indistinguishable from stock whisper-small |
+| 30–34% | 4 | marginal gain over zero-shot |
+| 25–30% | 5 | |
+| 21–25% | 6 | |
+| 16.5–21% | 7 | |
+| 12–16.5% | 8 | commercial cloud tier (Google, Azure on FLEURS Bosnian) |
+| 8–12% | 9 | |
+| ≤ 8% | 10 | dictation people would actually use |
+
+The gated whisper-small at 34.9% sits at **band 3–4** — marginal above zero-shot.
+The shipped whisper-large-v3 at 14.1% sits at **band 8** — at the level of
+commercial cloud speech APIs on this language. The gap from the first builds
+(> 55% WER) to today (11.9% on the 200-clip prefix) spans six rubric bands.
 
 ### 5.4 Photograph results
 
 | Reader | the 40 (found / invented) | test-v2, 132 photographs (found / invented) |
 |---|---|---|
+| The first builds (unrecorded) | **< 30% / > 280** | — |
 | First recorded (EasyOCR, first reader) | 36.0% / 224 | — |
 | EasyOCR, stock | 48.0% / 188 | 30.0% / — |
 | EasyOCR, fine-tuned on real crops | 54.5% / 182 | 34.6% / 2,071 |
 | **PP-OCRv6, stock, floor 0.9 (shipped)** | **67.0% / 65** | **57.8% / 450** |
+
+**Industry context.** The rubric grades photograph reading on strict end-to-end word
+F1 (ICDAR2015 Task 4.4 matching) with a recall floor. The photograph score is
+currently **void** — the rubric requires ≥ 200 real photographs with text, and
+test-v2 has 132. If it were scored, 57.8% found with 450 invented would place the
+reader in the band-7 to band-8 range (F1 53–62). For reference, stock EasyOCR at
+30.0% on the same 132 photographs would sit at band 2–3. The progression from
+< 30% found with > 280 invented to 67.0% found with 65 invented on the 40 is a
+climb from band 1 to the upper range.
+
+**What matters is both columns.** Recall can always be bought by guessing more:
+without the confidence floor PP-OCRv6 reads 60.0% but invents 2,373 words. The
+floor cut invented words from 2,373 to 65 while raising found words from 60.0% to
+67.0% — a rare case where precision and recall both improved.
 
 ### 5.5 Voice results
 
@@ -421,7 +517,7 @@ Piper's framework.
 
 ---
 
-## 6. The Rubric
+## 6. The Rubric — Where Lilly Stands Against Published Systems
 
 All three abilities are graded on a 1–10 scale (`training/RUBRIC.md`) written on
 27 August 2026, before the measurements it grades. The scale was not set by whoever
@@ -430,11 +526,51 @@ deliberately not told how Lilly scores, then each proposal was handed to a secon
 agent asked to attack it — to name any invented citation and to find any band an
 off-the-shelf model would clear by accident. What survived:
 
-| Ability | Lilly's score | Anchored to |
-|---|---|---|
-| Translation (chrF2 68.10) | **10** | ≥ 67.2 = NLLB-200-3.3B, best of 30 published systems on this pair |
-| Speech (WER 14.1% on 925 clips) | **8** | 10–15% = commercial cloud (Google, Azure) on FLEURS Bosnian |
-| Photographs | **void** | RUBRIC.md refuses to grade below 200 real photographs with text; test-v2 has 132 |
+### Translation rubric — chrF2 on FLORES-200 bos_Latn → eng
+
+| Score | chrF2 | Anchored to | Lilly |
+|---|---|---|---|
+| 10 | ≥ 67.2 | NLLB-200-3.3B, best of 30 published systems | **68.10 — here** |
+| 9 | 66.5–67.1 | between NLLB-1.3B (66.6) and the 3.3B | |
+| 8 | 65.5–66.4 | above every system below the NLLB-1.3B tier | |
+| 7 | 64.6–65.4 | clear of NLLB-200-distilled-600M (64.5) | |
+| 5–6 | 63.5–64.5 | at the free download's level | |
+| 3–4 | 60.0–63.4 | below it | |
+| 2 | 57.4–59.9 | near mozilla/tiny_bsen (57.4), a 17M student | |
+| 1 | < 57.4 | below the smallest system on the board | |
+
+**Lilly scores 10** — at the level of the best published system on this pair, a model
+15× its size. The credit belongs to the base model (Helsinki-NLP), not the fine-tune.
+
+### Speech rubric — WER on FLEURS bs_ba test
+
+| Score | WER | Anchored to | Lilly |
+|---|---|---|---|
+| 10 | ≤ 8% | dictation people would actually use | |
+| 9 | 8–12% | | |
+| 8 | 12–16.5% | commercial cloud tier (Google, Azure) | **14.1% — here** |
+| 7 | 16.5–21% | | |
+| 5 | 25–30% | | |
+| 4 | 30–34% | marginal gain over zero-shot | |
+| 2 | ±2.5 of baseline | indistinguishable from doing nothing | |
+| 1 | worse than baseline + 2.5 | | |
+
+**Lilly scores 8** — at the level of commercial cloud speech APIs (Google Cloud
+Speech-to-Text, Azure Speech Services) on this language.
+
+### Photograph rubric — end-to-end word F1
+
+| Score | F1 | Recall floor | Lilly |
+|---|---|---|---|
+| 10 | ≥ 68 | 60 | |
+| 9 | 62–68 | 55 | |
+| 7 | 53–57 | 46 | |
+| 5 | 42–48 | 36 | |
+| 3 | 27–35 | | |
+| 1 | < 18 | | |
+
+**Lilly: void.** The rubric refuses to grade below 200 real photographs with text;
+test-v2 has 132. The test set must grow before a valid score exists.
 
 ---
 
