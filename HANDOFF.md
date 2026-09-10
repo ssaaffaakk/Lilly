@@ -67,9 +67,18 @@ when it stops being true; a stale handoff is worse than none.
 > **COMPLETE 02:38 CEST: all three arms sound** — A 26.6%, B 26.0%, C 25.5%
 > against the checkpoint's 22.3% (each +3 to +4, p = 0.0000; not the +30 of
 > the refused lines). The pipeline is not broken; the phonemizer is cleared;
-> the refusals stand as data verdicts. **No voice line relaunches.** The only
-> line left open is a clean hour from a native Bosnian speaker — the owner's
-> call. The app keeps the sr_RS voice.
+> the refusals stand as data verdicts. The app keeps the sr_RS voice.
+>
+> **10 Sep, ~04:10 CEST: the third voice line, `speak-youtube`, launched**
+> (`afaksrmeli/lilly-speak-youtube` version 1, T4, commit 44ed719), pre-registered
+> as "v8 -- speak -- a voice from Creative-Commons YouTube": seven Bosnian
+> lecturers named in CC BY video titles, three hours of video each, 22.5 h in
+> 20 videos fetched on the Mac (`training/speak-youtube/manifest.json`, sha256
+> per file; dataset `lilly-youtube-voice-c8157ef3`), heard and cut on the box
+> by the shipped listener (log-prob >= -0.6, 3-20 s, centroid filter 0.60),
+> mean speaker served, same bars. About 11 h. On COMPLETE:
+> `scripts/kaggle_train.py speak-youtube --fetch`, `training/RESULTS-speak-youtube.md`,
+> the outcome under v8; `lilly-speak-youtube.zip` only if it cleared bar 1.
 
 ## The three numbers
 
