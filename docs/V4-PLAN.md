@@ -23,6 +23,14 @@ counts and intervals beside every delta; heavy compute on Kaggle
 | test-v2b | 160 photographs on the Mac, attribution committed, blind sheets written and empty | two blind passes, then `build_truth`, then one score on test-v2 ∪ test-v2b |
 | published bundle | `listen/` is whisper-large-v3 again since 8 Sep evening, by the owner's named override (`--allow-listen e6bb58483586b06c`); reply build in since 11:31 UTC | `publish_to_hf.py` refuses an unnamed listener and binds the reply build to its numbers |
 
+**Note added 11 September 2026 — the voice lane.** The board above predates v5–v8.
+The Bosnian voice's warm-start checkpoint was found to be Lower Sorbian (West
+Slavic) rather than Serbian, and all three fine-tunes from it lost points —
+including the control, on the checkpoint's own studio data. The next voice step
+is a measurement, not a training run: hear `sl_SI-artur` and `bg_BG-dimitar` as
+fetched against the 200-clip prefix. v8 YouTube training is held, not closed.
+See `docs/speak-checkpoint-comparison.md`.
+
 ## What the evidence says before anything is launched
 
 - **Photographs.** Six self-labelled passes, three PaddleOCR fine-tunes and a
