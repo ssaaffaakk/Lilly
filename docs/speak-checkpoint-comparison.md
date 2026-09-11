@@ -150,16 +150,74 @@ both are worth having:
 A run that cannot lose is a better use of the next quota than a run our own
 results table predicts will fail its gate.
 
+## Measured 11 September: the YouTube audio cannot train a 22.05 kHz voice
+
+The argument above was about the *class* of the data — found audio, like the two
+corpora that lost thirty points. That was a prediction. It is now a measurement.
+
+`training/probe_audio_quality.py` decoded 90 seconds from the middle of each of
+the 20 staged lectures and measured three things (full table:
+`training/speak-youtube/audio-quality.json`):
+
+| | median | range across the 20 |
+|---|---|---|
+| rolloff — highest frequency still carrying speech energy | **6,460 Hz** | 2,433 – 9,475 Hz |
+| share of speech energy above 8 kHz | **0.15%** | 0.00 – 2.51% |
+| dryness — dB of modulation depth inside speech | **10.4 dB** | 5.0 – 19.8 dB |
+| noise — speech level over noise floor | 33.4 dB | 17 – 48 dB |
+
+**Nought of twenty files reach 11,025 Hz.** That is not a quality preference, it
+is the format: a 22.05 kHz Piper voice has to *generate* content up to 11 kHz.
+Trained on audio that is empty above 6.5 kHz, it learns to emit silence in the
+top half of its own output band. Two of twenty pass 9 kHz; five pass 8 kHz.
+
+The missing band is the one Bosnian can least afford. **s, š, z, ž, c, ć, č**
+carry their identity between roughly 4 and 10 kHz, and those are exactly the
+consonants that separate this language's words from each other. A voice that
+cannot place energy there is not merely dull, it is ambiguous.
+
+Dryness compounds it. Close-mic studio speech keeps 20 dB or more of modulation
+depth between syllables; reverberation fills those dips in. The median here is
+10.4 dB and **one file of twenty** reaches 18. A voice trained on it learns the
+hall as much as the speaker.
+
+And the twenty differ enormously from one another — a fourfold spread in
+bandwidth, 31 dB in noise. Multi-speaker TTS wants one consistent recording
+chain across its speakers. This is twenty.
+
+**So the v8/v9 speak line closes on a number, not on an analogy.** The earlier
+sections argued the run was unlikely to clear its gate; this section says the
+audio lacks the frequencies the output format is required to produce.
+
+The same properties are harmless for **recognition**. Whisper resamples to
+16 kHz and its filterbank stops at 8 kHz, so the median file's content sits
+inside the band the listener actually reads; the model was pre-trained on found
+web audio with exactly these defects, and variety across recording conditions is
+an asset there rather than a liability. The 18.4 hours are good data pointed at
+the wrong ability.
+
+One caveat on pointing them at the listener instead:
+`training/build_speak_youtube_notebook.py:119` records the transcripts as
+"transcribed by the shipped listener". They are the shipped model's own output.
+Training the shipped listener on them is the circular move this project already
+closed once on the reading side (`.claude/CLAUDE.md`, the Mapillary line, passes
+14–19). Using large-v3's transcripts to train the smaller listener would be
+distillation rather than circularity and is a different question — but it is not
+the one v8 was written to ask, and it needs its own pre-registration.
+
 ## Recommendation
 
 1. **Measure `sl_SI-artur` and `bg_BG-dimitar` as fetched**, `bs` phonemes,
    against the 200-clip prefix and the shipped listener. Pre-register the bar
    first: ships only if strictly below 22.3% at p < 0.05, the same bar every
    other speech candidate has faced.
-2. **Hold v8/v9 YouTube training.** Do not close the line — the 18.4 hours are
-   good data and they stay on Kaggle — but do not spend six hours on a recipe
-   that has lost points on every corpus it has been given, including the one it
-   was built from.
+2. **Close v8/v9 — YouTube audio to a voice.** Not held: closed, on the
+   measurement above. Nought of twenty lectures carry speech energy to 11 kHz,
+   which is the band a 22.05 kHz voice must fill. Do not relaunch
+   `speak-youtube` against any checkpoint, at any batch size, for any number of
+   epochs. The 18.4 hours stay on Kaggle and on the Mac; they are recognition
+   data, and their transcripts' provenance has to be settled before they are
+   that.
 3. **Revisit training only if step 1 changes the picture** — for example if a
    fetched voice lands well below 22.3%, which would give a fine-tune real room
    to fall and still clear the bar.
