@@ -26,7 +26,8 @@ language-token re-run already in flight is not duplicated here.
 | 3 | **Suppress the seven Croatian words at decode time** | **none** | CTranslate2 4.8.1 has `suppress_sequences`; the seven words are already enumerated |
 | 4 | Back-translate CC0 Bosnian | one Kaggle run | MaCoCu-bs is **730M words, CC0**; back-translation at this data shape is worth ~+2.7 BLEU in the literature |
 | 5 | Filter WikiMatrix | none to filter | it is 56% of their mix and a sixth misaligned by their own audit |
-| — | a Bosnian voice from a 2026 TTS | — | **nothing found that is both permissive and speaks Bosnian**; their own conclusion stands |
+| 6 | Hear `sl_SI-artur` as fetched (agent 1's standing item) | none, ~30 min | CC BY 4.0, the only South Slavic Piper voice in Bosnian's own sub-branch; listening cannot lose |
+| — | a Bosnian voice from a 2026 zero-shot TTS | — | **nothing found that is both permissive and speaks Bosnian**; their own conclusion stands |
 
 Three of the top five need **no GPU at all**. That is the headline: the cheapest
 wins available to this project right now are in the serving path and in the
@@ -210,6 +211,15 @@ FLORES's Bosnian side is 49% Bosnian by lexical marker against their training
 data's 77%. Web-crawled `.ba` text will be genuinely Bosnian; FLORES may not
 fully reward it. The form-rate instrument should be read beside any BLEU gain.
 
+**Why this matters more than it looks.** `docs/what-moves-the-model.md` ranks the
+zero-cost decoding lever (section 3) above data work *because the data side looked
+blocked* — every large Bosnian source it could name was licence-encumbered, which
+is exactly what happened with NLLB and ParlaSpeech-HR. Those two facts belong side
+by side: **the data side is not blocked.** 730 million words of Bosnian under CC0
+is a licence this project cannot be caught out by, and it reopens a lane that was
+ranked low for a reason that no longer holds. The decoding lever is still cheaper
+and should still go first; it is no longer the *only* thing left.
+
 ---
 
 ## 5. Kaggle or Colab Pro — the buying decision
@@ -258,9 +268,25 @@ Colab is worth money for exactly two things this project might want:
 | whisper-large-v3-turbo re-train | yes | already measured at 3h23m for half |
 | TTS from ~1 hour of speech | yes | but see section 6 — the blocker is data and licence, not compute |
 
-**Recommendation: do not buy Colab Pro yet.** Every one of the top three levers
-in this report needs no GPU. Buy Pro+ only when a specific job needs the A100 or
-the 24-hour window, and that job is not on today's list.
+**Recommendation: do not buy Colab **Pro**.** For T4-shaped work it buys less
+compute than Kaggle already gives away, and every one of the top three levers in
+this report needs no GPU at all.
+
+**Pro+ is a different question, and the argument for it is ergonomic rather than
+volumetric.** Corrected after this section was first written: I claimed nothing
+on today's list needs the 24-hour window, and that was wrong. The listener runs
+as **two separate Kaggle kernels** solely because of the 12-hour wall — half 1
+took 3h23m and half 2 4h18m, **7h41m in total, which is comfortably one job
+inside a 24-hour background window**. Splitting a training run in two is not free:
+it is two launches, two fetches, two chances to lose an artefact to Output expiry,
+and a mix that has to be halved in the first place. The same wall already
+truncated two voice runs — v5 stopped at a 5h30 cap and v6 at 9 hours with its
+losses still falling.
+
+So: Pro+ at $49.99/month buys one thing this project actually feels every week —
+runs that finish in one piece — plus about 33 A100-hours for the jobs a T4 cannot
+hold. Neither is urgent. Both are real. It is the owner's call, and it should be
+made on the wall, not on the hours.
 
 ---
 
@@ -290,6 +316,19 @@ not publicly resolvable on the Hub under that name.
 to a Bosnian voice is a clean hour from a native speaker.** That is a negative
 result, and it is worth as much as a lead — it closes a line of enquiry that
 looked open.
+
+**One distinction, and one cheap thing that is still open.** OmniVoice is voice
+*cloning* from seconds of reference audio; `docs/speak-checkpoint-comparison.md`
+is about a Piper *warm start*. Different questions that happen to hit the same
+licence wall, so the CC-BY-NC finding closes the first without touching the
+second — and the second still has a recommendation that costs about **thirty
+minutes and no training**: fetch **`sl_SI-artur`** (CC BY 4.0, Slovenian — the
+only South Slavic Piper voice in Bosnian's own sub-branch, where the shipped
+`sr_RS` voice turned out to be trained on Lower Sorbian) and simply *hear* it
+against the 200-clip prefix. A fetched checkpoint that is only listened to cannot
+lose: it either beats 22.3% or it does not, and either way nothing was spent.
+That remains the cheapest open item in the voice lane and this report does not
+displace it.
 
 ---
 
