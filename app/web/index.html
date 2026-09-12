@@ -43,7 +43,7 @@
   }
 
   * { margin: 0; padding: 0; box-sizing: border-box; }
-  html { -webkit-text-size-adjust: 100%; }
+  html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
   html, body { height: 100%; }
 
   body {
@@ -55,10 +55,8 @@
       linear-gradient(172deg, #0a1a22 0%, #0d242c 42%, #071219 100%);
     background-attachment: fixed;
     min-height: 100dvh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: max(18px, env(safe-area-inset-top)) 18px calc(28px + env(safe-area-inset-bottom));
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
     -webkit-font-smoothing: antialiased;
   }
 
@@ -190,6 +188,7 @@
     font: inherit;
     font-size: 15px;
     color: var(--ink);
+    text-decoration: none;
     cursor: pointer;
     border: 1px solid var(--hair);
     background: var(--glass-lift);
@@ -514,13 +513,159 @@
     font-size: 15px;
   }
 
-  footer {
-    margin-top: auto;
-    padding-top: 40px;
-    font-size: 11.5px;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    color: rgba(238, 244, 246, 0.3);
+  /* ---------------------------------------------------------------
+     Marketing shell: nav, hero, proof, abilities, privacy, story.
+     Built around the same glass/gradient language as the tool itself,
+     so the page reads as one product, not a brochure stapled to an app.
+     --------------------------------------------------------------- */
+  .wrap { width: 100%; max-width: 1100px; margin: 0 auto; padding: 0 24px; }
+
+  .topnav {
+    position: sticky;
+    top: 0;
+    z-index: 15;
+    background: linear-gradient(180deg, rgba(9, 20, 26, 0.82), rgba(9, 20, 26, 0.6));
+    backdrop-filter: blur(20px) saturate(160%);
+    -webkit-backdrop-filter: blur(20px) saturate(160%);
+    border-bottom: 1px solid var(--hair);
+  }
+  .topnav-inner { display: flex; align-items: center; gap: 20px; min-height: 62px; }
+  .brand {
+    display: flex; align-items: center; gap: 8px;
+    font-weight: 600; font-size: 16px; color: var(--ink);
+    text-decoration: none; letter-spacing: -0.01em;
+  }
+  .brand svg { width: 20px; height: 20px; flex: none; }
+  .navlinks { display: flex; align-items: center; gap: 22px; margin-left: 8px; }
+  .navlinks a { font-size: 13.5px; color: var(--ink-2); text-decoration: none; transition: color var(--t-base) var(--ease); }
+  .navlinks a:hover { color: var(--ink); }
+  .nav-spacer { flex: 1; }
+  .nav-github { display: inline-flex; color: var(--ink-2); transition: color var(--t-base) var(--ease); }
+  .nav-github:hover { color: var(--ink); }
+  .nav-cta { font-size: 13.5px; padding: 0 16px; min-height: 38px; }
+  @media (max-width: 760px) { .navlinks { display: none; } }
+
+  .icon-ext { width: 15px; height: 15px; margin-left: 2px; }
+
+  section.marketing, section.hero { padding: clamp(52px, 9vh, 96px) 0; }
+
+  .section-eyebrow {
+    text-align: center;
+    font-size: 11.5px; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 14px;
+  }
+  .section-head { text-align: center; max-width: 640px; margin: 0 auto 40px; }
+  .section-head h2 { font-size: clamp(26px, 4.4vw, 36px); font-weight: 600; letter-spacing: -0.015em; text-wrap: balance; }
+  .section-head p { margin-top: 12px; font-size: 15.5px; line-height: 1.6; color: var(--ink-2); }
+
+  /* Hero */
+  .hero { padding-top: clamp(56px, 10vh, 108px); text-align: center; }
+  .hero h1 {
+    font-size: clamp(32px, 6.2vw, 56px);
+    font-weight: 650;
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+    max-width: 880px;
+    margin: 0 auto;
+    text-wrap: balance;
+  }
+  .hero .sub { max-width: 620px; margin: 22px auto 0; font-size: 17px; line-height: 1.6; color: var(--ink-2); }
+  .hero .cta-row { display: flex; gap: 12px; justify-content: center; margin-top: 32px; flex-wrap: wrap; }
+  .hero .cta-row .btn { min-height: 50px; padding: 0 26px; font-size: 15.5px; }
+
+  /* Proof strip */
+  .chip-row { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px 14px; margin-bottom: 44px; }
+  .chip {
+    display: inline-flex; align-items: baseline; gap: 6px;
+    padding: 10px 16px; border-radius: 999px;
+    background: var(--glass-lift); border: 1px solid var(--hair);
+    font-size: 13.5px; color: var(--ink-2);
+  }
+  .chip b { color: var(--ink); font-size: 14.5px; font-weight: 600; }
+
+  .stat-grid, .ability-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+  @media (max-width: 880px) { .stat-grid, .ability-grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 520px) { .stat-grid, .ability-grid { grid-template-columns: 1fr; } }
+
+  .stat-card { padding: 22px 20px; text-align: left; }
+  .stat-card .from { font-size: 12.5px; color: var(--ink-3); }
+  .stat-card .arrow { margin: 2px 0 6px; font-size: 12px; color: var(--ink-3); }
+  .stat-card .today { font-size: 28px; font-weight: 650; letter-spacing: -0.01em; color: var(--accent-hi); }
+  .stat-card .what { margin-top: 8px; font-size: 13.5px; color: var(--ink-2); line-height: 1.45; }
+
+  .footnote { max-width: 720px; margin: 28px auto 0; text-align: center; font-size: 13px; line-height: 1.55; color: var(--ink-3); }
+  .footnote a { color: var(--ink-2); }
+
+  /* Abilities */
+  .intro-copy { max-width: 760px; margin: 0 auto 44px; text-align: center; font-size: 15.5px; line-height: 1.65; color: var(--ink-2); }
+  .intro-copy strong { color: var(--ink); }
+  .ability-card { padding: 24px 20px; }
+  .ability-card .icon {
+    width: 44px; height: 44px; border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(122, 211, 189, 0.14); color: var(--accent-hi);
+    margin-bottom: 16px;
+  }
+  .ability-card .icon svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+  .ability-card h3 { font-size: 16.5px; font-weight: 600; letter-spacing: -0.005em; }
+  .ability-card p { margin-top: 8px; font-size: 13.5px; line-height: 1.55; color: var(--ink-2); }
+
+  /* Privacy */
+  .privacy-panel { display: flex; align-items: center; gap: 32px; padding: 36px; flex-wrap: wrap; }
+  .privacy-panel .icon-lg {
+    width: 56px; height: 56px; flex: none; border-radius: 16px;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(122, 211, 189, 0.14); color: var(--accent-hi);
+  }
+  .privacy-panel .icon-lg svg { width: 28px; height: 28px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+  .privacy-panel .copy { flex: 1; min-width: 240px; }
+  .privacy-panel h2 { font-size: 22px; font-weight: 600; letter-spacing: -0.01em; }
+  .privacy-panel p { margin-top: 8px; font-size: 14.5px; line-height: 1.6; color: var(--ink-2); }
+  .privacy-tags { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 14px; }
+  .privacy-tags span {
+    font-size: 11.5px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-3);
+    border: 1px solid var(--hair); border-radius: 999px; padding: 5px 11px;
+  }
+
+  /* Story: the dramatic beat, on its own dark panel */
+  .story-panel { padding: clamp(36px, 6vw, 64px); background: linear-gradient(175deg, rgba(10, 28, 26, 0.85), rgba(7, 20, 22, 0.9)); }
+  .story-quote {
+    font-family: Georgia, "Iowan Old Style", "Times New Roman", serif;
+    font-style: italic;
+    font-size: clamp(23px, 3.8vw, 34px);
+    line-height: 1.35;
+    text-align: center;
+    max-width: 760px;
+    margin: 18px auto 0;
+    color: var(--ink);
+    text-wrap: balance;
+  }
+  .story-body { max-width: 640px; margin: 28px auto 0; font-size: 15px; line-height: 1.75; color: var(--ink-2); }
+  .story-body p + p { margin-top: 14px; }
+  .story-sign { text-align: center; margin-top: 22px; font-size: 14px; color: var(--ink-3); }
+  .story-cta { display: flex; gap: 12px; justify-content: center; margin-top: 28px; flex-wrap: wrap; }
+
+  /* Try-it section: the original masthead + composer, given room to breathe */
+  section.try {
+    display: flex; flex-direction: column; align-items: center;
+    padding: clamp(36px, 7vh, 72px) 18px clamp(56px, 10vh, 100px);
+  }
+  section.try .section-eyebrow { margin-bottom: 6px; }
+
+  footer { padding: 48px 0 max(28px, env(safe-area-inset-bottom)); font-size: 13px; color: var(--ink-3); }
+  .footer-inner { display: flex; justify-content: space-between; gap: 24px; flex-wrap: wrap; padding-bottom: 20px; border-bottom: 1px solid var(--hair); }
+  .footer-brand { display: flex; align-items: center; gap: 8px; font-weight: 600; color: var(--ink-2); }
+  .footer-brand svg { width: 18px; height: 18px; }
+  .footer-links { display: flex; gap: 18px; flex-wrap: wrap; }
+  .footer-links a { color: var(--ink-2); text-decoration: none; font-size: 13.5px; }
+  .footer-links a:hover { color: var(--ink); }
+  .footer-meta { margin-top: 18px; font-size: 12px; line-height: 1.6; }
+  .footer-meta a { color: var(--ink-2); }
+
+  @media (max-width: 640px) {
+    .hero .cta-row .btn, .story-cta .btn { flex: 1 1 auto; }
+    .privacy-panel { padding: 26px; }
   }
 
   @media (max-width: 420px) {
@@ -541,7 +686,7 @@
   }
 </style>
 </head>
-<body>
+<body id="top">
 
 <!-- Mostar at dusk: the Old Bridge, the minarets, the Neretva. It sits behind
      the glass so the interface has somewhere to be, and it never asks to be
@@ -623,6 +768,156 @@
   </svg>
 </div>
 
+<nav class="topnav">
+  <div class="wrap topnav-inner">
+    <a href="#top" class="brand" aria-label="Lilly, back to top">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3C8.5 3 6 6.2 6 10.5c3.6 0 6-2.3 6-7.5Z" fill="var(--accent)"/><path d="M12 3c3.5 0 6 3.2 6 7.5-3.6 0-6-2.3-6-7.5Z" fill="var(--accent-hi)"/></svg>
+      Lilly
+    </a>
+    <div class="navlinks">
+      <a href="#numbers">Numbers</a>
+      <a href="#abilities">How it works</a>
+      <a href="#story">Why I built it</a>
+    </div>
+    <span class="nav-spacer"></span>
+    <a class="nav-github" href="https://github.com/ssaaffaakk/Lilly" target="_blank" rel="noopener" aria-label="Lilly on GitHub">
+      <svg viewBox="0 0 16 16" aria-hidden="true" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
+    </a>
+    <a class="btn primary nav-cta" href="#try">Try Lilly</a>
+  </div>
+</nav>
+
+<section class="hero">
+  <div class="wrap">
+    <p class="section-eyebrow">Bosnian ⇄ English · runs offline on your own machine</p>
+    <h1>They said I didn&rsquo;t know Bosnian.<br>So I built the thing that understands it.</h1>
+    <p class="sub">Type it, say it into a microphone, or point a camera at a sign &mdash; Lilly translates Bosnian and English both ways, fine-tuned on real Bosnian instead of filed under &ldquo;South Slavic&rdquo; and left at that.</p>
+    <div class="cta-row">
+      <a class="btn primary" href="#try">Try Lilly free</a>
+      <a class="btn" href="https://github.com/ssaaffaakk/Lilly" target="_blank" rel="noopener">
+        View the code
+        <svg class="icon-ext" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17 17 7"/><path d="M8 7h9v9"/></svg>
+      </a>
+    </div>
+  </div>
+</section>
+
+<section id="numbers" class="marketing">
+  <div class="wrap">
+    <div class="section-head">
+      <p class="section-eyebrow">Measured, not claimed</p>
+      <h2>Every number below is in the repo</h2>
+      <p>Scored against held-out sentences, held-out speech, and photographs the model never trained on &mdash; through the app&rsquo;s own code, not a cherry-picked demo.</p>
+    </div>
+    <div class="chip-row">
+      <span class="chip"><b>43.25</b>&nbsp;BLEU &middot; Bosnian &rarr; English</span>
+      <span class="chip"><b>11.9%</b>&nbsp;word error &middot; spoken Bosnian</span>
+      <span class="chip"><b>67.0%</b>&nbsp;words read &middot; off a photo</span>
+      <span class="chip"><b>99.2%</b>&nbsp;Bosnian form rate &middot; replying</span>
+    </div>
+    <div class="stat-grid">
+      <div class="glass stat-card">
+        <div class="from">Photographs &mdash; words found</div>
+        <div class="arrow">from under 30% at the start</div>
+        <div class="today">67.0%</div>
+        <p class="what">Per photograph, on 40 Bosnian signs from Wikimedia Commons &mdash; not synthetic text.</p>
+      </div>
+      <div class="glass stat-card">
+        <div class="from">Speech &mdash; word error</div>
+        <div class="arrow">from over 55% at the start</div>
+        <div class="today">11.9%</div>
+        <p class="what">200 held-out clips, the listener the app ships today.</p>
+      </div>
+      <div class="glass stat-card">
+        <div class="from">Translation &mdash; BLEU</div>
+        <div class="arrow">from under 30 at the start</div>
+        <div class="today">43.25</div>
+        <p class="what">1,012 FLORES devtest sentences, exactly as the user sees them.</p>
+      </div>
+      <div class="glass stat-card">
+        <div class="from">Reply &mdash; Bosnian form rate</div>
+        <div class="arrow">from 94.3% on the untuned base</div>
+        <div class="today">99.2%</div>
+        <p class="what">Writes the Bosnian form of a contested word, not the Croatian or Serbian one.</p>
+      </div>
+    </div>
+    <p class="footnote">Not every number here is a clean win &mdash; the listener above failed its own pre-registered gate twice and shipped anyway, by the owner&rsquo;s decision, with that refusal written down next to it. <a href="https://github.com/ssaaffaakk/Lilly#what-it-cannot-do-yet" target="_blank" rel="noopener">See what it can&rsquo;t do yet &rarr;</a></p>
+  </div>
+</section>
+
+<section id="abilities" class="marketing">
+  <div class="wrap">
+    <div class="section-head">
+      <p class="section-eyebrow">One tool, four ways in</p>
+      <h2>Built for Bosnian, not bolted onto it</h2>
+    </div>
+    <p class="intro-copy">Most translators file Bosnian under <strong>South Slavic</strong> and stop there &mdash; close enough to look right, wrong enough to leave you lost in the room. Lilly&rsquo;s translator and listener are fine-tuned on Bosnian specifically, and every score above is measured against the untuned model underneath them.</p>
+    <div class="ability-grid">
+      <div class="glass ability-card">
+        <div class="icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 8h11M15 5l3 3-3 3"/><path d="M17 16H6M9 13l-3 3 3 3"/></svg></div>
+        <h3>Type it</h3>
+        <p>Write a sentence in Bosnian or English and get it back in the other, instantly.</p>
+      </div>
+      <div class="glass ability-card">
+        <div class="icon"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0"/><path d="M12 18v3"/></svg></div>
+        <h3>Say it</h3>
+        <p>Press the microphone, speak, and hear Lilly&rsquo;s answer read back to you.</p>
+      </div>
+      <div class="glass ability-card">
+        <div class="icon"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="6" width="18" height="14" rx="3"/><circle cx="12" cy="13" r="4"/><path d="M9 6l1.5-2h3L15 6"/></svg></div>
+        <h3>Photograph it</h3>
+        <p>Point your camera at a sign, a whiteboard, a menu &mdash; Lilly reads it and translates it.</p>
+      </div>
+      <div class="glass ability-card">
+        <div class="icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="9"/></svg></div>
+        <h3>Correct it</h3>
+        <p>Tell Lilly when it&rsquo;s wrong. Verified corrections go back into training, not a benchmark.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="marketing">
+  <div class="wrap">
+    <div class="glass privacy-panel">
+      <div class="icon-lg"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l7 3v6c0 5-3.5 7.5-7 9-3.5-1.5-7-4-7-9V6l7-3Z"/><path d="M9 12l2 2 4-4"/></svg></div>
+      <div class="copy">
+        <h2>Nothing leaves your machine</h2>
+        <p>Fetch the weights once. After that, Lilly never reaches the network again &mdash; no account, no upload, no API key. A correction you send is stored locally for review, not phoned anywhere.</p>
+        <div class="privacy-tags">
+          <span>Offline at inference</span>
+          <span>int8 quantised</span>
+          <span>FastAPI, one process</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="story" class="marketing story">
+  <div class="wrap">
+    <div class="glass story-panel">
+      <p class="section-eyebrow">Why I built it</p>
+      <p class="story-quote">&ldquo;They told me I didn&rsquo;t know Bosnian.<br>So I built the thing that understands it.&rdquo;</p>
+      <div class="story-body">
+        <p>I applied for an internship. They didn&rsquo;t take me &mdash; not because my code was weak, but because I didn&rsquo;t know Bosnian. I&rsquo;d heard some version of that sentence before, in different rooms, and at some point language stopped feeling like a language and started feeling like a door I was always standing on the wrong side of.</p>
+        <p>Bosnian itself was never the problem. The tools were: most of them file it under one more entry in a South Slavic bucket, a different flag on the interface. Recognizing the region is not the same as understanding the language.</p>
+        <p>So I trained the models myself, measured every change against the untuned model underneath it, and published all of it &mdash; including the runs that say a change did nothing. I build things because when I hit a wall, I&rsquo;d rather solve it than accept that it can&rsquo;t be solved.</p>
+      </div>
+      <p class="story-sign">&mdash; @ssaaffaakk</p>
+      <div class="story-cta">
+        <a class="btn" href="https://github.com/ssaaffaakk/Lilly/blob/main/docs/STORY.md" target="_blank" rel="noopener">
+          Read the full story
+          <svg class="icon-ext" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17 17 7"/><path d="M8 7h9v9"/></svg>
+        </a>
+        <a class="btn primary" href="#try">Try Lilly now</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="try" class="try">
+<p class="section-eyebrow">Try it now</p>
 <header>
   <h1>Lilly</h1>
   <p class="tagline">
@@ -688,8 +983,24 @@
     </div>
   </section>
 </main>
+</section>
 
-<footer>Lilly</footer>
+<footer>
+  <div class="wrap">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3C8.5 3 6 6.2 6 10.5c3.6 0 6-2.3 6-7.5Z" fill="var(--accent)"/><path d="M12 3c3.5 0 6 3.2 6 7.5-3.6 0-6-2.3-6-7.5Z" fill="var(--accent-hi)"/></svg>
+        Lilly
+      </div>
+      <div class="footer-links">
+        <a href="https://github.com/ssaaffaakk/Lilly" target="_blank" rel="noopener">GitHub</a>
+        <a href="https://huggingface.co/Safak11/lilly" target="_blank" rel="noopener">Model card</a>
+        <a href="https://github.com/ssaaffaakk/Lilly/blob/main/docs/STORY.md" target="_blank" rel="noopener">The full story</a>
+      </div>
+    </div>
+    <p class="footer-meta">Built by <a href="https://github.com/ssaaffaakk" target="_blank" rel="noopener">@ssaaffaakk</a>. Weights from Helsinki-NLP, OpenAI, PaddlePaddle, and hexgrad &mdash; credit them, not this page.</p>
+  </div>
+</footer>
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
