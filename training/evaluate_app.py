@@ -18,6 +18,7 @@ against a float32 one measures the quantisation as much as the training.
 
     python3 training/evaluate_app.py
     python3 training/evaluate_app.py --limit 200      # a quick look
+    python3 training/evaluate_app.py --direction en-bs   # the reply side
 
 Roughly forty minutes on a laptop for the full 2,009 pairs, most of it the base
 model: it writes longer output and so decodes for longer.
@@ -40,6 +41,25 @@ TUNED_BUILD = MODELS / "translator"
 SAVED = REPO_ROOT / "training" / "app-hypotheses.json"
 REPORT = REPO_ROOT / "training" / "RESULTS-product.md"
 
+# Each direction is its own pair of builds, its own translation cache and its
+# own report. The reply direction (English -> Bosnian) was published from
+# training/evaluate.py, which scores the PyTorch base plus its LoRA adapter and
+# feeds each row in whole -- so its 30.73 BLEU / 60.00 chrF2 belonged to a path
+# no user meets. The int8 build the app answers with had never been scored at
+# all. That is what --direction is for.
+DIRECTIONS = {
+    "bs-en": {"src": "bs", "ref": "en",
+              "base": BASE_BUILD, "tuned": TUNED_BUILD,
+              "saved": SAVED, "report": REPORT,
+              "reads": "Bosnian", "writes": "English"},
+    "en-bs": {"src": "en", "ref": "bs",
+              "base": MODELS / "translator-en-bs-base",
+              "tuned": MODELS / "translator-en-bs",
+              "saved": REPO_ROOT / "training" / "app-hypotheses-en-bs.json",
+              "report": REPO_ROOT / "training" / "RESULTS-product-en-bs.md",
+              "reads": "English", "writes": "Bosnian"},
+}
+
 # The base model writes its language tag into the text of many translations.
 # That is a real defect, so the score is reported both ways: with the tags,
 # which is what the model emits, and without, which is the translation quality
@@ -54,7 +74,7 @@ REPORT = REPO_ROOT / "training" / "RESULTS-product.md"
 LANGUAGE_TAG = re.compile(r"^\s*(>>[a-zA-Z_]+<<\s*)+")
 
 
-def pairs(limit=None):
+def pairs(limit=None, direction="bs-en"):
     """FLORES-200 devtest and dev — 2,009 pairs the base model has not seen.
 
     devtest first, always, because `split_range` slices this list rather than
@@ -62,15 +82,19 @@ def pairs(limit=None):
     scored separately, which is what makes a devtest-only score free instead of
     another hour of decoding.
     """
+    spec = DIRECTIONS[direction]
     src, ref, bounds = [], [], {}
     for split in ("devtest", "dev"):
         start = len(src)
-        bs = (FLORES / f"{split}.bs").read_text(encoding="utf-8").splitlines()
-        en = (FLORES / f"{split}.en").read_text(encoding="utf-8").splitlines()
-        if len(bs) != len(en):
-            raise SystemExit(f"{split}: {len(bs)} Bosnian against {len(en)} English")
-        src += [s.strip() for s in bs]
-        ref += [s.strip() for s in en]
+        source = (FLORES / f"{split}.{spec['src']}").read_text(
+            encoding="utf-8").splitlines()
+        target = (FLORES / f"{split}.{spec['ref']}").read_text(
+            encoding="utf-8").splitlines()
+        if len(source) != len(target):
+            raise SystemExit(f"{split}: {len(source)} {spec['reads']} against "
+                             f"{len(target)} {spec['writes']}")
+        src += [s.strip() for s in source]
+        ref += [s.strip() for s in target]
         bounds[split] = (start, len(src))
     keep = [i for i, s in enumerate(src) if s and ref[i]]
     if limit:
@@ -100,14 +124,17 @@ def split_range(name: str, total: int) -> slice:
     return slice(lo, hi)
 
 
-def translate_all(build: Path, src: list, label: str) -> list:
+def translate_all(build: Path, src: list, label: str, direction="bs-en") -> list:
     from app.translate import Engine
 
     if not (build / "model.bin").exists():
         raise SystemExit(
             f"no build at {build}. For the base: python3 scripts/build_translator.py "
-            f"--no-adapter --dest {build}")
-    engine = Engine(directory=build)
+            f"--direction {direction} --no-adapter --dest {build}")
+    # direction and not just the directory: en-bs has to carry >>bos_Latn<< on
+    # every sentence, and an engine loaded without it answers in whichever
+    # South Slavic language the decoder prefers.
+    engine = Engine(directory=build, direction=direction)
     out, started = [], time.time()
     for i, text in enumerate(src):
         out.append(engine.translate(text, truncate=True, strip_tags=False))
@@ -195,17 +222,26 @@ def main() -> int:
                     help="which FLORES half to score; devtest is the one "
                          "published leaderboards use")
     ap.add_argument("--fresh", action="store_true", help="re-translate, ignore saved")
+    ap.add_argument("--direction", default="bs-en", choices=sorted(DIRECTIONS),
+                    help="which direction to score; sets both builds, the "
+                         "translation cache and the report")
     # A candidate build can be scored where it stands, without being installed
     # first. Deciding whether to replace the served model should not require
     # having already replaced it.
-    ap.add_argument("--tuned", type=Path, default=TUNED_BUILD,
+    ap.add_argument("--tuned", type=Path, default=None,
                     help="the build to score against the base")
-    ap.add_argument("--saved", type=Path, default=SAVED,
+    ap.add_argument("--saved", type=Path, default=None,
                     help="where to cache the translations")
     args = ap.parse_args()
 
-    src, refs = pairs(args.limit)
-    print(f"{len(src):,} pairs, both models through app.translate.Engine")
+    spec = DIRECTIONS[args.direction]
+    base_build = spec["base"]
+    args.tuned = args.tuned or spec["tuned"]
+    args.saved = args.saved or spec["saved"]
+
+    src, refs = pairs(args.limit, args.direction)
+    print(f"{len(src):,} pairs, {spec['reads']} -> {spec['writes']}, "
+          f"both models through app.translate.Engine")
 
     # The two sides are cached separately because only one of them changes, and
     # re-translating the base costs half an hour per candidate for an answer
@@ -239,7 +275,7 @@ def main() -> int:
         except (FileNotFoundError, NotADirectoryError):
             return ""
 
-    base_fp, tuned_fp = fingerprint_of(BASE_BUILD), fingerprint_of(args.tuned)
+    base_fp, tuned_fp = fingerprint_of(base_build), fingerprint_of(args.tuned)
 
     def cached_side(path, side, want_fp):
         """Saved translations for `side`, but only if they came from `want_fp`."""
@@ -263,21 +299,21 @@ def main() -> int:
         # The base build really is the same in every comparison, so a cache
         # written by an earlier candidate can still supply it — but only one
         # that says so by fingerprint.
-        for other in sorted(REPO_ROOT.glob("training/app-hypotheses*.json")):
+        for other in sorted(REPO_ROOT.glob(f"training/{args.saved.stem}*.json")):
             spare = cached_side(other, "base", base_fp)
             if spare:
                 print(f"  base translations reused from {other.name}")
                 base = spare
                 break
     if not base:
-        base = translate_all(BASE_BUILD, src, "base")
+        base = translate_all(base_build, src, "base", args.direction)
 
     tuned = cached_side(args.saved, "lilly", tuned_fp)
     if tuned:
         print(f"  candidate translations reused (build {tuned_fp[:16]})"
               f" — --fresh to redo them")
     else:
-        tuned = translate_all(args.tuned, src, args.tuned.name)
+        tuned = translate_all(args.tuned, src, args.tuned.name, args.direction)
 
     args.saved.write_text(json.dumps({"n": len(src),
                                       "base": base, "base_build": base_fp,
@@ -319,8 +355,9 @@ def main() -> int:
     fingerprint = tuned_fp or build_fingerprint(args.tuned)
     print(f"\nscored build: {fingerprint}")
     write_report(len(src), leaked, leaked_t, tables, fingerprint,
-                 split=args.split, out=args.out)
-    written = (args.out or REPORT).resolve()
+                 split=args.split, out=args.out or spec["report"],
+                 direction=args.direction)
+    written = (args.out or spec["report"]).resolve()
     try:
         written = written.relative_to(REPO_ROOT)
     except ValueError:
@@ -341,9 +378,11 @@ def reading(gap: float, p: float, metric: str) -> str:
 
 
 def write_report(n, leaked_base, leaked_tuned, tables, fingerprint,
-                 split="all", out=None) -> None:
+                 split="all", out=None, direction="bs-en") -> None:
+    spec = DIRECTIONS[direction]
     lines = [
-        "# Translation quality — what Lilly actually serves", "",
+        f"# Translation quality — what Lilly actually serves "
+        f"({spec['reads']} → {spec['writes']})", "",
         f"Scored build: `{fingerprint}`", "",
         (f"{n:,} FLORES-200 devtest pairs — the set published leaderboards for "
          f"this language pair use, so these numbers can be put beside theirs. "
@@ -353,13 +392,20 @@ def write_report(n, leaked_base, leaked_tuned, tables, fingerprint,
         "int8 CTranslate2 builds and both go through `app.translate.Engine`, so the "
         "sentence splitting and the quantisation are the product's own. The only "
         "difference between the two columns is the fine-tuning.", "",
-        "This is the number to quote. `training/RESULTS.md` scores the raw adapter "
-        "on whole rows, which is a useful diagnostic and not what anyone runs: on "
-        "the same pairs that path reads +0.54 BLEU and −0.79 chrF2, because feeding "
-        "several sentences at once makes the model drop a clause and the app never "
-        "does that.", "",
+        "This is the number to quote. "
+        + ("`training/RESULTS.md` scores the raw adapter on whole rows, which is a "
+           "useful diagnostic and not what anyone runs: on the same pairs that path "
+           "reads +0.54 BLEU and −0.79 chrF2, because feeding several sentences at "
+           "once makes the model drop a clause and the app never does that."
+           if direction == "bs-en" else
+           "`training/RESULTS-en-bs.md` scores the PyTorch base plus its LoRA adapter "
+           "and feeds each row in whole — the path the published 29.57 → 30.73 BLEU "
+           "came from. Neither the quantisation nor the sentence splitting is in that "
+           "number, and both are in what a reader meets, so the two are not "
+           "interchangeable."), "",
         f"The base model prints its language tag into the translation itself — "
-        f"`>>eng<<` and friends — in {leaked_base:,} of {n:,} outputs "
+        f"`{'>>eng<<' if direction == 'bs-en' else '>>bos_Latn<<'}` and friends — "
+        f"in {leaked_base:,} of {n:,} outputs "
         f"({100 * leaked_base / n:.1f}%). Lilly does it in {leaked_tuned:,} "
         f"({100 * leaked_tuned / n:.1f}%). That is a defect in what the model emits, "
         f"so the scores are given both with it and without: with, because it is what "
@@ -382,10 +428,11 @@ def write_report(n, leaked_base, leaked_tuned, tables, fingerprint,
             lines.append(reading(gap, r["p"].get(metric), metric))
         lines.append("")
     lines += ["---", "",
-              "Generated by `training/evaluate_app.py`. Build the base to compare "
-              "against with `python3 scripts/build_translator.py --no-adapter "
-              "--dest models/lilly/translator-base`."]
-    (out or REPORT).write_text("\n".join(lines) + "\n", encoding="utf-8")
+              f"Generated by `training/evaluate_app.py --direction {direction}`. "
+              f"Build the base to compare against with `python3 "
+              f"scripts/build_translator.py --direction {direction} --no-adapter "
+              f"--dest {spec['base'].relative_to(REPO_ROOT)}`."]
+    (out or spec["report"]).write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
 if __name__ == "__main__":
