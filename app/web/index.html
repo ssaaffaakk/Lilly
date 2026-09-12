@@ -3,38 +3,43 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="color-scheme" content="dark">
-<meta name="theme-color" content="#08141a">
+<meta name="color-scheme" content="light">
+<meta name="theme-color" content="#f7f4f0">
 <meta name="description" content="Lilly translates Bosnian and English — typed, spoken, or photographed.">
 <title>Lilly</title>
 <style>
   /* ---------------------------------------------------------------
-     Dusk over the Neretva. One accent, taken from the river itself;
-     everything else is light passing through glass.
+     Morning over the Neretva. Warm paper, one deep teal accent, and
+     the same bridge — now a soft line drawing instead of a night
+     silhouette. The story panel keeps the old night palette, scoped
+     to itself, as the one dark beat on the page.
      --------------------------------------------------------------- */
   :root {
-    --bg-0: #071219;
-    --ink: #eef4f6;
-    --ink-2: rgba(238, 244, 246, 0.68);
-    --ink-3: rgba(238, 244, 246, 0.5);
-    --ink-quiet: rgba(238, 244, 246, 0.6);
+    --bg-0: #f7f4f0;
+    --ink: #14181a;
+    --ink-2: rgba(20, 24, 26, 0.66);
+    --ink-3: rgba(20, 24, 26, 0.48);
+    --ink-quiet: rgba(20, 24, 26, 0.58);
 
-    --glass-top: rgba(255, 255, 255, 0.085);
-    --glass-bot: rgba(255, 255, 255, 0.035);
-    --glass-lift: rgba(255, 255, 255, 0.12);
-    --hair: rgba(255, 255, 255, 0.13);
-    --sheen: rgba(255, 255, 255, 0.16);
+    --glass-top: rgba(255, 255, 255, 0.88);
+    --glass-bot: rgba(255, 255, 255, 0.68);
+    --glass-lift: rgba(20, 24, 26, 0.045);
+    --hair: rgba(20, 24, 26, 0.1);
+    --sheen: rgba(255, 255, 255, 0.7);
 
-    --accent: #7ad3bd;
-    --accent-hi: #93e0cb;
-    --accent-ink: #05231c;
-    --rec: #f0968c;
+    --accent: #0f8a7c;
+    --accent-hi: #0b6b60;
+    --accent-ink: #ffffff;
+    --rec: #c2483e;
 
-    --shadow: 0 1px 2px rgba(0, 0, 0, 0.28), 0 18px 40px -14px rgba(0, 0, 0, 0.55);
+    --shadow: 0 1px 2px rgba(20, 20, 24, 0.05), 0 18px 40px -18px rgba(20, 20, 24, 0.16);
 
     --r-lg: 24px;
     --r-md: 16px;
     --r-sm: 12px;
+
+    --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
+    --font-serif: ui-serif, Georgia, "Iowan Old Style", "Palatino Linotype", "Times New Roman", serif;
 
     --ease: cubic-bezier(0.32, 0.72, 0, 1);
     --t-fast: 0.16s;
@@ -47,12 +52,12 @@
   html, body { height: 100%; }
 
   body {
-    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
+    font-family: var(--font-sans);
     color: var(--ink);
     background:
-      radial-gradient(130% 80% at 78% -10%, #1d3f49 0%, transparent 58%),
-      radial-gradient(110% 70% at 12% 105%, #123a30 0%, transparent 52%),
-      linear-gradient(172deg, #0a1a22 0%, #0d242c 42%, #071219 100%);
+      radial-gradient(130% 80% at 78% -10%, #ffe4cf 0%, transparent 58%),
+      radial-gradient(110% 70% at 12% 105%, #d9f0e8 0%, transparent 52%),
+      linear-gradient(172deg, #fbf9f6 0%, #f7f4ef 42%, #f3efe8 100%);
     background-attachment: fixed;
     min-height: 100dvh;
     padding-top: env(safe-area-inset-top);
@@ -60,7 +65,7 @@
     -webkit-font-smoothing: antialiased;
   }
 
-  ::selection { background: rgba(122, 211, 189, 0.28); }
+  ::selection { background: rgba(15, 138, 124, 0.22); }
 
   /* --- Mostar: the valley the app lives in, not a picture of it -------- */
   .scene {
@@ -69,7 +74,7 @@
     height: clamp(200px, max(36vh, 22vw), 480px);
     z-index: -1;
     pointer-events: none;
-    opacity: 0.9;
+    opacity: 0.55;
     -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 26%, #000 100%);
     mask-image: linear-gradient(to bottom, transparent 0%, #000 26%, #000 100%);
   }
@@ -81,6 +86,7 @@
     margin: clamp(22px, 7vh, 54px) 0 clamp(20px, 4vh, 34px);
   }
   h1 {
+    font-family: var(--font-serif);
     font-size: clamp(34px, 9vw, 42px);
     font-weight: 600;
     letter-spacing: -0.015em;
@@ -270,9 +276,9 @@
     transition: opacity 90ms linear, transform 90ms linear;
   }
   #micBtn.recording {
-    background: rgba(240, 150, 140, 0.2);
-    border-color: rgba(240, 150, 140, 0.5);
-    color: #ffd6d0;
+    background: rgba(194, 72, 62, 0.14);
+    border-color: rgba(194, 72, 62, 0.45);
+    color: #8a2c23;
   }
   #micBtn.recording .halo {
     opacity: calc(0.22 + var(--level, 0) * 0.6);
@@ -376,7 +382,7 @@
     align-items: center;
     flex-wrap: wrap;
     padding-top: 2px;
-    border-top: 1px solid rgba(255, 255, 255, 0.07);
+    border-top: 1px solid rgba(20, 24, 26, 0.08);
     margin-top: 2px;
   }
   .result-actions .btn { font-size: 13.5px; padding: 0 13px; min-height: 44px; }
@@ -395,7 +401,7 @@
     line-height: 1.35;
     text-align: center;
     color: var(--ink);
-    background: rgba(18, 34, 41, 0.72);
+    background: rgba(255, 253, 250, 0.86);
     backdrop-filter: blur(24px) saturate(180%);
     -webkit-backdrop-filter: blur(24px) saturate(180%);
     border: 1px solid var(--hair);
@@ -427,11 +433,11 @@
   .sheet {
     padding: 24px;
     border-radius: var(--r-lg);
-    background: linear-gradient(180deg, rgba(24, 44, 52, 0.9), rgba(15, 30, 37, 0.9));
+    background: linear-gradient(180deg, rgba(255, 253, 250, 0.97), rgba(250, 247, 242, 0.97));
     backdrop-filter: blur(34px) saturate(180%);
     -webkit-backdrop-filter: blur(34px) saturate(180%);
     border: 1px solid var(--hair);
-    box-shadow: 0 32px 70px -20px rgba(0, 0, 0, 0.7), inset 0 1px 0 var(--sheen);
+    box-shadow: 0 32px 70px -20px rgba(20, 20, 24, 0.35), inset 0 1px 0 var(--sheen);
   }
   dialog[open] { animation: sheetIn 0.34s var(--ease) both; }
   dialog[open]::backdrop { animation: fadeIn 0.34s var(--ease) both; }
@@ -448,8 +454,8 @@
     margin: 16px 0 4px;
     padding: 12px 14px;
     border-radius: var(--r-sm);
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(20, 24, 26, 0.035);
+    border: 1px solid rgba(20, 24, 26, 0.08);
     font-size: 13.5px;
     line-height: 1.5;
     max-height: 132px;
@@ -469,7 +475,7 @@
     resize: vertical;
     border: 1px solid var(--hair);
     border-radius: var(--r-sm);
-    background: rgba(255, 255, 255, 0.05);
+    background: rgba(20, 24, 26, 0.035);
     color: var(--ink);
     font: inherit;
     font-size: 15px;
@@ -478,7 +484,7 @@
     outline: none;
     transition: border-color var(--t-base) var(--ease), background var(--t-base) var(--ease);
   }
-  .sheet textarea:focus { border-color: rgba(122, 211, 189, 0.55); background: rgba(255, 255, 255, 0.07); }
+  .sheet textarea:focus { border-color: rgba(15, 138, 124, 0.5); background: rgba(20, 24, 26, 0.055); }
   .sheet .row { display: flex; gap: 8px; justify-content: flex-end; margin-top: 20px; }
   /* The sheet is a modal, and a modal paints over everything — including the
      toast, which sits at the bottom of the page under the backdrop. A failure
@@ -509,7 +515,7 @@
     padding: 14px 22px;
     border-radius: 999px;
     border: 1px dashed rgba(122, 211, 189, 0.6);
-    color: var(--ink-2);
+    color: rgba(238, 244, 246, 0.85);
     font-size: 15px;
   }
 
@@ -524,7 +530,7 @@
     position: sticky;
     top: 0;
     z-index: 15;
-    background: linear-gradient(180deg, rgba(9, 20, 26, 0.82), rgba(9, 20, 26, 0.6));
+    background: linear-gradient(180deg, rgba(250, 248, 244, 0.86), rgba(250, 248, 244, 0.62));
     backdrop-filter: blur(20px) saturate(160%);
     -webkit-backdrop-filter: blur(20px) saturate(160%);
     border-bottom: 1px solid var(--hair);
@@ -556,7 +562,7 @@
     margin-bottom: 14px;
   }
   .section-head { text-align: center; max-width: 640px; margin: 0 auto 40px; }
-  .section-head h2 { font-size: clamp(26px, 4.4vw, 36px); font-weight: 600; letter-spacing: -0.015em; text-wrap: balance; }
+  .section-head h2 { font-family: var(--font-serif); font-size: clamp(26px, 4.4vw, 36px); font-weight: 600; letter-spacing: -0.015em; text-wrap: balance; }
   .section-head p { margin-top: 12px; font-size: 15.5px; line-height: 1.6; color: var(--ink-2); }
 
   /* Hero */
@@ -604,7 +610,7 @@
   .ability-card .icon {
     width: 44px; height: 44px; border-radius: 12px;
     display: flex; align-items: center; justify-content: center;
-    background: rgba(122, 211, 189, 0.14); color: var(--accent-hi);
+    background: rgba(15, 138, 124, 0.12); color: var(--accent-hi);
     margin-bottom: 16px;
   }
   .ability-card .icon svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
@@ -616,7 +622,7 @@
   .privacy-panel .icon-lg {
     width: 56px; height: 56px; flex: none; border-radius: 16px;
     display: flex; align-items: center; justify-content: center;
-    background: rgba(122, 211, 189, 0.14); color: var(--accent-hi);
+    background: rgba(15, 138, 124, 0.12); color: var(--accent-hi);
   }
   .privacy-panel .icon-lg svg { width: 28px; height: 28px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
   .privacy-panel .copy { flex: 1; min-width: 240px; }
@@ -628,10 +634,23 @@
     border: 1px solid var(--hair); border-radius: 999px; padding: 5px 11px;
   }
 
-  /* Story: the dramatic beat, on its own dark panel */
-  .story-panel { padding: clamp(36px, 6vw, 64px); background: linear-gradient(175deg, rgba(10, 28, 26, 0.85), rgba(7, 20, 22, 0.9)); }
+  /* Story: the dramatic beat, kept on the old night palette, scoped to
+     itself, so the rest of the page can be light without losing the
+     one moment that should feel like standing in front of a wall. */
+  .story-panel {
+    --ink: #eef4f6;
+    --ink-2: rgba(238, 244, 246, 0.7);
+    --ink-3: rgba(238, 244, 246, 0.5);
+    --hair: rgba(255, 255, 255, 0.14);
+    --glass-lift: rgba(255, 255, 255, 0.12);
+    --accent: #7ad3bd;
+    --accent-hi: #93e0cb;
+    --accent-ink: #05231c;
+    padding: clamp(36px, 6vw, 64px);
+    background: linear-gradient(175deg, rgba(10, 28, 26, 0.94), rgba(6, 16, 18, 0.97));
+  }
   .story-quote {
-    font-family: Georgia, "Iowan Old Style", "Times New Roman", serif;
+    font-family: var(--font-serif);
     font-style: italic;
     font-size: clamp(23px, 3.8vw, 34px);
     line-height: 1.35;
@@ -699,8 +718,8 @@
         <stop offset="1" stop-color="#ffb877" stop-opacity="0"/>
       </radialGradient>
       <linearGradient id="water" gradientUnits="userSpaceOnUse" x1="0" y1="472" x2="0" y2="560">
-        <stop offset="0" stop-color="#0d2a34" stop-opacity="0.55"/>
-        <stop offset="1" stop-color="#06141b" stop-opacity="0.88"/>
+        <stop offset="0" stop-color="#a9c9cd" stop-opacity="0.4"/>
+        <stop offset="1" stop-color="#7a9ea3" stop-opacity="0.55"/>
       </linearGradient>
       <linearGradient id="refl" gradientUnits="userSpaceOnUse" x1="0" y1="472" x2="0" y2="318">
         <stop offset="0" stop-color="#cfe6ee" stop-opacity="0.15"/>
@@ -712,16 +731,16 @@
     <ellipse cx="800" cy="486" rx="300" ry="52" fill="url(#townGlow)"/>
 
     <!-- the ridge, with the last light along its edge -->
-    <path fill="#0c2029" fill-opacity="0.62"
+    <path fill="#4a4238" fill-opacity="0.4"
           d="M0,268 C120,240 220,262 330,244 C450,224 520,258 640,238 C760,218 830,250 950,232 C1080,212 1160,246 1290,230 C1400,216 1500,244 1600,232 L1600,472 L0,472 Z"/>
-    <path fill="none" stroke="#a8d2de" stroke-opacity="0.17" stroke-width="1.6"
+    <path fill="none" stroke="#e8d9c0" stroke-opacity="0.4" stroke-width="1.6"
           d="M0,268 C120,240 220,262 330,244 C450,224 520,258 640,238 C760,218 830,250 950,232 C1080,212 1160,246 1290,230 C1400,216 1500,244 1600,232"/>
 
     <!-- nearer slopes -->
-    <path fill="#08171e" fill-opacity="0.72" d="M0,352 C90,330 170,344 250,326 C330,308 400,330 470,318 L470,472 L0,472 Z"/>
-    <path fill="#08171e" fill-opacity="0.72" d="M1600,340 C1520,322 1440,338 1360,320 C1290,304 1220,326 1150,314 L1150,472 L1600,472 Z"/>
+    <path fill="#3d362d" fill-opacity="0.5" d="M0,352 C90,330 170,344 250,326 C330,308 400,330 470,318 L470,472 L0,472 Z"/>
+    <path fill="#3d362d" fill-opacity="0.5" d="M1600,340 C1520,322 1440,338 1360,320 C1290,304 1220,326 1150,314 L1150,472 L1600,472 Z"/>
 
-    <g fill="#050f14" fill-opacity="0.88">
+    <g fill="#2e2822" fill-opacity="0.58">
       <!-- the old town, both banks -->
       <path d="M0,472 L0,438 L26,438 L26,424 L58,424 L58,442 L92,442 L92,430 L124,430 L124,446 L160,446 L160,432 L196,432 L196,448 L236,448 L236,436 L272,436 L272,452 L316,452 L316,440 L352,440 L352,454 L398,454 L398,442 L440,442 L440,456 L470,456 L470,472 Z"/>
       <path d="M1600,472 L1600,440 L1566,440 L1566,426 L1530,426 L1530,444 L1494,444 L1494,432 L1456,432 L1456,448 L1414,448 L1414,434 L1372,434 L1372,450 L1326,450 L1326,438 L1282,438 L1282,454 L1232,454 L1232,442 L1186,442 L1186,456 L1160,456 L1160,472 Z"/>
@@ -749,12 +768,12 @@
     </g>
 
     <!-- the parapet takes the last of the sky -->
-    <path fill="none" stroke="#dbeef4" stroke-opacity="0.2" stroke-width="7" stroke-linecap="round"
+    <path fill="none" stroke="#6b5d4f" stroke-opacity="0.3" stroke-width="7" stroke-linecap="round"
           d="M548,464 Q800,220 1052,464"/>
 
     <!-- the Neretva -->
     <rect x="0" y="472" width="1600" height="88" fill="url(#water)"/>
-    <rect x="0" y="471.4" width="1600" height="1.2" fill="#cfe6ee" opacity="0.09"/>
+    <rect x="0" y="471.4" width="1600" height="1.2" fill="#ffffff" opacity="0.4"/>
     <g transform="translate(0,731.6) scale(1,-0.55)" fill="url(#refl)">
       <path d="M560,458 Q800,230 1040,458 L1005,452 Q800,308 595,452 Z"/>
     </g>
