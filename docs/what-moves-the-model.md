@@ -4,8 +4,19 @@ Written 12 September 2026 from the repository's own numbers. No model was
 loaded, nothing was trained, nothing was launched. This is the case for where
 the next GPU hours should go, and the case against the places they keep going.
 
-**The one sentence:** *feed it real Bosnian it has never seen, and judge it
-with a Bosnian ruler — everything else has already come back null.*
+**The one sentence:** *Croatian and Serbian are not the enemy — they are the
+95% Bosnian is built from; feed it that family, then bias the thin Bosnian
+layer on top, and never waste a step on Bulgarian.*
+
+**The correction that reframes the whole plan (12 Sep, owner):** the earlier
+version of this file, and much of the project before it, treated Croatian and
+Serbian as *contamination* to filter out. That is wrong. Bosnian, Croatian and
+Serbian are one pluricentric language (BCS) — mutually intelligible, ~95%
+shared. The abundant HR/SR data is not a threat to be scrubbed; it is the
+resource. **Bulgarian** (`bg_BG-dimitar`, eastern South Slavic, lost its case
+system, different vowels) is a genuinely different language and has no place in
+this project. The base model already knows this: it is `eng-hbs` +
+Slovenian — the BCS-plus-Slovenian cluster — and Bulgarian was never in it.
 
 ## The pattern in the record
 
@@ -32,6 +43,57 @@ Two causes, stated plainly:
 
 So the question "what training helps" has a precondition: a run only helps if
 its data is new to the model **and** its instrument can see the gain.
+
+## The family reframe — Bosnian is Croatian-spelling + Serbian-lexicon + turkisms
+
+This is the single most useful thing in the record and it was hiding in a
+footnote. The base already writes fluent BCS. The only question the whole
+project turns on is: **on the handful of axes where the three standards split,
+which one does it pick?** The form-rate instrument already answered it. The
+base commits to a form on 245 targets and gets the Bosnian one on 231; the 14
+it "misses" are not random — sort them by axis and they fall into two clean
+piles:
+
+| the base wrote | the axis | where Bosnian's form comes from |
+|---|---|---|
+| reči, dece, drugde, promenila, posetilaca, negde (6) | **ijekavica → ekavica** | the **Croatian** side |
+| istorijska (1) | **kept-h dropped** | the **Croatian** side |
+| Točno, travnja, lipnja, tisućama, vlak, Europe, sudjelovati (7) | **lexicon** | the **Serbian** side |
+
+Read it twice, because it is the strategy:
+
+- **Every systematic loss goes to Serbian.** Ijekavica (*vrijeme*, *djece*,
+  *negdje*) and the kept *h* (*historija*) are Bosnian's rule-based layer, and
+  on every one of them Bosnian and **Croatian are identical** and both oppose
+  Serbian *ekavica*. This axis touches the most sentences (`BOSNIAN_METRIC.md`
+  calls it "the most systematic"). **Croatian data is an ally here, not
+  contamination — it teaches the exact forms the Bosnian ruler rewards.**
+- **Every lexical loss goes to Croatian.** Month names (*aprila* not *travnja*),
+  *voz* not *vlak*, *hiljada* not *tisuća*, *Evropa* not *Europa* — here
+  Bosnian sides with **Serbian** against distinctively Croatian vocabulary.
+- **Bulgarian appears in neither pile**, because it is a different language.
+
+So Bosnian is literally **Croatian's phonology and orthography, Serbian's
+leaning lexicon, plus its own turkisms and kept-h.** Neither neighbour alone is
+"the wrong standard to filter out"; each supplies a different half of what
+correct Bosnian is. Three consequences that reorder everything below:
+
+1. **Stop filtering Croatian/Serbian out of the training data.** The 77%-Bosnian
+   audit was reassuring, but the lesson is not "purify to 100%." Croatian in the
+   mix raises the ijekavica form rate for free. Filtering it *out* would remove
+   the best signal for the most systematic axis.
+2. **The cheapest win needs no GPU at all: a Bosnian-form lexicon at decode
+   time.** The lexical losses are a *finite, known list* — months, *vlak/voz*,
+   *tisuća/hiljada*, *Europa/Evropa*. A constrained-decoding bias or a
+   deterministic post-edit against a Bosnian-form dictionary fixes most of them
+   without touching a weight. Half the form-rate gap is a dictionary, not a
+   retrain.
+3. **The Bosnian ruler must not punish Croatian-shared forms.** This is a trap.
+   If the metric flags anything "Croatian-looking" as wrong, it will mark down
+   *vrijeme*, *djece*, *historija* — which are correct Bosnian. The ruler may
+   only penalise the axes where Bosnian genuinely diverges: Serbian *ekavica*,
+   dropped *h*, and distinctively-Croatian *lexicon*. A ruler that treats HR as
+   the enemy rejects real Bosnian.
 
 ## The levers, ranked by what can move a held-out number
 
@@ -64,16 +126,26 @@ penalised. `docs/BOSNIAN_METRIC.md` already specifies it (200 targeted + 50
 control sentences); `bench/terms.tsv` and `bench/cases.tsv` exist. This costs
 no GPU and decides whether the next run can be read at all.
 
-### 3. Speech — one language token per clip
+### 3. Speech — Croatian is the acoustic backbone; the token fix unlocks it
 
-The only lane where a **diagnosed recipe defect** is the cause, not a data
-limit. 6,050 Croatian rows trained under `<|bs|>` against 6,182 Bosnian, while
-Whisper's pretraining gave that token 11 hours of Bosnian against 91 of
-Croatian. Six thousand examples taught it that Bosnian is spelled *Europom*.
-That is the exact row that closed large-v3 (Croatian substitution 1.1% → 6.1%,
-p = 0.018). The fix is one column in the mix file, it is written, and it is
-pre-registered. It is blocked only on the owner's rule-3 ruling on which base
-carries it.
+This is where the family point pays off most, and where "not Bulgarian" is
+most literal. Whisper's pretraining has **11 hours of Bosnian against 91 of
+Croatian**, and the two are acoustically near-identical — the roadmap itself
+calls Croatian "acoustically near-identical" to Bosnian. **ParlaSpeech-HR is
+1,800 hours of Croatian, CC BY-SA.** That is the single biggest supply of
+in-family speech in existence, and Bulgarian audio would be useless for it
+(different phonology). So Croatian is not a fallback — it is the acoustic
+teacher.
+
+The one thing that stopped it working was a **recipe defect, not the data**:
+6,050 Croatian rows were trained under `<|bs|>`, which taught the decoder that
+Bosnian is *spelled* *Europom* — the exact row that closed large-v3 (Croatian
+substitution 1.1% → 6.1%, p = 0.018). The fix — **one language token per clip**
+— lets Croatian audio train the *ears* under `<|hr|>` while never corrupting
+Bosnian *spelling*. It is written, pre-registered, and separates the two layers
+exactly the way the family reframe says to: shared phonology from Croatian,
+Bosnian orthography kept clean. Blocked only on the owner's rule-3 ruling on
+which base carries it, and on the ParlaSpeech-HR licence approval (decision 4).
 
 ### 4. Speech distillation — the 18.4 hours are good data pointed at the wrong ability
 
@@ -106,18 +178,51 @@ today; it is the only lever that compounds.
 
 ## What this says about the voice lane
 
-Nothing here recommends training a voice. The next voice step is a
-measurement: hear `sl_SI-artur` (Slovenian, same sub-branch as Bosnian, CC BY
-rather than NC-SA) and `bg_BG-dimitar` as fetched, against the same 200-clip
-prefix and the same bar every other candidate faced. A fetched voice landing
-below 22.3% is what would give a fine-tune room to fall and still clear.
+Rank the candidate voices by **linguistic distance from Bosnian**, not by
+what happens to be sitting in Piper:
+
+    Croatian ≈ Bosnian  >  Serbian  >  Slovenian  >>  Bulgarian  >>>  Lower Sorbian (shipped)
+
+The shipped voice is **Lower Sorbian — West Slavic**, the *worst* branch on the
+whole list, further from Bosnian than Bulgarian is. Any BCS-family voice beats
+it. So:
+
+- **`bg_BG-dimitar` is struck from the plan.** Bulgarian is eastern South
+  Slavic with a different vowel system and no case marking; a Bulgarian voice
+  reading Bosnian is the same category of error as the Sorbian one, just less
+  extreme. Do not fetch it, do not measure it.
+- **`sl_SI-artur` (Slovenian, CC BY) is the least-bad *fetched* voice** — same
+  sub-branch, and dropping the NC-SA restriction is a real independent gain.
+  Measure it as fetched against the 200-clip prefix, ships only if strictly
+  below 22.3% at p < 0.05.
+- **The right voice, if one is trained, is a single clean Croatian speaker.**
+  Croatian is ijekavica, phonologically identical to Bosnian. `speak-parla`
+  already had the right *data* (Croatian Sabor) and still failed at 51.9% —
+  but it warm-started from the Sorbian checkpoint and mean-pooled five
+  speakers. One speaker, warm-started from Slovenian (South Slavic, not West),
+  is a different experiment and has not been run. That is the only voice
+  training worth a pre-registration.
 
 ## The order, if only one thing happens
 
-1. Owner decides the monolingual source and licence (decision 4).
-2. Build the Bosnian held-out set — no GPU, and it makes run 1 readable.
-3. Launch back-translation en→bs with four bars: FLORES chrF2 above the best
-   shipped, BLEU floor, **form rate floor, and the silent count as its own
-   row**, since that is where the headroom is.
+0. **Build the Bosnian-form lexicon and bias decoding with it** — no GPU, no
+   launch, no owner decision. The 14 lexical losses are a known finite list;
+   a decode-time dictionary fixes most of the lexical axis immediately, and it
+   is the same lexicon the ruler and the back-translation targets will reuse.
+   Ship it first because it is free and it moves the exact metric.
+1. **Build the Bosnian held-out ruler** — and write its rule so Croatian-shared
+   forms (ijekavica, kept-h) count as *correct*, only Serbian-ekavica and
+   distinctively-Croatian lexicon count against. No GPU; it makes every run
+   below readable.
+2. **Owner decides** the monolingual Bosnian source + licence (decision 4) and
+   the ParlaSpeech-HR licence — one decision unlocks both the strongest
+   translation lever and the strongest speech lever.
+3. **Launch back-translation en→bs** with four bars: FLORES chrF2 above the
+   best shipped, BLEU floor, **form rate floor, and the silent count as its own
+   row** (93 of 338 — that is where the headroom is). Keep Croatian in the mix;
+   do not purify.
+4. **Launch the speech token-per-clip run on ParlaSpeech-HR** — Croatian ears,
+   Bosnian spelling, the two layers kept apart.
 
-Everything else on this page is ready to wait for that.
+Everything else on this page is ready to wait for that. Bulgarian is not on the
+page at all, and that is the point.
