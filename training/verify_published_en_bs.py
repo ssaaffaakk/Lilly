@@ -7,11 +7,14 @@ every translation it scored into `training/hypotheses-en-bs.json`, so the four
 headline scores in `training/RESULTS-en-bs.md` and the interval beside them can
 be checked by arithmetic alone, in seconds, on any machine.
 
-That matters because the two documents disagreed. README.md:284 published the
-BLEU gap's 95% interval as [+0.70, +1.62]; training/RESULTS-en-bs.md:31
-published it as [+0.67, +1.65]. A bootstrap is a random procedure, so two runs
-of it differ — but only one of the two can be reproduced from the outputs that
-are on disk, and that is the one a reader can check.
+That matters because the two documents disagreed. Until 12 September 2026
+README.md published the BLEU gap's 95% interval as [+0.70, +1.62] where
+training/RESULTS-en-bs.md:31 published [+0.67, +1.65]. A bootstrap is a random
+procedure, so two runs of it differ — but only one of the two could be
+reproduced from the outputs on disk, and the owner ruled that the reproducible
+one is what gets published. Both documents now say [+0.67, +1.65], and this file
+is what holds them to it: the intervals below are quoted from the documents, so
+a change to either has to come past a failing run rather than past nobody.
 
     python3 training/verify_published_en_bs.py
     python3 training/verify_published_en_bs.py --served training/app-hypotheses-en-bs.json
@@ -38,7 +41,7 @@ PUBLISHED = {
     "in-house 1,500, Lilly": ("tuned_in", "in_house_refs", 34.06, 60.11),
 }
 PUBLISHED_INTERVALS = {
-    "README.md:284": {"bleu": [0.70, 1.62], "chrf2": [0.70, 1.35]},
+    "README.md:284": {"bleu": [0.67, 1.65], "chrf2": [0.69, 1.35]},
     "training/RESULTS-en-bs.md:31": {"bleu": [0.67, 1.65]},
 }
 
@@ -165,6 +168,21 @@ def main() -> int:
         print(f"\nFAILED: a published score does not reproduce "
               f"(worst difference {worst:.2f})", file=sys.stderr)
         return 1
+    # An interval is only held to the documents at the settings the documents
+    # were written from. A bootstrap is random: run it with another resample
+    # count and the bounds move by more than the tolerance for no reason worth
+    # failing over, so that case warns instead of failing.
+    if found["disagreements"]:
+        canonical = args.resamples == 1000 and found["bootstrap"]["seed"] == 11
+        print(f"\n{'FAILED' if canonical else 'NOTE'}: a published interval does "
+              f"not reproduce", file=sys.stderr)
+        for d in found["disagreements"]:
+            print(f"  {d['where']} {d['metric']}: published {d['published']}, "
+                  f"recomputed {d['reproduced']}", file=sys.stderr)
+        if canonical:
+            return 1
+        print(f"  (not failing: {args.resamples} resamples rather than the "
+              f"1,000 the documents were written from)", file=sys.stderr)
     return 0
 
 

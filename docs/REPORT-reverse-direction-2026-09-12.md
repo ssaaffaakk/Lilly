@@ -141,11 +141,18 @@ moves one bound. The chrF2 low end differs by 0.01, which is resampling noise
 and not a disagreement.
 
 Neither number is dishonest and the point estimate and p-value agree in both
-places. But the README is the public face, and it carries the one interval a
-reader cannot reproduce from the outputs that are on disk. **This is the owner's
-to rule on, not ours; nothing in README.md was edited.** The recommendation is
-to quote the interval that comes out of the stored outputs, and to say which
-file they are in, so the next person can redo it in one command.
+places. But the README is the public face, and it carried the one interval a
+reader cannot reproduce from the outputs that are on disk.
+
+**Ruled by the owner on 12 September, after this was reported: corrected.**
+`README.md` now publishes [+0.67, +1.65] for BLEU and [+0.69, +1.35] for chrF2 —
+the values that come out of the stored outputs — and names
+`training/verify_published_en_bs.py` beside them, which recomputes all of it in
+one command and exits non-zero if any published score stops reproducing. The
+Hugging Face model card was regenerated from the README by
+`scripts/sync_model_card.py`, per the standing rule that the card says what the
+README says. Uploading the card to the Hub remains the owner's act and has not
+been done from here.
 
 ## 5. Smaller findings
 
@@ -172,12 +179,17 @@ file they are in, so the next person can redo it in one command.
 
 ## 6. What should happen next
 
-1. The owner rules on the interval in `README.md:284`.
-2. `README.md` gains, for the reply direction, the same "as the user sees it"
-   treatment the forward direction has: quote 32.22 / 61.55 as the served score
-   and keep 30.73 / 60.00 labelled as the adapter path. Both are true; only one
-   is what a user gets. **Not done here — editing a published claim is the
-   owner's act.**
+1. ~~The owner rules on the interval in `README.md:284`.~~ **Done 12 Sep** —
+   ruled and corrected to the reproducible interval, see section 4.
+2. ~~`README.md` gains, for the reply direction, the same "as the user sees it"
+   treatment the forward direction has.~~ **Done 12 Sep, on the owner's
+   instruction.** `README.md` and `docs/WHITE-PAPER.md` now quote
+   32.22 / 61.55 (and 32.45 / 61.75 on devtest) as the served score, with
+   30.73 / 60.00 kept and labelled as the adapter path the pre-registered bars
+   were cleared on. Both are true; only one is what a user gets. The white
+   paper's en-bs table now carries both columns side by side rather than one.
+   The pre-registration was not touched: bars are judged on the path they were
+   registered on, and they were.
 3. The photograph faults in section 1 deserve a real measurement rather than
    four synthetic signs: an English-text photograph set with a truth file, and a
    first English word-error rate on human English speech. Neither is expensive.

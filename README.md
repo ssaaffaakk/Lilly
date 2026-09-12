@@ -208,7 +208,7 @@ first number that was recorded, with the file it lives in. The last is today.
 | Photographs — words invented that are on no sign | **> 280** | 224 | **65** |
 | Speech — word error, 200 held-out clips | **> 55%** | 38.5% (`training/RESULTS-speech.md`) | **11.9%** (whisper-large-v3, shipped by decision, refused at its gate; the gated whisper-small reads 34.9%) |
 | Translation — BLEU on FLORES devtest, as the user sees it | **< 30** | 37.72, with the language tag leaked into 308 of 1,012 outputs (`training/RESULTS-devtest.md`) | **43.25**, leaked into **0** (re-measured 8 Sep on a T4 after the ordinal splitter fix) |
-| Reply, English → Bosnian — chrF2 on FLORES-200 | — | 58.96, the base as downloaded (`training/RESULTS-en-bs.md`) | **60.00**, fine-tuned and published 8 Sep |
+| Reply, English → Bosnian — chrF2 on FLORES-200, as the user sees it | — | 58.96, the base as downloaded (`training/RESULTS-en-bs.md`) | **61.55** through the app's own path (`training/RESULTS-product-en-bs.md`, measured 12 Sep); the adapter alone on whole rows reads 60.00 |
 
 One recorded moment says what the early period was like: the reader scored
 about 75% on synthetic text and **36% the first time it was pointed at real
@@ -227,7 +227,7 @@ pass marks were written down before each run (see
 | Ability | Measured on | Untuned base | Lilly today | Where it stands |
 | --- | --- | --- | --- | --- |
 | **Translate**, Bosnian → English | 1,012 FLORES devtest sentences, as the user sees them | 42.08 BLEU / 67.85 chrF2 with its tag stripped; the base emits its language tag into 576 of 2,009 outputs, which the app strips since 8 Sep | **43.25 BLEU / 68.10 chrF2**, **0** leaks | shipped; re-measured 8 Sep on a T4 after the ordinal splitter fix |
-| **Reply**, English → Bosnian | 2,009 FLORES-200 pairs | 29.57 BLEU / 58.96 chrF2 | **30.73 / 60.00**; writes the Bosnian form of a contested word **99.2%** of the time (base 94.3%) | cleared all four bars 8 Sep; **in the bundle since 8 Sep** |
+| **Reply**, English → Bosnian | 2,009 FLORES-200 pairs, as the user sees them | 31.23 BLEU / 60.93 chrF2 through the app's own path; the adapter alone on whole rows reads 29.57 / 58.96 | **32.22 BLEU / 61.55 chrF2**, **0** leaks; writes the Bosnian form of a contested word **99.2%** of the time (base 94.3%) | cleared all four bars 8 Sep; **in the bundle since 8 Sep**; the served build scored 12 Sep (`training/RESULTS-product-en-bs.md`) |
 | **Listen**, whisper-small | 200 held-out FLEURS clips | 38.5% word error | **34.9%** word error; Bosnian term recall 65.9% → 68.2% | the listener that cleared its gate; kept as the baseline |
 | **Listen**, whisper-large-v3 | the same 200, then all 925 | — | 11.9% word error on the 200; **14.1%** on 925 against small's 39.5% | **shipped since 8 Sep by the owner's decision, refused at its gate**: writes Croatian forms more often (1.1% → 6.1%); closed to further looks, see below |
 | **Read** | 40 Commons photographs; `test-v2`, 132 with text | first reader: 36.0% of sign words found, 224 invented | **67.0% found, 65 invented** on the 40; **57.8% found, 450 invented** on `test-v2` | shipped (PP-OCRv6, untrained) |
@@ -281,7 +281,7 @@ records, not erased.
 **The reply direction** (English → Bosnian) was fine-tuned on 8 September and
 cleared all four of its pre-registered bars on the same 2,009 pairs: chrF2
 **58.96 → 60.00**, BLEU **29.57 → 30.73** (a paired bootstrap over sentences
-puts the gains at +1.04 [+0.70, +1.35] chrF2 and +1.16 [+0.70, +1.62] BLEU, 0
+puts the gains at +1.04 [+0.69, +1.35] chrF2 and +1.16 [+0.67, +1.65] BLEU, 0
 of 1,000 resamples at or below zero); the Bosnian form rate on 338 audited bench
 targets **94.3% → 99.2%** (244 of 246 decided,
 `training/RESULTS-en-bs-formrate.md`); and the `>>bos_Latn<<` label still
@@ -289,7 +289,31 @@ steers, its gap against `>>hrv<<` going 21.8 → 22.5 points. The served build
 was rebuilt with the adapter merged and published on 8 September;
 `scripts/fetch_models.py` pulls it as `translator-en-bs/`. Its base, `tc-base`,
 is a smaller model than the forward direction's, so the two directions are not
-of comparable quality.
+of comparable quality. Those four figures and both intervals come back out of
+the stored outputs with `python3 training/verify_published_en_bs.py`, which
+exits non-zero if any of them stops reproducing.
+
+Those bars were measured the way they were pre-registered: the PyTorch base plus
+its adapter, each row fed in whole. **That is not the path a reader meets**, and
+on 12 September the served int8 build was scored through `app.translate.Engine`
+for the first time, on the same 2,009 pairs — the same treatment the forward
+direction already had. It reads **32.22 BLEU / 61.55 chrF2** against an int8
+base at 31.23 / 60.93, a gap of **+0.99 BLEU [+0.47, +1.46]** and **+0.62 chrF2
+[+0.33, +0.89]** with 0 of 1,000 resamples at or below zero; on the devtest half
+alone, 31.49 / 61.03 → **32.45 / 61.75**. Both moves matter and they point
+opposite ways: what a user's sentence actually gets is **1.49 BLEU above the
+figure the bars were cleared on**, while the fine-tuning's own share of it is
+**smaller** than those bars suggest (+0.99 against +1.16 BLEU). The sentence
+splitter lifts both columns and lifts the untuned base more, because part of
+what the fine-tune learned was how to survive multi-sentence rows the app never
+hands it — the forward direction found the same shape. One caveat belongs beside
+this number rather than under it: `training/RESULTS-bosnian-audit.md` measures
+FLORES's Bosnian side at 49% Bosnian by lexical marker against this project's
+training data at 77%, and in this direction the Bosnian text is the *reference*,
+so part of any chrF2 movement here measures which standard the reference was
+written in. The form-rate instrument is the one that tests that question head-on
+and is unaffected by it. Full report: `training/RESULTS-product-en-bs.md` and
+`docs/REPORT-reverse-direction-2026-09-12.md`.
 
 ### Speech
 
@@ -433,8 +457,8 @@ This section exists because a README that only lists wins is not worth trusting.
   recordings were. The one path left is a clean hour from a native speaker.
 - **English → Bosnian stays the weaker direction.** The fine-tune cleared its
   bars (above) and has been in the bundle since 8 September, but it starts from
-  a smaller base than the forward direction and reads 60.00 chrF2 where the
-  forward direction reads 68.10.
+  a smaller base than the forward direction and reads 61.55 chrF2 through the
+  app's own path where the forward direction reads 68.10.
 - **The photograph scores are recognition, not phone reality.** The evaluated
   images come from Wikimedia Commons. Real photographs taken on a phone in
   Bosnia would be the honest test, and there is not a labelled set of them yet.

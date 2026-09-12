@@ -14,8 +14,10 @@ consumer hardware, with no external API calls at inference time. The system
 bundles five fine-tuned or selected models under a single FastAPI server and a
 browser-based interface.
 
-On the FLORES-200 benchmark the translator scores 43.25 BLEU / 68.10 chrF2
-(Bosnian → English) and 30.73 BLEU / 60.00 chrF2 (English → Bosnian). The
+On the 1,012-sentence FLORES-200 devtest half, both directions measured through
+the serving path a user actually meets, the translator scores 43.25 BLEU /
+68.10 chrF2 (Bosnian → English) and 32.45 BLEU / 61.75 chrF2
+(English → Bosnian). The
 speech recogniser achieves 11.9% word error rate on 200 held-out FLEURS clips —
 a whisper-large-v3 fine-tune shipped by the owner's decision after it was refused
 at its pre-registered gate (Croatian substitution 1.1% → 6.1%, p = 0.018); the
@@ -84,7 +86,7 @@ the file it lives in. The last is today.
 | Photographs — words invented that are on no sign | **> 280** | 224 | **65** |
 | Speech — word error, 200 held-out clips | **> 55%** | 38.5% (`training/RESULTS-speech.md`) | **11.9%** (whisper-large-v3, shipped by decision, refused at its gate; the gated whisper-small reads 34.9%) |
 | Translation — BLEU on FLORES devtest, as the user sees it | **< 30** | 37.72, with the language tag leaked into 308 of 1,012 outputs (`training/RESULTS-devtest.md`) | **43.25**, leaked into **0** (re-measured 8 Sep on a T4 after the ordinal splitter fix) |
-| Reply, English → Bosnian — chrF2 on FLORES-200 | — | 58.96, the base as downloaded (`training/RESULTS-en-bs.md`) | **60.00**, fine-tuned and published 8 Sep |
+| Reply, English → Bosnian — chrF2 on FLORES-200, as the user sees it | — | 58.96, the base as downloaded (`training/RESULTS-en-bs.md`) | **61.55** through the app's own path (`training/RESULTS-product-en-bs.md`, measured 12 Sep); the adapter alone on whole rows reads 60.00 |
 
 One recorded moment says what the early period was like: the reader scored about 75%
 on synthetic text and **36% the first time it was pointed at real photographs**
@@ -409,14 +411,34 @@ worth +0.89 BLEU / +0.37 chrF2 to the fine-tune (p = 0.001, 167 of 2,009 rows
 changed). Device drift between the Mac's CPU and the T4 is within noise (−0.04 BLEU,
 p = 0.25).
 
-**English → Bosnian, 2,009 FLORES-200 pairs:**
+**English → Bosnian, 2,009 FLORES-200 pairs.** Two paths, because they do not
+give the same answer and only one of them is the product. The pre-registered
+bars were cleared on the left column — the PyTorch base plus its LoRA adapter,
+each row fed in whole. The right column is the int8 build the app answers with,
+scored through `app.translate.Engine` on 12 September 2026, the same treatment
+the forward direction has:
 
-| | BLEU | chrF2 |
+| | Adapter, whole rows | **Served: int8, app splitter** |
 |---|---|---|
-| Base (untuned) | 29.57 | 58.96 |
-| Lilly (fine-tuned) | **30.73** | **60.00** |
-| Gap | +1.16 | +1.04 |
-| p | 0.001 | 0.001 |
+| Base (untuned) | 29.57 / 58.96 | 31.23 / 60.93 |
+| Lilly (fine-tuned) | **30.73** / **60.00** | **32.22** / **61.55** |
+| Gap | +1.16 / +1.04 | +0.99 / +0.62 |
+| 95% interval on the gap | [+0.67, +1.65] / [+0.69, +1.35] | [+0.47, +1.46] / [+0.33, +0.89] |
+| p | 0.001 / 0.001 | 0.001 / 0.001 |
+
+Both intervals are 1,000 paired resamples over sentences with 0 at or below
+zero. The served column is 1.49 BLEU above the figure the bars were cleared on,
+while the fine-tuning's own share of it is smaller (+0.99 against +1.16 BLEU):
+the sentence splitter lifts both columns and lifts the untuned base more,
+because part of what the fine-tune learned was how to survive multi-sentence
+rows the app never hands it. The forward direction showed the same shape. On the
+devtest half alone the served build reads 31.49 / 61.03 → 32.45 / 61.75.
+`training/verify_published_en_bs.py` recomputes the left column and both of its
+intervals from the stored outputs in one command and fails if they stop
+reproducing. One caveat belongs beside these numbers: `RESULTS-bosnian-audit.md`
+measures FLORES's Bosnian side at 49% Bosnian by lexical marker against this
+project's training data at 77%, and here the Bosnian text is the *reference*, so
+part of any chrF2 movement measures which standard the reference was written in.
 
 Bosnian form rate: 94.3% → 99.2% (244 of 246 decided targets). `>>bos_Latn<<`
 label steering gap: 21.8 → 22.5 points. Against NLLB-600M (26.07 BLEU / 56.22
