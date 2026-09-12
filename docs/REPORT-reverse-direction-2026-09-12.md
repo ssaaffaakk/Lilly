@@ -28,27 +28,55 @@ from a locally running server, not descriptions of intent.
 | Photograph, `/api/photo` `direction=en-bs` | a sign reading EXIT ONLY / NO PARKING | read "EXIT ONLY NO PARKING", answered "IZLAZ SAMO BEZ PARKIRANJA" |
 | Photograph | DANGER / HIGH VOLTAGE / KEEP OUT | read correctly, answered "OPASNA VISOKA VOLTAŽA OSTAJE NAPOLJU" |
 | Photograph | PHARMACY / OPEN 24 HOURS | read correctly, answered "OTVORENA **FARMACIJA** 24 SATA" |
-| Photograph | PLEASE DO NOT FEED THE ANIMALS | read "PLEASE DO NOT **FEE**", answered "Molim vas, ne jedite" |
+| Photograph | PLEASE DO NOT FEED THE ANIMALS, on a canvas too narrow for it — **my error, see the correction below** | read "PLEASE DO NOT FEE", answered "Molim vas, ne jedite" |
+| Photograph | the same sentence on a canvas wide enough | read **"PLEASE DO NOT FEED THE ANIMALS"** exactly, answered "Molim vas, nemojte hraniti životinje" — correct |
 
 The Bosnian is Bosnian and not Croatian or Serbian on every chat row that could
 have gone either way: *dvije* not *dve*, *vrijeme* not *vreme*, *kćerka*,
 *kišobran*. That is the form-rate instrument's claim holding up in ordinary use.
 
-Three real faults, all on the photograph path and none of them new weights:
+**A correction, and it is mine.** The first version of this report claimed the
+reader had truncated "PLEASE DO NOT FEED THE ANIMALS" to "PLEASE DO NOT FEE" and
+called that the most user-visible defect found. **That was wrong, and the fault
+was in my test, not in the reader.** I had drawn 30 characters at 92 px — 1,673
+pixels of text — onto a 1,000-pixel canvas, so the sentence ran off the right
+edge. The reader read exactly what was in the image; the visible text ends at
+1,014 px, which is "PLEASE DO NOT FEE" to the pixel. Re-drawn on a canvas wide
+enough, the reader returns the full sentence, and so does a 59-character line
+2,049 pixels wide:
 
-- **The reader dropped eleven characters of a long line.** "PLEASE DO NOT FEED
-  THE ANIMALS" came back as "PLEASE DO NOT FEE". The translator then did its job
-  faithfully on what it was given and produced "Molim vas, ne jedite" — *please
-  do not eat*. A truncation in the reader becomes a confident, fluent, wrong
-  sentence downstream, with nothing in the response marking it as partial.
-- **"PHARMACY" became "FARMACIJA".** In Bosnian a pharmacy you walk into is an
-  *apoteka*; *farmacija* is the academic subject. On an uppercase sign this is
-  the difference between a useful answer and a confusing one.
-- **"KEEP OUT" became "OSTAJE NAPOLJU"** — "stays outside". Grammatical,
-  fluent, and not what the sign means.
+| image | read as |
+|---|---|
+| PLEASE DO NOT FEED THE ANIMALS, 1,672 px wide | "PLEASE DO NOT FEED THE ANIMALS" — exact |
+| the same text at a smaller size, 1,016 px | "PLEASE DO NOT FEED THE ANIMALS" — exact |
+| NO SMOKING ANYWHERE ON THESE PREMISES INCLUDING THE TERRACE, 2,049 px | exact |
 
-All three are on uppercase signage text, which is what a camera actually meets,
-and none of them would show up in a BLEU score on FLORES sentences.
+There is no line-length defect in the reader. The retraction is recorded here
+rather than quietly edited out, because a false defect sent to the owner is the
+same kind of error as a flattering number.
+
+**What the corrected test found instead is worth more than the false finding
+was: the translator is much worse on ALL-CAPS input, and signs are written in
+capitals.** Same sentences, once as a sign writes them and once as a person
+would:
+
+| sign text, uppercase | what Lilly answers | the same sentence in ordinary case |
+|---|---|---|
+| DANGER HIGH VOLTAGE KEEP OUT | "OPASNA VISOKA VOLTAŽA OSTAJE NAPOLJU" — *"dangerous high voltage stays outside"* | "Opasnost, visok napon. Drži se podalje." — **correct** |
+| PHARMACY OPEN 24 HOURS | "OTVORENA FARMACIJA 24 SATA" — *farmacija* is the academic subject | "Ljekarna, otvorena 24 sata." — the right sense, though *ljekarna* is the Croatian word where Bosnian says *apoteka* |
+| NO SMOKING ANYWHERE ON THESE PREMISES INCLUDING THE TERRACE | "NEMA PUŠENJA NIGDJE NA OVIM **PREMIJERAMA** UKLJUČUJUĆI TERASU" — *premijerama* is premieres, or prime ministers | — |
+| PLEASE DO NOT FEED THE ANIMALS | "Molim vas, nemojte hraniti životinje" — correct even in capitals | identical |
+
+The photograph path hands the reader's output straight to the translator, so on
+that path the translator meets capitals and on the chat path it meets ordinary
+prose. Nobody had measured what that costs. It is a serving-path question of
+exactly the kind this project has already been paid for once: splitting input
+into sentences before translating was worth +0.89 BLEU. Section 5 carries the
+measurement.
+
+Two faults survive the correction, both in the translator rather than the reader,
+and neither would show up in a BLEU score on FLORES sentences: *farmacija* for a
+pharmacy you walk into, and *ostaje napolju* for "keep out".
 
 One more observation, from sending the English clip with the wrong direction
 flag on purpose: told to expect Bosnian, the listener invents Bosnian-shaped
