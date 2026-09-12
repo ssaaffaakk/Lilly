@@ -2717,6 +2717,63 @@ unless the owner reopens that base. Anything about Serbian drift, which the
 Serbian column reports and no bar here judges. Whether more Bosnian audio
 would do better still; that is V4-PLAN's lever and it is not touched.
 
+## Amendment, 12 September 2026 — the base is whisper-large-v3-turbo
+
+Written **before the launch and before any number exists**, as the section
+above requires: *"The base chosen goes into the notebooks' cell 7 and into an
+amendment under this section before the launch, by the owner."*
+
+The owner chose **`openai/whisper-large-v3-turbo`** from the three the section
+named. Rule 3 is untouched: it closed `openai/whisper-large-v3`, and turbo is a
+different model — a 4-layer distilled decoder against large-v3's 32 — not that
+base under a new recipe.
+
+What changes: `SPEECH_BASE` in cell 7 of `Lilly_Speech_Kaggle.ipynb` and
+`Lilly_Speech_Kaggle_Half2.ipynb`. Nothing else. The sources, the 0.47 Bosnian
+share, one epoch per half, the LoRA configuration, the leakage gate, the
+language column and the three bars above all stand as written.
+
+**The expected direction is restated for this base**, so a surprise stays
+recognisable. Turbo's decoder is distilled and shallower than large-v3's, and
+distillation is known to cost most on the languages least represented in the
+teacher's data — which for Bosnian is 11 hours. The mechanism's prediction is
+unchanged in sign: Croatian substitution at or below the small baseline's. The
+word-error gain over whisper-small may be smaller than large-v3's was, and a
+smaller gain is not evidence against the language-token hypothesis; only the
+Croatian row speaks to that.
+
+## Amendment, 12 September 2026 — the full instrument cannot score this run yet
+
+Recorded **before the launch**, because a limit found after a number exists is
+worth less than one found before.
+
+The section above names `scripts/kaggle_train.py speech-instrument` as "the
+full instrument, unchanged". It is not usable unchanged. Cell 5 of
+`Lilly_Speech_Instrument_Kaggle.ipynb` pins **both** builds by fingerprint —
+
+    GATE_FP = {"listen-previous": "a76342f6ab59b382", "listen": "e6bb58483586b06c"}
+
+— and exits if either differs, and separately requires the candidate's
+`built.json` to read `openai/whisper-large-v3` exactly. That notebook was
+written to **re-measure the two builds the gate had already scored**, not to
+judge a new one. Any new candidate, on any base, fails both checks. This is the
+gate working as designed, not a defect to patch around.
+
+So this run is judged in two steps, and only the first is available today:
+
+1. **Half 2's AFTER WER** — `training/evaluate_speech.py`, 200 clips of
+   `data/speech/test.tsv`, written by the notebook that trained the weights.
+   That is the number this launch produces.
+2. **The 925-clip instrument** — needs its own amendment first: the candidate's
+   fingerprint is computed after training and pinned **before** scoring, and the
+   candidate base becomes the one this amendment names. Neither the bars, the
+   split, the normaliser nor the term list moves. Until that is written and
+   committed, no weights from this run are published, and step 1's number is
+   not read as the gate's verdict.
+
+`.claude/CLAUDE.md` applies unchanged: a 200-clip AFTER WER is not the gate, and
+unmeasured weights are not zipped into a release.
+
 ---
 
 # v5 — speak — a Bosnian voice from FLEURS, written before any run
