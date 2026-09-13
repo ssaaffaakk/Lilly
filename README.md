@@ -155,15 +155,27 @@ lilly.translate_photo("sign.jpg", direction="en-bs")  # English photo  -> (Bosni
 | --- | --- | --- |
 | `POST /api/translate` | `{"text": "..."}` | Bosnian in, English out |
 | `POST /api/reply` | `{"text": "..."}` | English in, Bosnian out |
-| `POST /api/speech` | audio upload, optional `direction` field | transcribes, then translates: Bosnian heard → English (`bs-en`, the default) or English heard → Bosnian (`en-bs`); the answer is `{"bosnian", "english"}` either way |
+| `POST /api/detect` | `{"text": "..."}` | which language the text is in — `{"language": "bs"}` or `{"language": "en"}` — so the page can route it without asking |
+| `POST /api/speech` | audio upload, optional `direction` field | transcribes, then translates: Bosnian heard → English (`bs-en`, the default), English heard → Bosnian (`en-bs`), or `auto`, where the listener decides the language and the answer adds `"heard"`; the answer is `{"bosnian", "english"}` otherwise |
 | `POST /api/photo` | image upload, optional `direction` field | reads the text off the image, then translates it, the same two ways |
+| `POST /api/photo-boxes` | image upload, optional `direction` field | the same read-and-translate as `/api/photo`, plus one box per region with its own source text and translation, so the page can draw the answer over the photograph |
 | `POST /api/speak` | `{"text": "...", "language": "en"}` | speech as WAV; `"bs"` reads the Bosnian answer with the Bosnian voice |
+| `POST /api/document` | `.docx` or `.pdf` upload, optional `direction` field | extracts the text and translates it through the same sentence-split path |
 | `POST /api/feedback` | a correction | stored for review and retraining |
 | `GET /health` | — | liveness |
 
 Every request is bounded before it reaches a model — uploads by size, text by
 how much work it asks for, images by pixel count — because the server is written
 to face the open internet.
+
+On top of the five abilities the page carries the flow a general translator
+has: it detects the language unless you pick one (the swap arrow is the manual
+override), translates as you type, keeps a local history and a phrasebook in
+the browser, offers a conversation mode that hears either language from one
+microphone, opens a live camera that draws each region's translation over the
+sign, and reads a `.docx` or `.pdf` you hand it. Detection is a small committed
+classifier (`app/detect.py`), not a download; the camera overlay is region-level,
+one box per paragraph group, not word by word.
 
 ### The correction button
 
