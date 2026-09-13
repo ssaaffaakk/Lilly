@@ -529,6 +529,16 @@ def get_reader():
 
 def load_within_limits(image_path: str):
     """Open a photo at a size worth working on, or refuse it."""
+    return load_within_limits_scaled(image_path)[0]
+
+
+def load_within_limits_scaled(image_path: str):
+    """Open a photo at a size worth working on, and say how it was shrunk.
+
+    The (image, scale) pair: scale is 1.0 when nothing was resized, else the
+    factor the pixels were multiplied by. Overlay callers need it to put
+    boxes read off the working image back into the original's coordinates.
+    """
     import numpy as np
     from PIL import Image
 
@@ -542,10 +552,11 @@ def load_within_limits(image_path: str):
         if width * height > MAX_DECLARED_PIXELS:
             raise ImageTooLarge(f"that image is {width}x{height}; too large to read")
         img = img.convert("RGB")
+        scale = 1.0
         if width * height > MAX_WORKING_PIXELS:
             scale = (MAX_WORKING_PIXELS / (width * height)) ** 0.5
             img = img.resize((max(int(width * scale), 1), max(int(height * scale), 1)))
-        return np.asarray(img)
+        return np.asarray(img), scale
 
 
 def get_cyrillic_reader():
@@ -678,6 +689,27 @@ def scan(image_path: str) -> str:
     image = load_within_limits(image_path)
     results = read_regions(image, detail=0, paragraph=True)
     return "\n".join(results).strip()
+
+
+def scan_regions(image_path: str) -> tuple:
+    """The same reading scan() makes, plus a box for every paragraph of it.
+
+    Returns (text, regions) where regions are the reader's paragraph groups
+    as (box, text) pairs — the paragraph merge joins per-region confidence
+    away, so there is none to return — with each box rescaled back into the
+    original photo's pixels. The overlay endpoint draws these boxes over the
+    photograph the way it arrived, whatever size the reader had to shrink it
+    to. The text is the same string scan() returns, so the full translation
+    and the per-region ones agree on what was read.
+    """
+    image, scale = load_within_limits_scaled(image_path)
+    regions = read_regions(image, detail=1, paragraph=True)
+    if scale != 1.0:
+        for region in regions:
+            region[0] = [[int(round(x / scale)), int(round(y / scale))]
+                         for x, y in region[0]]
+    text = "\n".join(str(r[1]) for r in regions).strip()
+    return text, regions
 
 
 def main() -> int:

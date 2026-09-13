@@ -200,6 +200,64 @@ class Lilly:
         bosnian = self.read(image_path)
         return bosnian, (self.translate(bosnian, truncate=True) if bosnian else "")
 
+    def converse(self, audio_path: str) -> tuple:
+        """Spoken either language -> (bosnian, english, heard).
+
+        Conversation mode hears without being told which language the clip is
+        in: Whisper decides (language=None), and the detector then decides
+        which way the text travels. The third value, "bs" or "en", says which
+        side was heard, so the caller knows which side is the answer to read
+        aloud. The pair order is the usual (bosnian, english) whichever way
+        it ran. Returns ("", "", "") when nothing was heard.
+        """
+        from app.detect import detect_language
+        text = self.listen(audio_path, language=None)
+        if not text:
+            return "", "", ""
+        if detect_language(text) == "en":
+            return (self.reply(text, truncate=True) if text else ""), text, "en"
+        return text, (self.translate(text, truncate=True) if text else ""), "bs"
+
+    def translate_photo_regions(self, image_path: str, direction: str = "bs-en") -> tuple:
+        """(bosnian, english, regions) — the photo's text plus a box per region.
+
+        Each region carries its source text and its own translation, so the
+        page can draw the translation over the photograph at the place the
+        words were found. Region-level, not word-level: one box per paragraph
+        group, the way the reader groups them. The full pair is the same
+        read-plus-translate translate_photo() would return for the same file.
+        """
+        from app.ocr import scan_regions
+        text, regions = scan_regions(image_path)
+        out = []
+        if check_direction(direction) == "en-bs":
+            english = text
+            bosnian = self.reply(english, truncate=True) if english else ""
+            for box, source in regions:
+                out.append({"box": box, "source": source,
+                            "translated": self.reply(source, truncate=True) if source else ""})
+        else:
+            bosnian = text
+            english = self.translate(bosnian, truncate=True) if bosnian else ""
+            for box, source in regions:
+                out.append({"box": box, "source": source,
+                            "translated": self.translate(source, truncate=True) if source else ""})
+        return bosnian, english, out
+
+    def translate_document(self, document_path: str, direction: str = "bs-en") -> tuple:
+        """(bosnian, english, original) — a document's text, translated.
+
+        The document is read down to text (app/document.py, .docx or .pdf),
+        then travels the same sentence-split path as anything typed, with
+        truncate=True: the caller never typed the document, so a refusal over
+        its length would be baffling — better a translated beginning.
+        """
+        from app.document import extract_text
+        original = extract_text(document_path)
+        if check_direction(direction) == "en-bs":
+            return self.reply(original, truncate=True), original, original
+        return original, self.translate(original, truncate=True), original
+
     @property
     def status(self) -> str:
         from app.translate import get_engine

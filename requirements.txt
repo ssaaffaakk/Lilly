@@ -64,6 +64,11 @@ fastapi
 uvicorn
 python-multipart
 
+# Document translation: text extraction from .docx and .pdf uploads.
+# Imported lazily by app/document.py, so the server starts without them.
+python-docx
+pypdf
+
 # Tests: python3 -m pytest tests  -- the sentence splitter, the batch grouping
 # and the server's error mapping, none of which needs a model.
 pytest

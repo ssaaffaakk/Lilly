@@ -8,9 +8,12 @@ Endpoints:
     GET  /health            liveness, for whatever is watching the process
     POST /api/translate     {"text": "..."}            -> Bosnian text to English
     POST /api/reply         {"text": "..."}            -> English text to Bosnian
+    POST /api/detect        {"text": "..."}            -> {"language": "bs"|"en"}
     POST /api/speech        audio upload [+ direction]  -> transcribe, then translate
     POST /api/speak         {"text": "...", "language": "en"|"bs"} -> speech (WAV)
     POST /api/photo         image upload [+ direction]  -> read, then translate
+    POST /api/photo-boxes   image upload [+ direction]  -> regions with boxes
+    POST /api/document      .docx/.pdf upload [+ direction] -> text, translated
     POST /api/feedback      correction report           -> saved to review database
 
 Every ability comes from the one Lilly object (app/lilly.py), which reads its
@@ -22,6 +25,8 @@ field, "bs-en" (the default: Bosnian heard or photographed, English back) or
 "en-bs" (English heard or photographed, Bosnian back); the answer is always
 {"bosnian": ..., "english": ...}, whichever side was the input. /api/speak takes
 `language`, "en" (default) or "bs", for reading the answer aloud on either side.
+/api/speech also takes direction="auto" (conversation mode): Whisper decides
+which language the clip holds, and the answer says which side was heard.
 
 This is written to face the open internet, so every request is bounded before it
 reaches a model: uploads by size, text by how much work it asks for, images by
@@ -41,6 +46,7 @@ from pydantic import BaseModel, Field, StringConstraints
 from starlette.concurrency import run_in_threadpool
 
 from app import feedback
+from app.detect import detect_language
 from app.lilly import BadInput, lilly
 from app.ocr import ImageTooLarge
 from app.translate import TextTooLong
@@ -48,8 +54,12 @@ from app.translate import TextTooLong
 APP_DIR = Path(__file__).resolve().parent
 
 # Uploads are bounded before anything reads them. A photo of a sign is well
-# under a megabyte; a minute of voice is a few hundred kilobytes.
-MAX_UPLOAD = {"/api/photo": 12 * 1024 * 1024, "/api/speech": 25 * 1024 * 1024}
+# under a megabyte; a minute of voice is a few hundred kilobytes. A document
+# may carry pictures of its own, so it gets the same room as speech.
+MAX_UPLOAD = {"/api/photo": 12 * 1024 * 1024,
+              "/api/photo-boxes": 12 * 1024 * 1024,
+              "/api/speech": 25 * 1024 * 1024,
+              "/api/document": 25 * 1024 * 1024}
 UPLOAD_CHUNK = 256 * 1024
 SAFE_SUFFIX = re.compile(r"^\.[A-Za-z0-9]{1,8}$")
 
@@ -77,8 +87,11 @@ class SpeakIn(BaseModel):
 
 
 # The uploads' direction, a form field beside the file. Checked here so a typo
-# is a 422 with the field named, never a 400 blamed on the recording.
+# is a 422 with the field named, never a 400 blamed on the recording. Speech
+# is the one upload that also takes "auto": conversation mode hears either
+# language and lets Whisper decide.
 Direction = Annotated[str, Form(pattern="^(bs-en|en-bs)$")]
+SpeechDirection = Annotated[str, Form(pattern="^(bs-en|en-bs|auto)$")]
 
 
 class FeedbackIn(BaseModel):
@@ -185,14 +198,37 @@ async def reply(body: TranslateIn):
     return {"bosnian": bosnian, "english": body.text}
 
 
+@app.post("/api/detect")
+async def detect(body: TranslateIn):
+    """Which language a text is in, so the page can route it without asking.
+
+    Same length bounds as /api/translate: a text too long to translate is too
+    long to be worth classifying. The detector is a committed table of counts,
+    not a model download, but a machine without the file still gets a 503
+    rather than a crash, like any other missing part.
+    """
+    try:
+        language = await run_in_threadpool(detect_language, body.text)
+    except FileNotFoundError as exc:
+        return JSONResponse(status_code=503, content={"error": str(exc)})
+    return {"language": language}
+
+
 @app.post("/api/speech")
-async def speech(file: UploadFile, direction: Direction = "bs-en"):
+async def speech(file: UploadFile, direction: SpeechDirection = "bs-en"):
     tmp_path = await _save_upload(file, "a.webm", MAX_UPLOAD["/api/speech"])
     try:
+        if direction == "auto":
+            # Conversation mode: the listener decides the language, then the
+            # detector routes the text. `heard` says which side the answer
+            # belongs to, because both keys hold a language either way.
+            bosnian, english, heard = await run_in_threadpool(lilly.converse, tmp_path)
+            return {"bosnian": bosnian, "english": english, "heard": heard}
         bosnian, english = await run_in_threadpool(lilly.translate_audio, tmp_path, direction)
     except FileNotFoundError as exc:
-        # No listener on this machine. Not the caller's recording and not a
-        # crash: the same 503 the reply direction answers with.
+        # No listener on this machine (or no reply model behind the answer).
+        # Not the caller's recording and not a crash: the same 503 the reply
+        # direction answers with.
         return JSONResponse(status_code=503, content={"error": str(exc)})
     finally:
         Path(tmp_path).unlink(missing_ok=True)
@@ -223,6 +259,51 @@ async def photo(file: UploadFile, direction: Direction = "bs-en"):
     finally:
         Path(tmp_path).unlink(missing_ok=True)
     return {"bosnian": bosnian, "english": english}
+
+
+@app.post("/api/photo-boxes")
+async def photo_boxes(file: UploadFile, direction: Direction = "bs-en"):
+    """The same read-plus-translate as /api/photo, plus a box per region.
+
+    The page draws each region's translation over the photograph at the place
+    the words were found, so this returns the regions with their boxes, their
+    source text and their own translation, beside the full pair. Boxes are in
+    the original upload's pixels and pass the reader's confidence floor like
+    everything else the reader returns. Region-level, not word-level: one box
+    per paragraph group.
+    """
+    tmp_path = await _save_upload(file, "a.jpg", MAX_UPLOAD["/api/photo-boxes"])
+    try:
+        bosnian, english, regions = await run_in_threadpool(
+            lilly.translate_photo_regions, tmp_path, direction)
+    except FileNotFoundError as exc:
+        # The reader is a required part, but missing weights are reported the
+        # way /api/reply reports them: a download to make, not a crash.
+        return JSONResponse(status_code=503, content={"error": str(exc)})
+    finally:
+        Path(tmp_path).unlink(missing_ok=True)
+    return {"regions": regions, "bosnian": bosnian, "english": english}
+
+
+@app.post("/api/document")
+async def document(file: UploadFile, direction: Direction = "bs-en"):
+    """A .docx or .pdf upload: its text, read and translated.
+
+    The document is extracted to text (app/document.py) and travels the same
+    sentence-split path as anything typed, truncate=True — the caller never
+    typed the document, so the beginning is translated rather than the request
+    refused. The 503 covers a machine without the translation weights, the
+    same way /api/reply answers.
+    """
+    tmp_path = await _save_upload(file, "a.pdf", MAX_UPLOAD["/api/document"])
+    try:
+        bosnian, english, original = await run_in_threadpool(
+            lilly.translate_document, tmp_path, direction)
+    except FileNotFoundError as exc:
+        return JSONResponse(status_code=503, content={"error": str(exc)})
+    finally:
+        Path(tmp_path).unlink(missing_ok=True)
+    return {"bosnian": bosnian, "english": english, "original": original}
 
 
 @app.post("/api/feedback")

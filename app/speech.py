@@ -103,6 +103,12 @@ def transcribe(audio_path: str, language: str = "bs", build=None,
                beam_size: int = 5, temperature=None) -> str:
     """The product decodes at beam_size=5 and those are the defaults.
 
+    `language` is "bs" or "en" to tell Whisper which language to expect, or
+    None to let it decide from the audio itself — conversation mode hears
+    either language and needs no second listener for it. Whisper's own
+    detection is the whole of that feature; the text it returns is then
+    routed by the text detector (app/detect.py).
+
     `beam_size` and `temperature` exist for one caller: training/RUBRIC.md
     defines the speech score at greedy, temperature 0, and speech_bench.py's
     --decode rubric passes beam_size=1, temperature=0.0 to measure that. The

@@ -725,6 +725,183 @@
   .footer-meta { margin-top: 18px; font-size: 12px; line-height: 1.6; }
   .footer-meta a { color: var(--ink-2); }
 
+  /* --- Detect & conversation pills ------------------------------------ */
+  .tagline { gap: 10px; flex-wrap: wrap; }
+  .pill {
+    font: inherit;
+    font-size: 11.5px;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    background: transparent;
+    border: 1px solid var(--hair);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    min-height: 36px;
+    padding: 0 13px;
+    border-radius: 999px;
+    -webkit-tap-highlight-color: transparent;
+    transition:
+      color var(--t-base) var(--ease),
+      background var(--t-base) var(--ease),
+      border-color var(--t-base) var(--ease);
+  }
+  .pill:hover { color: var(--ink-2); background: rgba(255, 255, 255, 0.07); }
+  .pill[aria-pressed="true"] {
+    color: var(--accent-hi);
+    border-color: rgba(15, 138, 124, 0.45);
+    background: rgba(15, 138, 124, 0.08);
+  }
+
+  /* --- Character counter ----------------------------------------------- */
+  .composer-foot { flex-wrap: wrap; }
+  .counter {
+    font-size: 12px;
+    font-variant-numeric: tabular-nums;
+    color: var(--ink-3);
+    padding: 0 2px;
+    white-space: nowrap;
+  }
+  .counter.over { color: var(--rec); }
+
+  /* The conversation mode's microphone is the one button that changed
+     meaning, so it wears the accent while the mode is on. */
+  body.convo #micBtn { border-color: rgba(15, 138, 124, 0.55); color: var(--accent-hi); }
+
+  /* --- Camera: live viewfinder and its overlays ------------------------ */
+  .camera { padding: 12px; }
+  .cam-stage {
+    position: relative;
+    border-radius: var(--r-md);
+    overflow: hidden;
+    background: rgba(20, 24, 26, 0.92);
+    border: 1px solid var(--hair);
+    aspect-ratio: 4 / 3;
+  }
+  .cam-stage video, .cam-stage img {
+    position: absolute; inset: 0;
+    width: 100%; height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+  /* display:block above would quietly defeat the [hidden] attributes these
+     two start and end their lives with — said explicitly instead. */
+  .cam-stage video[hidden], .cam-stage img[hidden] { display: none; }
+  .cam-overlay { position: absolute; inset: 0; pointer-events: none; }
+  /* One chip per detected region, drawn over the words it translates. The
+     chips are positioned in percentages of the frame, so they stay on their
+     region however the stage is displayed. */
+  .cam-chip {
+    position: absolute;
+    background: rgba(11, 107, 96, 0.92);
+    color: #ffffff;
+    font-size: 12.5px;
+    line-height: 1.35;
+    padding: 3px 6px;
+    border-radius: 6px;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+  .cam-note { margin: 12px 4px 0; font-size: 13.5px; line-height: 1.5; color: var(--ink-2); }
+  .cam-actions { display: flex; gap: 8px; align-items: center; margin-top: 12px; }
+  .cam-actions .spacer { flex: 1; }
+
+  /* --- History & phrasebook --------------------------------------------- */
+  .library { padding: 12px 14px 14px; }
+  .library-tabs { display: flex; gap: 6px; }
+  .lib-tab {
+    font: inherit;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    background: transparent;
+    border: 1px solid transparent;
+    cursor: pointer;
+    padding: 8px 12px;
+    border-radius: 999px;
+    -webkit-tap-highlight-color: transparent;
+    transition: color var(--t-base) var(--ease), background var(--t-base) var(--ease);
+  }
+  .lib-tab.on { color: var(--accent-hi); background: rgba(15, 138, 124, 0.08); }
+  .lib-list { list-style: none; margin-top: 6px; max-height: 300px; overflow: auto; }
+  .lib-empty { font-size: 13.5px; color: var(--ink-3); padding: 14px 4px 6px; line-height: 1.5; }
+  .lib-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border-top: 1px solid rgba(20, 24, 26, 0.07);
+  }
+  .lib-item:first-child { border-top: none; }
+  .lib-row {
+    flex: 1;
+    min-width: 0;
+    font: inherit;
+    text-align: left;
+    color: var(--ink);
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 10px 4px;
+    border-radius: var(--r-sm);
+    -webkit-tap-highlight-color: transparent;
+  }
+  .lib-row:hover { background: rgba(255, 255, 255, 0.14); }
+  .lib-row .dir {
+    display: block;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+  }
+  .lib-row .src {
+    display: block;
+    font-size: 14.5px;
+    color: var(--ink);
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .lib-row .dst {
+    display: block;
+    font-size: 12.5px;
+    color: var(--ink-3);
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .lib-x {
+    flex: none;
+    font: inherit;
+    font-size: 15px;
+    line-height: 1;
+    color: var(--ink-3);
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 999px;
+    width: 30px; height: 30px;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .lib-x:hover { color: var(--rec); background: rgba(194, 72, 62, 0.08); }
+  .library-foot { display: flex; justify-content: flex-end; margin-top: 6px; }
+  .library-foot .btn { font-size: 12.5px; min-height: 36px; }
+
+  /* --- Handwriting pad ---------------------------------------------------- */
+  .write-pad {
+    width: 100%;
+    height: 240px;
+    border: 1px solid var(--hair);
+    border-radius: var(--r-sm);
+    background: rgba(255, 255, 255, 0.78);
+    touch-action: none;
+    display: block;
+    margin-top: 14px;
+    cursor: crosshair;
+  }
+
   @media (max-width: 640px) {
     .hero .cta-row .btn, .story-cta .btn { flex: 1 1 auto; }
     .privacy-panel { padding: 26px; }
@@ -913,6 +1090,8 @@
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 8h11M15 5l3 3-3 3"/><path d="M17 16H6M9 13l-3 3 3 3"/></svg>
       <span id="toLang">English</span>
     </button>
+    <button type="button" class="pill" id="detectBtn" aria-pressed="true">Detect language</button>
+    <button type="button" class="pill" id="convoBtn" aria-pressed="false">Conversation</button>
   </p>
 </header>
 
@@ -928,7 +1107,18 @@
       <button type="button" class="btn icon" id="photoBtn" title="Translate a photo" aria-label="Choose a photo">
         <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="6" width="18" height="14" rx="3"/><circle cx="12" cy="13" r="4"/><path d="M9 6l1.5-2h3L15 6"/></svg>
       </button>
+      <button type="button" class="btn icon" id="camBtn" title="Live camera" aria-label="Open the live camera">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 8a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M16 11l5-3v8l-5-3"/></svg>
+      </button>
+      <button type="button" class="btn icon" id="writeBtn" title="Write by hand" aria-label="Open the handwriting pad">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20l1-4L16.5 4.5a2.1 2.1 0 0 1 3 3L8 19z"/><path d="M14.5 6.5l3 3"/></svg>
+      </button>
+      <button type="button" class="btn icon" id="docBtn" title="Translate a document" aria-label="Choose a document">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4"/><path d="M9 12h6M9 16h6"/></svg>
+      </button>
       <input type="file" id="photoInput" accept="image/*" hidden>
+      <input type="file" id="docInput" accept=".docx,.pdf" hidden>
+      <span class="counter" id="counter" aria-hidden="true">0 / 5000</span>
       <span class="spacer"></span>
       <button type="button" class="btn icon ghost" id="clearBtn" title="Clear" aria-label="Clear the text">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
@@ -964,8 +1154,42 @@
         <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2.5"/><path d="M15 6.5V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h.5"/></svg>
         <span class="lbl">Copy</span>
       </button>
+      <button type="button" class="btn" id="saveBtn">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4l2.4 4.9 5.6.8-4 3.9.9 5.4-4.9-2.6-4.9 2.6.9-5.4-4-3.9 5.6-.8z"/></svg>
+        <span class="lbl">Save</span>
+      </button>
+      <button type="button" class="btn" id="shareBtn">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="6" r="2.5"/><circle cx="18" cy="18" r="2.5"/><path d="M8.3 10.8l7.4-3.6M8.3 13.2l7.4 3.6"/></svg>
+        <span class="lbl">Share</span>
+      </button>
       <span class="spacer"></span>
       <button type="button" class="btn ghost" id="wrongBtn"><span class="lbl">This translation is wrong</span></button>
+    </div>
+  </section>
+
+  <section class="glass library" id="library">
+    <div class="library-tabs">
+      <button type="button" class="lib-tab on" id="histTab" aria-selected="true">History</button>
+      <button type="button" class="lib-tab" id="savedTab" aria-selected="false">Saved</button>
+    </div>
+    <ul class="lib-list" id="histList"></ul>
+    <ul class="lib-list" id="savedList" hidden></ul>
+    <div class="library-foot">
+      <button type="button" class="btn ghost" id="histClear">Clear history</button>
+    </div>
+  </section>
+
+  <section class="glass camera" id="cameraPanel" hidden>
+    <div class="cam-stage" id="camStage">
+      <video id="camVideo" autoplay playsinline muted hidden></video>
+      <img id="camStill" alt="" hidden>
+      <div class="cam-overlay" id="camOverlay" aria-live="polite"></div>
+    </div>
+    <p class="cam-note" id="camNote" hidden></p>
+    <div class="cam-actions">
+      <button type="button" class="btn ghost" id="camClose"><span class="lbl">Close</span></button>
+      <span class="spacer"></span>
+      <button type="button" class="btn primary" id="camCapture" disabled><span class="lbl">Capture</span></button>
     </div>
   </section>
 </main>
@@ -1012,12 +1236,28 @@
   </div>
 </dialog>
 
+<dialog id="writeDialog" aria-labelledby="writeTitle">
+  <div class="sheet">
+    <h2 id="writeTitle">Write it by hand</h2>
+    <p class="sub">Draw the words with your finger or a mouse. Lilly reads the pad as a photograph.</p>
+    <canvas class="write-pad" id="writePad" width="560" height="240"></canvas>
+    <p class="sheet-note" id="writeNote" role="status" aria-live="polite" hidden></p>
+    <div class="row">
+      <button type="button" class="btn ghost" id="writeCancel"><span class="lbl">Cancel</span></button>
+      <button type="button" class="btn ghost" id="writeClear"><span class="lbl">Clear</span></button>
+      <button type="button" class="btn primary" id="writeSend"><span class="lbl">Read it</span></button>
+    </div>
+  </div>
+</dialog>
+
 <script>
   const $ = id => document.getElementById(id);
   const state = { bosnian: "", english: "", audioUrl: null, audioLang: "" };
   const calm = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   function isReply() { return document.body.classList.contains("en-bs"); }
+  function isAuto() { return document.body.classList.contains("auto-detect"); }
+  function isConvo() { return document.body.classList.contains("convo"); }
 
   function applyDirection(reply) {
     document.body.classList.toggle("en-bs", reply);
@@ -1031,9 +1271,36 @@
     input.setAttribute("aria-label", (reply ? "English" : "Bosnian") + " text");
     input.placeholder = reply ? "Type English\u2026" : "Upi\u0161ite bosanski tekst\u2026";
     $("micBtn").title = reply ? "Speak English" : "Speak Bosnian";
-    $("hint").textContent = reply
+    updateHint();
+  }
+
+  /* The hint under the composer says what this mode hears; conversation
+     mode says its own thing whichever way the arrow points. */
+  function updateHint() {
+    $("hint").textContent = isConvo()
+      ? "Tap the microphone, say either language. Lilly answers aloud, then listens again."
+      : isReply()
       ? "Type it, say it, or photograph it in English. Lilly answers in Bosnian."
       : "Type it, say it, or photograph a sign.";
+  }
+
+  /* "Detect language" (the default): the source label becomes Detect, and a
+     text travels through /api/detect before the translator, whichever side it
+     turns out to be — the arrow labels follow what the detector found. The
+     swap button is the manual override: pressing it turns detection off and
+     flips the arrow as always. The pill turns detection back on. */
+  function setAuto(on) {
+    document.body.classList.toggle("auto-detect", on);
+    $("detectBtn").setAttribute("aria-pressed", on ? "true" : "false");
+    const input = $("input");
+    if (on) {
+      $("fromLang").textContent = "Detect";
+      input.placeholder = "Type Bosnian or English\u2026";
+      input.lang = "";
+      input.setAttribute("aria-label", "Bosnian or English text");
+    } else {
+      applyDirection(isReply());   // restore the concrete names and placeholder
+    }
   }
 
   /* The direction the server is asked for, and which side of its answer is
@@ -1079,6 +1346,7 @@
     photo:     "try the photo again",
     speech:    "record again",
     speak:     "press Play voice again",
+    document:  "try the document again",
     feedback:  "send it again"
   };
   const TOO_MUCH_TEXT = "That is more text than Lilly translates in one go. "
@@ -1106,6 +1374,8 @@
         if (!text) return "That is too big for Lilly to take. Try again with something smaller.";
         if (/empty/.test(text)) return text + " — nothing came through. " + cap(next) + ".";
         if (where === "speech") return text + ". Record a shorter clip.";
+        if (where === "document")
+          return text + ". Send a smaller file, or export the document without its pictures.";
         return text + ". Pick a smaller photo, or take the picture again at a lower resolution.";
 
       case 400:
@@ -1164,6 +1434,7 @@
       card.classList.add("swap");
     }
     setStatus("");
+    remember(bosnian, english);                 // every successful result is history
   }
 
   /* The server explains itself in JSON: {"error": "..."} for the failures it
@@ -1188,17 +1459,64 @@
   }
 
   /* ---- text --------------------------------------------------------- */
+  /* One translation request at a time, the newest wins. A slow answer to
+     what was typed three keystrokes ago must never land after the answer to
+     what is in the box now, so every new run aborts the in-flight one. */
+  let liveCtrl = null, liveTimer = 0;
+  function abortLive() {
+    if (liveCtrl) { liveCtrl.abort(); liveCtrl = null; }
+  }
+
+  /* The one path a typed text travels: detect-and-route when Detect language
+     is on (the default), straight to the chosen direction otherwise. In
+     detect mode the arrow labels follow what the detector found. */
+  async function translateText(text, signal) {
+    const json = {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text }),
+      signal
+    };
+    if (isAuto()) {
+      const d = await apiJson("/api/detect", json);
+      applyDirection(d.language === "en");
+      return apiJson(d.language === "en" ? "/api/reply" : "/api/translate", json);
+    }
+    return apiJson(isReply() ? "/api/reply" : "/api/translate", json);
+  }
+
+  /* Translate-as-you-type: 300 ms after the last keystroke the settled text
+     is translated, and the next keystroke cancels the run in flight. */
+  function scheduleLive() {
+    clearTimeout(liveTimer);
+    liveTimer = setTimeout(liveTranslate, 300);
+  }
+
+  async function liveTranslate() {
+    const text = $("input").value.trim();
+    abortLive();
+    if (!text) return;
+    const ctrl = liveCtrl = new AbortController();
+    try {
+      const data = await translateText(text, ctrl.signal);
+      showResult(data.bosnian, data.english);
+    } catch (e) {
+      if (e && e.name === "AbortError") return;   // replaced by a newer request
+      fail(describe(e, "translate"));
+    } finally {
+      if (liveCtrl === ctrl) liveCtrl = null;    // never clear a newer run's controller
+    }
+  }
+
   $("translateBtn").addEventListener("click", async () => {
     const text = $("input").value.trim();
     if (!text) { $("input").focus(); return; }
+    clearTimeout(liveTimer);
+    abortLive();
     busy($("translateBtn"), true);
     setStatus("Translating…", true);
     try {
-      const data = await apiJson(isReply() ? "/api/reply" : "/api/translate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text })
-      });
+      const data = await translateText(text);
       showResult(data.bosnian, data.english);
     } catch (e) {
       fail(describe(e, "translate"));
@@ -1208,6 +1526,10 @@
   });
 
   $("swapBtn").addEventListener("click", () => {
+    // In detect mode the swap is the manual override: it turns detection off
+    // so the arrow means what it says until the pill turns detection back on.
+    if (isAuto()) setAuto(false);
+    abortLive();
     const goingReply = !isReply();
     if (state.bosnian || state.english) {
       $("input").value = goingReply ? (state.english || "") : (state.bosnian || "");
@@ -1220,16 +1542,54 @@
   $("input").addEventListener("keydown", e => {
     if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); $("translateBtn").click(); }
   });
+
+  /* The character counter is a guide, not a gate: the server holds the real
+     limits (12,000 characters, then tokens) and answers past-them inputs with
+     its own sentence. Five thousand is the point where the counter turns red
+     and asks the reader to think about splitting the text up. */
+  const COUNTER_MAX = 5000;
+  function updateCounter() {
+    const n = $("input").value.length;
+    $("counter").textContent = n + " / " + COUNTER_MAX;
+    $("counter").classList.toggle("over", n > COUNTER_MAX);
+  }
+
   $("input").addEventListener("input", () => {
     document.body.classList.toggle("has-text", $("input").value.trim().length > 0);
+    updateCounter();
+    scheduleLive();                 // translate as you type
   });
   $("clearBtn").addEventListener("click", () => {
     $("input").value = "";
     document.body.classList.remove("has-text");
+    updateCounter();
+    abortLive();                    // no answer may land for text that is gone
     $("input").focus();
   });
 
   /* ---- microphone ---------------------------------------------------- */
+  /* Conversation mode: the microphone becomes a two-sided tap-to-talk loop.
+     Everything else about the page stays as it is; only the direction the
+     clip travels with and what happens after the answer change. */
+  $("convoBtn").addEventListener("click", () => {
+    const on = !isConvo();
+    document.body.classList.toggle("convo", on);
+    $("convoBtn").setAttribute("aria-pressed", on ? "true" : "false");
+    updateHint();
+    setStatus(on
+      ? "Conversation on — tap the microphone and say either language."
+      : "Conversation off.");
+  });
+
+  $("detectBtn").addEventListener("click", () => {
+    setAuto(!isAuto());
+    setStatus(isAuto()
+      ? "Detect language is on — Lilly works out which language you typed."
+      : "Detect language is off — the arrow above picks the direction.");
+    // A text translated under the old mode deserves the new mode's answer.
+    if ($("input").value.trim()) { clearTimeout(liveTimer); scheduleLive(); }
+  });
+
   let recorder = null, chunks = [];
   let audioCtx = null, srcNode = null, levelRaf = 0;
 
@@ -1297,9 +1657,30 @@
         const blob = new Blob(chunks, { type: recorder.mimeType });
         const form = new FormData();
         form.append("file", blob, "speech.webm");
-        form.append("direction", direction());
+        form.append("direction", isConvo() ? "auto" : direction());
         try {
           const data = await apiJson("/api/speech", { method: "POST", body: form });
+
+          // Conversation mode: the server heard whatever language it heard and
+          // said which. The arrow follows the heard side, the answer is read
+          // aloud, and the microphone is left armed for the next utterance —
+          // the loop is tap, speak, listen, tap again.
+          if (isConvo()) {
+            const heardText = data.heard === "en" ? data.english : data.bosnian;
+            if (!heardText) {
+              fail("Lilly did not catch any words. Record again, closer to the microphone.");
+              return;
+            }
+            applyDirection(data.heard === "en");
+            $("input").value = heardText;
+            document.body.classList.add("has-text");
+            updateCounter();
+            showResult(data.bosnian, data.english);
+            setStatus("Conversation — tap the microphone for the next one.", true);
+            playAnswer();
+            return;
+          }
+
           const heard = sourceOf(data);
           if (!heard) {
             fail("Lilly did not catch any words. Record again, closer to the microphone.");
@@ -1307,6 +1688,7 @@
           }
           $("input").value = heard;
           document.body.classList.add("has-text");
+          updateCounter();
           showResult(data.bosnian, data.english);
           playAnswer();                // speak the answer back automatically
         } catch (e) {
@@ -1353,6 +1735,7 @@
       }
       $("input").value = seen;
       document.body.classList.add("has-text");
+      updateCounter();
       showResult(data.bosnian, data.english, file);
     } catch (e) {
       fail(describe(e, "photo"));
@@ -1451,14 +1834,31 @@
 
   const COPY_KEY = /Mac|iPhone|iPad/.test(navigator.platform || "") ? "\u2318C" : "Ctrl+C";
 
-  $("copyBtn").addEventListener("click", async () => {
+  function copyAnswer() {
     const text = isReply() ? state.bosnian : state.english;
     if (!text) return;
     if (navigator.clipboard && navigator.clipboard.writeText) {
-      try { await navigator.clipboard.writeText(text); setStatus("Copied"); return; }
-      catch (e) { /* denied — the selection below still gets them there */ }
+      navigator.clipboard.writeText(text)
+        .then(() => setStatus("Copied"))
+        .catch(() => setStatus(selectAnswer()
+          ? "Copied" : "Press " + COPY_KEY + " — the translation is selected."));
+      return;
     }
     setStatus(selectAnswer() ? "Copied" : "Press " + COPY_KEY + " — the translation is selected.");
+  }
+  $("copyBtn").addEventListener("click", copyAnswer);
+
+  /* Share where the platform has it; everywhere else, the copy routine above
+     is the fallback — the answer is selected on the page, so the reader's own
+     shortcut finishes the job even where a silent write fails. */
+  $("shareBtn").addEventListener("click", async () => {
+    const text = isReply() ? state.bosnian : state.english;
+    if (!text) return;
+    if (navigator.share) {
+      try { await navigator.share({ text }); return; }
+      catch (e) { if (e && e.name === "AbortError") return; }  // dismissed: not a failure
+    }
+    copyAnswer();
   });
 
   /* ---- correction loop ------------------------------------------------ */
@@ -1509,6 +1909,437 @@
       busy($("fbSend"), false);
     }
   });
+
+  /* ---- history & phrasebook -------------------------------------------
+     Both live in localStorage, so they survive a reload and cost the server
+     nothing. The lists are capped: a long evening of translations cannot
+     grow the store without bound, and a full or blocked store degrades the
+     feature rather than the translation. */
+  const HIST_KEY = "lilly.history.v1", SAVED_KEY = "lilly.saved.v1";
+  const HIST_CAP = 50, SAVED_CAP = 200;
+
+  function loadList(key) {
+    try {
+      const v = JSON.parse(localStorage.getItem(key) || "[]");
+      return Array.isArray(v) ? v : [];
+    } catch (e) { return []; }
+  }
+  function saveList(key, list) {
+    try { localStorage.setItem(key, JSON.stringify(list)); }
+    catch (e) { /* storage unavailable — history is a courtesy, translation is not */ }
+  }
+
+  /* Every successful result is remembered, live typing included; a pair
+     already in the list is moved back to the top rather than stacked — the
+     same translation made again, or restored from the list, is one entry.
+     The direction is whichever the arrow showed when the result landed, so a
+     click can put the pair back exactly the way it was made. */
+  function remember(bosnian, english) {
+    if (!bosnian && !english) return;
+    const direction = isReply() ? "en-bs" : "bs-en";
+    const entry = { bosnian, english, direction, ts: Date.now() };
+    const list = loadList(HIST_KEY);
+    const i = list.findIndex(e => e.bosnian === bosnian && e.english === english
+                               && e.direction === entry.direction);
+    if (i === 0) {
+      list[0].ts = entry.ts;
+    } else {
+      if (i > 0) list.splice(i, 1);
+      /* Translate-as-you-type makes a result out of every pause, and the
+         exact-match check above cannot see that. Measured in a browser before
+         this line existed: one sentence typed with three natural pauses left
+         three entries, two of them half-words -- "Gdje je na", "Gdje je
+         najbliza a", "Gdje je najbliza apoteka?". At a 50-entry cap a few
+         minutes of typing would evict every real translation in favour of
+         fragments of the newest one.
+
+         A run of typing is one thought, so when the newest entry's source
+         text and this one are prefixes of each other -- still typing, or
+         backspacing over a mistake -- the run collapses onto its latest
+         state instead of stacking. Two genuinely different texts are never
+         prefixes of each other, so history a person actually made is
+         untouched. The source side is whichever one was typed, which is what
+         the direction records. */
+      const sourceOf = e => (e.direction === "en-bs" ? e.english : e.bosnian) || "";
+      const head = list[0];
+      const typed = sourceOf(entry), earlier = head ? sourceOf(head) : "";
+      if (head && head.direction === direction && typed && earlier
+          && (typed.startsWith(earlier) || earlier.startsWith(typed))) {
+        list.shift();
+      }
+      list.unshift(entry);
+      if (list.length > HIST_CAP) list.length = HIST_CAP;
+    }
+    saveList(HIST_KEY, list);
+    renderHistory();
+  }
+
+  function pairRow(entry, onRemove) {
+    const li = document.createElement("li");
+    li.className = "lib-item";
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "lib-row";
+    const dir = document.createElement("span");
+    dir.className = "dir";
+    dir.textContent = entry.direction === "en-bs"
+      ? "English \u2192 Bosnian" : "Bosnian \u2192 English";
+    const src = document.createElement("span");
+    src.className = "src";
+    src.textContent = entry.direction === "en-bs" ? entry.english : entry.bosnian;
+    const dst = document.createElement("span");
+    dst.className = "dst";
+    dst.textContent = entry.direction === "en-bs" ? entry.bosnian : entry.english;
+    btn.append(dir, src, dst);
+    btn.addEventListener("click", () => restorePair(entry));
+    li.appendChild(btn);
+    if (onRemove) {
+      const x = document.createElement("button");
+      x.type = "button";
+      x.className = "lib-x";
+      x.setAttribute("aria-label", "Remove this pair");
+      x.textContent = "\u00d7";
+      x.addEventListener("click", onRemove);
+      li.appendChild(x);
+    }
+    return li;
+  }
+
+  function renderList(key, listEl, removable) {
+    const list = loadList(key);
+    listEl.innerHTML = "";
+    if (!list.length) {
+      const empty = document.createElement("li");
+      empty.className = "lib-empty";
+      empty.textContent = key === HIST_KEY
+        ? "Nothing here yet — translations you make will appear."
+        : "Nothing saved yet — press Save under a translation to keep it.";
+      listEl.appendChild(empty);
+      return;
+    }
+    for (const entry of list) {
+      listEl.appendChild(pairRow(entry, removable && (() => {
+        saveList(key, loadList(key).filter(e => e !== entry));
+        renderList(key, listEl, removable);
+      })));
+    }
+  }
+  function renderHistory() { renderList(HIST_KEY, $("histList"), false); }
+  function renderSaved() { renderList(SAVED_KEY, $("savedList"), true); }
+
+  /* A click puts the pair back exactly as it was made: the arrow, the input
+     and the result, straight from the stored answer — no network round trip. */
+  function restorePair(entry) {
+    clearTimeout(liveTimer);
+    abortLive();
+    applyDirection(entry.direction === "en-bs");
+    $("input").value = entry.direction === "en-bs" ? entry.english : entry.bosnian;
+    document.body.classList.add("has-text");
+    updateCounter();
+    showResult(entry.bosnian, entry.english);
+    setStatus("");
+  }
+
+  function selectTab(hist) {
+    $("histTab").classList.toggle("on", hist);
+    $("savedTab").classList.toggle("on", !hist);
+    $("histTab").setAttribute("aria-selected", hist ? "true" : "false");
+    $("savedTab").setAttribute("aria-selected", hist ? "false" : "true");
+    $("histList").hidden = !hist;
+    $("savedList").hidden = hist;
+    $("histClear").hidden = !hist;
+    renderHistory();
+    renderSaved();
+  }
+  $("histTab").addEventListener("click", () => selectTab(true));
+  $("savedTab").addEventListener("click", () => selectTab(false));
+  $("histClear").addEventListener("click", () => {
+    saveList(HIST_KEY, []);
+    renderHistory();
+    setStatus("History cleared.");
+  });
+
+  $("saveBtn").addEventListener("click", () => {
+    const pair = { bosnian: state.bosnian, english: state.english,
+                   direction: isReply() ? "en-bs" : "bs-en", ts: Date.now() };
+    if (!pair.bosnian && !pair.english) {
+      fail("There is no translation to save yet — translate something first.");
+      return;
+    }
+    const list = loadList(SAVED_KEY);
+    const already = list.some(e => e.bosnian === pair.bosnian
+                                && e.english === pair.english
+                                && e.direction === pair.direction);
+    if (already) { setStatus("Already in your phrasebook."); return; }
+    list.unshift(pair);
+    if (list.length > SAVED_CAP) list.length = SAVED_CAP;
+    saveList(SAVED_KEY, list);
+    renderSaved();
+    setStatus("Saved to your phrasebook.");
+  });
+
+  /* ---- live camera ------------------------------------------------------
+     The viewfinder is a courtesy built on getUserMedia; what it captures
+     travels to the same /api/photo-boxes endpoint a photo upload would. Where
+     the browser cannot give a camera (plain http from a phone, or denied
+     permission) the panel says so and points at the photo button, which
+     needs no camera. */
+  let camStream = null, camStillUrl = null;
+
+  async function openCamera() {
+    const panel = $("cameraPanel");
+    if (!panel.hidden) { closeCamera(); return; }
+    panel.hidden = false;
+    $("camNote").hidden = true;
+    $("camCapture").querySelector(".lbl").textContent = "Capture";
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      cameraFallback(window.isSecureContext
+        ? "This browser will not give Lilly a camera. Use the photo button instead."
+        : "Browsers only allow the camera over https, and Lilly is open over "
+          + "http. Open it at http://localhost:8000 on this machine, or use "
+          + "the photo button instead.");
+      return;
+    }
+    try {
+      camStream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: "environment" }, audio: false
+      });
+      const video = $("camVideo");
+      video.srcObject = camStream;
+      video.hidden = false;
+      await video.play();
+      $("camCapture").disabled = false;
+    } catch (e) {
+      cameraFallback(e && e.name === "NotAllowedError"
+        ? "Lilly needs permission to use the camera. Allow it in the browser, "
+          + "then press the camera button again."
+        : "Lilly could not start the camera. Use the photo button instead.");
+    }
+  }
+
+  function cameraFallback(msg) {
+    $("camCapture").disabled = true;
+    const note = $("camNote");
+    note.textContent = msg;
+    note.hidden = false;
+  }
+
+  function closeCamera() {
+    if (camStream) { camStream.getTracks().forEach(t => t.stop()); camStream = null; }
+    if (camStillUrl) { URL.revokeObjectURL(camStillUrl); camStillUrl = null; }
+    $("camVideo").hidden = true;
+    $("camStill").hidden = true;
+    $("camOverlay").innerHTML = "";
+    $("camStage").classList.remove("still");
+    $("camStage").style.aspectRatio = "";
+    $("cameraPanel").hidden = true;
+  }
+  $("camClose").addEventListener("click", closeCamera);
+  $("camBtn").addEventListener("click", openCamera);
+
+  $("camCapture").addEventListener("click", async () => {
+    // After a capture the stage shows the still; the same button returns to
+    // the live view for another shot.
+    if ($("camStage").classList.contains("still")) {
+      $("camStill").hidden = true;
+      $("camOverlay").innerHTML = "";
+      $("camStage").classList.remove("still");
+      $("camVideo").hidden = false;
+      $("camCapture").querySelector(".lbl").textContent = "Capture";
+      return;
+    }
+    const video = $("camVideo");
+    if (!video.videoWidth) return;
+    const canvas = document.createElement("canvas");
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    canvas.getContext("2d").drawImage(video, 0, 0);
+    const blob = await new Promise(res => canvas.toBlob(res, "image/jpeg", 0.92));
+    if (!blob) { fail("The camera frame could not be read. Try the capture again."); return; }
+    busy($("camCapture"), true);
+    setStatus("Reading the photo…", true);
+    const form = new FormData();
+    form.append("file", blob, "frame.jpg");
+    form.append("direction", direction());
+    try {
+      const data = await apiJson("/api/photo-boxes", { method: "POST", body: form });
+      drawCameraOverlay(blob, data);
+      const seen = sourceOf(data);
+      if (seen) {
+        $("input").value = seen;
+        document.body.classList.add("has-text");
+        updateCounter();
+      }
+      showResult(data.bosnian, data.english, blob);
+    } catch (e) {
+      fail(describe(e, "photo"));
+    } finally {
+      busy($("camCapture"), false);
+    }
+  });
+
+  /* The frame is drawn over by each region's translation, placed where the
+     words were found. Boxes arrive in the frame's own pixels, so they are
+     mapped to percentages of the still's natural size and the stage is set to
+     the frame's aspect — overlay and picture then move together at any
+     display size. The still decodes asynchronously, so the placement runs
+     once it has its real size (onload), and again straight away in case it
+     decoded before the handler could attach. */
+  function drawCameraOverlay(blob, data) {
+    $("camVideo").hidden = true;
+    const stage = $("camStage");
+    stage.classList.add("still");
+    if (camStillUrl) URL.revokeObjectURL(camStillUrl);
+    camStillUrl = URL.createObjectURL(blob);
+    const still = $("camStill");
+    still.src = camStillUrl;
+    still.hidden = false;
+    $("camCapture").querySelector(".lbl").textContent = "Live view";
+    const place = () => {
+      if (!still.naturalWidth) return;
+      stage.style.aspectRatio = still.naturalWidth + " / " + still.naturalHeight;
+      const overlay = $("camOverlay");
+      overlay.innerHTML = "";
+      for (const region of data.regions || []) {
+        if (!region.translated || !region.box || region.box.length < 2) continue;
+        const xs = region.box.map(p => p[0]), ys = region.box.map(p => p[1]);
+        const x0 = Math.min(...xs), y0 = Math.min(...ys);
+        const x1 = Math.max(...xs), y1 = Math.max(...ys);
+        const chip = document.createElement("span");
+        chip.className = "cam-chip";
+        chip.textContent = region.translated;
+        chip.style.left = (x0 / still.naturalWidth * 100) + "%";
+        chip.style.top = (y0 / still.naturalHeight * 100) + "%";
+        chip.style.width = Math.max(4, (x1 - x0) / still.naturalWidth * 100) + "%";
+        overlay.appendChild(chip);
+      }
+    };
+    still.onload = place;
+    place();
+  }
+
+  /* ---- handwriting ------------------------------------------------------
+     A canvas pad, exported as a PNG and sent to the same /api/photo the
+     camera and the file picker use. The reader cannot tell a drawn page from
+     a photographed one, so no new server path is needed. */
+  const writeDlg = $("writeDialog");
+  let drawing = false;
+
+  function sizePad() {
+    const pad = $("writePad");
+    const width = Math.min(pad.parentElement.clientWidth, 560);
+    const scale = Math.max(window.devicePixelRatio || 1, 1);
+    // Crisp strokes on a retina screen: the bitmap is dpr times the CSS size
+    // and the context scaled back, so one logical pixel is one logical pixel.
+    pad.style.width = width + "px";
+    pad.style.height = "240px";
+    pad.width = Math.round(width * scale);
+    pad.height = Math.round(240 * scale);
+    const ctx = pad.getContext("2d");
+    ctx.scale(scale, scale);
+    ctx.lineWidth = 3;
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+    ctx.strokeStyle = "#14181a";
+  }
+
+  $("writeBtn").addEventListener("click", () => {
+    sizePad();                          // resizing clears the pad: only on open
+    $("writeNote").hidden = true;
+    writeDlg.showModal();
+  });
+
+  function padPoint(e) {
+    const rect = $("writePad").getBoundingClientRect();
+    return [e.clientX - rect.left, e.clientY - rect.top];
+  }
+  $("writePad").addEventListener("pointerdown", e => {
+    drawing = true;
+    $("writePad").setPointerCapture(e.pointerId);
+    const [x, y] = padPoint(e);
+    const ctx = $("writePad").getContext("2d");
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+  });
+  $("writePad").addEventListener("pointermove", e => {
+    if (!drawing) return;
+    const [x, y] = padPoint(e);
+    const ctx = $("writePad").getContext("2d");
+    ctx.lineTo(x, y);
+    ctx.stroke();
+  });
+  $("writePad").addEventListener("pointerup", () => { drawing = false; });
+  $("writePad").addEventListener("pointercancel", () => { drawing = false; });
+
+  $("writeClear").addEventListener("click", () => {
+    const pad = $("writePad");
+    pad.getContext("2d").clearRect(0, 0, pad.width, pad.height);
+  });
+  $("writeCancel").addEventListener("click", () => writeDlg.close());
+  $("writeSend").addEventListener("click", async () => {
+    busy($("writeSend"), true);
+    $("writeNote").hidden = true;
+    try {
+      const blob = await new Promise(res => $("writePad").toBlob(res, "image/png"));
+      if (!blob) throw new Error("empty pad export");
+      const form = new FormData();
+      form.append("file", blob, "handwriting.png");
+      form.append("direction", direction());
+      const data = await apiJson("/api/photo", { method: "POST", body: form });
+      const seen = sourceOf(data);
+      if (!seen) {
+        $("writeNote").textContent = "Lilly could not read the pad. Write larger, "
+          + "with clear letters, then press Read it again.";
+        $("writeNote").hidden = false;
+        return;
+      }
+      writeDlg.close();
+      $("input").value = seen;
+      document.body.classList.add("has-text");
+      updateCounter();
+      showResult(data.bosnian, data.english);
+    } catch (e) {
+      // Inside the modal the toast sits behind the backdrop: answer where the
+      // reader is looking, the way the correction sheet does.
+      $("writeNote").textContent = describe(e, "photo");
+      $("writeNote").hidden = false;
+    } finally {
+      busy($("writeSend"), false);
+    }
+  });
+
+  /* ---- document ----------------------------------------------------------
+     A .docx or .pdf travels to /api/document; its text comes back as
+     `original` and drops into the box the way a photograph's text does, with
+     the usual bosnian/english pair beside it. */
+  $("docBtn").addEventListener("click", () => $("docInput").click());
+  $("docInput").addEventListener("change", async () => {
+    const file = $("docInput").files[0];
+    $("docInput").value = "";
+    if (!file) return;
+    busy($("docBtn"), true);
+    setStatus("Reading the document…", true);
+    const form = new FormData();
+    form.append("file", file, file.name || "document.pdf");
+    form.append("direction", direction());
+    try {
+      const data = await apiJson("/api/document", { method: "POST", body: form });
+      $("input").value = data.original || "";
+      document.body.classList.add("has-text");
+      updateCounter();
+      showResult(data.bosnian, data.english);
+    } catch (e) {
+      fail(describe(e, "document"));
+    } finally {
+      busy($("docBtn"), false);
+    }
+  });
+
+  /* ---- start ---------------------------------------------------------- */
+  setAuto(true);             // Detect language is the default source mode
+  updateCounter();
+  renderHistory();
+  renderSaved();
 </script>
 </body>
 </html>

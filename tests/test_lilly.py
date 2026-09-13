@@ -70,3 +70,27 @@ def test_an_unknown_direction_is_the_callers_fault():
         Fake(hears="x").translate_audio("clip.wav", direction="fr-en")
     with pytest.raises(BadInput):
         Fake(sees="x").translate_photo("sign.jpg", direction="bs-fr")
+
+
+def test_converse_hears_either_language_and_says_which(monkeypatch):
+    """Conversation mode: the listener is not told a language, the detector
+    routes the text, and the third value names the side that was heard."""
+    from app import detect
+    monkeypatch.setattr(detect, "detect_language",
+                        lambda text: "en" if text == "Good day" else "bs")
+
+    heard_en = Fake(hears="Good day")
+    assert heard_en.converse("clip.wav") == ("bs<Good day>", "Good day", "en")
+    assert heard_en.calls == [("listen", None), ("reply", "Good day", True)]
+
+    heard_bs = Fake(hears="Dobar dan")
+    assert heard_bs.converse("clip.wav") == ("Dobar dan", "en<Dobar dan>", "bs")
+    assert heard_bs.calls == [("listen", None), ("translate", "Dobar dan", True)]
+
+
+def test_converse_hears_nothing_and_translates_nothing(monkeypatch):
+    from app import detect
+    monkeypatch.setattr(detect, "detect_language", lambda text: "bs")
+    f = Fake(hears="")
+    assert f.converse("clip.wav") == ("", "", "")
+    assert not [c for c in f.calls if c[0] in ("translate", "reply")]
