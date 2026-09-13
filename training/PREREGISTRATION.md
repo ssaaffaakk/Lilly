@@ -3345,3 +3345,91 @@ one, so a batch of eight is consistently at the padded maximum. One thing
 changes: **batch 4** (the control ran batch 2 at 56-second clips; batch 4 at
 20 s is comparable). No number existed at the crash; the data, the speaker
 selection, the caps and the bars stand. Version 2 is the run v8 judges.
+
+# v9 — reply — the big `-sla` base as the reply direction's foundation, written before any number exists
+
+Written 14 September 2026, before the candidate was built or scored. The
+candidate is the untuned
+`Helsinki-NLP/opus-mt-tc-bible-big-deu_eng_fra_por_spa-sla`, Apache-2.0,
+released 2024-05-30, **`>>bos_Latn<<` among its target labels** — the model
+found on 13 September 2026 answering "what would raise the numbers"
+(`docs/REPORT-what-would-raise-the-numbers-2026-09-13.md`, §2 and §7). It is not
+a fine-tune and nothing here trains.
+
+## Why
+
+The reply direction is the weaker one (61.55 chrF2 against the forward
+direction's 68.10) and its base is **the only English→Serbo-Croatian model
+Helsinki ever published**, `opus-mt-tc-base-en-sh`; there is no big going the
+other way. On 300 FLORES devtest pairs the untuned big `-sla` model drew level
+with the fine-tuned shipped small one — 32.11 BLEU / 60.47 chrF2 against
+30.81 / 60.60 — but 300 pairs is a lead, not a result, and in the same 300
+outputs it wrote Bosnian with less discipline (10 ekavica hits, 0
+Croatian-lexicon hits). This run is the honest version of that lead: the full
+2,009 pairs, both columns through the app's own path, a paired bootstrap, and
+the form rate on the candidate.
+
+## The question
+
+Not "is the big base better than the small base" — the candidate is untuned and
+the shipped build is fine-tuned, so a plain win would not say which. The
+question is **which foundation is better to build the product on**: if the
+untuned big `-sla` model already matches or beats the fine-tuned shipped small
+one, then the reply direction's LoRA — worth +1.16 BLEU / +1.04 chrF2 and +4.9
+points of form rate on the small base (`training/RESULTS-en-bs.md`,
+`training/RESULTS-en-bs-formrate.md`) — would be starting from a higher floor,
+and the two effects are not obviously in competition.
+
+## The instrument
+
+`training/evaluate_app.py --direction en-bs`, both builds int8 CTranslate2
+through `app.translate.Engine`, 2,009 FLORES-200 pairs (devtest 1,012 + dev
+997), the `>>bos_Latn<<` tag on every sentence, the tag-stripped table reported
+beside the raw one, paired bootstrap over sentences (1,000 resamples). Plus
+`training/bosnian_form_rate.py` on the candidate, the instrument the reply
+direction's Bosnian claim is actually measured with.
+
+## The bars
+
+Four things are fixed now, before the number exists. Bars 1 and 2 decide; 3 and
+4 are reported and carry the interpretation.
+
+| | bar | shipped reference |
+|---|---|---|
+| 1 | chrF2 (2,009, app path, tag stripped) strictly above the shipped build | 61.55 |
+| 2 | BLEU (2,009, app path, tag stripped) strictly above the shipped build | 32.22 |
+| 3 | form rate on the candidate, with its Wilson interval | 99.2% |
+| 4 | the `>>bos_Latn<<` label still steers against `>>hrv<<`, reported | gap 22.5 points |
+
+## What failure looks like
+
+- **Bars 1 and 2 clear, bar 3 does not.** The expected shape. The raw-quality
+  lead is real and the discipline is missing — the good version of the problem,
+  because the discipline is what the LoRA already fixed once. The next step is a
+  separate pre-registration: LoRA on the big base with a form-rate floor.
+- **Bar 1 or 2 fails.** The 300-pair lead does not survive the full set; the
+  reply direction stays on the small base and this line closes on a number.
+- **Everything clears.** Unlikely, and it would still ship only through the
+  product process: displacing the served `translator-en-bs/` is its own
+  pre-registration, not this measurement's outcome.
+
+## Expected direction
+
+Bars 1 and 2 near level — the 300-pair lead was +1.30 BLEU and −0.13 chrF2, and
+300 pairs carries no interval. Bar 3 below the shipped form rate, because the
+candidate is tuned for nothing and Bosnian is only one of its targets. The run
+is worth its afternoon either way: it is the only measured answer to "should the
+weak direction be rebuilt on a bigger base".
+
+## What this run cannot settle
+
+Whether the big base fine-tunes as well as the small one — that is the next run,
+not this one. Whether a BLEU/chrF2 gain and a form-rate loss net out for a user;
+that is a product decision and has no number here.
+
+## Where the numbers go
+
+`training/RESULTS-product-en-bs-sla.md` (the scored report, by build
+fingerprint), `training/app-hypotheses-en-bs-sla.json` (the cached
+translations), `training/form-rate/sla.json` (the form rate), and the outcome
+recorded under this section, whichever way it fell.
