@@ -26,6 +26,14 @@ faster-whisper
 kokoro
 soundfile
 
+# The Bosnian half of "speech out". app/tts.py imports piper inside the two
+# functions that load and drive the voice, so a list without it builds and
+# boots perfectly well and only POST /api/speak with "language": "bs" answers a
+# 500 — the second package this list has lost to a lazy import, after the
+# paddleocr note below. Unpinned, as in the repository root; the voice work was
+# done under 1.8.0 (training/PREREGISTRATION.md).
+piper-tts
+
 # photographs. The app reads with PaddleOCR PP-OCRv6 (docs/OCR-ROADMAP.md,
 # decision 5) and app/ocr.py imports paddleocr on the first photo; a Space
 # built from a list without it answered every photo with a 500. EasyOCR stays

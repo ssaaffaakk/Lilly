@@ -77,12 +77,17 @@ else
   } > "$STAGE/README.md"
 fi
 
-# Only the script the build actually runs. The rest — training launchers, the
-# publisher, the overnight watcher — have no business in a public Space: they
-# are noise at best and a reader wondering why a demo ships a Kaggle uploader at
-# worst.
+# The scripts the build actually runs — two of them, not one. fetch_models.py
+# is the one the entrypoint calls, but its last step imports fetch_bosnian_voice
+# from fetch_speak_bs through a bare sys.path.insert, with no try/except around
+# it, so a Space staged with fetch_models.py alone dies at startup on
+# ModuleNotFoundError: No module named 'fetch_speak_bs'. The chain stops there:
+# fetch_speak_bs imports nothing else out of scripts/. The rest — training
+# launchers, the publisher, the overnight watcher — have no business in a public
+# Space: they are noise at best and a reader wondering why a demo ships a Kaggle
+# uploader at worst.
 mkdir -p "$STAGE/scripts"
-cp "$ROOT/scripts/fetch_models.py" "$STAGE/scripts/"
+cp "$ROOT/scripts/fetch_models.py" "$ROOT/scripts/fetch_speak_bs.py" "$STAGE/scripts/"
 
 # Nothing generated, nothing heavy: a Space that carries weights in git is a
 # Space that takes ten minutes to clone and breaks the 5 GB limit.

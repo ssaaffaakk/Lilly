@@ -398,12 +398,17 @@ one set of weights. This is the ordinary shape of that trade-off: the smaller mo
 is not better at translation — it is spending 100% of its capacity on this language
 family while NLLB divides its capacity across 200.
 
-**The finding that matters most.** The fine-tuning does not move chrF2: −0.16 at
-p = 0.128 on 2,009 pairs, a bootstrap tie. Its BosnianBench term recall moves
-+0.5 at p = 0.36. What the fine-tuning did achieve: the base model prints its
-language tag into 30.4% of translations and Lilly into none, and with tags stripped
-from both, BLEU still moves +1.26 at p = 0.001. The base model was already excellent;
-we measured that carefully enough to know it.
+**The finding that matters most.** The fine-tuning barely moves chrF2. On all
+2,009 FLORES-200 pairs (dev + devtest) with the language tag stripped from both
+sides — the 8 September T4 re-measurement, `training/RESULTS-product.md` — the
+gap is **+0.15 chrF2 at p = 0.074**, which does not clear the usual 0.05 bar:
+unproven rather than absent, and small either way. The Bosnian-specific claim
+does not carry it either — BosnianBench term recall for this direction came back
++0.5 points at p = 0.360 (`training/RESULTS-en-bs-formrate.md`). What the
+fine-tuning did achieve, on those same 2,009 pairs: the base model prints its
+language tag into the translation in 576 of 2,009 outputs (28.7%) and Lilly into
+none, and with the tag stripped from both, BLEU still moves +1.26 at p = 0.001.
+The base model was already excellent; we measured that carefully enough to know it.
 
 **The ordinal splitter fix.** Until 8 September the sentence splitter cut a Bosnian
 date (*5. maja 1990. godine*) into three pieces. The fix was pre-registered and is
@@ -518,10 +523,18 @@ reader in the band-7 to band-8 range (F1 53–62). For reference, stock EasyOCR 
 < 30% found with > 280 invented to 67.0% found with 65 invented on the 40 is a
 climb from band 1 to the upper range.
 
-**What matters is both columns.** Recall can always be bought by guessing more:
-without the confidence floor PP-OCRv6 reads 60.0% but invents 2,373 words. The
-floor cut invented words from 2,373 to 65 while raising found words from 60.0% to
-67.0% — a rare case where precision and recall both improved.
+**What matters is both columns.** Recall can always be bought by guessing more, and
+the confidence floor is what buys it back — at a price, on both sets. On the 40, the
+sweep runs from 67.7% found with 106 invented at no floor to 67.0% with 65 at floor
+0.9 (`training/RESULTS-ocr-paddle-floor.md`). On test-v2's 132 held-out photographs
+the same floor takes PP-OCRv6 from 60.0% found with 2,373 invented
+(`training/RESULTS-ocr-test-v2.md`) to 57.8% with 450. Each set loses a little
+recall — 0.7 points on the 40, 2.2 on test-v2 — and sheds most of its invented
+words. That is a trade, not a free gain, and it is the trade the pre-registration
+asked for: the floor chosen was the highest that still kept PP-OCRv6 above the
+shipped EasyOCR reader's 54.5% on the 40. The two invented columns are not
+comparable across the sets — a bigger set, and a key built to a different coverage
+— which is why each number stays beside the set it was measured on.
 
 ### 5.5 Voice results
 
@@ -762,7 +775,7 @@ nulls and failures — are committed to the repository.
 
 ## 13. Current Status and Next Steps
 
-As of 10 September 2026:
+As of 12 September 2026:
 
 **Shipped and published:**
 - Translation, both directions, with the ordinal splitter fix
@@ -786,4 +799,4 @@ As of 10 September 2026:
 
 ---
 
-*Last updated: 10 September 2026.*
+*Last updated: 12 September 2026.*

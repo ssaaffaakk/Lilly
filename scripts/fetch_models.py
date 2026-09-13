@@ -57,8 +57,11 @@ PARTS = ("translator", "listen", "speak", "read")
 # when the repository has it, never required.
 OPTIONAL = ("translator-en-bs",)
 # The card and the attribution notice travel with the weights (NOTICE.md is a
-# licence condition, not a courtesy). Both are tracked in git as well, so the
-# copies here are the published ones and git's are the source.
+# licence condition, not a courtesy). Both are tracked in git as well, and in
+# that direction git is the source and the Hub holds the copy: the card is
+# GENERATED from the repository's README.md by scripts/sync_model_card.py, and
+# `sync_model_card.py --check` asserts the two match. So these two are fetched
+# only where they are absent -- see the download in main().
 CARD_FILES = ("README.md", "NOTICE.md")
 
 # The listener that cleared its gate: whisper-small, 34.9% word error on the
@@ -193,11 +196,33 @@ def main() -> int:
         except ImportError:
             print("pip install huggingface_hub first", file=sys.stderr)
             return 1
+        # Only the card files this install does not already have. A git clone
+        # has both, tracked, and git's are the source the published ones are
+        # made from -- so downloading the Hub's copies over them inverts that,
+        # and leaves a fresh clone with a dirty working tree after the very
+        # command the README tells it to run first. It is not hypothetical
+        # either: the published card is whatever publish_to_hf.py last
+        # uploaded, and uploading is a separate manual step that has been
+        # missed before (docs/OCR-ROADMAP.md, step 6: a finished card edit sat
+        # on the Mac unpublished because HF_TOKEN was not in the environment).
+        # A NOTICE.md from before the Bosnian voice was credited would then
+        # overwrite one that credits it -- while this same script installs that
+        # voice, at the fetch_bosnian_voice() call at the end of this function.
+        # They are still fetched wherever nothing has them, which is every
+        # install that is not a checkout: neither Dockerfile copies models/
+        # into the image (both COPY scripts/ and app/ only), and space/push.sh
+        # stages this script without the repository around it, so without this
+        # the notice would not travel with the weights it covers.
+        cards = [n for n in CARD_FILES if not (DEST / n).is_file()]
+        kept = [n for n in CARD_FILES if n not in cards]
         print(f"fetching {REPO} -> {DEST}: {', '.join(PARTS)}, {', '.join(OPTIONAL)} "
-              f"if published, and the model card (about 2.3 GB)")
+              f"if published{', and ' + ', '.join(cards) if cards else ''} (about 2.3 GB)")
+        if kept:
+            print(f"keeping this checkout's {', '.join(kept)}: git's copy is the source "
+                  f"(scripts/sync_model_card.py), the Hub's is the published output")
         DEST.mkdir(parents=True, exist_ok=True)
         snapshot_download(repo_id=REPO, repo_type="model", local_dir=str(DEST),
-                          allow_patterns=[f"{p}/*" for p in PARTS + OPTIONAL] + list(CARD_FILES),
+                          allow_patterns=[f"{p}/*" for p in PARTS + OPTIONAL] + cards,
                           token=os.environ.get("HF_TOKEN") or None)
         missing = [p for p in PARTS if not (DEST / p).is_dir()]
         if missing:

@@ -86,10 +86,30 @@ when it stops being true; a stale handoff is worse than none.
 > more than FLEURS or the parliament -- then training hit CUDA OOM at batch 8
 > (lecture segments all sit near the 20 s cap). Fixed to **batch 4** (commit
 > 6a04676, v8 amendment). The relaunch was refused: **"Maximum weekly GPU quota
-> of 30.00 hours reached."** Nothing is running. When the quota resets (weekly),
-> relaunch: `python3 scripts/kaggle_train.py speak-youtube` -- the dataset
-> `lilly-youtube-voice-c8157ef3` is already uploaded, so it only pushes the
-> notebook. Then watch, fetch, RESULTS-speak-youtube.md, v8 outcome as before.
+> of 30.00 hours reached."** Nothing is running.
+>
+> **11 Sep: the line is CLOSED by measurement -- do not relaunch it.** This entry
+> used to end "when the quota resets, relaunch `speak-youtube`". That instruction
+> is dead and following it would burn a quota on a run whose outcome is already
+> known. `training/probe_audio_quality.py` decoded 90 seconds from the middle of
+> each of the 20 staged lectures (full table
+> `training/speak-youtube/audio-quality.json`): the median file's speech energy
+> rolls off at **6,460 Hz**, and **nought of twenty reaches 11,025 Hz** -- which
+> is the band a 22.05 kHz Piper voice is required to generate, and the band
+> s/š/z/ž/c/ć/č need to be told apart. `docs/speak-checkpoint-comparison.md`
+> (commit 0bbb1df, 11 September) reads it out: "**Close v8/v9 -- YouTube audio to
+> a voice.** Not held: closed, on the measurement above. Nought of twenty
+> lectures carry speech energy to 11 kHz ... Do not relaunch `speak-youtube`
+> against any checkpoint, at any batch size, for any number of epochs." So the
+> batch-4 fix is moot: the refusal is about the data, not the OOM. The 18.4 hours
+> of staged audio stay on Kaggle and on the Mac as **recognition** data, where a
+> 16 kHz filterbank makes the same defects harmless -- but their transcripts are
+> the shipped listener's own output, so training the listener on them is the
+> circular move the reading side already closed, and it would need its own
+> pre-registration. What that document recommends for the next quota instead is
+> measuring `sl_SI-artur` and `bg_BG-dimitar` **as fetched**, `bs` phonemes,
+> against the 200-clip prefix, with the bar pre-registered first: ships only if
+> strictly below 22.3% at p < 0.05.
 
 ## The three numbers
 
@@ -118,19 +138,30 @@ TED2020-v1 and wikimedia-v20210402 by name. **`data/clean/train.tsv` is inside
 the base model's own training data, and so are `valid.tsv` and `test.tsv`,
 drawn from the same pool.** Fine-tuning was re-weighting material the model
 already had, not showing it new material. That invalidates nothing and is not a
-defect — it is the correct frame for reading +1.29 BLEU, and the best
+defect — it is the correct frame for reading +1.26 BLEU, and the best
 explanation anyone has produced for why chrF2 will not move. NTREX (1,924 rows)
 is genuinely unseen on two independent grounds: published 15 months after the
 cutoff, and zero rows in the manifest.
 
 **The finding that still matters more than any of them:** the translator's
-fine-tuning does not move chrF2. −0.16 at p = 0.128, a bootstrap tie. Its
+fine-tuning buys no proven chrF2. On the 2,009-pair FLORES-200 dev+devtest set,
+tag stripped, re-measured 8 September on a Kaggle T4, the gap over the base is
+**+0.15 chrF2 at p = 0.074** — the right side of zero and still short of the
+0.05 bar, so unproven rather than absent (`training/RESULTS-product.md`). Its
 BosnianBench term recall moves +0.5 at p = 0.36. What the fine-tuning did
 achieve is real and narrower: the base model prints its own language tag into
-30.4% of its translations and Lilly into none, and with that stripped from both
-sides BLEU still moves +1.29 at p = 0.001. The base model was already excellent,
-we measured that carefully enough to know it, we fixed a visible defect, and our
-own training is worth a small BLEU gain and nothing measurable on chrF2.
+576 of those 2,009 translations (28.7%) and Lilly into none, and with that
+stripped from both sides BLEU still moves **+1.26 at p = 0.001**. The base model
+was already excellent, we measured that carefully enough to know it, we fixed a
+visible defect, and our own training is worth a small BLEU gain and nothing
+proven on chrF2.
+
+*Corrected 13 Sep: this read "−0.16 at p = 0.128, a bootstrap tie", beside
++1.29 BLEU and a 30.4% tag rate. Those three are `training/RESULTS-devtest.md`'s
+1,012-pair devtest figures, and that file disowns itself twice in its own header
+— the Lilly rows do not reproduce (7 September) and the whole report is
+superseded by the T4 re-measurement (8 September). The argument survives the
+correction; only its numbers and the split they are on had to change.*
 
 Scales for all three are pre-registered in `training/RUBRIC.md`, written before
 the measurements and anchored to published systems by agents who were not told
