@@ -1,0 +1,2383 @@
+{
+ "label": "sla",
+ "adapter": null,
+ "tag": ">>bos_Latn<<",
+ "attempted": 338,
+ "decided": 261,
+ "bosnian": 140,
+ "variant": 121,
+ "silent": 77,
+ "form_rate": 0.5363984674329502,
+ "ci95": [
+  0.47580902928588564,
+  0.5959319660864426
+ ],
+ "marks": [
+  {
+   "case_id": "flores-20",
+   "term": "vrijeme",
+   "variant": "vreme",
+   "mark": "bosnian",
+   "output": "Hsieh je tokom izbora implicirao da bi Ma mogao pobjeći iz zemlje u vrijeme krize."
+  },
+  {
+   "case_id": "flores-28",
+   "term": "umjetnosti",
+   "variant": "umetnosti",
+   "mark": "variant",
+   "output": "Diplomirao je na koledžu umetnosti i nauka Univerziteta u Virdžiniji 1950. godine i bio je značajan donator te institucije."
+  },
+  {
+   "case_id": "flores-32",
+   "term": "pobjedu",
+   "variant": "pobedu",
+   "mark": "silent",
+   "output": "Dok su automobili ispred Alonsa ulazili na gorivo ispod bezbednosnog automobila, on je pomerio paket kako bi pobedio."
+  },
+  {
+   "case_id": "flores-34",
+   "term": "tačno",
+   "variant": "Točno",
+   "mark": "bosnian",
+   "output": "Tačno u 8:46 ujutro, tišina je pala preko grada, označavajući tačan trenutak kada je prvi avion udario u metu."
+  },
+  {
+   "case_id": "flores-35",
+   "term": "dvije",
+   "variant": "Dve",
+   "mark": "silent",
+   "output": "Dva snopa svjetlosti su namještena do tačke prema nebu preko noći."
+  },
+  {
+   "case_id": "flores-36",
+   "term": "prijevoz",
+   "variant": "prevoz",
+   "mark": "silent",
+   "output": "U toku je izgradnja pet novih nebodera na lokaciji, sa saobraćajnim centrom i memorijalnim parkom u sredini."
+  },
+  {
+   "case_id": "flores-37",
+   "term": "dvije",
+   "variant": "dve",
+   "mark": "silent",
+   "output": "PBS-ova emisija ima više od dvadeset Emmy nagrada, a njen rad je kraći samo od Sesame Street i Mister Rogers' Neighborhood."
+  },
+  {
+   "case_id": "flores-39",
+   "term": "djeca",
+   "variant": "deca",
+   "mark": "variant",
+   "output": "Svaka emisija će takođe pružiti preporuke za knjige koje deca treba da traže kada idu u svoju biblioteku."
+  },
+  {
+   "case_id": "flores-42",
+   "term": "vjerovatno",
+   "variant": "verovatno",
+   "mark": "bosnian",
+   "output": "Oluja, koja se nalazi oko 1040 kilometara zapadno od Zelenortskih ostrva, vjerovatno će nestati prije nego što zaprijeti bilo kakvim kopnenim područjima, kažu prognozeri."
+  },
+  {
+   "case_id": "flores-45",
+   "term": "septembra",
+   "variant": "rujna",
+   "mark": "bosnian",
+   "output": "Dana 24. septembra 1759. godine, Artur Ginis je potpisao 9.000-godišnji ugovor o zakupu za pivovaru St. James's Gate u Dablinu, Irska."
+  },
+  {
+   "case_id": "flores-47",
+   "term": "historiju",
+   "variant": "istoriju",
+   "mark": "variant",
+   "output": "Jonny Reid, suvozač A1GP tima Novog Zelanda, danas je ušao u istoriju praveći najbržu vožnju preko 48-godišnjeg mosta Auckland Harbour na Novom Zelandu."
+  },
+  {
+   "case_id": "flores-66",
+   "term": "porodice",
+   "variant": "obitelji",
+   "mark": "bosnian",
+   "output": "Nakon što je postalo očigledno da mnoge porodice traže pravnu pomoć u borbi protiv iseljavanja, 20. marta održan je sastanak u Centru za pravosuđe u zajednici Švajcarski zaliv."
+  },
+  {
+   "case_id": "flores-70",
+   "term": "septembra",
+   "variant": "rujna",
+   "mark": "bosnian",
+   "output": "Kompanija za upravljanje bendom, HK Management Inc., nije dala početni razlog kada su otkazali 20. septembra, ali je okrivila logističke razloge do sljedećeg dana."
+  },
+  {
+   "case_id": "flores-81",
+   "term": "porodice",
+   "variant": "obitelji",
+   "mark": "bosnian",
+   "output": "Hesperonychus elizabethae je vrsta iz porodice Dromaeosauridae i rođak je Velociraptora."
+  },
+  {
+   "case_id": "flores-87",
+   "term": "vijesti",
+   "variant": "vesti",
+   "mark": "bosnian",
+   "output": "Vijesti su se danas proširile u zajednici Crvenog jezera kada je održana sahrana Jeffa Weisea i tri od devet žrtava, da je još jedan učenik uhapšen u vezi sa pucnjavom u školi 21. marta."
+  },
+  {
+   "case_id": "flores-93",
+   "term": "izvještajima",
+   "variant": "izveštajima",
+   "mark": "variant",
+   "output": "To je u suprotnosti sa ranijim izveštajima, u kojima se navodi da bi otkazivanje drugog kruga glasova bilo protiv Ustava."
+  },
+  {
+   "case_id": "flores-96",
+   "term": "mjeseca",
+   "variant": "meseca",
+   "mark": "bosnian",
+   "output": "Il-76 je glavna komponenta ruske i sovjetske vojske od 1970-ih, a već je vidio ozbiljnu nesreću u Rusiji prošlog mjeseca."
+  },
+  {
+   "case_id": "flores-97",
+   "term": "oktobra",
+   "variant": "listopada",
+   "mark": "bosnian",
+   "output": "Dana 7. oktobra, motor se odvojio u poletanju, bez povreda. Rusija je nakratko prizemljila Il-76 nakon te nesreće."
+  },
+  {
+   "case_id": "flores-98",
+   "term": "hiljade",
+   "variant": "tisuće",
+   "mark": "silent",
+   "output": "800 milja transaljaškog gasovodnog sistema zatvoreno je nakon izlivanja hiljada barela sirove nafte južno od Fairbanksa na Aljasci."
+  },
+  {
+   "case_id": "flores-105",
+   "term": "izvještaju",
+   "variant": "izveštaju",
+   "mark": "variant",
+   "output": "U svom najnovijem mesečnom izveštaju OPEK navodi da je izvoz sirove nafte pao na najniži nivo u poslednje dve decenije, na 2,8 miliona barela dnevno."
+  },
+  {
+   "case_id": "flores-107",
+   "term": "sjevernoj",
+   "variant": "severnoj",
+   "mark": "variant",
+   "output": "Kada kapsula stigne na Zemlju i uđe u atmosferu, oko 5 sati po istočnom vremenu, očekuje se da će staviti prilično laganu emisiju za ljude u Severnoj Kaliforniji, Oregonu, Nevadi i Juti."
+  },
+  {
+   "case_id": "flores-111",
+   "term": "sjeverne",
+   "variant": "severne",
+   "mark": "variant",
+   "output": "\"Pomeriće se preko zapadne obale severne Kalifornije i osvetliće nebo od Kalifornije preko centralnog Oregona i dalje kroz Nevadu i Ajdaho i do Jute,\" rekao je Tom Daksberi, menadžer projekta Stardasta."
+  },
+  {
+   "case_id": "flores-114",
+   "term": "historiji",
+   "variant": "istoriji",
+   "mark": "variant",
+   "output": "Ovo je najveća kupovina u istoriji eBay-a."
+  },
+  {
+   "case_id": "flores-115",
+   "term": "evropa",
+   "variant": "Europa",
+   "mark": "bosnian",
+   "output": "Kompanija se nada da će diverzificirati svoje izvore profita i steći popularnost u područjima gdje Skype ima snažnu poziciju, kao što su Kina, Istočna Evropa i Brazil."
+  },
+  {
+   "case_id": "flores-124",
+   "term": "izvještaja",
+   "variant": "izveštaja",
+   "mark": "silent",
+   "output": "Dugo prije The Daily Showa i The Colbert Reporta, Heck i Johnson su zamislili publikaciju koja bi parodirala vijesti - i izvještavanje o vijestima - kada su bili studenti na UW-u 1988. godine."
+  },
+  {
+   "case_id": "flores-124",
+   "term": "vijesti",
+   "variant": "vesti",
+   "mark": "bosnian",
+   "output": "Dugo prije The Daily Showa i The Colbert Reporta, Heck i Johnson su zamislili publikaciju koja bi parodirala vijesti - i izvještavanje o vijestima - kada su bili studenti na UW-u 1988. godine."
+  },
+  {
+   "case_id": "flores-129",
+   "term": "evropi",
+   "variant": "Europi",
+   "mark": "bosnian",
+   "output": "Grad će biti prvi u jugoistočnoj Evropi koji će biti domaćin CowParade, najvećeg svjetskog javnog umjetničkog događaja, između juna i avgusta ove godine."
+  },
+  {
+   "case_id": "flores-129",
+   "term": "svijetu",
+   "variant": "svetu",
+   "mark": "silent",
+   "output": "Grad će biti prvi u jugoistočnoj Evropi koji će biti domaćin CowParade, najvećeg svjetskog javnog umjetničkog događaja, između juna i avgusta ove godine."
+  },
+  {
+   "case_id": "flores-129",
+   "term": "juna",
+   "variant": "lipnja",
+   "mark": "bosnian",
+   "output": "Grad će biti prvi u jugoistočnoj Evropi koji će biti domaćin CowParade, najvećeg svjetskog javnog umjetničkog događaja, između juna i avgusta ove godine."
+  },
+  {
+   "case_id": "flores-138",
+   "term": "vjetar",
+   "variant": "vetar",
+   "mark": "silent",
+   "output": "Ljudi mogu biti pogođeni disanjem zahvaćene vode koja se prenosi u vazduh od strane vetra i talasa."
+  },
+  {
+   "case_id": "flores-153",
+   "term": "historiji",
+   "variant": "istoriji",
+   "mark": "bosnian",
+   "output": "Vjeruje se da je ovo peti put u historiji da su ljudi promatrali ono što se ispostavilo kao hemijski potvrđeni materijal sa Marsa koji je pao na Zemlju."
+  },
+  {
+   "case_id": "flores-155",
+   "term": "jula",
+   "variant": "srpnja",
+   "mark": "bosnian",
+   "output": "Petnaest od ovih stijena pripisuje se meteorskoj kiši prošlog jula."
+  },
+  {
+   "case_id": "flores-169",
+   "term": "svijetu",
+   "variant": "svetu",
+   "mark": "variant",
+   "output": "Peri je posebno rekao: \"Postoji nekoliko mesta na svetu koja su bolje opremljena da se suoče sa izazovom koji se postavlja u ovom slučaju.\""
+  },
+  {
+   "case_id": "flores-170",
+   "term": "djeca",
+   "variant": "deca",
+   "mark": "variant",
+   "output": "\"Danas smo saznali da su neka deca školskog uzrasta bila u kontaktu sa pacijentom."
+  },
+  {
+   "case_id": "flores-177",
+   "term": "vrijeme",
+   "variant": "vreme",
+   "mark": "bosnian",
+   "output": "U vrijeme dodjele nagrade, škole u Atlanti su vidjele značajno poboljšanje u rezultatima testova."
+  },
+  {
+   "case_id": "flores-178",
+   "term": "izvještaj",
+   "variant": "izveštaj",
+   "mark": "bosnian",
+   "output": "Ubrzo nakon toga, Atlanta Journal-Ustav je objavio izvještaj koji ukazuje na probleme sa rezultatima testa."
+  },
+  {
+   "case_id": "flores-179",
+   "term": "izvještaj",
+   "variant": "Izveštaj",
+   "mark": "variant",
+   "output": "Izveštaj je pokazao da su rezultati testova rasli neverovatno brzo i da je škola interno otkrila probleme, ali nije reagovala na nalaze."
+  },
+  {
+   "case_id": "flores-183",
+   "term": "promjene",
+   "variant": "promene",
+   "mark": "silent",
+   "output": "Ministar zdravlja je izrazio zabrinutost kako za dobrobit pojedinaca koji iskorištavaju privremenu zakonitost uključenih supstanci, tako i za osude vezane za droge koje su donesene od stupanja na snagu sada neustavnih promjena."
+  },
+  {
+   "case_id": "flores-185",
+   "term": "nedjelju",
+   "variant": "nedelju",
+   "mark": "bosnian",
+   "output": "Boravio je u timskom hotelu uoči utakmice koja je planirana za nedjelju protiv Bolonje."
+  },
+  {
+   "case_id": "flores-187",
+   "term": "svjetlo",
+   "variant": "svetlo",
+   "mark": "variant",
+   "output": "U subotu u 1:15 sati, prema svedocima, autobus je prolazio kroz zeleno svetlo kada je automobil skrenuo ispred njega."
+  },
+  {
+   "case_id": "flores-197",
+   "term": "predsjednik",
+   "variant": "Predsednik",
+   "mark": "silent",
+   "output": "Stanje predsednika je stabilno, iako će biti izolovan kod kuće nekoliko dana."
+  },
+  {
+   "case_id": "flores-198",
+   "term": "osjećam",
+   "variant": "osećam",
+   "mark": "variant",
+   "output": "\"Pored groznice i upale grla, osećam se dobro i u dobroj formi da obavljam svoj posao na daljinu."
+  },
+  {
+   "case_id": "flores-208",
+   "term": "izvještaji",
+   "variant": "izveštaji",
+   "mark": "silent",
+   "output": "Prema izveštajima, stan u ulici Makbet je eksplodirao zbog curenja gasa."
+  },
+  {
+   "case_id": "flores-232",
+   "term": "uvijek",
+   "variant": "uvek",
+   "mark": "bosnian",
+   "output": "Vlasti još uvijek ne znaju njegovo ime, iako znaju da je pripadnik ujgurske etničke grupe."
+  },
+  {
+   "case_id": "flores-233",
+   "term": "septembra",
+   "variant": "rujna",
+   "mark": "bosnian",
+   "output": "Nadia, rođena 17. septembra 2007. godine u carskom rezu u porodiljnoj klinici u Aleisku, Rusija, težila je masivnih 17 funti."
+  },
+  {
+   "case_id": "flores-239",
+   "term": "januara",
+   "variant": "siječnja",
+   "mark": "bosnian",
+   "output": "Pitanje je počelo 1. januara kada su se desetine lokalnih stanovnika počeli žaliti pošti Obanazawa da nisu dobili svoje tradicionalne i redovne novogodišnje čestitke."
+  },
+  {
+   "case_id": "flores-241",
+   "term": "uspješno",
+   "variant": "uspešno",
+   "mark": "bosnian",
+   "output": "Mjesečev orbiter Chandrayaan-1 izbacio je svoju Mjesečevu udarnu sondu (MIP), koja je letjela po površini Mjeseca brzinom od 1,5 kilometara u sekundi (3000 milja na sat), i uspješno se srušila u blizini Mjesečevog južnog pola."
+  },
+  {
+   "case_id": "flores-246",
+   "term": "predsjednik",
+   "variant": "predsednik",
+   "mark": "bosnian",
+   "output": "Od nezavisnosti Pakistana od britanske vladavine 1947. godine, pakistanski predsjednik je imenovao \"političke agente\" da upravljaju FATA-om, koji imaju gotovo potpunu autonomnu kontrolu nad tim područjima."
+  },
+  {
+   "case_id": "flores-249",
+   "term": "posjetu",
+   "variant": "posetu",
+   "mark": "silent",
+   "output": "U zgradi je bio smešten veliki broj hodočasnika koji su došli da posete sveti grad uoči hadža."
+  },
+  {
+   "case_id": "flores-263",
+   "term": "jula",
+   "variant": "srpnja",
+   "mark": "bosnian",
+   "output": "Povjerenik je rekao: \"Još se nismo dogovorili o pravilima porijekla i tarifama, ali okvir koji imamo je dovoljan za početak trgovanja 1. jula 2020. godine\"."
+  },
+  {
+   "case_id": "flores-284",
+   "term": "mjeseca",
+   "variant": "meseca",
+   "mark": "variant",
+   "output": "Prošlog meseca u Poljskoj su bili veliki protesti kada je ta zemlja potpisala ACTA, što je dovelo do toga da je poljska vlada odlučila da ne ratifikuje sporazum."
+  },
+  {
+   "case_id": "flores-298",
+   "term": "sjednici",
+   "variant": "sednici",
+   "mark": "bosnian",
+   "output": "Promjena je napravljena na ovoj zakonodavnoj sjednici kada je druga rečenica prvo izbrisana od strane Predstavničkog doma, a zatim usvojena u sličnom obliku od strane Senata u ponedjeljak."
+  },
+  {
+   "case_id": "flores-302",
+   "term": "svjetskog",
+   "variant": "svetskog",
+   "mark": "bosnian",
+   "output": "Francuski zakon je promijenjen. Njegov aktivizam se vratio u dobi od 15 godina kada se pridružio francuskom pokretu otpora tokom Drugog svjetskog rata."
+  },
+  {
+   "case_id": "flores-308",
+   "term": "svjetski",
+   "variant": "svetski",
+   "mark": "bosnian",
+   "output": "Kao bivši olimpijski i svjetski prvak, Saito je bio predsjednik Odbora za obuku Sve japanske džudo federacije u vrijeme njegove smrti."
+  },
+  {
+   "case_id": "flores-314",
+   "term": "riječi",
+   "variant": "reči",
+   "mark": "bosnian",
+   "output": "U svojim bilješkama koristio je riječi koje su neki roditelji smatrali grubim, a navodno je koristio i psovke u razredu."
+  },
+  {
+   "case_id": "flores-331",
+   "term": "historiji",
+   "variant": "istoriji",
+   "mark": "variant",
+   "output": "1995. godine proglašen je za najboljeg igrača u istoriji Partizana."
+  },
+  {
+   "case_id": "flores-332",
+   "term": "svjetski",
+   "variant": "svetski",
+   "mark": "bosnian",
+   "output": "Proslava je započela posebnom izložbom svjetski poznate grupe Cirque du Soleil."
+  },
+  {
+   "case_id": "flores-359",
+   "term": "svjetlo",
+   "variant": "svetlo",
+   "mark": "silent",
+   "output": "Naučnici ovaj proces nazivaju \"stimulisanom emisijom zračenja\" jer se atomi stimulišu jakom svetlošću, uzrokujući emisiju fotona svetlosti, a svetlost je jedna vrsta zračenja."
+  },
+  {
+   "case_id": "flores-365",
+   "term": "uvijek",
+   "variant": "uvek",
+   "mark": "silent",
+   "output": "To je zato što struja koja teče u utičnicu u kojoj se nalazi metalni deo sijalice može da izazove ozbiljan električni šok ako dodirnete unutrašnjost utičnice ili metalnu bazu sijalice dok je još delimično u utičnici."
+  },
+  {
+   "case_id": "flores-375",
+   "term": "cijelo",
+   "variant": "Celo",
+   "mark": "bosnian",
+   "output": "Sunce nema koru poput Zemlje na kojoj možete stajati. Cijelo Sunce je napravljeno od plinova, vatre i plazme."
+  },
+  {
+   "case_id": "flores-389",
+   "term": "evropi",
+   "variant": "Europi",
+   "mark": "bosnian",
+   "output": "Sanskrit je drevni jezik i uporediv je sa latinskim jezikom koji se govori u Evropi."
+  },
+  {
+   "case_id": "flores-409",
+   "term": "hiljade",
+   "variant": "tisuće",
+   "mark": "bosnian",
+   "output": "Većina predmeta sahranjenih sa Tutankamonom je dobro očuvana, uključujući hiljade artefakata napravljenih od plemenitih metala i retkog kamenja."
+  },
+  {
+   "case_id": "flores-416",
+   "term": "procjene",
+   "variant": "procene",
+   "mark": "bosnian",
+   "output": "Postoje različite procjene o tome koliko ljudi govori hindski. Procjenjuje se da je između drugog i četvrtog najrasprostranjenijeg govornog jezika na svijetu."
+  },
+  {
+   "case_id": "flores-416",
+   "term": "procjenjuje",
+   "variant": "Procenjuje",
+   "mark": "bosnian",
+   "output": "Postoje različite procjene o tome koliko ljudi govori hindski. Procjenjuje se da je između drugog i četvrtog najrasprostranjenijeg govornog jezika na svijetu."
+  },
+  {
+   "case_id": "flores-418",
+   "term": "procjene",
+   "variant": "Procene",
+   "mark": "variant",
+   "output": "Procene se kreću od 340 miliona do 500 miliona govornika, a čak 800 miliona ljudi može da razume jezik."
+  },
+  {
+   "case_id": "flores-423",
+   "term": "riječi",
+   "variant": "reči",
+   "mark": "bosnian",
+   "output": "Kako je vrijeme prolazilo, mnoge riječi koje su posuđene iz Njemačke su se ujedinile. Ovo je bio početak prosvjetiteljstva."
+  },
+  {
+   "case_id": "flores-425",
+   "term": "historiju",
+   "variant": "istoriju",
+   "mark": "bosnian",
+   "output": "Međutim, Charles je otišao na univerzitet na Trinity College, Cambridge, gdje je studirao antropologiju i arheologiju, a kasnije i historiju, zarađujući 2: 2 (niži drugi razred)."
+  },
+  {
+   "case_id": "flores-426",
+   "term": "porodice",
+   "variant": "obitelji",
+   "mark": "bosnian",
+   "output": "Charles je bio prvi član britanske kraljevske porodice koji je dobio diplomu."
+  },
+  {
+   "case_id": "flores-429",
+   "term": "evropi",
+   "variant": "Europi",
+   "mark": "bosnian",
+   "output": "Područje Turske, uključujući jezera, zauzima 783.562 kvadratnih kilometara (300.948 kvadratnih milja), od čega je 755.688 kvadratnih kilometara (291.773 kvadratnih milja) u jugozapadnoj Aziji i 23.764 kvadratnih kilometara (9.174 kvadratnih milja) u Evropi."
+  },
+  {
+   "case_id": "flores-431",
+   "term": "sjeveru",
+   "variant": "severu",
+   "mark": "bosnian",
+   "output": "Turska je okružena morem sa tri strane: Egejskim morem na zapadu, Crnim morem na sjeveru i Sredozemnim morem na jugu."
+  },
+  {
+   "case_id": "flores-433",
+   "term": "dijelovi",
+   "variant": "delovi",
+   "mark": "bosnian",
+   "output": "Današnji dijelovi Belgije bili su dio Luksemburga u prošlosti, ali su postali Belgija nakon Belgijske revolucije 1830-ih."
+  },
+  {
+   "case_id": "flores-437",
+   "term": "pobjede",
+   "variant": "pobede",
+   "mark": "silent",
+   "output": "Tvrdi se da je 1649. godine Zhabdrung Ngawang Namgyel stvorio tvrđavu u znak sjećanja na svoju pobjedu nad tibetansko-mongolskim snagama."
+  },
+  {
+   "case_id": "flores-448",
+   "term": "oktobra",
+   "variant": "listopada",
+   "mark": "silent",
+   "output": "Svake godine oko 1.5 miliona biljojeda putuje prema južnim ravnicama, prelazeći rijeku Mara, sa sjevernih brda zbog kiša."
+  },
+  {
+   "case_id": "flores-448",
+   "term": "rijeke",
+   "variant": "reke",
+   "mark": "silent",
+   "output": "Svake godine oko 1.5 miliona biljojeda putuje prema južnim ravnicama, prelazeći rijeku Mara, sa sjevernih brda zbog kiša."
+  },
+  {
+   "case_id": "flores-449",
+   "term": "aprila",
+   "variant": "travnja",
+   "mark": "silent",
+   "output": "A onda nazad na sever kroz zapad, ponovo prelazeći rijeku Maru, nakon kiša u aprilu."
+  },
+  {
+   "case_id": "flores-451",
+   "term": "zahtijeva",
+   "variant": "zahteva",
+   "mark": "variant",
+   "output": "Učenje za stvaranje interaktivnih medija zahteva konvencionalne i tradicionalne veštine, kao i alate savladane na interaktivnim časovima (storyboarding, audio i video montažiranje, pripovedanje priča, itd.)"
+  },
+  {
+   "case_id": "flores-451",
+   "term": "vještine",
+   "variant": "veštine",
+   "mark": "variant",
+   "output": "Učenje za stvaranje interaktivnih medija zahteva konvencionalne i tradicionalne veštine, kao i alate savladane na interaktivnim časovima (storyboarding, audio i video montažiranje, pripovedanje priča, itd.)"
+  },
+  {
+   "case_id": "flores-465",
+   "term": "hiljadu",
+   "variant": "tisuću",
+   "mark": "bosnian",
+   "output": "Čak i stojeći usred hiljadu godina starih ruševina, lako je podsetiti se zvukova i mirisa davno prošlih bitaka, skoro da se čuje buka kopita na kaldrmi i miris straha koji se diže iz tamničkih jama."
+  },
+  {
+   "case_id": "flores-473",
+   "term": "promjenu",
+   "variant": "promenu",
+   "mark": "bosnian",
+   "output": "To je označilo važnu promjenu, jer evropske sile više ne bi imale izgovor da budu vjerski ratovi. Tako bi Tridesetogodišnji rat bio posljednji rat koji bi se označio kao vjerski rat."
+  },
+  {
+   "case_id": "flores-474",
+   "term": "jula",
+   "variant": "srpnja",
+   "mark": "bosnian",
+   "output": "Artemidin hram u Efezu uništen je 21. jula 356. godine p. n. e. u podmetanju požara koji je počinio Herostratus."
+  },
+  {
+   "case_id": "flores-492",
+   "term": "rijeke",
+   "variant": "reke",
+   "mark": "variant",
+   "output": "Civilizacija je cvetala u slivovima reke Ind, zbog čega je i dobila ime."
+  },
+  {
+   "case_id": "flores-501",
+   "term": "svijest",
+   "variant": "svest",
+   "mark": "bosnian",
+   "output": "Djeca razvijaju svijest o rasnim i rasnim stereotipima vrlo rano i ti rasni stereotipi utiču na ponašanje."
+  },
+  {
+   "case_id": "flores-509",
+   "term": "djece",
+   "variant": "dece",
+   "mark": "bosnian",
+   "output": "To nije poremećaj učenja, to je poremećaj učenja; \"pogađa 3 do 5 posto sve djece, možda čak 2 miliona američke djece\"."
+  },
+  {
+   "case_id": "flores-513",
+   "term": "promijenila",
+   "variant": "promenila",
+   "mark": "bosnian",
+   "output": "Kao što se sposobnost sticanja znanja i učenja mijenjala na takav način kao što je gore navedeno, promijenila se osnovna stopa sticanja znanja."
+  },
+  {
+   "case_id": "flores-520",
+   "term": "vjeruju",
+   "variant": "veruju",
+   "mark": "variant",
+   "output": "Neki ljudi veruju da doživljavanje veštački izazvanih lucidnih snova dovoljno često može biti veoma iscrpljujuće."
+  },
+  {
+   "case_id": "flores-525",
+   "term": "sjevernoj",
+   "variant": "severnoj",
+   "mark": "silent",
+   "output": "U roku od nedelju dana od italijanske objave rata, 10. juna 1940. godine, britanski 11. husari su zauzeli tvrđavu Džajdža u Libiji."
+  },
+  {
+   "case_id": "flores-525",
+   "term": "juna",
+   "variant": "lipnja",
+   "mark": "bosnian",
+   "output": "U roku od nedelju dana od italijanske objave rata, 10. juna 1940. godine, britanski 11. husari su zauzeli tvrđavu Džajdža u Libiji."
+  },
+  {
+   "case_id": "flores-527",
+   "term": "juna",
+   "variant": "lipnja",
+   "mark": "bosnian",
+   "output": "Dana 28. juna, maršal Italo Balbo, generalni guverner Libije i očigledni Musolinijev nasljednik, ubijen je u prijateljskoj vatri prilikom slijetanja u Tobruk."
+  },
+  {
+   "case_id": "flores-535",
+   "term": "mjesto",
+   "variant": "mesto",
+   "mark": "variant",
+   "output": "Ovo je kada ljudi odlaze na mesto koje se veoma razlikuje od njihovog svakodnevnog života da bi se opustili i zabavili."
+  },
+  {
+   "case_id": "flores-537",
+   "term": "posjete",
+   "variant": "posete",
+   "mark": "variant",
+   "output": "Ako je cilj posete određenom mestu da se upozna njegova istorija i kultura, onda je ovaj tip turizma poznat kao kulturni turizam."
+  },
+  {
+   "case_id": "flores-537",
+   "term": "historije",
+   "variant": "istorije",
+   "mark": "silent",
+   "output": "Ako je cilj posete određenom mestu da se upozna njegova istorija i kultura, onda je ovaj tip turizma poznat kao kulturni turizam."
+  },
+  {
+   "case_id": "flores-542",
+   "term": "sjevera",
+   "variant": "severa",
+   "mark": "silent",
+   "output": "Kada je plima otvorila jaz duž reke Mistik duž severoistoka poluostrva, brzo su proširili ogradu sa kratkim kamenim zidom prema severu koji se završava na ivici vode na maloj plaži."
+  },
+  {
+   "case_id": "flores-549",
+   "term": "čovjek",
+   "variant": "čovek",
+   "mark": "variant",
+   "output": "Naravno, prvoklasni polu-miler, čovek koji može da pobedi dva minuta, mora da poseduje dovoljnu brzinu, ali izdržljivost mora da se kultiviše u svim opasnostima."
+  },
+  {
+   "case_id": "flores-550",
+   "term": "dijela",
+   "variant": "dela",
+   "mark": "silent",
+   "output": "Neki cross-country trčanje tokom zime, u kombinaciji sa gimnastičkim radom za gornji deo tela, najbolji su preparati za trčanje tokom sezone."
+  },
+  {
+   "case_id": "flores-552",
+   "term": "razumijevanje",
+   "variant": "razumevanje",
+   "mark": "variant",
+   "output": "Održavanje zdrave energetske ravnoteže, prakticiranje efikasnih navika hidratacije i razumevanje različitih aspekata prakse suplementacije može pomoći sportistima da poboljšaju svoje performanse i povećaju svoje uživanje u sportu."
+  },
+  {
+   "case_id": "flores-576",
+   "term": "riječ",
+   "variant": "Reč",
+   "mark": "variant",
+   "output": "Šta je ćelija? Reč ćelija dolazi od latinske reči \"cela\", što znači \"mala soba\", i prvi put je skovao mikroskop koji je posmatrao strukturu plute."
+  },
+  {
+   "case_id": "flores-580",
+   "term": "cijelom",
+   "variant": "celom",
+   "mark": "variant",
+   "output": "Ovi nervni impulsi mogu se brzo poslati po celom telu, što pomaže da se telo zaštiti od bilo kakvih potencijalnih pretnji."
+  },
+  {
+   "case_id": "flores-584",
+   "term": "hiljadama",
+   "variant": "tisućama",
+   "mark": "bosnian",
+   "output": "Ljudi su pravili i koristili sočiva za uvećanje hiljadama i hiljadama godina."
+  },
+  {
+   "case_id": "flores-585",
+   "term": "evropi",
+   "variant": "Europi",
+   "mark": "bosnian",
+   "output": "Prvi pravi teleskopi su napravljeni u Evropi krajem 16. veka."
+  },
+  {
+   "case_id": "flores-596",
+   "term": "riječ",
+   "variant": "Reč",
+   "mark": "silent",
+   "output": "Ćelija potiče od latinske reči cella, što znači mala soba."
+  },
+  {
+   "case_id": "flores-600",
+   "term": "mijenjaju",
+   "variant": "menjaju",
+   "mark": "variant",
+   "output": "Elementi i jedinjenja mogu da se kreću iz jednog stanja u drugo, a ne da se menjaju."
+  },
+  {
+   "case_id": "flores-602",
+   "term": "primjer",
+   "variant": "primer",
+   "mark": "bosnian",
+   "output": "Voda je još jedan primjer. Složena voda se sastoji od dva atoma vodika i jednog atoma kisika."
+  },
+  {
+   "case_id": "flores-604",
+   "term": "hemijsko",
+   "variant": "kemijsko",
+   "mark": "bosnian",
+   "output": "Iako se njegovo fizičko stanje može promeniti, njegovo hemijsko stanje ostaje isto."
+  },
+  {
+   "case_id": "flores-606",
+   "term": "hiljadama",
+   "variant": "tisućama",
+   "mark": "bosnian",
+   "output": "Vreme je proučavano od strane naučnih, filozofskih i naučnih naučnika hiljadama godina."
+  },
+  {
+   "case_id": "flores-620",
+   "term": "razumijevanje",
+   "variant": "razumevanje",
+   "mark": "variant",
+   "output": "Iako razumevanje nečije istorije ne podrazumeva razumevanje kulture, bar pomaže ljudima da steknu osećaj o tome gde spadaju u istoriju organizacije."
+  },
+  {
+   "case_id": "flores-620",
+   "term": "historije",
+   "variant": "istorije",
+   "mark": "variant",
+   "output": "Iako razumevanje nečije istorije ne podrazumeva razumevanje kulture, bar pomaže ljudima da steknu osećaj o tome gde spadaju u istoriju organizacije."
+  },
+  {
+   "case_id": "flores-620",
+   "term": "osjećaj",
+   "variant": "osećaj",
+   "mark": "variant",
+   "output": "Iako razumevanje nečije istorije ne podrazumeva razumevanje kulture, bar pomaže ljudima da steknu osećaj o tome gde spadaju u istoriju organizacije."
+  },
+  {
+   "case_id": "flores-620",
+   "term": "historiji",
+   "variant": "istoriji",
+   "mark": "silent",
+   "output": "Iako razumevanje nečije istorije ne podrazumeva razumevanje kulture, bar pomaže ljudima da steknu osećaj o tome gde spadaju u istoriju organizacije."
+  },
+  {
+   "case_id": "flores-621",
+   "term": "vrijednosti",
+   "variant": "vrednosti",
+   "mark": "variant",
+   "output": "Dok procenjuju uspehe i postaju svesni neuspeha, pojedinci i sve osobe koje učestvuju u projektu otkrivaju dublje vrednosti, misije i pokretne snage."
+  },
+  {
+   "case_id": "flores-622",
+   "term": "promjenama",
+   "variant": "promenama",
+   "mark": "silent",
+   "output": "U ovom slučaju, sećanje na prethodne primere preduzetničkog ponašanja i rezultirajućih uspeha pomoglo je ljudima da budu otvoreni za nove promene i novi pravac za lokalnu crkvu."
+  },
+  {
+   "case_id": "flores-622",
+   "term": "smjeru",
+   "variant": "smeru",
+   "mark": "silent",
+   "output": "U ovom slučaju, sećanje na prethodne primere preduzetničkog ponašanja i rezultirajućih uspeha pomoglo je ljudima da budu otvoreni za nove promene i novi pravac za lokalnu crkvu."
+  },
+  {
+   "case_id": "flores-624",
+   "term": "rješenja",
+   "variant": "rešenja",
+   "mark": "variant",
+   "output": "Konvergentni obrasci razmišljanja su tehnike rešavanja problema koje ujedinjuju različite ideje ili polja u pronalaženju rešenja."
+  },
+  {
+   "case_id": "flores-630",
+   "term": "uspješno",
+   "variant": "uspešno",
+   "mark": "variant",
+   "output": "To znači da smo u stanju da uspešno predvidimo šta drugi ljudi percipiraju, nameravaju, veruju, znaju ili žele."
+  },
+  {
+   "case_id": "flores-630",
+   "term": "vjeruju",
+   "variant": "veruju",
+   "mark": "variant",
+   "output": "To znači da smo u stanju da uspešno predvidimo šta drugi ljudi percipiraju, nameravaju, veruju, znaju ili žele."
+  },
+  {
+   "case_id": "flores-638",
+   "term": "cijelo",
+   "variant": "celo",
+   "mark": "silent",
+   "output": "Damadian je 1977. godine završio izgradnju prvog MRI skenera \"cijelog tijela\", koji je nazvao \"Nezaustavljiv\"."
+  },
+  {
+   "case_id": "flores-647",
+   "term": "učestvovati",
+   "variant": "sudjelovati",
+   "mark": "bosnian",
+   "output": "Mnogi od nas se osećaju kao da gledaju televizijsku emisiju koja nas obaveštava o procesu ili iskustvu u kojem nikada nećemo učestvovati ili primeniti to znanje."
+  },
+  {
+   "case_id": "flores-649",
+   "term": "evropi",
+   "variant": "Europi",
+   "mark": "silent",
+   "output": "Zahvaljujući podmorskim kablovskim vezama sa Evropom i širokopojasnim satelitima, Grenland je dobro povezan sa 93% stanovništva koje ima pristup internetu."
+  },
+  {
+   "case_id": "flores-650",
+   "term": "vjerovatno",
+   "variant": "verovatno",
+   "mark": "bosnian",
+   "output": "Vaš hotel ili domaćini (ako borave u pansionu ili privatnoj kući) vjerovatno će imati Wi-Fi ili PC povezan na internet, a sva naselja imaju internet kafić ili neku lokaciju sa javnim Wi-Fi."
+  },
+  {
+   "case_id": "flores-661",
+   "term": "cijelom",
+   "variant": "celom",
+   "mark": "silent",
+   "output": "Njegova česta uloga u muzici, filmovima, književnosti i popularnoj kulturi pomogla je da grad i njegove znamenitosti budu poznati širom sveta."
+  },
+  {
+   "case_id": "flores-665",
+   "term": "posjeta",
+   "variant": "poseta",
+   "mark": "variant",
+   "output": "\"Tipična\" poseta uključuje letenje na međunarodni aerodrom Orlando, odlazak autobusom do Diznijevog hotela na licu mesta, provođenje oko nedelju dana bez napuštanja Diznijevog imanja i povratak kući."
+  },
+  {
+   "case_id": "flores-669",
+   "term": "zahtijeva",
+   "variant": "zahteva",
+   "mark": "variant",
+   "output": "Svako kampovanje ispod ruba u Velikom kanjonu zahteva dozvolu za backcountry."
+  },
+  {
+   "case_id": "flores-681",
+   "term": "novembra",
+   "variant": "studenog",
+   "mark": "bosnian",
+   "output": "Tokom kišne sezone (od novembra do marta), količina vode će biti veća, a vodopadi će biti dramatičniji."
+  },
+  {
+   "case_id": "flores-688",
+   "term": "drugdje",
+   "variant": "drugde",
+   "mark": "variant",
+   "output": "Posetioci sa ograničenim vremenom najbolje bi bilo da svoje vreme provedu negde drugde."
+  },
+  {
+   "case_id": "flores-689",
+   "term": "vijeka",
+   "variant": "veka",
+   "mark": "bosnian",
+   "output": "Phnom Krom, 12 km jugozapadno od Siem Reap. Ovaj hram na vrhu brda izgrađen je krajem 9. vijeka, za vrijeme vladavine kralja Yasovarmana."
+  },
+  {
+   "case_id": "flores-691",
+   "term": "posjeta",
+   "variant": "Poseta",
+   "mark": "variant",
+   "output": "Poseta ostrvu se može povoljno kombinovati sa izletom brodom na jezero."
+  },
+  {
+   "case_id": "flores-694",
+   "term": "historiju",
+   "variant": "istoriju",
+   "mark": "variant",
+   "output": "Drevni grad na Judejskim brdima ima fascinantnu istoriju koja se proteže hiljadama godina."
+  },
+  {
+   "case_id": "flores-694",
+   "term": "hiljadama",
+   "variant": "tisućama",
+   "mark": "bosnian",
+   "output": "Drevni grad na Judejskim brdima ima fascinantnu istoriju koja se proteže hiljadama godina."
+  },
+  {
+   "case_id": "flores-699",
+   "term": "zahtjevima",
+   "variant": "zahtevima",
+   "mark": "variant",
+   "output": "Ovo pismo mora biti legalizovano od strane Ministarstva spoljnih poslova Ekvadora i mora biti u skladu sa određenim zahtevima."
+  },
+  {
+   "case_id": "flores-702",
+   "term": "mjeseci",
+   "variant": "meseci",
+   "mark": "variant",
+   "output": "Vaš pasoš mora biti važeći najmanje 6 meseci nakon datuma putovanja. Potrebna je karta za povratnu/nazad putnu kartu kako bi se dokazala dužina vašeg boravka."
+  },
+  {
+   "case_id": "flores-713",
+   "term": "mjesto",
+   "variant": "mesto",
+   "mark": "variant",
+   "output": "Većina ljudi rezerviše svoje mesto unapred (jer su čamci obično puni tokom sezone)."
+  },
+  {
+   "case_id": "flores-716",
+   "term": "sjeverni",
+   "variant": "severni",
+   "mark": "variant",
+   "output": "Pre nego što su Španci stigli u 16. veku, severni Čile je bio pod vlašću Inka, dok su domorodački Aravčani (Mapuche) naseljavali centralni i južni Čile."
+  },
+  {
+   "case_id": "flores-734",
+   "term": "unaprijed",
+   "variant": "unapred",
+   "mark": "variant",
+   "output": "Dozvole moraju biti rezervisane unapred. Morate imati dozvolu da prenoćite u Sirena."
+  },
+  {
+   "case_id": "flores-737",
+   "term": "mjesec",
+   "variant": "mesec",
+   "mark": "bosnian",
+   "output": "Usluga parkiranja (MINAE) ne izdaje dozvolu za parkiranje više od mjesec dana prije očekivanog dolaska."
+  },
+  {
+   "case_id": "flores-744",
+   "term": "umjetnosti",
+   "variant": "umetnosti",
+   "mark": "silent",
+   "output": "U razvijenim zemljama danas, pružanje luksuznih kreveta i doručka je podignuto u neku vrstu umjetničke forme."
+  },
+  {
+   "case_id": "flores-748",
+   "term": "historijska",
+   "variant": "istorijska",
+   "mark": "variant",
+   "output": "Postavljanje može biti istorijska stara zgrada sa antičkim nameštajem, manikiranim terenom i bazenom."
+  },
+  {
+   "case_id": "flores-754",
+   "term": "naslijeđe",
+   "variant": "nasleđe",
+   "mark": "bosnian",
+   "output": "Neki hoteli imaju naslijeđe iz zlatnog doba parnih željeznica i okeanskih brodova; prije Drugog svjetskog rata, u 19. ili početkom 20. vijeka."
+  },
+  {
+   "case_id": "flores-754",
+   "term": "svjetskog",
+   "variant": "svetskog",
+   "mark": "bosnian",
+   "output": "Neki hoteli imaju naslijeđe iz zlatnog doba parnih željeznica i okeanskih brodova; prije Drugog svjetskog rata, u 19. ili početkom 20. vijeka."
+  },
+  {
+   "case_id": "flores-765",
+   "term": "porodice",
+   "variant": "Obitelji",
+   "mark": "bosnian",
+   "output": "Porodice sa decom su rijedak prizor, ali neki hosteli ih dozvoljavaju u privatnim sobama."
+  },
+  {
+   "case_id": "flores-772",
+   "term": "svjetska",
+   "variant": "Svetska",
+   "mark": "bosnian",
+   "output": "Svjetski sajam (obično nazvan Svjetska izložba ili jednostavno Expo) je veliki međunarodni festival umjetnosti i nauke."
+  },
+  {
+   "case_id": "flores-773",
+   "term": "historiju",
+   "variant": "istoriju",
+   "mark": "bosnian",
+   "output": "Zemlje učesnice predstavljaju umjetničke i obrazovne izložbe u nacionalnim paviljonima kako bi prikazale svjetska pitanja ili kulturu i historiju svoje zemlje."
+  },
+  {
+   "case_id": "flores-776",
+   "term": "mjeseci",
+   "variant": "meseci",
+   "mark": "variant",
+   "output": "Ovi događaji obično traju između tri i šest meseci i održavaju se na lokacijama ne manjim od 50 hektara."
+  },
+  {
+   "case_id": "flores-782",
+   "term": "hiljadu",
+   "variant": "tisuću",
+   "mark": "bosnian",
+   "output": "Fotografija divljih životinja se često uzima zdravo za gotovo, ali kao i fotografija uopšte, slika vredi hiljadu reči."
+  },
+  {
+   "case_id": "flores-814",
+   "term": "porodicama",
+   "variant": "Obiteljima",
+   "mark": "bosnian",
+   "output": "Porodicama sa malom decom možda treba više priprema, ali dan na otvorenom je lako moguć čak i kod beba i predškolske dece."
+  },
+  {
+   "case_id": "flores-825",
+   "term": "svijet",
+   "variant": "svet",
+   "mark": "variant",
+   "output": "Ako želite da vidite svet jeftino, iz nužde, životnog stila ili izazova, postoje neki načini da to uradite."
+  },
+  {
+   "case_id": "flores-828",
+   "term": "učestvuju",
+   "variant": "sudjeluju",
+   "mark": "bosnian",
+   "output": "Savet podrazumeva da putnici ne kradu, ne upadaju, ne učestvuju u ilegalnom tržištu, ne mole ili na drugi način iskorištavaju druge ljude za sopstvenu korist."
+  },
+  {
+   "case_id": "flores-830",
+   "term": "voz",
+   "variant": "vlak",
+   "mark": "silent",
+   "output": "U nekim prekograničnim vozovima se obavljaju inspekcije u vozu i morate imati važeću ličnu kartu sa sobom prilikom ukrcavanja na jedan od tih vozova."
+  },
+  {
+   "case_id": "flores-830",
+   "term": "vozova",
+   "variant": "vlakova",
+   "mark": "bosnian",
+   "output": "U nekim prekograničnim vozovima se obavljaju inspekcije u vozu i morate imati važeću ličnu kartu sa sobom prilikom ukrcavanja na jedan od tih vozova."
+  },
+  {
+   "case_id": "flores-850",
+   "term": "mjestima",
+   "variant": "mestima",
+   "mark": "variant",
+   "output": "Jama se ili zagreva vrelim kamenjem iz vatre, ili na nekim mestima geotermalna toplota zagreva delove zemlje."
+  },
+  {
+   "case_id": "flores-852",
+   "term": "mjestima",
+   "variant": "mestima",
+   "mark": "silent",
+   "output": "Nekoliko lokacija u Rotorui nudi geotermalne hangije, dok se drugi hangiji mogu uzorkovati u Christchurchu, Wellingtonu i drugdje."
+  },
+  {
+   "case_id": "flores-854",
+   "term": "evropi",
+   "variant": "Europi",
+   "mark": "bosnian",
+   "output": "MetroPlus je udobniji i manje gužve, ali nešto skuplji, iako je i dalje jeftiniji od standardnih metro karata u Evropi."
+  },
+  {
+   "case_id": "flores-855",
+   "term": "voz",
+   "variant": "vlak",
+   "mark": "bosnian",
+   "output": "Svaki voz ima i MetroPlus i Metro autobuse; MetroPlus autobusi su uvek na kraju najbližeg voza u Kejptaunu."
+  },
+  {
+   "case_id": "flores-855",
+   "term": "voza",
+   "variant": "vlaka",
+   "mark": "bosnian",
+   "output": "Svaki voz ima i MetroPlus i Metro autobuse; MetroPlus autobusi su uvek na kraju najbližeg voza u Kejptaunu."
+  },
+  {
+   "case_id": "flores-880",
+   "term": "namjerava",
+   "variant": "namerava",
+   "mark": "variant",
+   "output": "Ovi zahtevi često zavise od toga koje zemlje putnik poseti ili namerava da poseti."
+  },
+  {
+   "case_id": "flores-881",
+   "term": "porodice",
+   "variant": "obitelji",
+   "mark": "bosnian",
+   "output": "Jedna od prednosti Charlotte, Sjeverna Karolina, je da ima obilje visokokvalitetnih opcija za porodice."
+  },
+  {
+   "case_id": "flores-882",
+   "term": "porodice",
+   "variant": "obitelji",
+   "mark": "silent",
+   "output": "Stanovnici iz drugih oblasti često navode prijateljstvo sa porodicom kao primarni razlog za preseljenje, a posetioci često smatraju da je grad lak za uživanje sa decom u blizini."
+  },
+  {
+   "case_id": "flores-884",
+   "term": "porodice",
+   "variant": "Obitelji",
+   "mark": "silent",
+   "output": "Taksiji se obično ne koriste u porodici u Šarlotu, iako mogu biti od neke koristi u određenim okolnostima."
+  },
+  {
+   "case_id": "flores-900",
+   "term": "snijeg",
+   "variant": "sneg",
+   "mark": "variant",
+   "output": "Problem je u tome što je sneg lepljiv, tako da je potrebno neko okidanje da bi se spustio, a neki sneg koji pada može biti okidač za ostatak."
+  },
+  {
+   "case_id": "flores-901",
+   "term": "snijeg",
+   "variant": "sneg",
+   "mark": "silent",
+   "output": "Ponekad je izvorni događaj zagrijavanje snijega sunce, ponekad još snijega, ponekad i drugi prirodni događaji, često čovjek."
+  },
+  {
+   "case_id": "flores-926",
+   "term": "unaprijed",
+   "variant": "unapred",
+   "mark": "variant",
+   "output": "Ako koristite dronove, proverite unapred šta vam je dozvoljeno da snimate i koje dozvole ili dodatne dozvole su neophodne."
+  },
+  {
+   "case_id": "flores-928",
+   "term": "rijetko",
+   "variant": "retko",
+   "mark": "bosnian",
+   "output": "Danas se avio-putovanja rijetko rezervišu direktno preko avio-kompanije bez prethodnog pretraživanja i poređenja cijena."
+  },
+  {
+   "case_id": "flores-928",
+   "term": "cijena",
+   "variant": "cena",
+   "mark": "bosnian",
+   "output": "Danas se avio-putovanja rijetko rezervišu direktno preko avio-kompanije bez prethodnog pretraživanja i poređenja cijena."
+  },
+  {
+   "case_id": "flores-943",
+   "term": "vještine",
+   "variant": "veštine",
+   "mark": "variant",
+   "output": "Živeti i volontirati u stranoj zemlji je odličan način da upoznate drugu kulturu, upoznate nove ljude, naučite o sebi, dobijete osećaj za perspektivu, pa čak i steknete nove veštine."
+  },
+  {
+   "case_id": "flores-945",
+   "term": "dijelovi",
+   "variant": "Delovi",
+   "mark": "bosnian",
+   "output": "Vikinzi su koristili ruske vodene puteve da bi došli do Crnog mora i Kaspijskog mora. Dijelovi ovih ruta još uvijek se mogu koristiti. Provjerite moguću potrebu za posebnim dozvolama, što može biti teško dobiti."
+  },
+  {
+   "case_id": "flores-956",
+   "term": "prijevoz",
+   "variant": "prevoz",
+   "mark": "silent",
+   "output": "Ne zaboravite dodati dodatne troškove viza, poreza na odlazak, kopnenog prevoza itd. za sva mjesta izvan Afrike."
+  },
+  {
+   "case_id": "flores-958",
+   "term": "prijelaza",
+   "variant": "prelaza",
+   "mark": "variant",
+   "output": "Nijedna aviokompanija ne pokriva sva tri okeanska prelaza na južnoj hemisferi (a SkyTeam ne pokriva nijedan od tih prelaza)."
+  },
+  {
+   "case_id": "flores-965",
+   "term": "historijske",
+   "variant": "istorijske",
+   "mark": "bosnian",
+   "output": "Cijeli okrug je uvršten na UNESCO-vu listu svjetske baštine zbog svoje jedinstvene kulturne i historijske vrijednosti, a njegove vrijednosti su među najvišim u zemlji."
+  },
+  {
+   "case_id": "flores-965",
+   "term": "vrijednosti",
+   "variant": "vrednosti",
+   "mark": "bosnian",
+   "output": "Cijeli okrug je uvršten na UNESCO-vu listu svjetske baštine zbog svoje jedinstvene kulturne i historijske vrijednosti, a njegove vrijednosti su među najvišim u zemlji."
+  },
+  {
+   "case_id": "flores-969",
+   "term": "vozovi",
+   "variant": "vlakovi",
+   "mark": "bosnian",
+   "output": "Deo njegovog šarma je nedostatak vidljivog korporativnog razvoja. Staze, vozovi i brodovi povezuju sela, a automobili ne mogu da dođu do njih spolja."
+  },
+  {
+   "case_id": "flores-976",
+   "term": "namjerom",
+   "variant": "namerom",
+   "mark": "variant",
+   "output": "Pomoćni jezici su veštački ili konstruisani jezici stvoreni sa namerom da olakšaju komunikaciju između naroda koji bi inače imali poteškoća u komunikaciji."
+  },
+  {
+   "case_id": "flores-984",
+   "term": "hiljadu",
+   "variant": "tisuću",
+   "mark": "bosnian",
+   "output": "Zabeleženo je manje od hiljadu slučajeva kod ljudi, ali neki od njih su bili smrtonosni."
+  },
+  {
+   "case_id": "flores-1010",
+   "term": "porodica",
+   "variant": "obitelj",
+   "mark": "silent",
+   "output": "Američka gimnastika podržava pismo Olimpijskog komiteta Sjedinjenih Američkih Država i prihvata apsolutnu potrebu olimpijske porodice da promoviše bezbedno okruženje za sve naše sportiste."
+  },
+  {
+   "case_id": "flores-1011",
+   "term": "promjenu",
+   "variant": "promenu",
+   "mark": "silent",
+   "output": "Slažemo se sa izjavom USOC-a da interesima naših sportista i klubova, i njihovom sportu, može bolje služiti napredak sa značajnim promenama u našoj organizaciji, a ne dezintegracija."
+  },
+  {
+   "case_id": "flores-1012",
+   "term": "promjene",
+   "variant": "promene",
+   "mark": "bosnian",
+   "output": "Američka gimnastika podržava nezavisnu istragu koja bi mogla rasvijetliti kako je zloupotreba proporcije koju su tako hrabro opisali preživjeli Larry Nassar mogla ostati neopažena tako dugo i prihvaća sve neophodne i odgovarajuće promjene."
+  },
+  {
+   "case_id": "flores-1020",
+   "term": "pjesme",
+   "variant": "pesme",
+   "mark": "bosnian",
+   "output": "Dvije pjesme iz filma, Audition (The Fools Who Dream) i City of Stars, dobile su nominacije za najbolju originalnu pjesmu."
+  },
+  {
+   "case_id": "flores-1020",
+   "term": "pjesmu",
+   "variant": "pesmu",
+   "mark": "bosnian",
+   "output": "Dvije pjesme iz filma, Audition (The Fools Who Dream) i City of Stars, dobile su nominacije za najbolju originalnu pjesmu."
+  },
+  {
+   "case_id": "flores-1021",
+   "term": "nedjelju",
+   "variant": "nedelju",
+   "mark": "silent",
+   "output": "Predsednik SAD Donald Tramp, u saopštenju dostavljenom preko sekretara za štampu, najavio je da će američke trupe napustiti Siriju."
+  },
+  {
+   "case_id": "flores-1022",
+   "term": "predsjednika",
+   "variant": "predsednika",
+   "mark": "silent",
+   "output": "Saopštenje je objavljeno nakon što je Tramp telefonski razgovarao sa turskim predsednikom Redžepom Tajipom Erdoganom."
+  },
+  {
+   "case_id": "flores-1041",
+   "term": "djece",
+   "variant": "dece",
+   "mark": "variant",
+   "output": "Duvall, koji je oženjen sa dvoje odrasle dece, nije ostavio veliki utisak na Milera, sa kojim je priča bila povezana."
+  },
+  {
+   "case_id": "flores-1050",
+   "term": "smjeru",
+   "variant": "smeru",
+   "mark": "silent",
+   "output": "Izveštaj je veoma kritičan prema skoro svakom aspektu aktuelne politike izvršne vlasti prema Iraku i poziva na hitnu promenu smera."
+  },
+  {
+   "case_id": "flores-1053",
+   "term": "predsjednika",
+   "variant": "predsednika",
+   "mark": "bosnian",
+   "output": "Kirchner je najavila svoju namjeru da se kandiduje za predsjednika u argentinskom pozorištu, na istom mjestu na kojem je započela svoju kampanju za Senat 2005. godine."
+  },
+  {
+   "case_id": "flores-1060",
+   "term": "namjerom",
+   "variant": "namerom",
+   "mark": "variant",
+   "output": "Istoričari su ranije kritikovali politiku FBI-a zbog fokusiranja resursa na slučajeve koje je lako rešiti, posebno slučajeve ukradenih automobila, sa namerom da se poveća stopa uspeha agencije."
+  },
+  {
+   "case_id": "flores-1076",
+   "term": "sjeverne",
+   "variant": "Severne",
+   "mark": "variant",
+   "output": "Bušov portparol Gordon Džondro nazvao je obećanje Severne Koreje \"velikim korakom ka postizanju proverljive denuklearizacije Korejskog poluostrva.\""
+  },
+  {
+   "case_id": "flores-1111",
+   "term": "mjere",
+   "variant": "mere",
+   "mark": "variant",
+   "output": "Epidemija je podstakla indijsku vladu da preduzme mere kao što su raspoređivanje lovaca na svinje u teško pogođenim područjima, distribucija hiljade zavesa protiv komaraca i sprej za pesticide."
+  },
+  {
+   "case_id": "flores-1111",
+   "term": "hiljada",
+   "variant": "tisuća",
+   "mark": "silent",
+   "output": "Epidemija je podstakla indijsku vladu da preduzme mere kao što su raspoređivanje lovaca na svinje u teško pogođenim područjima, distribucija hiljade zavesa protiv komaraca i sprej za pesticide."
+  },
+  {
+   "case_id": "flores-1142",
+   "term": "predsjedničkih",
+   "variant": "predsedničkih",
+   "mark": "bosnian",
+   "output": "Konačni rezultati predsjedničkih i parlamentarnih izbora u Namibiji ukazuju na to da je sadašnji predsjednik, Hifikepunye Pohamba, ponovo izabran s velikom razlikom."
+  },
+  {
+   "case_id": "flores-1147",
+   "term": "svjetska",
+   "variant": "Svetska",
+   "mark": "variant",
+   "output": "Medicinska dobrotvorna organizacija Mangola, Medicines Sans Frontieres i Svetska zdravstvena organizacija saopštili su da je to najgora epidemija zabeležena u zemlji."
+  },
+  {
+   "case_id": "flores-1179",
+   "term": "izvještaji",
+   "variant": "izveštaji",
+   "mark": "silent",
+   "output": "Američka geološka služba (USGS) i njen Nacionalni centar za informacije o zemljotresu (National Earth Information Center) nisu primili nikakve neposredne izveštaje o šteti."
+  },
+  {
+   "case_id": "flores-1213",
+   "term": "avion",
+   "variant": "zrakoplov",
+   "mark": "bosnian",
+   "output": "Kineska novinska agencija Xinhua saopštila je da je otet avion."
+  },
+  {
+   "case_id": "flores-1214",
+   "term": "avion",
+   "variant": "zrakoplov",
+   "mark": "bosnian",
+   "output": "Kasniji izveštaji su rekli da je avion primio pretnju bombom i da je preusmeren nazad u Avganistan, gde je sleteo u Kandahar."
+  },
+  {
+   "case_id": "flores-1215",
+   "term": "izvještajima",
+   "variant": "izveštajima",
+   "mark": "variant",
+   "output": "Prema prvim izveštajima, avion je preusmeren nazad u Avganistan nakon što mu je uskraćeno hitno sletanje u Urumkiju."
+  },
+  {
+   "case_id": "flores-1215",
+   "term": "avion",
+   "variant": "zrakoplov",
+   "mark": "bosnian",
+   "output": "Prema prvim izveštajima, avion je preusmeren nazad u Avganistan nakon što mu je uskraćeno hitno sletanje u Urumkiju."
+  },
+  {
+   "case_id": "flores-1219",
+   "term": "mjesec",
+   "variant": "mesec",
+   "mark": "silent",
+   "output": "Prošlog meseca Iran je doživeo najgoru vazdušnu nesreću u poslednjih nekoliko godina kada se srušio avion na putu za Jermeniju, ubivši 168 putnika u avionu."
+  },
+  {
+   "case_id": "flores-1223",
+   "term": "pjevač",
+   "variant": "pevač",
+   "mark": "bosnian",
+   "output": "Turneja je otkazana nakon što je pjevač Steven Tyler povrijeđen nakon što je pao sa pozornice 5. augusta."
+  },
+  {
+   "case_id": "flores-1228",
+   "term": "pjesme",
+   "variant": "pesme",
+   "mark": "bosnian",
+   "output": "Poznati pjevači širom zemlje predstavljali su bhajane, ili pobožne pjesme, Shri Shyamovim stopalima."
+  },
+  {
+   "case_id": "flores-1229",
+   "term": "pjevač",
+   "variant": "Pevač",
+   "mark": "bosnian",
+   "output": "Pjevač Sanju Sharma započeo je večer, a slijedio ga je Jai Shankar Choudhary. poslao je i chhappan bhog bhajan. Pjevač, Raju Khandelwal, bio je s njim."
+  },
+  {
+   "case_id": "flores-1268",
+   "term": "čovjeka",
+   "variant": "čoveka",
+   "mark": "silent",
+   "output": "Schneider ima stalnu bol, sljepoću u jednom oku, nedostaje dio lubanje i lice obnovljeno od titana."
+  },
+  {
+   "case_id": "flores-1296",
+   "term": "mjera",
+   "variant": "mera",
+   "mark": "bosnian",
+   "output": "Prošlog mjeseca predsjednička komisija preporučila je ostavku prethodnog CEP-a kao dio paketa mjera za pokretanje nove izborne kampanje."
+  },
+  {
+   "case_id": "flores-1302",
+   "term": "izvještaja",
+   "variant": "izveštaja",
+   "mark": "variant",
+   "output": "Američko ministarstvo odbrane saopštilo je da je odlaganje izveštaja \"stvarno žalosno.\""
+  },
+  {
+   "case_id": "flores-1309",
+   "term": "djecu",
+   "variant": "decu",
+   "mark": "variant",
+   "output": "Šestoro talaca, uključujući decu i starije osobe, pušteno je ranije, kao i fotografi sa Filipina."
+  },
+  {
+   "case_id": "flores-1334",
+   "term": "vozovi",
+   "variant": "vlakovi",
+   "mark": "bosnian",
+   "output": "Na Wembleyju neće biti dodatnog transporta, a nadzemni vozovi neće stati, a parkiralište i objekti za parkiranje i vožnju nisu dostupni na terenu."
+  },
+  {
+   "case_id": "flores-1341",
+   "term": "hemijske",
+   "variant": "kemijske",
+   "mark": "silent",
+   "output": "Ovo se zove pH hemikalija. Možete napraviti indikator pomoću soka od crvenog kupusa."
+  },
+  {
+   "case_id": "flores-1354",
+   "term": "promijenio",
+   "variant": "promenio",
+   "mark": "variant",
+   "output": "Točak je promenio svet na neverovatan način. Najveća stvar koju je točak uradio za nas je dao nam mnogo lakši i brži prevoz."
+  },
+  {
+   "case_id": "flores-1354",
+   "term": "svijet",
+   "variant": "svet",
+   "mark": "variant",
+   "output": "Točak je promenio svet na neverovatan način. Najveća stvar koju je točak uradio za nas je dao nam mnogo lakši i brži prevoz."
+  },
+  {
+   "case_id": "flores-1355",
+   "term": "voz",
+   "variant": "vlak",
+   "mark": "bosnian",
+   "output": "Doneo nam je voz, auto i mnoge druge transportne uređaje."
+  },
+  {
+   "case_id": "flores-1358",
+   "term": "uspjeha",
+   "variant": "uspeha",
+   "mark": "variant",
+   "output": "Tajna njihovog uspeha je koncept niše, posebnog posla koji svaka mačka ima i koji je sprečava da se takmiči sa drugima."
+  },
+  {
+   "case_id": "flores-1361",
+   "term": "porodici",
+   "variant": "obitelji",
+   "mark": "silent",
+   "output": "Ženke su obično u bliskom srodstvu jedna sa drugom, što je velika porodica sestara i ćerki."
+  },
+  {
+   "case_id": "flores-1371",
+   "term": "promijenila",
+   "variant": "promenila",
+   "mark": "variant",
+   "output": "Prvobitna populacija se uopšte nije promenila, i dalje im je potrebna ista prilagodba kao i ranije."
+  },
+  {
+   "case_id": "flores-1373",
+   "term": "hiljada",
+   "variant": "tisuća",
+   "mark": "bosnian",
+   "output": "Na kraju, nakon hiljada ili čak miliona godina, dvije populacije će izgledati toliko različito da se ne mogu nazvati istom vrstom."
+  },
+  {
+   "case_id": "flores-1377",
+   "term": "odjeću",
+   "variant": "odeću",
+   "mark": "bosnian",
+   "output": "Izrađujemo kuće od biljaka i odjeću od biljaka. Većina hrane koju jedemo su biljke. Bez biljaka, životinje ne bi mogle preživjeti."
+  },
+  {
+   "case_id": "flores-1384",
+   "term": "evropu",
+   "variant": "Europu",
+   "mark": "bosnian",
+   "output": "Drevni rimski obroci nisu mogli uključivati hranu koja je došla u Evropu iz Amerike ili iz Azije u kasnijim vekovima."
+  },
+  {
+   "case_id": "flores-1392",
+   "term": "porodice",
+   "variant": "obitelji",
+   "mark": "bosnian",
+   "output": "Najveći deo života jevrejske porodice odvijao se na otvorenom."
+  },
+  {
+   "case_id": "flores-1397",
+   "term": "historije",
+   "variant": "istorije",
+   "mark": "variant",
+   "output": "Iako je svaka zemlja bila \"skandinavska,\" postojale su mnoge razlike između naroda, kraljeva, običaja i istorije Danske, Švedske, Norveške i Islanda."
+  },
+  {
+   "case_id": "flores-1404",
+   "term": "umjesto",
+   "variant": "umesto",
+   "mark": "variant",
+   "output": "To su bili Francuzi koji su sklopili mir sa Nemcima 1940. godine i radili sa okupatorima umesto da se bore protiv njih."
+  },
+  {
+   "case_id": "flores-1420",
+   "term": "vijeka",
+   "variant": "veka",
+   "mark": "silent",
+   "output": "Tajvan je započeo u 15. vijeku kada su evropski pomorci koji su prolazili pored njega zabilježili ime ostrva kao Ilha Formosa, ili prekrasno ostrvo."
+  },
+  {
+   "case_id": "flores-1427",
+   "term": "primjer",
+   "variant": "primer",
+   "mark": "variant",
+   "output": "Na primer, najčešći format fotografije fotografija na svetu je 35mm, što je bila dominantna veličina filma na kraju analogne filmske ere."
+  },
+  {
+   "case_id": "flores-1431",
+   "term": "porodica",
+   "variant": "obitelj",
+   "mark": "silent",
+   "output": "Mnogi uobičajeni formati (na primer, APS familija formata) su jednaki ili blisko aproksimirani ovom omjeru."
+  },
+  {
+   "case_id": "flores-1434",
+   "term": "historije",
+   "variant": "istorije",
+   "mark": "variant",
+   "output": "Tokom ovog perioda evropske istorije, Katolička crkva, koja je postala bogata i moćna, došla je pod kontrolu."
+  },
+  {
+   "case_id": "flores-1435",
+   "term": "hiljadu",
+   "variant": "tisuću",
+   "mark": "bosnian",
+   "output": "Više od hiljadu godina hrišćanska religija povezivala je evropske države uprkos razlikama u jeziku i običajima."
+  },
+  {
+   "case_id": "flores-1438",
+   "term": "hiljadu",
+   "variant": "tisuću",
+   "mark": "bosnian",
+   "output": "Centralni autoritet crkve bio je u Rimu više od hiljadu godina i ova koncentracija moći i novca navela je mnoge da se zapitaju da li se to poštuje."
+  },
+  {
+   "case_id": "flores-1447",
+   "term": "porodica",
+   "variant": "obitelj",
+   "mark": "bosnian",
+   "output": "Drevna Kina je imala jedinstven način prikazivanja različitih vremenskih perioda; svaka faza Kine ili svaka porodica koja je bila na vlasti bila je posebna dinastija."
+  },
+  {
+   "case_id": "flores-1450",
+   "term": "hiljade",
+   "variant": "Tisuće",
+   "mark": "bosnian",
+   "output": "Tri kraljevstva bila su jedna od najkrvavijih epoha u istoriji drevne Kine. Hiljade ljudi je poginulo u borbi za najviša mjesta u velikoj palači u Xi'anu."
+  },
+  {
+   "case_id": "flores-1453",
+   "term": "umjesto",
+   "variant": "umesto",
+   "mark": "variant",
+   "output": "Isto važi i za vojsku, jer umesto da se rangiranje vojske zasniva na klasi, sada se zasniva na kailaberu."
+  },
+  {
+   "case_id": "flores-1485",
+   "term": "prijestolnica",
+   "variant": "prestolnica",
+   "mark": "silent",
+   "output": "Na način na koji je Pariz poznat kao modna prestonica savremenog sveta, Konstantinopolj je smatran kao modna prestonica feudalne Evrope."
+  },
+  {
+   "case_id": "flores-1485",
+   "term": "evrope",
+   "variant": "Europe",
+   "mark": "bosnian",
+   "output": "Na način na koji je Pariz poznat kao modna prestonica savremenog sveta, Konstantinopolj je smatran kao modna prestonica feudalne Evrope."
+  },
+  {
+   "case_id": "flores-1492",
+   "term": "evropa",
+   "variant": "Europa",
+   "mark": "bosnian",
+   "output": "Krajem srednjeg veka, zapadna Evropa je počela da razvija svoj stil. jedan od najvećih dostignuća u to vreme, kao rezultat krstaških ratova, ljudi su počeli da koriste dugmad za modifikovanje odeće."
+  },
+  {
+   "case_id": "flores-1496",
+   "term": "osjećaj",
+   "variant": "osećaj",
+   "mark": "variant",
+   "output": "Subkulture okupljaju istomišljenike koji se osećaju zanemarenim po društvenim standardima i dozvoljavaju im da razviju osećaj identiteta."
+  },
+  {
+   "case_id": "flores-1503",
+   "term": "živjeli",
+   "variant": "živeli",
+   "mark": "variant",
+   "output": "Drugi su navodno odgajani od strane životinja; neki su navodno živeli u divljini sami."
+  },
+  {
+   "case_id": "flores-1507",
+   "term": "čovjek",
+   "variant": "čovek",
+   "mark": "variant",
+   "output": "Skele mogu biti i virtuelne i stvarne, drugim rečima, nastavnik je oblik skele, ali tako je i mali čovek spajalica u Microsoft Office-u."
+  },
+  {
+   "case_id": "flores-1511",
+   "term": "djecu",
+   "variant": "decu",
+   "mark": "variant",
+   "output": "Mi smatramo da je sistem za udomljavanje dece bezbedna zona za ovu decu."
+  },
+  {
+   "case_id": "flores-1548",
+   "term": "primjera",
+   "variant": "primera",
+   "mark": "bosnian",
+   "output": "Jedan od najznačajnijih nedavnih primjera toga bila je sjevernoatlantska kampanja Drugog svjetskog rata. Amerikanci su pokušavali premjestiti ljude i materijale preko atlantskog okeana kako bi pomogli Britaniji."
+  },
+  {
+   "case_id": "flores-1550",
+   "term": "evrope",
+   "variant": "Europe",
+   "mark": "bosnian",
+   "output": "Da Saveznici nisu uspjeli, Njemačka bi vjerovatno mogla osvojiti Britaniju kao i ostatak Evrope."
+  },
+  {
+   "case_id": "flores-1563",
+   "term": "rješenje",
+   "variant": "rešenje",
+   "mark": "variant",
+   "output": "Ovo je kao simptomatsko lečenje u mnogim slučajevima. Međutim, ako ne želimo samo privremeno rešenje, onda treba da pronađemo koren problema i da ih deaktiviramo."
+  },
+  {
+   "case_id": "flores-1564",
+   "term": "promijenio",
+   "variant": "promenio",
+   "mark": "variant",
+   "output": "Dovoljno je očigledno da se svet mnogo promenio zbog naučnog i tehnološkog napretka čovečanstva, a problemi su postali veći zbog prenaseljenosti i prenapučenog načina života čovečanstva."
+  },
+  {
+   "case_id": "flores-1619",
+   "term": "hiljada",
+   "variant": "tisuća",
+   "mark": "bosnian",
+   "output": "Pre nekoliko hiljada godina, čovek po imenu Aristarh je rekao da se Sunčev sistem kreće oko Sunca."
+  },
+  {
+   "case_id": "flores-1632",
+   "term": "hemijske",
+   "variant": "kemijske",
+   "mark": "bosnian",
+   "output": "Ljudi su znali za osnovne hemijske elemente kao što su zlato, srebro i bakar iz antike, jer se svi oni mogu otkriti u prirodi u matičnoj formi i relativno su jednostavni za rudarenje."
+  },
+  {
+   "case_id": "flores-1634",
+   "term": "mijenjaju",
+   "variant": "menjaju",
+   "mark": "variant",
+   "output": "Ovo je više ličilo na četiri stanja materije (u istom redosledu): čvrsta, tečna, gasna i plazma, iako je takođe teoretisao da se one menjaju u nove supstance da bi formirale ono što vidimo."
+  },
+  {
+   "case_id": "flores-1657",
+   "term": "osjeća",
+   "variant": "oseća",
+   "mark": "variant",
+   "output": "Na drugom kraju spektra, jedan se transformiše u neprepoznatljivu osobu koja oseća da mora da promeni sve što je tim uradio i da to učini svojim."
+  },
+  {
+   "case_id": "flores-1658",
+   "term": "uspjeh",
+   "variant": "uspeh",
+   "mark": "variant",
+   "output": "Na kraju krajeva, lider je odgovoran za uspeh i neuspeh tima."
+  },
+  {
+   "case_id": "flores-1658",
+   "term": "neuspjeh",
+   "variant": "neuspeh",
+   "mark": "variant",
+   "output": "Na kraju krajeva, lider je odgovoran za uspeh i neuspeh tima."
+  },
+  {
+   "case_id": "flores-1661",
+   "term": "tačka",
+   "variant": "točka",
+   "mark": "bosnian",
+   "output": "Članovi virtuelnog tima često funkcionišu kao kontaktna tačka za njihovu neposrednu fizičku grupu."
+  },
+  {
+   "case_id": "flores-1681",
+   "term": "rješenje",
+   "variant": "rešenje",
+   "mark": "variant",
+   "output": "Tehnologija nudi rešenje sa virtuelnim terenskim izletima. Studenti mogu da pogledaju muzejske artefakte, posete akvarijum ili da se dive prelepoj umetnosti tokom sedenja sa svojim razredom."
+  },
+  {
+   "case_id": "flores-1690",
+   "term": "sjeveru",
+   "variant": "severu",
+   "mark": "variant",
+   "output": "Dalje na jugu je Nijagarini vodopadi, a na severu se nalaze neiskorišćene prirodne lepote Muskoke i šire."
+  },
+  {
+   "case_id": "flores-1698",
+   "term": "evrope",
+   "variant": "Europe",
+   "mark": "bosnian",
+   "output": "Evropski uticaj i kolonijalizam započeli su u 15. veku, kada je portugalski istraživač Vasko da Gama otkrio put Rta od Evrope do Indije."
+  },
+  {
+   "case_id": "flores-1713",
+   "term": "cijena",
+   "variant": "cena",
+   "mark": "bosnian",
+   "output": "Možete koristiti boda-boda (motocikl taksi) da biste dobili oko Goma. Normalna (lokalna) cijena je ~ 500 kongoanskih franaka za kratku vožnju."
+  },
+  {
+   "case_id": "flores-1720",
+   "term": "podijeljen",
+   "variant": "podeljen",
+   "mark": "bosnian",
+   "output": "Park se prostire na 19.500 km2 i podijeljen je na 14 različitih ekozona, od kojih svaka podržava različite vrste divljih životinja."
+  },
+  {
+   "case_id": "flores-1751",
+   "term": "vrijednost",
+   "variant": "vrednost",
+   "mark": "bosnian",
+   "output": "Službena valuta Falklandskih otoka je falklandska funta (FKP) čija je vrijednost jednaka vrijednosti jedne britanske funte (GBP)."
+  },
+  {
+   "case_id": "flores-1758",
+   "term": "rijetko",
+   "variant": "retko",
+   "mark": "variant",
+   "output": "Zima može biti varljivo hladna: temperature retko padaju ispod leda, ali vetar i vlažnost se kombinuju da bi se osećali hladnije nego što to kaže termometar."
+  },
+  {
+   "case_id": "flores-1758",
+   "term": "vjetra",
+   "variant": "vetra",
+   "mark": "silent",
+   "output": "Zima može biti varljivo hladna: temperature retko padaju ispod leda, ali vetar i vlažnost se kombinuju da bi se osećali hladnije nego što to kaže termometar."
+  },
+  {
+   "case_id": "flores-1763",
+   "term": "posjetilaca",
+   "variant": "posetilaca",
+   "mark": "variant",
+   "output": "Svake godine, na desetine posetilaca je povređeno jer nisu držali odgovarajuću distancu. Ove životinje su velike, divlje i potencijalno opasne, pa im dajte svoj prostor."
+  },
+  {
+   "case_id": "flores-1794",
+   "term": "sjeverni",
+   "variant": "severni",
+   "mark": "variant",
+   "output": "Ako prelazite severni Baltik zimi, proverite lokaciju kabine, jer prolazak kroz led izaziva prilično užasnu buku kod onih koji su najteže pogođeni."
+  },
+  {
+   "case_id": "flores-1795",
+   "term": "zahtjeva",
+   "variant": "zahteva",
+   "mark": "bosnian",
+   "output": "Krstarenja u Sankt Peterburgu uključuju vrijeme provedeno u gradu. Putnici krstarenja su izuzeti od zahtjeva za vizu (provjerite uslove)."
+  },
+  {
+   "case_id": "flores-1804",
+   "term": "posjetioce",
+   "variant": "posetioce",
+   "mark": "variant",
+   "output": "Safari su možda najveća turistička atrakcija u Africi i najvažnija atrakcija za mnoge posetioce."
+  },
+  {
+   "case_id": "flores-1824",
+   "term": "duhana",
+   "variant": "duvana",
+   "mark": "silent",
+   "output": "Putnici koji putuju u zemlje sa visokim porezima ponekad mogu da uštede značajnu količinu novca, posebno na proizvodima kao što su alkoholna pića i duvan."
+  },
+  {
+   "case_id": "flores-1837",
+   "term": "dijelova",
+   "variant": "delova",
+   "mark": "silent",
+   "output": "Ali, ako se koristi bez dodatnih kvalifikacija, termin ima tendenciju da označava hranu poreklom iz centralnog i istočnog dela glavnog ostrva Java."
+  },
+  {
+   "case_id": "flores-1845",
+   "term": "dijelova",
+   "variant": "delova",
+   "mark": "bosnian",
+   "output": "Vrhovi uključuju poglede koji oduzimaju dah sa vrhova. Penjači iz svih dijelova svijeta kontinuirano uspostavljaju nove rute među svojim beskrajnim potencijalom zidova."
+  },
+  {
+   "case_id": "flores-1854",
+   "term": "evropa",
+   "variant": "Europa",
+   "mark": "bosnian",
+   "output": "Evropa je kontinent koji je relativno mali, ali sa mnogim nezavisnim zemljama. Pod normalnim okolnostima, putovanje kroz više zemalja bi značilo da morate proći kroz zahtjeve za vizu i pasošku kontrolu."
+  },
+  {
+   "case_id": "flores-1859",
+   "term": "evropi",
+   "variant": "Europi",
+   "mark": "bosnian",
+   "output": "Definicija ima geografske varijacije, gdje bi starosna granica mogla biti kraća u mjestima kao što je Sjeverna Amerika nego u Evropi."
+  },
+  {
+   "case_id": "flores-1862",
+   "term": "živjeli",
+   "variant": "živeli",
+   "mark": "bosnian",
+   "output": "Čak i tradicionalno, međutim, nisu svi Sami bili uključeni u uzgoj irvasa velikih razmjera, ali su živjeli od ribolova, lova i slično, uglavnom kao irvasi."
+  },
+  {
+   "case_id": "flores-1889",
+   "term": "negdje",
+   "variant": "negde",
+   "mark": "variant",
+   "output": "Pokušajte da ciljate negde gde vas više ne uhvate ili, u zavisnosti od vaših veština i da li ste primećeni, možda ćete želeti da sačekate spasavanje."
+  },
+  {
+   "case_id": "flores-1905",
+   "term": "dijelu",
+   "variant": "delu",
+   "mark": "silent",
+   "output": "Sjeverni dio ili Sentinel Range ima najviše planine na Antarktiku, masiv Vinson, koji se nalazi na 4892 m nadmorske visine."
+  },
+  {
+   "case_id": "flores-1922",
+   "term": "cijenu",
+   "variant": "cenu",
+   "mark": "bosnian",
+   "output": "Neki krstarenja imaju Berlin, Njemačka u brošurama. Kao što možete vidjeti iz mape iznad Berlina nije gdje u blizini mora i posjeta gradu nije uključena u cijenu krstarenja."
+  },
+  {
+   "case_id": "flores-1925",
+   "term": "aviona",
+   "variant": "zrakoplova",
+   "mark": "silent",
+   "output": "Za neke, razumevanje nečega o tome kako avioni rade i šta se dešava tokom leta može pomoći da se prevaziđe strah koji se zasniva na nepoznatom ili nekontrolisanom."
+  },
+  {
+   "case_id": "flores-1926",
+   "term": "dijelove",
+   "variant": "delove",
+   "mark": "silent",
+   "output": "Kurirske kompanije su dobro plaćene za brzu isporuku stvari. Često je vreme veoma važno sa poslovnim dokumentima, robom ili rezervnim delovima za hitnu popravku."
+  },
+  {
+   "case_id": "flores-1932",
+   "term": "tačke",
+   "variant": "točke",
+   "mark": "silent",
+   "output": "Uopšteno govoreći, nema smisla čak ni tražiti popuste za poslovna ili prvoklasna sedišta na direktnim letovima od A do B."
+  },
+  {
+   "case_id": "flores-1933",
+   "term": "negdje",
+   "variant": "negde",
+   "mark": "variant",
+   "output": "Aviokompanije dobro znaju da postoji određena osnovna grupa letaka koji su spremni da plate najviše dolare za privilegiju da se negde brzo i udobno i naplaćuju u skladu sa tim."
+  },
+  {
+   "case_id": "ntrex-6",
+   "term": "cjelini",
+   "variant": "celini",
+   "mark": "variant",
+   "output": "U saopštenju se navodi da grupa u celini nije bila \"srećna\" i da je predložila alternative."
+  },
+  {
+   "case_id": "ntrex-9",
+   "term": "promjena",
+   "variant": "promena",
+   "mark": "variant",
+   "output": "Skupštinska komisija, koja trenutno izrađuje zakone o uvođenju promena imena, navela je: \"Konačna odluka o bilo kakvim deskriptorima o tome kako se zovu članovi Skupštine će, naravno, biti stvar samih članova Skupštine.\""
+  },
+  {
+   "case_id": "ntrex-13",
+   "term": "promjenama",
+   "variant": "promenama",
+   "mark": "variant",
+   "output": "AM očigledno predlažu alternativne opcije, ali borba za postizanje konsenzusa mogla bi biti glavobolja za predsjedavajućeg Elin Jones, koji se očekuje da podnese nacrt zakona o promenama u roku od nekoliko nedelja."
+  },
+  {
+   "case_id": "ntrex-172",
+   "term": "izvještaju",
+   "variant": "izveštaju",
+   "mark": "bosnian",
+   "output": "Forenzički pregled je potvrdio da je svinja od 550 funti izmučila farmera do smrti, navodi se u izvještaju."
+  },
+  {
+   "case_id": "ntrex-176",
+   "term": "čovjeka",
+   "variant": "čoveka",
+   "mark": "variant",
+   "output": "Životinja koja je ubila čoveka nije pripadala Juanu ili njegovom rođaku."
+  },
+  {
+   "case_id": "ntrex-284",
+   "term": "pobjedu",
+   "variant": "pobedu",
+   "mark": "silent",
+   "output": "Prvi gol Dolly Menge za Livingston"
+  },
+  {
+   "case_id": "ntrex-359",
+   "term": "bijes",
+   "variant": "bes",
+   "mark": "variant",
+   "output": "Tramp: Kavano je patio, podlost, bes Demokratske partije"
+  },
+  {
+   "case_id": "ntrex-430",
+   "term": "vjerujem",
+   "variant": "Verujem",
+   "mark": "variant",
+   "output": "\"Verujem da je 'ye' najčešće korišćena reč u Bibliji, a u Bibliji to znači 'ti',\" rekao je Vest ranije ove godine, razgovarajući o naslovu albuma sa radio voditeljem Big Boy."
+  },
+  {
+   "case_id": "ntrex-815",
+   "term": "odjeću",
+   "variant": "odeću",
+   "mark": "silent",
+   "output": "\"Ali ja sam izabrao da ne nagrađujem (kupovinom njegove muzike ili odeće ili podržavanjem njegove \"umjetnosti\") nekoga za koga verujem da prihvata i izbacuje ideologiju koja je štetna za moju zajednicu."
+  },
+  {
+   "case_id": "ntrex-815",
+   "term": "umjetnost",
+   "variant": "umetnost",
+   "mark": "silent",
+   "output": "\"Ali ja sam izabrao da ne nagrađujem (kupovinom njegove muzike ili odeće ili podržavanjem njegove \"umjetnosti\") nekoga za koga verujem da prihvata i izbacuje ideologiju koja je štetna za moju zajednicu."
+  },
+  {
+   "case_id": "ntrex-815",
+   "term": "vjerujem",
+   "variant": "verujem",
+   "mark": "variant",
+   "output": "\"Ali ja sam izabrao da ne nagrađujem (kupovinom njegove muzike ili odeće ili podržavanjem njegove \"umjetnosti\") nekoga za koga verujem da prihvata i izbacuje ideologiju koja je štetna za moju zajednicu."
+  },
+  {
+   "case_id": "ntrex-819",
+   "term": "umjetnik",
+   "variant": "umetnik",
+   "mark": "bosnian",
+   "output": "On nije prvi umjetnik koji je promijenio svoje ime i slijedi korake Diddyja, također poznatog kao Puff Daddy, Puffy i P Diddy."
+  },
+  {
+   "case_id": "ntrex-828",
+   "term": "vjeruje",
+   "variant": "veruje",
+   "mark": "bosnian",
+   "output": "U razgovoru za Sunday Times Culture, Kit je rekao da vjeruje da je \"nešto pošlo po zlu\" i pitao se kako se nositi s problemom toksične muškosti u eri #MeToo."
+  },
+  {
+   "case_id": "ntrex-832",
+   "term": "vjeruje",
+   "variant": "veruje",
+   "mark": "variant",
+   "output": "Kit veruje da je televizija delimično odgovorna za porast toksične muškosti, zahvaljujući njenim muškim likovima."
+  },
+  {
+   "case_id": "ntrex-853",
+   "term": "procjenjuju",
+   "variant": "procenjuju",
+   "mark": "silent",
+   "output": "Zbog konzervativnih vrednosti u zemlji, studije su procenile da će 70-90% muškaraca koji imaju seks sa muškarcima na kraju oženiti žene."
+  },
+  {
+   "case_id": "ntrex-892",
+   "term": "obavještajne",
+   "variant": "obaveštajne",
+   "mark": "silent",
+   "output": "Njeni obaveštajni savetnici je obaveštavaju da će, pošto je svaki aktivni špijun kompromitovan, morati da izvuče nekog iz penzije."
+  },
+  {
+   "case_id": "ntrex-1068",
+   "term": "tačno",
+   "variant": "točno",
+   "mark": "bosnian",
+   "output": "Jedan od njegovih unuka, Majkl Van, rekao je da je to \"briljantno simbolično\" da će kamen biti otkriven tačno 100 godina nakon nagrađivanog podviga njegovog dede."
+  },
+  {
+   "case_id": "ntrex-1081",
+   "term": "potpredsjednik",
+   "variant": "potpredsednik",
+   "mark": "variant",
+   "output": "\"Vladina je regulativa da u 6 sati taj sadržaj nije bio adekvatan, pa su morali da pređu na programiranje za decu,\" rekao je Dejv Švarc, stariji potpredsednik za marketing i komunikacije."
+  },
+  {
+   "case_id": "ntrex-1229",
+   "term": "zauvijek",
+   "variant": "zauvek",
+   "mark": "variant",
+   "output": "Bregzit: Velika Britanija zauvek zažalila zbog gubitka proizvođača automobila"
+  },
+  {
+   "case_id": "ntrex-1230",
+   "term": "zauvijek",
+   "variant": "zauvek",
+   "mark": "variant",
+   "output": "Velika Britanija će \"zauvek zažaliti\" ako izgubi svoj status svetskog lidera u proizvodnji automobila posle Bregzita, izjavio je danas britanski ministar finansija Greg Klark."
+  },
+  {
+   "case_id": "ntrex-1268",
+   "term": "učestvuje",
+   "variant": "sudjeluje",
+   "mark": "bosnian",
+   "output": "Tramp redovno odgovara na pitanja kada napušta Belu kuću ili učestvuje na otvorenim sednicama ili konferencijama za štampu sa visokim zvaničnicima."
+  },
+  {
+   "case_id": "ntrex-1299",
+   "term": "procjenjuje",
+   "variant": "Procenjuje",
+   "mark": "variant",
+   "output": "Procenjuje se da 13 odsto novoizgrađenih nekretnina u Londonu kupuju stanovnici koji nisu iz Velike Britanije, što podiže cene i otežava kupcima koji prvi put kupuju nekretnine da se popnu na merdevine."
+  },
+  {
+   "case_id": "ntrex-1323",
+   "term": "osjeća",
+   "variant": "oseća",
+   "mark": "variant",
+   "output": "Ross kaže da se sada oseća prijatnije nego ikada tokom svoje karijere u Clydeu, Hartlepoolu, Falkirku, St. Mirrenu i Hamilton Academicalu."
+  },
+  {
+   "case_id": "ntrex-1355",
+   "term": "svijest",
+   "variant": "svest",
+   "mark": "silent",
+   "output": "Istraživanje, koje su proveli Digital Awareness UK i Direktori i Direktorice (HMC) nezavisnih škola, pokazalo je da 40 odsto dece od 11 do 18 godina ima dva profila, od kojih polovina priznaje da vodi privatne račune."
+  },
+  {
+   "case_id": "ntrex-1386",
+   "term": "osjećaju",
+   "variant": "osećaju",
+   "mark": "variant",
+   "output": "\"Ovo je zabavna reklama namenjena majkama koje pumpaju (često na svojim radnim mestima ili toaletima) i osećaju se kao \"krave.\""
+  },
+  {
+   "case_id": "ntrex-1389",
+   "term": "osjećaju",
+   "variant": "osećaju",
+   "mark": "variant",
+   "output": "Koncept kampanje zasniva se na uvidu da mnoge žene koje pumpaju dojke kažu da se osećaju kao krave."
+  },
+  {
+   "case_id": "ntrex-1682",
+   "term": "avionu",
+   "variant": "zrakoplovu",
+   "mark": "bosnian",
+   "output": "Ubijen kontrolor vazdušnog saobraćaja kako bi se obezbedilo da stotine ljudi u avionu mogu da pobegnu od zemljotresa"
+  },
+  {
+   "case_id": "ntrex-1709",
+   "term": "avion",
+   "variant": "zrakoplov",
+   "mark": "bosnian",
+   "output": "Lokalni čamci pomogli su u spašavanju ostalih putnika i posade nakon što je avion udario u vodu dok je pokušavao da sleti na aerodrom na ostrvu Čuk."
+  },
+  {
+   "case_id": "ntrex-1713",
+   "term": "avion",
+   "variant": "zrakoplov",
+   "mark": "bosnian",
+   "output": "Američka aviokompanija i mornarica saopštili su da je avion sleteo u lagunu nedaleko od piste."
+  },
+  {
+   "case_id": "ntrex-1717",
+   "term": "uspjeli",
+   "variant": "uspeli",
+   "mark": "variant",
+   "output": "Džejns je rekao da su on i ostali uspeli da prođu kroz vodu duboko u struku do izlaza za hitne slučajeve u avionu koji je tonuo."
+  },
+  {
+   "case_id": "ntrex-1717",
+   "term": "avionu",
+   "variant": "zrakoplovu",
+   "mark": "bosnian",
+   "output": "Džejns je rekao da su on i ostali uspeli da prođu kroz vodu duboko u struku do izlaza za hitne slučajeve u avionu koji je tonuo."
+  },
+  {
+   "case_id": "ntrex-1768",
+   "term": "uspjeh",
+   "variant": "uspeh",
+   "mark": "bosnian",
+   "output": "Mislim da je Paddingtonov uspjeh gledao na taj način."
+  },
+  {
+   "case_id": "ntrex-1783",
+   "term": "avion",
+   "variant": "zrakoplov",
+   "mark": "bosnian",
+   "output": "Na kraju, gospođa Ednan-Laperouse, koja je već tugovala zbog gubitka kćerke, ukrcala se u avion zajedno sa ostalim putnicima - ne obazirući se na iskušenja kroz koja je prolazila."
+  },
+  {
+   "case_id": "ntrex-1823",
+   "term": "sjevera",
+   "variant": "severa",
+   "mark": "silent",
+   "output": "Velika većina dezertera sa Severne Koreje na kraju dobijaju i državljanstvo od Južne Koreje."
+  },
+  {
+   "case_id": "ntrex-1880",
+   "term": "izbjeglica",
+   "variant": "izbeglica",
+   "mark": "variant",
+   "output": "Sirija spremna za povratak izbeglica, izjavio je ministar spoljnih poslova"
+  },
+  {
+   "case_id": "ntrex-1881",
+   "term": "izbjeglica",
+   "variant": "izbeglica",
+   "mark": "variant",
+   "output": "Sirija je saopštila da je spremna za dobrovoljni povratak izbeglica i apeluje na pomoć u obnovi zemlje razorene više od sedam godina dugim ratom."
+  },
+  {
+   "case_id": "ntrex-1885",
+   "term": "mjera",
+   "variant": "mera",
+   "mark": "variant",
+   "output": "Sada su prisutni svi uslovi za dobrovoljni povratak izbeglica u zemlju koju su morali da napuste zbog terorizma i jednostranih ekonomskih mera koje su bile usmerene na njihov svakodnevni život i njihovu egzistenciju."
+  },
+  {
+   "case_id": "ntrex-1911",
+   "term": "naprijed",
+   "variant": "napred",
+   "mark": "silent",
+   "output": "Pregrupirat ćemo se, sarađivat ću s PGA-om Amerike i Ryder Cup Committeeom i nastaviti dalje."
+  },
+  {
+   "case_id": "setimes_test-12",
+   "term": "susjednim",
+   "variant": "susednim",
+   "mark": "bosnian",
+   "output": "Zemljotres se osjetio u susjednim provincijama Tunceli, Bingol i Diyarbakir, izvijestio je turski dnevnik Hurriyet."
+  },
+  {
+   "case_id": "setimes_test-18",
+   "term": "neuspjeh",
+   "variant": "neuspeh",
+   "mark": "silent",
+   "output": "Iznad svega, to je pokazatelj neuspeha obrazovnih i bezbednosnih institucija da se bave ovim ozbiljnim problemom koji počinje da dostiže zabrinjavajuće proporcije,\" prokomentarisao je Avni Bytyci iz nevladine organizacije INPO, jedne od retkih organizacija koje se bave ovim problemom."
+  },
+  {
+   "case_id": "setimes_test-38",
+   "term": "riječima",
+   "variant": "rečima",
+   "mark": "variant",
+   "output": "Prema rečima direktora instituta Nemanje Damjanova, sredstva su iskorišćena za nabavku i ugradnju sofisticiranog digitalnog rendgenskog sistema."
+  },
+  {
+   "case_id": "setimes_test-48",
+   "term": "vjetra",
+   "variant": "vetra",
+   "mark": "variant",
+   "output": "Da bi ispunila specifikacije EU, Bugarska mora da obezbedi da udeo energije proizvedene iz vetra, sunca i drugih zelenih izvora dostigne 16 odsto ukupne ukupne ukupne ukupne potrošnje energije u zemlji do 2020. godine."
+  },
+  {
+   "case_id": "setimes_test-86",
+   "term": "uspjeli",
+   "variant": "uspeli",
+   "mark": "variant",
+   "output": "Napadači, koji su uspeli da pobegnu nakon što su otvorili vatru na policiju, bacili su eksploziv na autobus koji je prevozio partijske aktiviste na sastanak uoči izbora 12. juna."
+  },
+  {
+   "case_id": "setimes_test-100",
+   "term": "naprijed",
+   "variant": "napred",
+   "mark": "silent",
+   "output": "Povjerenik EU za proširenje Olli Rehn stigao je u Sarajevo sa oštrim upozorenjem političkim liderima Bosne i Hercegovine: nastavite sa potrebnim reformama ili se nastavite sa pokušajem da se zemlja odrekne EU."
+  },
+  {
+   "case_id": "setimes_test-114",
+   "term": "lijevo",
+   "variant": "levo",
+   "mark": "bosnian",
+   "output": "Hrvatski predsjednik Stipe Mesić (lijevo) održao je u petak (8. januar) u Prištini konferenciju za novinare s kosovskim predsjednikom Fatmirom Sejdiuom. [Getty Images]"
+  },
+  {
+   "case_id": "setimes_test-160",
+   "term": "podijeljen",
+   "variant": "podeljen",
+   "mark": "variant",
+   "output": "Od 1964. godine Kipar je podeljen na grčke i turske teritorije."
+  },
+  {
+   "case_id": "setimes_test-205",
+   "term": "mjere",
+   "variant": "mere",
+   "mark": "variant",
+   "output": "Finansijske institucije koje se bave velikim količinama novca moraće da unaprede svoje mere bezbednosti."
+  },
+  {
+   "case_id": "setimes_test-210",
+   "term": "lijevo",
+   "variant": "levo",
+   "mark": "bosnian",
+   "output": "Izaslanik EU Wolfgang Ischinger (u sredini), američki posrednik Frank Wisner (lijevo) i ruski Aleksandar Botsan-Kharchenko održali su u ponedjeljak (3. decembar) konferenciju za novinare u Beogradu. [Getty Images]"
+  },
+  {
+   "case_id": "setimes_test-216",
+   "term": "izmijeni",
+   "variant": "izmeni",
+   "mark": "silent",
+   "output": "Članica Karmen Rivoseki Simić, kaže da će RODA podržati Mesića da pomogne u promeni zakona o IVF-u."
+  },
+  {
+   "case_id": "setimes_test-224",
+   "term": "posjetu",
+   "variant": "posetu",
+   "mark": "bosnian",
+   "output": "Makedonski premijer Nikola Gruevski stigao je u trodnevnu posjetu Njemačkoj u ponedjeljak (16. oktobar) u nadi da će dobiti podršku Berlina za kandidature njegove zemlje za članstvo u EU i NATO-u."
+  },
+  {
+   "case_id": "setimes_test-228",
+   "term": "pobijedio",
+   "variant": "pobedio",
+   "mark": "bosnian",
+   "output": "Eroglu je pobijedio na predsjedničkim izborima u aprilu pobijedivši svog prethodnika Mehmeta Alija Talata. (Centar za vijesti UN-a, novinska agencija Anadolija, World Bulletin, Cyprus Mail - 21/05/10)"
+  },
+  {
+   "case_id": "setimes_test-232",
+   "term": "posjete",
+   "variant": "posete",
+   "mark": "variant",
+   "output": "\"Računamo na to da ćemo biti u mogućnosti da predstavimo izveštaj pred kraj našeg predsedništva u kojem ćemo predstaviti plan,\" rekla je Merkel tokom posete Kopenhagenu prošle nedelje."
+  },
+  {
+   "case_id": "setimes_test-241",
+   "term": "bezbjednosti",
+   "variant": "bezbednosti",
+   "mark": "silent",
+   "output": "Dragnea je rekao da će njegovi glavni ciljevi biti poboljšanje javne sigurnosti, uključujući i u školama, te decentralizacija i reforma administracije."
+  },
+  {
+   "case_id": "setimes_test-249",
+   "term": "usmjeren",
+   "variant": "usmeren",
+   "mark": "bosnian",
+   "output": "Američki ambasador u Turskoj Ross Wilson osudio je \"očiti teroristički čin\" usmjeren na SAD."
+  },
+  {
+   "case_id": "setimes_test-260",
+   "term": "izmijeni",
+   "variant": "izmeni",
+   "mark": "bosnian",
+   "output": "Naglašavajući važnost slobode govora, on je pozvao Ankaru da izmijeni ili poništi kontroverzni članak krivičnog zakona koji je doveo do niza sudskih procesa protiv pisaca i intelektualaca."
+  },
+  {
+   "case_id": "setimes_test-261",
+   "term": "rješenja",
+   "variant": "rešenja",
+   "mark": "silent",
+   "output": "Planeri Nabuka smatraju Azerbejdžan najsigurnijim izvorom, a ministar spoljnih poslova zemlje Araz Azimov rekao je u intervjuu od 29. januara da je \"rješenje\" vjerovatno ove godine."
+  },
+  {
+   "case_id": "setimes_test-284",
+   "term": "učestvovati",
+   "variant": "sudjelovati",
+   "mark": "silent",
+   "output": "Predsednik Kosova Fatmir Sejdiu izjavio je da, iako o nezavisnosti nema pregovora, njegova strana je spremna da učestvuje u daljim pregovorima."
+  },
+  {
+   "case_id": "setimes_test-299",
+   "term": "zamijeniti",
+   "variant": "zameniti",
+   "mark": "bosnian",
+   "output": "Prema sporazumu, Međuvladina konferencija (IGC) sazvat će se sljedećeg mjeseca kako bi izradila nacrt reformskog ugovora koji će zamijeniti glomazni ustav, koji je odbacila većina francuskih i holandskih birača."
+  },
+  {
+   "case_id": "setimes_test-322",
+   "term": "uslijedila",
+   "variant": "usledila",
+   "mark": "silent",
+   "output": "Njegova izjava je stigla na državnom banketu u čast svog indijskog kolege, Pratibha Devisingh Patila."
+  },
+  {
+   "case_id": "setimes_test-357",
+   "term": "djelimično",
+   "variant": "delimično",
+   "mark": "variant",
+   "output": "\"Poruka je delimično bila odgovor na pretnje ove grupe,\" citirala je DPA jednog američkog zvaničnika, koji je govorio pod uslovom da ostane anoniman."
+  },
+  {
+   "case_id": "setimes_test-364",
+   "term": "učestvovati",
+   "variant": "sudjelovati",
+   "mark": "silent",
+   "output": "Tri zemlje sada mogu da učestvuju u projektima FP7 i da se prijave za finansiranje nauke i istraživanja."
+  },
+  {
+   "case_id": "setimes_test-367",
+   "term": "općina",
+   "variant": "Opština",
+   "mark": "variant",
+   "output": "Opština Bitolj će učestvovati obezbeđujući 3,5 miliona eura,\" izjavio je za SETimes gradonačelnik Bitolja Vadimir Talevski."
+  },
+  {
+   "case_id": "setimes_test-367",
+   "term": "učestvovati",
+   "variant": "sudjelovati",
+   "mark": "bosnian",
+   "output": "Opština Bitolj će učestvovati obezbeđujući 3,5 miliona eura,\" izjavio je za SETimes gradonačelnik Bitolja Vadimir Talevski."
+  },
+  {
+   "case_id": "setimes_test-373",
+   "term": "riječima",
+   "variant": "rečima",
+   "mark": "variant",
+   "output": "Prema Dabarčićevim rečima, SNSD i SDS razmatraju povlačenje iz tekućih razgovora i nominovanje svojih kandidata za najviša državna mesta."
+  },
+  {
+   "case_id": "setimes_test-397",
+   "term": "prijevremene",
+   "variant": "prevremene",
+   "mark": "silent",
+   "output": "Grčki premijer Costas Karamanlis pozvao je na vanredne izbore 4. oktobra ranije ovog mjeseca, čime su okončane nedjelje špekulacija. [Getty Images]"
+  },
+  {
+   "case_id": "setimes_test-406",
+   "term": "predsjedničkih",
+   "variant": "predsedničkih",
+   "mark": "silent",
+   "output": "Njih dvojica održali su više od 70 sastanaka prije pauze za predsjedničke izbore u Turskoj na Kipru ovog mjeseca, koje je aktuelni Talat izgubio od nacionalističkog hardlinera Eroglua."
+  },
+  {
+   "case_id": "setimes_test-441",
+   "term": "prijelaza",
+   "variant": "prelaza",
+   "mark": "bosnian",
+   "output": "Stvarne prepreke s kojima će se domaći proizvođači suočiti uključuju nedovoljan broj opremljenih graničnih prijelaza, nedovoljno opremljene laboratorije za analizu i nedostatak dozvola, koje su potrebne za ulazak izvezene robe na tržište EU."
+  },
+  {
+   "case_id": "setimes_test-465",
+   "term": "prijedlog",
+   "variant": "Predlog",
+   "mark": "variant",
+   "output": "Predlog za borbu protiv korupcije naišao na skepticizam u Srbiji"
+  },
+  {
+   "case_id": "setimes_test-466",
+   "term": "učestvovati",
+   "variant": "sudjelovati",
+   "mark": "silent",
+   "output": "Obeshrabreni su da igraju na Kosovu jer ne mogu da učestvuju na međunarodnim takmičenjima ili mečevima i, što je još važnije, ne dobijaju poštovanje koje zaslužuju,\" rekao je on."
+  },
+  {
+   "case_id": "setimes_test-498",
+   "term": "namjerno",
+   "variant": "namerno",
+   "mark": "variant",
+   "output": "U saopštenju se namerno izostavlja termin \"islamski ili islamistički terorizam.\""
+  },
+  {
+   "case_id": "setimes_test-501",
+   "term": "susjednim",
+   "variant": "susednim",
+   "mark": "variant",
+   "output": "Što su bliže veze sa susednim zemljama, kraći će biti put Albanije ka EU, izjavio je ministar za integracije Arenca Trashani."
+  },
+  {
+   "case_id": "setimes_test-563",
+   "term": "zahtijevajući",
+   "variant": "zahtevajući",
+   "mark": "variant",
+   "output": "Kada je ACR prvi put kupio rudnik na koncesiji, objasnila je, Nikolaj i sindikalni vođa Tafe Koleci organizovali su protest zahtevajući povećanje plata rudara - prvo za 30%, a zatim za dodatnih 50% - kao i investicije za poboljšanje uslova rada."
+  },
+  {
+   "case_id": "setimes_test-568",
+   "term": "izmjena",
+   "variant": "izmena",
+   "mark": "silent",
+   "output": "Predložene izmene Izbornog zakona Makedonije bave se nepravilnostima u glasanju, mogućnostima Državne izborne komisije i finansiranju kampanje."
+  }
+ ]
+}
