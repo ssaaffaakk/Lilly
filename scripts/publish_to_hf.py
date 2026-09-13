@@ -157,6 +157,14 @@ EXCLUDE_RULES = (
                          "bound to training/RESULTS-en-bs-formrate.md"),
     ("adapter-en-bs", "raw LoRA adapter for the reply direction; the merged model is published "
                       "as translator-en-bs/ (--with-reply)"),
+    # The reply direction's untuned int8 comparison, built on 12 September so
+    # the served build could be scored through the path a user actually meets
+    # (training/RESULTS-product-en-bs.md: 31.23 -> 32.22 BLEU). It is the
+    # mirror of translator-base above, and it sat in the unrecognised bucket
+    # until now -- which is the guard doing its job, not a defect.
+    ("translator-en-bs-base", "int8 English -> Bosnian base built by build_translator.py "
+                              "--direction en-bs --no-adapter, the comparison column of "
+                              "training/RESULTS-product-en-bs.md rather than a served model"),
     # The Bosnian voice. Never published from here: it is Piper's public
     # sr_RS voice, pulled from rhasspy/piper-voices by scripts/fetch_speak_bs.py
     # on every install, and a copy in this bundle would add nothing to it.
