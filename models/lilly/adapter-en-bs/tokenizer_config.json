@@ -1,0 +1,39 @@
+{
+  "added_tokens_decoder": {
+    "39611": {
+      "content": "</s>",
+      "lstrip": false,
+      "normalized": false,
+      "rstrip": false,
+      "single_word": false,
+      "special": true
+    },
+    "47908": {
+      "content": "<unk>",
+      "lstrip": false,
+      "normalized": false,
+      "rstrip": false,
+      "single_word": false,
+      "special": true
+    },
+    "58638": {
+      "content": "<pad>",
+      "lstrip": false,
+      "normalized": false,
+      "rstrip": false,
+      "single_word": false,
+      "special": true
+    }
+  },
+  "clean_up_tokenization_spaces": false,
+  "eos_token": "</s>",
+  "extra_special_tokens": {},
+  "model_max_length": 512,
+  "pad_token": "<pad>",
+  "separate_vocabs": false,
+  "source_lang": "en",
+  "sp_model_kwargs": {},
+  "target_lang": "sh",
+  "tokenizer_class": "MarianTokenizer",
+  "unk_token": "<unk>"
+}

@@ -121,6 +121,19 @@ models/lilly/*
 !models/lilly/README.md
 !models/lilly/NOTICE.md
 
+# The LoRA adapters are the fine-tuning itself, and until now they existed in
+# exactly one place on earth: this laptop. The blanket `models/lilly/*` above
+# caught them, and the publisher leaves them out of the bundle on purpose
+# (scripts/publish_to_hf.py lists them under "left behind": what a user runs is
+# the merged int8 build, not the adapter). The merged builds are on the Hub, so
+# the product was never the thing at risk -- the fine-tune was. Losing these
+# would mean the adapter path that cleared all four pre-registered bars could
+# never be re-merged at another precision, re-measured, or continued.
+# 8.7 MB + 17 MB of safetensors. GitHub is the store.
+!models/lilly/adapter/
+!models/lilly/adapter-en-bs/
+!models/lilly/adapter-arm-a/
+
 # Local agent / overnight runs — not source of truth
 logs/*
 !logs/README.md
@@ -134,6 +147,16 @@ data/signs/.osm-harvest.progress.json
 *.safetensors
 *.pt
 *.onnx
+
+# ...except the three LoRA adapters re-included above. The weight-extension
+# rules on the lines above are what actually kept them off GitHub: re-including
+# the directory is not enough, because `*.safetensors` still catches the only
+# file that matters. Staging the directory without this line commits the
+# tokenizer and the config and leaves the fine-tune exactly as single-copy as
+# it was, while looking backed up.
+!models/lilly/adapter/*.safetensors
+!models/lilly/adapter-en-bs/*.safetensors
+!models/lilly/adapter-arm-a/*.safetensors
 
 # Fine-tune floor re-sweep (scripts/paddle_finetune_floor.py): the per-floor
 # summaries (the40-floor*.json/.md, test-v2-floor*.json/.md) are the raw counts
