@@ -551,6 +551,7 @@ of failures already paid for: [`docs/kaggle-fail-stop.md`](docs/kaggle-fail-stop
 ## Status
 
 - [x] Translate, listen, speak, read, web app, correction pipeline
+- [x] Web app flow — detect-language by default, translate-as-you-type, a local history and phrasebook, a conversation loop, a live camera that draws each region's translation over the sign, and `.docx`/`.pdf` in
 - [x] Published weights and model card with every score and every limit
 - [x] Pre-registered thresholds and hash-bound results
 - [x] English → Bosnian fine-tune — all four pre-registered bars cleared 8 Sep (chrF2 +1.04, BLEU +1.16, form rate 99.2%, label gap 22.5); built and **published 8 Sep**
