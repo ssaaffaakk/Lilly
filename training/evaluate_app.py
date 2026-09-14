@@ -354,9 +354,20 @@ def main() -> int:
 
     fingerprint = tuned_fp or build_fingerprint(args.tuned)
     print(f"\nscored build: {fingerprint}")
+    # `--tuned` exists so a candidate can be scored where it stands, which means
+    # the second column is not always Lilly. Naming it "Lilly (fine-tuned)"
+    # regardless is how a candidate's number gets read back as the product's —
+    # the same confusion the build fingerprint was added to prevent, one layer
+    # up in the prose. So the report is told which build it actually scored.
+    candidate = None
+    if args.tuned.resolve() != spec["tuned"].resolve():
+        try:
+            candidate = str(args.tuned.resolve().relative_to(REPO_ROOT))
+        except ValueError:
+            candidate = str(args.tuned)
     write_report(len(src), leaked, leaked_t, tables, fingerprint,
                  split=args.split, out=args.out or spec["report"],
-                 direction=args.direction)
+                 direction=args.direction, candidate=candidate)
     written = (args.out or spec["report"]).resolve()
     try:
         written = written.relative_to(REPO_ROOT)
@@ -378,11 +389,18 @@ def reading(gap: float, p: float, metric: str) -> str:
 
 
 def write_report(n, leaked_base, leaked_tuned, tables, fingerprint,
-                 split="all", out=None, direction="bs-en") -> None:
+                 split="all", out=None, direction="bs-en", candidate=None) -> None:
     spec = DIRECTIONS[direction]
+    # `candidate` is set when the scored build is not the served one. Everything
+    # the report says about "Lilly" then has to say the candidate's name instead,
+    # or the file reads as a product number.
+    second = "Lilly (fine-tuned)" if candidate is None else f"Candidate — `{candidate}`"
+    second_prose = "Lilly" if candidate is None else "The candidate"
     lines = [
-        f"# Translation quality — what Lilly actually serves "
-        f"({spec['reads']} → {spec['writes']})", "",
+        (f"# Translation quality — what Lilly actually serves "
+         f"({spec['reads']} → {spec['writes']})" if candidate is None else
+         f"# Translation quality — a candidate scored, not what Lilly serves "
+         f"({spec['reads']} → {spec['writes']})"), "",
         f"Scored build: `{fingerprint}`", "",
         (f"{n:,} FLORES-200 devtest pairs — the set published leaderboards for "
          f"this language pair use, so these numbers can be put beside theirs. "
@@ -390,9 +408,14 @@ def write_report(n, leaked_base, leaked_tuned, tables, fingerprint,
          f"{n:,} FLORES-200 pairs the base model was not trained on. ")
         + "Both models are "
         "int8 CTranslate2 builds and both go through `app.translate.Engine`, so the "
-        "sentence splitting and the quantisation are the product's own. The only "
-        "difference between the two columns is the fine-tuning.", "",
-        "This is the number to quote. "
+        "sentence splitting and the quantisation are the product's own. "
+        + ("The only difference between the two columns is the fine-tuning."
+           if candidate is None else
+           f"The second column is **not** the served build: it is `{candidate}`, "
+           f"scored where it stands. Nothing in this file is a product number."), "",
+        ("This is the number to quote. " if candidate is None else
+         "This is not the number to quote: the served build's own report is "
+         f"`{spec['report'].relative_to(REPO_ROOT)}`. ")
         + ("`training/RESULTS.md` scores the raw adapter on whole rows, which is a "
            "useful diagnostic and not what anyone runs: on the same pairs that path "
            "reads +0.54 BLEU and −0.79 chrF2, because feeding several sentences at "
@@ -406,7 +429,7 @@ def write_report(n, leaked_base, leaked_tuned, tables, fingerprint,
         f"The base model prints its language tag into the translation itself — "
         f"`{'>>eng<<' if direction == 'bs-en' else '>>bos_Latn<<'}` and friends — "
         f"in {leaked_base:,} of {n:,} outputs "
-        f"({100 * leaked_base / n:.1f}%). Lilly does it in {leaked_tuned:,} "
+        f"({100 * leaked_base / n:.1f}%). {second_prose} does it in {leaked_tuned:,} "
         f"({100 * leaked_tuned / n:.1f}%). That is a defect in what the model emits, "
         f"so the scores are given both with it and without: with, because it is what "
         f"the model learned to write; without, because otherwise the fine-tuning gets "
@@ -419,7 +442,7 @@ def write_report(n, leaked_base, leaked_tuned, tables, fingerprint,
                   "|---|---|---|---|",
                   f"| Base (untuned) | {r['base_bleu']:.2f} | {r['base_chrf']:.2f} | "
                   f"{r['base_len']:.3f} |",
-                  f"| Lilly (fine-tuned) | {r['lilly_bleu']:.2f} | "
+                  f"| {second} | {r['lilly_bleu']:.2f} | "
                   f"{r['lilly_chrf']:.2f} | {r['lilly_len']:.3f} |",
                   f"| **Gap** | **{r['lilly_bleu'] - r['base_bleu']:+.2f}** | "
                   f"**{r['lilly_chrf'] - r['base_chrf']:+.2f}** | |", ""]
