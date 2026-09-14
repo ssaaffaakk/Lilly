@@ -3433,3 +3433,47 @@ that is a product decision and has no number here.
 fingerprint), `training/app-hypotheses-en-bs-sla.json` (the cached
 translations), `training/form-rate/sla.json` (the form rate), and the outcome
 recorded under this section, whichever way it fell.
+
+## Outcome, 14 September 2026 — bars 1 and 2 both fail; the line closes on a number
+
+The 300-pair lead did not survive the full set. Scored build
+`ffa292a180add0e88da4aad69413b518`, 2,009 FLORES-200 pairs, both columns int8
+through `app.translate.Engine`, paired bootstrap over sentences
+(`training/RESULTS-product-en-bs-sla.md`).
+
+| | bar | shipped | candidate | |
+|---|---|---|---|---|
+| 1 | chrF2, tag stripped | 61.55 | **60.89** | −0.66, **fails** |
+| 2 | BLEU, tag stripped | 32.22 | **31.71** | −0.51, **fails** |
+| 3 | form rate, `>>bos_Latn<<` | 99.2% | **53.6%** (95% CI 47.6–59.6; 261 decided, 77 silent) | |
+| 4 | label steering vs `>>hrv<<` | +22.5 | **−16.6** | steers the wrong way |
+
+Against its own untuned small base the candidate reads +0.48 BLEU (p = 0.071)
+and −0.04 chrF2 (p = 0.338) — neither clears 0.05, so even the level-pegging
+with the *base* is unproven. Against the shipped build, which is what bars 1 and
+2 name, it is behind on both.
+
+Bar 4 is the finding worth keeping. On the shipped build the `>>bos_Latn<<`
+label buys 22.5 points of Bosnian lexicon over `>>hrv<<` (99.2% against 76.7%).
+On this candidate the same label buys **−16.6**: 53.6% under `>>bos_Latn<<`
+against 70.2% under `>>hrv<<` (`training/form-rate/sla.json`,
+`training/form-rate/sla-hrv.json`). The label is in the model's target list and
+does not carry Bosnian lexical identity — it is a name, not a steering handle.
+That is a different failure from "tuned for nothing": a LoRA on this base would
+be teaching the label its meaning from scratch, not sharpening a tendency the
+way the small base's LoRA did (94.3% → 99.2%).
+
+So the pre-registered reading applies as written: *"Bar 1 or 2 fails. The
+300-pair lead does not survive the full set; the reply direction stays on the
+small base and this line closes on a number."* The reply direction stays on
+`opus-mt-tc-base-en-sh`. No LoRA-on-the-big-base pre-registration follows; that
+branch was conditional on bars 1 and 2 clearing, and they did not.
+
+One instrument defect was found while recording this. `training/evaluate_app.py`
+hard-coded the second column as "Lilly (fine-tuned)" whatever `--tuned` pointed
+at, so this candidate's 31.71 BLEU was written into a file titled "what Lilly
+actually serves" — a candidate number one copy-paste away from being read as the
+product's. `--tuned` exists precisely so a candidate can be scored without being
+installed, which makes the mislabel reachable by design. Fixed: when the scored
+build is not the served one the report names it in the table, in the title, and
+in place of "the number to quote". The served build's own reports are unchanged.
