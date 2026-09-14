@@ -23,6 +23,7 @@ import re
 import sys
 import threading
 
+from app import truecase
 from app.lilly import BadInput, TRANSLATOR_DIR, TRANSLATOR_EN_BS_DIR
 
 # Cost is driven by sentences x longest sentence, not by how many characters
@@ -140,6 +141,18 @@ class Engine:
         strip_tags=False returns the model's output with any leaked language
         tag left in. Only a measurement wants that (LANGUAGE_TAG above).
         """
+        # Signs are shouted, and an all-caps source costs this translator about
+        # 25.5 chrF2 -- "DANGER HIGH VOLTAGE KEEP OUT" answers "OPASNA VISOKA
+        # VOLTAŽA OSTAJE NAPOLJU" where the ordinary-case sentence is right.
+        # Truecasing the source before splitting gives most of that back
+        # (docs/REPORT-what-would-raise-the-numbers-2026-09-13.md, section 1).
+        # Staged behind LILLY_TRUECASE, default off: that number is a diagnostic
+        # on uppercased FLORES text, not a score on photographs, so its own
+        # pre-registration and a photograph-bar measurement have to land before
+        # it ships on. With the flag unset only enabled() runs and `text` is not
+        # touched, so the served path is byte-for-byte what it is today.
+        if truecase.enabled():
+            text = truecase.restore_sentence_case(text)[0]
         sentences = [s for s in SENTENCE_BREAK.split(text.strip()) if s.strip()] or [text]
         # Every sentence carries the label, not just the first one: the splitter
         # above means each sentence is its own decode, and a label on the first
