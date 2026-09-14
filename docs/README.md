@@ -7,7 +7,8 @@ Start here if you are new to the repo. Product pitch stays in the root
 
 | Doc | Use when |
 | :--- | :--- |
-| [`V3-PLAN.md`](V3-PLAN.md) | **Where we are now** — Kaggle lanes, half-2 wait, what changed |
+| [`V4-PLAN.md`](V4-PLAN.md) | **Where we are now** — the lane order for what gets trained next, and what does not |
+| [`V3-PLAN.md`](V3-PLAN.md) | Older v3 plan (points to V4 for current status) |
 | [`V2-PLAN.md`](V2-PLAN.md) | Older v2 architecture sketch (points to V3 for current status) |
 | [`V2-BOUNDARIES.md`](V2-BOUNDARIES.md) | Scope contract — Latin Bosnian, Kaggle not Mac, no secrets |
 
@@ -29,7 +30,9 @@ Cursor agents also load `.cursor/rules/kaggle-fail-stop.mdc` (always apply).
 | [`WHITE-PAPER.md`](WHITE-PAPER.md) | Licences and sources (fill at publish time) |
 | [`BOSNIAN_METRIC.md`](BOSNIAN_METRIC.md) | Why Bosnian metrics are hard |
 | [`OCR-ROADMAP.md`](OCR-ROADMAP.md) | **The reader's queue** — closed lines, numbers to trust, do-not-repeat list, status board |
-| [`ROADMAP.md`](ROADMAP.md) | Early phase roadmap (historical; prefer V3-PLAN for now) |
+| [`ROADMAP.md`](ROADMAP.md) | Early phase roadmap (historical; prefer V4-PLAN for now) |
+| [`REPORT-reverse-direction-2026-09-12.md`](REPORT-reverse-direction-2026-09-12.md) | The reply direction, scored through the path a user actually meets |
+| [`REPORT-what-would-raise-the-numbers-2026-09-13.md`](REPORT-what-would-raise-the-numbers-2026-09-13.md) | Ranked levers that would raise a measured number, and which need no GPU |
 
 ## Agent teams
 
