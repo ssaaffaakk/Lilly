@@ -45,7 +45,7 @@ adds bs-en, which the report did not measure: caps hurt it about as much.
 (`LILLY_READER`, `LILLY_PADDLE_CYRILLIC_RESCUE`). With the flag unset, behaviour
 is byte-for-byte unchanged. Shipping it as the default is a product change and
 needs its own pre-registration and a photograph-bar measurement first (the
-report says the honest bar is a score on photographs, not uppercased FLORES).
+report says the honest bar is a score on photographs, not uppercased FLORES). That photograph bar now exists: `training/RESULTS-truecase-photos.md` drives the flag through the served `bs-en` engine on the 40 Commons photographs' own OCR, off against on, and lays out the 13 it changes side by side — the A/B the default-on decision is gated behind. The decision itself stays open.
 
 ## Known limitation
 
