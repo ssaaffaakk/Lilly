@@ -561,9 +561,20 @@ def upload(repo_id: str, publish: dict, public: bool, message: str,
     for gone in prune:
         print(f"removed from the repository: {gone}")
     print(f"done: https://huggingface.co/{repo_id}")
-    if not public:
+    # Report the repository's ACTUAL visibility, not the --public flag: with
+    # exist_ok=True create_repo never flips an existing repo, so a repo that was
+    # already public stays public even when this run omits --public. Reading the
+    # flag alone printed "the repository is private" over an already-public repo
+    # (15 Sep 2026), which is a false alarm.
+    try:
+        actually_private = api.repo_info(repo_id, repo_type="model").private
+    except Exception:                              # noqa: BLE001 — report, don't raise
+        actually_private = not public              # fall back to the flag
+    if actually_private:
         print("the repository is private — make it public from its Settings page "
               "when you are ready")
+    else:
+        print("the repository is public")
     return 0
 
 
