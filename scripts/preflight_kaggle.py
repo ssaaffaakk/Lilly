@@ -603,6 +603,10 @@ def check_backtrans(text: str) -> None:
     if "from app.translate import Engine" not in text or 'direction="bs-en"' not in text:
         fail("backtrans must back-translate through the product path "
              "(app.translate.Engine on the bs-en forward build)")
+    if "0400" not in text:
+        fail("backtrans must keep only Latin MaCoCu lines (drop Cyrillic, \\u0400-\\u04FF) -- "
+             "raw MaCoCu-bs mixes scripts and Cyrillic targets would train en-bs to write "
+             "the wrong script")
     if "MAX_BT_SECONDS" not in text or "raise SystemExit" not in text:
         fail("backtrans must fail loud on the 12h wall, never under-produce silently")
     if "train-mix-backtrans.tsv" not in text \
