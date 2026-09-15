@@ -233,7 +233,7 @@ first number that was recorded, with the file it lives in. The last is today.
 | Photographs — words invented that are on no sign | **> 280** | 224 | **65** |
 | Speech — word error, 200 held-out clips | **> 55%** | 38.5% (`training/RESULTS-speech.md`) | **11.9%** (whisper-large-v3, shipped by decision, refused at its gate; the gated whisper-small reads 34.9%) |
 | Translation — BLEU on FLORES devtest, as the user sees it | **< 30** | 37.72, with the language tag leaked into 308 of 1,012 outputs (`training/RESULTS-devtest.md`) | **43.25**, leaked into **0** (re-measured 8 Sep on a T4 after the ordinal splitter fix) |
-| Reply, English → Bosnian — chrF2 on FLORES-200, as the user sees it | — | 58.96, the base as downloaded (`training/RESULTS-en-bs.md`) | **61.55** through the app's own path (`training/RESULTS-product-en-bs.md`, measured 12 Sep); the adapter alone on whole rows reads 60.00 |
+| Reply, English → Bosnian — chrF2 on FLORES-200, as the user sees it | — | 58.96, the first training (`training/RESULTS-en-bs.md`) | **61.55** through the app's own path (`training/RESULTS-product-en-bs.md`, measured 12 Sep); the adapter alone on whole rows reads 60.00 |
 
 One recorded moment says what the early period was like: the reader scored
 about 75% on synthetic text and **36% the first time it was pointed at real
