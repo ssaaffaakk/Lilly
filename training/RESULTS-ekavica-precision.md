@@ -86,3 +86,20 @@ Lane C, the pre-registration text proposing a small owner-gated training arm
 (bar: held-out FLORES form-rate up, no BLEU collapse) goes to the Leader.
 The 300–500-sentence pilot stays as reported here; a larger independent
 sample can be drawn from the same verified file if the Leader asks.
+
+## Pre-registration draft (gate passed → for the Leader)
+
+One small, owner-gated training arm, launched only if the owner approves:
+
+- **Data:** up to a bounded share of a converted Serbian CC0 slice — e.g.
+  ≤ 10% of added words, drawn from MaCoCu-sr-en 1.0 (CC0, handle 11356/1819)
+  after `ekavica_to_ijekavica.py` conversion, joined to the SR/HR strengthening
+  mix. Not mixed into the main bs→en train-mix.
+- **Pre-committed bar (measured on held-out FLORES bs→en):** ijekavian
+  requested-form rate up by at least +1 point *and* no BLEU collapse beyond a
+  threshold the Leader sets (proposal: ≥ −0.5).
+- **Fail rule:** either bar missed → arm is discarded and not relaunched with
+  a bandaged mix. The converter's pilot precision stands at 100% [97.6, 100]
+  on 155 rewrites; the Leader may first re-measure on a larger independent
+  sample from the same verified file — the source, licence, and slice method
+  are recorded above so a clone reproduces it.
