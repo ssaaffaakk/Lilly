@@ -9,18 +9,18 @@
     </filter>
   </defs>
   <rect width="1120" height="520" rx="24" fill="url(#bg)"/>
-  <text x="56" y="52" fill="#eef4f6" font-family="ui-sans-serif, system-ui, sans-serif" font-size="22" font-weight="700">Lilly  offline stack</text>
-  <text x="56" y="78" fill="rgba(238,244,246,0.55)" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13">Phone / browser ’ FastAPI ’ four local models under models/lilly/</text>
+  <text x="56" y="52" fill="#eef4f6" font-family="ui-sans-serif, system-ui, sans-serif" font-size="22" font-weight="700">Lilly â€” offline stack</text>
+  <text x="56" y="78" fill="rgba(238,244,246,0.55)" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13">Phone / browser â†’ FastAPI â†’ local models under models/lilly/, both directions</text>
 
   <!-- user -->
   <rect x="56" y="120" width="200" height="88" rx="16" fill="rgba(255,255,255,0.06)" stroke="rgba(255,255,255,0.14)" filter="url(#soft)"/>
   <text x="156" y="158" text-anchor="middle" fill="#7ad3bd" font-family="ui-sans-serif, system-ui, sans-serif" font-size="12" font-weight="600">USER</text>
-  <text x="156" y="182" text-anchor="middle" fill="#eef4f6" font-family="ui-sans-serif, system-ui, sans-serif" font-size="15">Type · Speak · Snap</text>
+  <text x="156" y="182" text-anchor="middle" fill="#eef4f6" font-family="ui-sans-serif, system-ui, sans-serif" font-size="15">Type Â· Speak Â· Snap Â· Correct</text>
 
   <!-- app -->
   <rect x="340" y="120" width="240" height="88" rx="16" fill="rgba(122,211,189,0.12)" stroke="#7ad3bd" filter="url(#soft)"/>
   <text x="460" y="158" text-anchor="middle" fill="#7ad3bd" font-family="ui-sans-serif, system-ui, sans-serif" font-size="12" font-weight="600">APP</text>
-  <text x="460" y="182" text-anchor="middle" fill="#eef4f6" font-family="ui-sans-serif, system-ui, sans-serif" font-size="15">FastAPI + glass UI</text>
+  <text x="460" y="182" text-anchor="middle" fill="#eef4f6" font-family="ui-sans-serif, system-ui, sans-serif" font-size="15">FastAPI + web UI</text>
 
   <!-- arrows user-app -->
   <path d="M256 164 H340" stroke="#7ad3bd" stroke-width="2" fill="none"/>
@@ -30,23 +30,23 @@
   <g font-family="ui-sans-serif, system-ui, sans-serif">
     <rect x="56" y="280" width="230" height="100" rx="16" fill="rgba(255,255,255,0.06)" stroke="rgba(255,255,255,0.14)" filter="url(#soft)"/>
     <text x="171" y="318" text-anchor="middle" fill="#7ad3bd" font-size="12" font-weight="600">TRANSLATE</text>
-    <text x="171" y="344" text-anchor="middle" fill="#eef4f6" font-size="14">bs ’ en text</text>
-    <text x="171" y="366" text-anchor="middle" fill="rgba(238,244,246,0.5)" font-size="12">LoRA adapter</text>
+    <text x="171" y="344" text-anchor="middle" fill="#eef4f6" font-size="14">bs â‡„ en text</text>
+    <text x="171" y="366" text-anchor="middle" fill="rgba(238,244,246,0.5)" font-size="12">LoRA Â· both ways</text>
 
     <rect x="312" y="280" width="230" height="100" rx="16" fill="rgba(255,255,255,0.06)" stroke="rgba(255,255,255,0.14)" filter="url(#soft)"/>
     <text x="427" y="318" text-anchor="middle" fill="#7ad3bd" font-size="12" font-weight="600">LISTEN</text>
-    <text x="427" y="344" text-anchor="middle" fill="#eef4f6" font-size="14">speech ’ bs text</text>
+    <text x="427" y="344" text-anchor="middle" fill="#eef4f6" font-size="14">speech â†’ text</text>
     <text x="427" y="366" text-anchor="middle" fill="rgba(238,244,246,0.5)" font-size="12">Whisper large-v3</text>
 
     <rect x="568" y="280" width="230" height="100" rx="16" fill="rgba(255,255,255,0.06)" stroke="rgba(255,255,255,0.14)" filter="url(#soft)"/>
     <text x="683" y="318" text-anchor="middle" fill="#7ad3bd" font-size="12" font-weight="600">READ</text>
-    <text x="683" y="344" text-anchor="middle" fill="#eef4f6" font-size="14">photo ’ bs text</text>
-    <text x="683" y="366" text-anchor="middle" fill="rgba(238,244,246,0.5)" font-size="12">EasyOCR + lilly.pth</text>
+    <text x="683" y="344" text-anchor="middle" fill="#eef4f6" font-size="14">photo â†’ text</text>
+    <text x="683" y="366" text-anchor="middle" fill="rgba(238,244,246,0.5)" font-size="12">PP-OCRv6</text>
 
     <rect x="824" y="280" width="240" height="100" rx="16" fill="rgba(255,255,255,0.06)" stroke="rgba(255,255,255,0.14)" filter="url(#soft)"/>
     <text x="944" y="318" text-anchor="middle" fill="#7ad3bd" font-size="12" font-weight="600">SPEAK</text>
-    <text x="944" y="344" text-anchor="middle" fill="#eef4f6" font-size="14">en text ’ voice</text>
-    <text x="944" y="366" text-anchor="middle" fill="rgba(238,244,246,0.5)" font-size="12">shipped TTS</text>
+    <text x="944" y="344" text-anchor="middle" fill="#eef4f6" font-size="14">en Â· bs â†’ voice</text>
+    <text x="944" y="366" text-anchor="middle" fill="rgba(238,244,246,0.5)" font-size="12">Kokoro Â· Piper</text>
   </g>
 
   <!-- connectors app to models -->
@@ -58,7 +58,7 @@
   <!-- kaggle -->
   <rect x="680" y="120" width="384" height="88" rx="16" fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.12)"/>
   <text x="872" y="158" text-anchor="middle" fill="#7ad3bd" font-family="ui-sans-serif, system-ui, sans-serif" font-size="12" font-weight="600">TRAIN (Kaggle T4)</text>
-  <text x="872" y="182" text-anchor="middle" fill="#eef4f6" font-family="ui-sans-serif, system-ui, sans-serif" font-size="14">Speech half-1/2 · OCR pass-7c · fail-stop</text>
+  <text x="872" y="182" text-anchor="middle" fill="#eef4f6" font-family="ui-sans-serif, system-ui, sans-serif" font-size="14">Speech half-1/2 Â· OCR Â· fail-stop</text>
 
-  <text x="56" y="480" fill="rgba(238,244,246,0.45)" font-family="ui-sans-serif, system-ui, sans-serif" font-size="12">Inference is offline. Correction loop feeds future retrain. See docs/V3-PLAN.md</text>
+  <text x="56" y="480" fill="rgba(238,244,246,0.45)" font-family="ui-sans-serif, system-ui, sans-serif" font-size="12">Inference is offline. Correction loop feeds future retrain. See docs/V4-PLAN.md</text>
 </svg>

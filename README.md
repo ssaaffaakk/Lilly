@@ -55,7 +55,7 @@ The longer version is in [`docs/STORY.md`](docs/STORY.md).
 
 ## See it work
 
-![Type, speak, or snap a photo](docs/images/lilly-modes.jpg)
+![Four ways in: type it, say it, photograph it, or correct it](docs/images/lilly-modes.jpg)
 
 Real output from the running app, not hand-picked from a benchmark.
 
