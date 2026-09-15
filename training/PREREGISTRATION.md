@@ -3566,9 +3566,11 @@ this section and the plumbing land first.
 
 ---
 
-# Run C — ekavica→ijekavica converter, source-diversity pilot
+# Ekavica→ijekavica converter — source-diversity pilot (assignment lane C)
 
-Written before any training number exists. The converter's precision is a
+Not one of V4-PLAN's Run A–D; a new pilot. (V4-PLAN's "Run C" is the WikiMatrix
+alignment filter, pre-registered further below.) Written before any training
+number exists. The converter's precision is a
 measured pilot; the training arm below has not run. Transcribed by the leader
 from lane `laneC-ekavica` (`scripts/ekavica_to_ijekavica.py`,
 `tests/test_ekavica.py`, `training/RESULTS-ekavica-precision.md`); the full
@@ -3602,3 +3604,26 @@ One small arm, launched **only if the owner approves**:
 
 The converter and its tests are on main; launching any training on its output is
 the owner's call.
+
+---
+
+# Run C — WikiMatrix semantic-alignment filter (bs→en)
+
+V4-PLAN §3's Run C, transcribed by the leader from assignment lane D
+(`scripts/filter_wikimatrix_align.py`, `tests/test_filter_align.py`,
+`training/RESULTS-wikimatrix-align.md`). Written before any training number
+exists; the retrain is owner-gated and has not been launched.
+
+Before training, score every WikiMatrix pair in the current bs→en mix with
+`sentence-transformers/LaBSE`; remove only pairs whose L2-normalized
+cross-lingual cosine is `< 0.55`. The cutoff was fixed after a seeded,
+sample-only 3,000-pair audit: **23/3,000 (0.77%, Wilson 95% CI 0.51–1.15%)** fell
+below it, and all 20 manually read tail pairs were plainly misaligned (20/20,
+Wilson 95% CI 83.9–100%). No held-out text is read by the filter.
+
+Retrain the shipped bs→en recipe unchanged except for this removal; compare
+against the shipped build on held-out FLORES with a paired bootstrap. **The arm
+passes only if chrF2 and BLEU are not below the shipped result** (report point
+deltas, counts, and bootstrap intervals). No result from the training-side
+sample decides the arm. The kept file must still pass the repository's held-out
+leakage audit before it is used.
