@@ -165,6 +165,15 @@ EXCLUDE_RULES = (
     ("translator-en-bs-base", "int8 English -> Bosnian base built by build_translator.py "
                               "--direction en-bs --no-adapter, the comparison column of "
                               "training/RESULTS-product-en-bs.md rather than a served model"),
+    # The v9 reply-direction candidate on the bigger -sla base, scored where it
+    # stands (training/RESULTS-product-en-bs-sla.md): 31.71 BLEU / 60.89 chrF2
+    # against the shipped 32.22 / 61.55, both moves unproven, built.json says
+    # fine_tuned:false. The line closed; it is kept locally as the record of a
+    # refused arm and, like every losing candidate, never goes in a release.
+    ("translator-en-bs-sla", "the v9 English -> Bosnian candidate on the -sla base, scored in "
+                             "training/RESULTS-product-en-bs-sla.md (31.71 BLEU / 60.89 chrF2 vs "
+                             "the shipped 32.22 / 61.55, unproven) and closed; kept locally as the "
+                             "record of a refused arm, not a served model"),
     # The Bosnian voice. Never published from here: it is Piper's public
     # sr_RS voice, pulled from rhasspy/piper-voices by scripts/fetch_speak_bs.py
     # on every install, and a copy in this bundle would add nothing to it.
