@@ -90,12 +90,18 @@ output, so their provenance has to be settled before they are even that.
 - **Run A — the full fine-tune arm.** The forward direction's Arm B won by a
   pre-registered tie-break; the reply direction has only run LoRA. Same corpus,
   same seed, same bars, one commit to flip `ARM`.
-- **Run B — back-translation.** Real monolingual Bosnian (licence chosen by the
-  owner; bs Wikipedia CC BY-SA is the clean default) translated to English by
-  the shipped bs-en model: synthetic source, **real Bosnian target**. This is
-  the strongest known lever for both chrF2 and the Bosnian form rate, because
-  the targets are Bosnian written by Bosnians. Bars: FLORES chrF2 above the
-  best shipped, BLEU floor, form rate floor, label gap not collapsed.
+- **Run B — back-translation.** Real monolingual Bosnian translated to English
+  by the shipped bs-en model: synthetic source, **real Bosnian target**. The
+  source is settled (was decision 4, now resolved): **MaCoCu-bs 1.0 — 730M
+  words, CC0** (CLARIN.SI 11356/1808), native Bosnian crawled from `.ba`. CC0
+  rather than Wikipedia's CC BY-SA, so no share-alike propagates to the
+  published weights. This is the strongest known lever for both chrF2 and the
+  Bosnian form rate, because the targets are Bosnian written by Bosnians. Bars:
+  FLORES chrF2 above the best shipped, BLEU floor, form rate floor, label gap
+  not collapsed. It stays on the small `opus-mt-tc-base-en-sh` base — the big
+  -sla base was measured and closed (`PREREGISTRATION.md`, "Outcome, 14
+  September ... the line closes"), so back-translation does not get combined
+  with it.
 
 ### 3. Bosnian → English — data quality first
 
@@ -179,8 +185,10 @@ from use rather than from corpora.
 4. ~~ParlaSpeech-HR under CC BY-SA~~ — decided 28 Aug: it is not used, because
    share-alike would propagate to the weights this project publishes, and
    voxpopuli_hr (CC0) covers the requirement on its own
-   (`training/PREREGISTRATION.md:749`, commit `911b143`). What stays open is the
-   monolingual Bosnian source and its licence for back-translation (run B).
+   (`training/PREREGISTRATION.md:749`, commit `911b143`). ~~What stays open is the
+   monolingual Bosnian source and its licence for back-translation (run B).~~
+   **Resolved: run B's source is MaCoCu-bs 1.0 — 730M words, CC0
+   (CLARIN.SI 11356/1808), native Bosnian, no share-alike.**
 
 ## What this plan will not do
 
