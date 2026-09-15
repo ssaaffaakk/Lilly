@@ -102,6 +102,14 @@ output, so their provenance has to be settled before they are even that.
   -sla base was measured and closed (`PREREGISTRATION.md`, "Outcome, 14
   September ... the line closes"), so back-translation does not get combined
   with it.
+- **Decode-time Croatian suppression (§2) — measured 15 Sep and closed.** The
+  static-list lever the reports raised: suppress the Croatian forms at decode
+  with CTranslate2 `suppress_sequences`, no training. Measured on the served
+  path (`training/RESULTS-suppress-en-bs.md`, `training/measure_suppress_en_bs.py`):
+  **0 of 308 outputs change and form rate holds at 99.6%** — the LoRA already
+  writes the Bosnian forms, so there is nothing left to suppress. Even the oracle
+  upper bound on the untuned base recovers +0.4 points (1 of 14) at zero chrF2
+  cost. Not shipped; the fine-tune subsumes it. No app flag added.
 
 ### 3. Bosnian → English — data quality first
 
