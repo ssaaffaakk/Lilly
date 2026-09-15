@@ -3563,3 +3563,42 @@ A new job in `scripts/kaggle_train.py`, its notebook under `training/`, and its
 commit — per `.claude/CLAUDE.md`. The back-translation itself (bs→en over ~1M
 lines) is heavy and runs on Kaggle, not the Mac. Launch is the owner's call;
 this section and the plumbing land first.
+
+---
+
+# Run C — ekavica→ijekavica converter, source-diversity pilot
+
+Written before any training number exists. The converter's precision is a
+measured pilot; the training arm below has not run. Transcribed by the leader
+from lane `laneC-ekavica` (`scripts/ekavica_to_ijekavica.py`,
+`tests/test_ekavica.py`, `training/RESULTS-ekavica-precision.md`); the full
+write-up and its source, licence and slice method live in that results file so a
+clone reproduces it.
+
+## What is settled (measured, not proposed)
+
+The rule-based Serbian ekavica→ijekavica converter was hand-checked on a
+500-sentence sample from **MaCoCu-sr-en 1.0 (CC0, CLARIN.SI handle 11356/1819)**:
+**155 of 155 rewrites correct, 100%, Wilson 95% interval [97.6%, 100%]** — above
+the 95% gate `docs/run-assignments.md` fixed for this lane. Two initial bad
+rewrites (*REKOM*, *zahteva*) were excluded before the final count; 19 unit tests
+pass, including homograph exclusions that must never change (e.g. words where the
+`e` is not a yat reflex).
+
+## The training arm — pre-registered, owner-gated, not yet run
+
+One small arm, launched **only if the owner approves**:
+
+- **Data:** a bounded share (proposal: ≤ 10% of added words) of a converted
+  Serbian CC0 slice from MaCoCu-sr-en 1.0, after `ekavica_to_ijekavica.py`,
+  joined to an SR/HR strengthening mix — **not** mixed into the main bs→en
+  train-mix.
+- **Bar (held-out FLORES):** the ijekavian requested-form rate up by at least
+  **+1 point** AND **no BLEU collapse** beyond a threshold the owner sets
+  (proposal: ≥ −0.5). Both hold, or the arm is discarded.
+- **Fail rule:** either bar missed → the arm is discarded, not relaunched with a
+  bandaged mix. A larger independent sample can be drawn from the same verified
+  file first if the owner asks.
+
+The converter and its tests are on main; launching any training on its output is
+the owner's call.
