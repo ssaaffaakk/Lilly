@@ -3477,3 +3477,89 @@ product's. `--tuned` exists precisely so a candidate can be scored without being
 installed, which makes the mislabel reachable by design. Fixed: when the scored
 build is not the served one the report names it in the table, in the title, and
 in place of "the number to quote". The served build's own reports are unchanged.
+
+## Run B — reply (English → Bosnian) — back-translation from MaCoCu-bs
+
+Written before any of its numbers exist. This makes `docs/V4-PLAN.md` §2 Run B
+concrete; it does not change Run B's decision or its bars, only fixes the method
+and the thresholds. The source is settled: **MaCoCu-bs 1.0, 730M words, CC0**
+(CLARIN.SI 11356/1808), native Bosnian crawled from `.ba` (V4-PLAN decision 4,
+resolved). The reply direction stays on the small `opus-mt-tc-base-en-sh` base —
+the big `-sla` base was measured and closed ("Outcome, 14 September … the line
+closes"), so back-translation is not combined with it.
+
+### Why this run, and the one thing it changes
+
+The shipped reply model is a LoRA on `tc-base` and reads **32.22 BLEU / 61.55
+chrF2** through the served path (`training/RESULTS-product-en-bs.md`). Parallel
+en→bs is scarce; the strongest known lever is target-side fluency from **real
+Bosnian written by Bosnians**. Back-translation supplies exactly that: the
+Bosnian side is human MaCoCu text, the English side is synthetic.
+
+**One variable changes: the training data.** The recipe is held identical to the
+shipped adapter (same base, same LoRA rank/alpha/dropout, same optimiser, same
+seed, same `>>bos_Latn<<` tagging, same eval path) so the measured move is the
+back-translation data and not a recipe change. Run A (the full-fine-tune arm) is
+the other lane and is not combined here — one thing at a time.
+
+### Method, fixed before the run
+
+1. **Sample & clean MaCoCu-bs.** Draw a sentence sample, target **1.0M kept
+   pairs**. Drop: near-duplicates (within the sample and against the existing
+   en→bs `train-mix.tsv`), lines that fail a Bosnian language-id check, lines
+   shorter than 3 or longer than 60 tokens, boilerplate/URL-heavy lines.
+2. **Hold out the test sets, verified not assumed.** Every FLORES-200 dev,
+   devtest and test Bosnian sentence, and the `bench/cases.tsv` targets, are
+   removed from the sample by exact and near match before any training. A leak
+   here would let the eval score its own training data; the dedup pass is
+   committed and its drop count reported.
+3. **Back-translate bs→en with the SHIPPED forward model** (`models/lilly/
+   translator`, int8, the build `training/RESULTS-product.md` names). Synthetic
+   English source, **real Bosnian target**. The forward build's fingerprint is
+   recorded so the synthetic set is reproducible.
+4. **Mix.** Combine the synthetic pairs with the existing en→bs parallel
+   `train-mix.tsv`. Pre-registered mix: **1:1 by sentence count**, real parallel
+   up-sampled if smaller, so the synthetic set cannot swamp the human parallel.
+5. **Train** the shipped LoRA recipe on Kaggle (one T4), `train_translation.py
+   --direction en-bs`, same seed as the shipped adapter; build the int8 CT2
+   served build with `build_translator.py --direction en-bs`.
+6. **Score through the served path**, the treatment the shipped number had:
+   `training/evaluate_app.py`, 2,009 FLORES-200 pairs, int8 both columns, tag
+   stripped, paired bootstrap over sentences; `bosnian_form_rate.py` ×2 (bos vs
+   hrv label) for the form rate and the label gap.
+
+### Bars — the four V4-PLAN names, made precise; all must hold, not either
+
+Baselines are the **served** shipped build a user meets, not the adapter path.
+These are the four bars `docs/V4-PLAN.md` line 99 already names (chrF2 above best
+shipped, BLEU floor, form-rate floor, label gap not collapsed), with the
+thresholds fixed here before any number exists.
+
+| # | bar | shipped (served) | candidate must |
+|---|---|---|---|
+| 1 | **chrF2**, FLORES devtest, served path, tag stripped | 61.55 | be **strictly above**, paired-bootstrap 95% CI excludes 0 |
+| 2 | **BLEU**, same | 32.22 | not fall below by more than noise (95% CI low end ≥ −0.30) |
+| 3 | **form rate**, `bosnian_form_rate.py` | 99.2% (adapter) / 99.6% (served) | not fall below 99.0% |
+| 4 | **label gap** vs `>>hrv<<` | +22.5 | not collapse (stays ≥ +15; the -sla base went to −16.6, the failure this guards) |
+
+Bar 1 is the point of the run; 2–4 are the guardrails that a fluency gain does
+not come by drifting off Bosnian lexical identity or the label handle.
+
+### The three ways it can end (pre-committed reading)
+
+- **Bar 1 clears, 2–4 hold.** Ship it: rebuild the served en→bs build, publish
+  under the bound fingerprint, update `RESULTS-product-en-bs.md` and the card.
+- **Bar 1 does not clear.** The strongest known data lever did not move the
+  held-out number on the small base; the reply direction's ceiling is the base,
+  and the line closes on a number (as v9 did). Do not re-run with more MaCoCu.
+- **Bar 1 clears but a guardrail fails.** Do not ship; record which guardrail
+  and why, the way the gate records a refusal. A chrF2 gain bought by losing
+  Bosnian identity is not the product's.
+
+### Kaggle plumbing (prep, not launch)
+
+A new job in `scripts/kaggle_train.py`, its notebook under `training/`, and its
+`DIRECTION`/dataset checks added to `scripts/preflight_kaggle.py` in the same
+commit — per `.claude/CLAUDE.md`. The back-translation itself (bs→en over ~1M
+lines) is heavy and runs on Kaggle, not the Mac. Launch is the owner's call;
+this section and the plumbing land first.
