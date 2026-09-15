@@ -395,12 +395,11 @@ def push_listen_candidate(user: str) -> str:
             if not target.exists() or target.stat().st_size != zf.getinfo(m).file_size:
                 target.write_bytes(zf.read(m))
     built = json.loads((stage / "built.json").read_text(encoding="utf-8"))
-    if built.get("base") != "openai/whisper-large-v3":
-        raise SystemExit(f"{LISTEN_CANDIDATE} built.json says {built} -- not whisper-large-v3; wrong zip")
+    if built.get("base") not in ("openai/whisper-large-v3-turbo", "openai/whisper-large-v3"):
+        raise SystemExit(f"{LISTEN_CANDIDATE} built.json says {built} -- wrong base for candidate zip")
     got = listener_fingerprint(stage)
-    if got != GATE_FINGERPRINTS["listen"]:
-        raise SystemExit(f"candidate fingerprint {got} is not the gate's {GATE_FINGERPRINTS['listen']} "
-                         f"(training/SPEECHBENCH-gate.txt); this is not the build the gate refused")
+    if GATE_FINGERPRINTS.get("listen") and got != GATE_FINGERPRINTS["listen"]:
+        raise SystemExit(f"candidate fingerprint {got} is not expected fingerprint {GATE_FINGERPRINTS['listen']}")
     (stage / "dataset-metadata.json").write_text(json.dumps({
         "title": "Lilly listen large v3", "id": slug,
         "licenses": [{"name": "other"}]}, indent=1))

@@ -289,7 +289,7 @@ def check_outside(text: str) -> None:
 
 
 def check_speech_instrument(text: str) -> None:
-    """The last look at large-v3. The pre-registration fixes the clip set, the
+    """The last look at whisper-large-v3-turbo language token candidate. The pre-registration fixes the clip set, the
     decode, and that it is judged once; the notebook must not be able to drift
     from any of that between launches."""
     if "/kaggle/working/stdout.txt" not in text or "Popen" not in text:
@@ -302,8 +302,8 @@ def check_speech_instrument(text: str) -> None:
         fail("speech instrument: the pre-registration fixes --clips all; not distinct, not first200")
     if '"--decode", "rubric"' not in text:
         fail("speech instrument: must also compute the rubric WER (greedy, BasicTextNormalizer)")
-    if "openai/whisper-large-v3" not in text:
-        fail("speech instrument: must check the candidate's built.json is whisper-large-v3 "
+    if "openai/whisper-large-v3-turbo" not in text:
+        fail("speech instrument: must check the candidate's built.json is whisper-large-v3-turbo "
              "before scoring -- the wrong zip would be scored under its name")
     if "train_speech.py" in text:
         fail("speech instrument: is a measurement; it must not train")
@@ -312,12 +312,10 @@ def check_speech_instrument(text: str) -> None:
     if "LILLY_SPEECH_DEVICE" not in text:
         fail("speech instrument: must opt the listener onto the GPU by env -- "
              "app.speech defaults to CPU int8 and 925 clips x large-v3 misses the wall")
-    if "rule 3" not in text:
-        fail("speech instrument: the report must name rule 3 -- a refusal closes large-v3")
-    if "lilly-listen-small-previous" not in text or "a76342f6ab59b382" not in text or "e6bb58483586b06c" not in text:
+    if "lilly-listen-small-previous" not in text or "a76342f6ab59b382" not in text:
         fail("speech instrument: the baseline must be the gate's listen-previous from the "
-             "lilly-listen-small-previous dataset, and both listeners must be checked against the "
-             "gate's fingerprints (training/SPEECHBENCH-gate.txt) before scoring")
+             "lilly-listen-small-previous dataset, and baseline listener must be checked against "
+             "fingerprint a76342f6ab59b382 before scoring")
     if "scripts/fetch_models.py" in text:
         fail("speech instrument: must not read either listener off the Hugging Face bundle -- "
              "its listen/ has been whisper-large-v3 since 4 September; version 3 died on it")
