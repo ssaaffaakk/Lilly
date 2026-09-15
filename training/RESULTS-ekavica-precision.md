@@ -23,8 +23,13 @@ MaCoCu-sr-en 1.0, a Serbian↔English parallel corpus built by crawling the
 ## Method
 
 - Slice = first 500 lines of the Latin-script sentence file whose `src_text`
-  is non-empty, ≤ 400 characters, and contains no Cyrillic — deterministic
-  in file order, so any clone with the verified file reproduces the sample.
+  is non-empty, ≤ 400 characters, and contains no Cyrillic *including the
+  visually-ambiguous Cyrillic `ј` (U+0458)* — i.e. the check covers the whole
+  Cyrillic block `[\u0400-\u04FF]`, not just `а-яА-Я`. This matters: the
+  corpus contains Latin-script lines with a Cyrillic `ј` hiding as Latin `j`
+  (e.g. "dostavl**ј**a", rejected by this filter). Deterministic in file
+  order, so any clone with the verified file reproduces the sample
+  byte-for-byte (verified by re-deriving and `cmp`).
 - Each token whose whole lowercase form is in the lexicon is rewritten; case
   is preserved; nothing else changes.
 - Every sentence containing at least one rewrite (127 before curation, 124
