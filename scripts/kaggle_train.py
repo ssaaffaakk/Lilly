@@ -105,6 +105,20 @@ JOBS = {
                     "direction": "en-bs", "arm": "lora",
                     "weights": WEIGHTS_EN_BS,
                     "weights_slug": "lilly-translate-en-bs-base"},
+    # Run B (PREREGISTRATION.md, "Run B -- reply ... back-translation from
+    # MaCoCu-bs"): the shipped en-bs LoRA recipe on the existing mix PLUS a 1:1
+    # slice of back-translated MaCoCu-bs. It attaches the en-bs base, the pinned
+    # corpus, the shipped bs-en forward build (fingerprint-checked; it does the
+    # back-translation), and the owner-uploaded MaCoCu-bs dataset. The BT
+    # inference and the training are the GPU steps; the launch is owner-gated.
+    "translation-en-bs-backtrans": {"notebook": "Lilly_Backtrans_EnBs_Kaggle.ipynb",
+                    "slug": "lilly-backtrans-en-bs",
+                    "title": "Lilly backtrans en bs",
+                    "needs_weights": True, "needs_corpus": True,
+                    "direction": "en-bs", "arm": "lora",
+                    "weights": WEIGHTS_EN_BS,
+                    "weights_slug": "lilly-translate-en-bs-base",
+                    "needs_forward_build": True, "needs_macocu": True},
     # A measurement job, not a training pass: it loads no Lilly weights, ships
     # no model, and its Output is a small zip of JSON. The fail-stop rules still
     # apply -- a run that scored a partial FLORES download, or that produced empty
@@ -369,6 +383,67 @@ def push_translator_builds(user: str) -> list:
             wait_until_ready(slug)
         slugs.append(slug)
     return slugs
+
+
+def push_forward_build(user: str) -> str:
+    """The shipped bs-en forward build, as a dataset, checked by content first.
+
+    Run B back-translates with the exact build every published served-path number
+    was scored on (training/RESULTS-product.md); a different forward model makes
+    different synthetic English and a different experiment. Same fingerprint check
+    as push_translator_builds, for the one build the back-translation needs.
+    """
+    name = "lilly-translator-scored"
+    source, want, what = TRANSLATOR_BUILDS[name]
+    if not (source / "model.bin").is_file():
+        raise SystemExit(f"no forward build at {source} -- {what}")
+    got = translator_build_fingerprint(source)
+    if got != want:
+        raise SystemExit(f"{source} is build {got}, not {want}: {what}. "
+                         "Not back-translating with a build the numbers do not describe.")
+    slug = f"{user}/{name}"
+    stage = STAGING / "dataset" / name
+    stage.mkdir(parents=True, exist_ok=True)
+    for f in source.iterdir():
+        if f.is_file():
+            target = stage / f.name
+            if not target.exists() or target.stat().st_size != f.stat().st_size:
+                target.write_bytes(f.read_bytes())
+    (stage / "dataset-metadata.json").write_text(json.dumps({
+        "title": "Lilly translator scored", "id": slug,
+        "licenses": [{"name": "other"}]}, indent=1))
+    existing = subprocess.run([KAGGLE, "datasets", "status", slug],
+                              text=True, capture_output=True)
+    if "ready" in existing.stdout.lower():
+        print(f"dataset already there: {slug} (build {got})")
+        return slug
+    mb = sum(f.stat().st_size for f in stage.iterdir()) / 1048576
+    print(f"uploading {mb:.0f} MB to {slug} (build {got})")
+    run(KAGGLE, "datasets", "create", "-p", stage, "-r", "zip")
+    wait_until_ready(slug)
+    return slug
+
+
+def require_macocu(user: str) -> str:
+    """MaCoCu-bs 1.0 (CC0), as an already-uploaded Kaggle dataset.
+
+    730M words is far too large to stage from an 8 GB laptop, so unlike every
+    other input this one is not pushed from here: the owner uploads it to Kaggle
+    once (Datasets -> New Dataset -> from URL/Hugging Face), and this only checks
+    it is there and ready before a GPU slot is spent. A missing corpus is a launch
+    that would die at the notebook's attach cell.
+    """
+    slug = f"{user}/lilly-macocu-bs"
+    state = subprocess.run([KAGGLE, "datasets", "status", slug],
+                           text=True, capture_output=True).stdout.lower()
+    if "ready" in state:
+        print(f"MaCoCu-bs dataset ready: {slug}")
+        return slug
+    raise SystemExit(
+        f"MaCoCu-bs is not on Kaggle as {slug}. It is 730M words (CC0, CLARIN.SI "
+        f"11356/1808) -- too large to upload from the Mac. Create it once on Kaggle "
+        f"(Datasets -> New Dataset -> Link/URL or Hugging Face), one Bosnian sentence "
+        f"per line, then relaunch. Nothing was pushed.")
 
 
 def push_listen_candidate(user: str) -> str:
@@ -1057,6 +1132,14 @@ def main() -> int:
             print("    training/RESULTS-outside-baseline.md — then commit and push.")
             print("  The pre-registration fixed that this is written up whichever")
             print("    way it fell; that is not reopened now the numbers exist.")
+        elif args.job == "translation-en-bs-backtrans":
+            print("  unzip lilly-adapter-en-bs-backtrans.zip; it holds the Run B adapter")
+            print("    and RESULTS-en-bs.md. Do NOT unzip it over the shipped adapter-en-bs.")
+            print("  Score the four Run B bars at home on the SERVED path before shipping:")
+            print("    build the en-bs translator from this adapter, then")
+            print("    python3 training/evaluate_app.py --direction en-bs --tuned <that build>")
+            print("    python3 training/bosnian_form_rate.py   # form rate + label gap")
+            print("  Ships only if all four pre-registered bars hold (PREREGISTRATION.md, Run B).")
         else:
             # Per direction, because they are not interchangeable and the
             # failure is silent: the en-bs run's Output is lilly-adapter-en-bs
@@ -1139,6 +1222,10 @@ def main() -> int:
         datasets.extend(push_translator_builds(user))
     if job.get("needs_listen_previous"):
         datasets.append(push_listen_previous(user))
+    if job.get("needs_forward_build"):
+        datasets.append(push_forward_build(user))
+    if job.get("needs_macocu"):
+        datasets.append(require_macocu(user))
     if job.get("needs_ocr_harvest"):
         hv = push_ocr_harvest(user)
         if hv is None:

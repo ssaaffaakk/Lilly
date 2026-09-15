@@ -14,6 +14,7 @@ OCR_PADDLE = REPO / "training" / "Lilly_OCR_Paddle_Kaggle.ipynb"
 OUTSIDE = REPO / "training" / "Lilly_Outside_Baseline_Kaggle.ipynb"
 SPEECH_INSTR = REPO / "training" / "Lilly_Speech_Instrument_Kaggle.ipynb"
 TRANSLATION = REPO / "training" / "Lilly_Translation_Kaggle.ipynb"
+BACKTRANS = REPO / "training" / "Lilly_Backtrans_EnBs_Kaggle.ipynb"
 ORDINALS = REPO / "training" / "Lilly_Ordinals_Kaggle.ipynb"
 SPEAK_BS = REPO / "training" / "Lilly_Speak_BS_Kaggle.ipynb"
 SPEAK_PARLA = REPO / "training" / "Lilly_Speak_Parla_Kaggle.ipynb"
@@ -572,12 +573,59 @@ def check_translation(text: str) -> None:
         fail("translation: cell 0 must set DIRECTION and ARM in the committed file")
 
 
+def check_backtrans(text: str) -> None:
+    """Run B (PREREGISTRATION.md, "Run B -- back-translation from MaCoCu-bs").
+
+    The one variable is the training data. The guards are the offload contract,
+    a fingerprint-pinned forward build, the leakage-proof holdout, the 1:1 mix,
+    training through the shipped recipe, the four deciding bars scored at home on
+    the served path, and a generation step that fails loud rather than
+    under-produce a partial mix as if it were the pre-registered run."""
+    check_offload(text, "backtrans")
+    if "/kaggle/working/Lilly" in text or 'os.chdir("/kaggle/working")' in text:
+        fail("backtrans must clone to /kaggle/temp")
+    if "/kaggle/temp" not in text:
+        fail("backtrans must clone to /kaggle/temp")
+    if 'DIRECTION == "en-bs"' not in text or 'ARM == "lora"' not in text:
+        fail("backtrans is the reply LoRA and must assert DIRECTION==en-bs, ARM==lora")
+    if "FORWARD_FINGERPRINT" not in text or "1aedcc11231cdf50817ff12f99ff0d1e" not in text:
+        fail("backtrans must pin the shipped bs-en forward build by fingerprint before "
+             "back-translating -- a different forward model is a different experiment")
+    if "build_fingerprint(d) == FORWARD_FINGERPRINT" not in text:
+        fail("backtrans must SELECT the forward build by fingerprint, not by filename")
+    if "scripts/prepare_backtrans_bs.py" not in text:
+        fail("backtrans must hold out FLORES/bench/parallel via prepare_backtrans_bs.py")
+    if "data/flores/dev.bs" not in text or "data/flores/devtest.bs" not in text \
+            or '"bench/cases.tsv"' not in text:
+        fail("backtrans holdout must cover FLORES dev+devtest bs and bench/cases.tsv")
+    if '"--parallel", "data/clean/train-mix.tsv"' not in text:
+        fail("backtrans holdout must also exclude the existing en-bs mix (--parallel)")
+    if "from app.translate import Engine" not in text or 'direction="bs-en"' not in text:
+        fail("backtrans must back-translate through the product path "
+             "(app.translate.Engine on the bs-en forward build)")
+    if "MAX_BT_SECONDS" not in text or "raise SystemExit" not in text:
+        fail("backtrans must fail loud on the 12h wall, never under-produce silently")
+    if "train-mix-backtrans.tsv" not in text \
+            or '"--data", "data/clean/train-mix-backtrans.tsv"' not in text:
+        fail("backtrans must train on the 1:1 mixed file via --data")
+    if 'run("python3", "-u", "training/train_translation.py"' not in text:
+        fail("backtrans must run train_translation.py unbuffered (python -u)")
+    if "evaluate_app.py" not in text or "bosnian_form_rate.py" not in text:
+        fail("backtrans must point the four deciding bars at the served path at home, "
+             "not gate on the in-run evaluate.py")
+    trainproof = text.find("OFF.check_trainproof()")
+    zip_at = text.find("/kaggle/working/{name}")
+    if trainproof < 0 or zip_at < 0 or zip_at < trainproof:
+        fail("backtrans must scan the tee (check_trainproof) before it zips the adapter")
+
+
 def main() -> int:
     for path, fn in ((SPEECH, check_speech), (SPEECH2, check_speech_half2),
                      (OCR, check_ocr), (OCR_PADDLE, check_ocr_paddle),
                      (OUTSIDE, check_outside),
                      (SPEECH_INSTR, check_speech_instrument),
                      (TRANSLATION, check_translation),
+                     (BACKTRANS, check_backtrans),
                      (ORDINALS, check_ordinals),
                      (SPEAK_BS, check_speak_bs),
                      (SPEAK_PARLA, check_speak_parla),
@@ -604,6 +652,12 @@ def main() -> int:
         fail("kaggle_train.py must carry the arm each translation job launches and check the "
              "notebook's ARM against it -- an arm that does not match its pre-registration "
              "trains to the end and returns a model nobody registered")
+    if '"translation-en-bs-backtrans"' not in kaggle_train or "push_forward_build" not in kaggle_train:
+        fail("kaggle_train.py must carry the Run B job and push the fingerprint-checked "
+             "bs-en forward build for the back-translation")
+    if '"needs_macocu": True' not in kaggle_train or "require_macocu" not in kaggle_train:
+        fail("kaggle_train.py must require the owner-uploaded MaCoCu-bs dataset for Run B "
+             "(it is 730M words, too large to push from the Mac)")
     if '"needs_translator_builds": True' not in kaggle_train or "push_translator_builds" not in kaggle_train:
         fail("kaggle_train.py must upload both served builds (checked by fingerprint) for ordinals-remeasure")
     if '"needs_listen_shipped": True' not in kaggle_train or "push_listen_shipped" not in kaggle_train:
@@ -654,7 +708,7 @@ def main() -> int:
     offload = (REPO / "training" / "kaggle_offload.py").read_text(encoding="utf-8")
     if "experiment_log.json" not in offload or "scan_trainproof" not in offload:
         fail("training/kaggle_offload.py must write experiment_log.json and scan the tee")
-    print("preflight ok: speech half-1 + half-2 + instrument, OCR, outside-baseline, translation, ordinals, speak-bs, speak-parla, speak-control, speak-youtube notebooks")
+    print("preflight ok: speech half-1 + half-2 + instrument, OCR, outside-baseline, translation, backtrans, ordinals, speak-bs, speak-parla, speak-control, speak-youtube notebooks")
     return 0
 
 
