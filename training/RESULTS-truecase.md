@@ -50,12 +50,21 @@ the source language, so an English caption or a brand on the same sign is left
 alone. With the flag unset, behaviour is byte-for-byte unchanged. Shipping it as
 the default is a product change and needs its own pre-registration and a
 photograph-bar measurement first (the report says the honest bar is a score on
-photographs, not uppercased FLORES). That photograph bar exists:
-`training/RESULTS-truecase-photos.md` drives the flag through the served `bs-en`
-photograph path on the 40 Commons photographs' own OCR, off against on, and lays
-out the **9** it changes side by side with a blind verdict slot each — the A/B
-the default-on decision is gated behind. The decision itself stays open, and
-ships only on a clear majority of *better* with no serious regressions.
+photographs, not uppercased FLORES). That photograph bar was run:
+`training/RESULTS-truecase-photos.md` drove the flag through the served `bs-en`
+photograph path on the shipped floor-0.9 reader's own OCR, off against on, as a
+blind randomised A/B over the **8** photographs it changes.
+
+**Decision, 16 Sep 2026: the candidate does not ship; the default stays OFF.**
+Blind verdicts (`training/truecase-photos-blind-verdicts-codex.md`) were locked
+before the key was opened, then unblinded against the SHA-256-committed key
+(`training/RESULTS-truecase-photos-unblinded.md`). The pre-registered gate was
+≥ 6 of 8 better with zero serious regressions; the candidate was **better on 3
+of 8** and carried **4 candidate-side serious regressions** (a hallucinated
+"rival", "Brod"→"ship" repetition, "Široki Brijeg"→"Wide hill", a dropped brand),
+failing both arms. The re-scoped restorer stays in the tree behind `LILLY_TRUECASE`
+(off), as the way to re-run the bar for any future candidate; it is not the
+product.
 
 ## Known limitation
 

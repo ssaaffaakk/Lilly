@@ -231,8 +231,3 @@ data/ocr/real-photos/test-v2b/*
 !data/ocr/real-photos/test-v2b/truth-v2b.json
 !data/ocr/real-photos/test-v2b/pass-a.json
 !data/ocr/real-photos/test-v2b/pass-b.json
-# The truecase photograph A/B keeps its answer key uncommitted so a blind pass
-# cannot peek at which rendering is the candidate; only its SHA-256 commitment
-# (training/truecase-photos-key.sha256) is committed, and the key is revealed
-# after the verdicts are locked (scripts/measure_truecase_photos.py).
-training/truecase-photos-key.json

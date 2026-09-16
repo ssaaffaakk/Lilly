@@ -1,0 +1,196 @@
+{
+  "reader_identity": "paddle:PP-OCRv6_medium_det+PP-OCRv6_medium_rec:3.7.0:rec>=0.9",
+  "cv2": "4.10.0",
+  "generated_at": "2026-09-16T10:56:27.615000+00:00",
+  "scan_parity": "40/40 identical",
+  "seed": 20260916,
+  "gate": "Default-on ships only if, on the changed photographs, the candidate is **better in at least two thirds** of them AND there is **no serious regression**. Serious regression = a place / person / brand name corrupted, a new repetition or hallucination, or a correct English line broken.",
+  "photos_with_text": 30,
+  "changed": 8,
+  "mapping": [
+    {
+      "photo": "Assasination_Plaque.JPG",
+      "A_is": "on",
+      "off": "RANCA FERDINANDA INJEGOVA SURUVA SOFIA FROM THIS PLACE ON 28 JUNE 1914 GAVRILO PRINCIPLE ASSASSINATED THE HEIR TO THE AUSTRO-HUNGARIAN THRONE FRANZ FERDINAND AND HIS WIFE SOFLA 11.08.201810:46",
+      "on": "Ranca ferdinanda and his rival Sofia FROM THIS PLACE ON 28 JUNE 1914 GAVRILO PRINCIPLE ASSASSINATED THE HEIR TO THE AUSTRO-HUNGARIAN THRONE FRANZ FERDINAND AND HIS WIFE SOFLA 11.08.201810:46",
+      "recased": "Ranca ferdinanda injegovu supruo sofiju\nFROM THIS PLACE ON 28 JUNE 1914 GAVRILO PRINCIP ASSASSINATED THE HEIR TO THE AUSTRO-HUNGARIAN THRONE FRANZ FERDINAND AND HIS WIFE SOFLA\n11.08.201810:46",
+      "src_changed": true,
+      "notes": [
+        [
+          "RANCA FERDINANDA INJEGOVU SUPRUO SOFIJU",
+          "recased (shouted, Bosnian)"
+        ],
+        [
+          "FROM THIS PLACE ON 28 JUNE 1914 GAVRILO PRINCIP ASSASSINATED THE HEIR TO THE AUSTRO-HUNGARIAN THRONE FRANZ FERDINAND AND HIS WIFE SOFLA",
+          "kept — read as a foreign line"
+        ],
+        [
+          "11.08.201810:46",
+          "calm — left as read"
+        ]
+      ]
+    },
+    {
+      "photo": "Entrance_to_Bosnia_and_Herzegovina_at_Brod.jpg",
+      "A_is": "off",
+      "off": "WELCOME TO BOSNIA AND HERZEGOVINA",
+      "on": "Welcome to Bosnia and Herzegovina ship welcome to Bosnia and Herzegovina ship",
+      "recased": "Dobro došli u Bosnu i Hercegovinu brod welcome to bosnia and herzegovina brod",
+      "src_changed": true,
+      "notes": [
+        [
+          "DOBRO DOŠLI U BOSNU I HERCEGOVINU BROD WELCOME TO BOSNIA AND HERZEGOVINA BROD",
+          "recased (shouted, Bosnian)"
+        ]
+      ]
+    },
+    {
+      "photo": "GiPS_Bus_Lion_s_City_03.jpg",
+      "A_is": "off",
+      "off": "GIPS ENTAR ODOVA LASER- GIPS T80-K-611",
+      "on": "GIPS Entar odova laser GIPS T80-K-611",
+      "recased": "GIPS\nEntar odova laser-\nGIPS\nT80-K-611",
+      "src_changed": true,
+      "notes": [
+        [
+          "GIPS",
+          "calm — left as read"
+        ],
+        [
+          "ENTAR ODOVA LASER-",
+          "recased (shouted, Bosnian)"
+        ],
+        [
+          "GIPS",
+          "calm — left as read"
+        ],
+        [
+          "T80-K-611",
+          "calm — left as read"
+        ]
+      ]
+    },
+    {
+      "photo": "Plaque_at_the_Battle_of_the_Sutjeska_memorial.jpg",
+      "A_is": "off",
+      "off": "33O1 BORAC WITH HERE MURDERED FIGHTERS SUTJESKA",
+      "on": "Here rests a 33o1 fighter with Deadly Fighters Sutjeska",
+      "recased": "Ovdje pociva 33o1 borac sa\nPoginulim borcima s\nSutjeske",
+      "src_changed": true,
+      "notes": [
+        [
+          "OVDJE POCIVA 33O1 BORAC SA",
+          "recased (shouted, Bosnian)"
+        ],
+        [
+          "POGINULIM BORCIMA S",
+          "recased (shouted, Bosnian)"
+        ],
+        [
+          "SUTJESKE",
+          "recased (shouted, Bosnian)"
+        ]
+      ]
+    },
+    {
+      "photo": "Street_in_Međugorje.jpg",
+      "A_is": "on",
+      "off": "SOUVENIRS SHOP Giuseppe MINIMARKET SHOP SHO",
+      "on": "SOUVENIRS SHOP Giuseppe Minimarket SHOP SHO",
+      "recased": "SOUVENIRS SHOP Giuseppe\nMinimarket\nSHOP\nSHO",
+      "src_changed": true,
+      "notes": [
+        [
+          "SOUVENIRS SHOP Giuseppe",
+          "calm — left as read"
+        ],
+        [
+          "MINIMARKET",
+          "recased (shouted, Bosnian)"
+        ],
+        [
+          "SHOP",
+          "calm — left as read"
+        ],
+        [
+          "SHO",
+          "calm — left as read"
+        ]
+      ]
+    },
+    {
+      "photo": "Trg-žrtava-ŠB03078.JPG",
+      "A_is": "on",
+      "off": "SILVER BRIDGE UVEKNAT.PLACE BRIJESK ZVON",
+      "on": "Wide hill Uvueknat. Brijesek bell",
+      "recased": "Široki brijeg\nUvueknat.Mjestu\nBrijesk zvon",
+      "src_changed": true,
+      "notes": [
+        [
+          "ŠIROKI BRIJEG",
+          "recased (shouted, Bosnian)"
+        ],
+        [
+          "UVUEKNAT.MJESTU",
+          "recased (shouted, Bosnian)"
+        ],
+        [
+          "BRIJESK ZVON",
+          "recased (shouted, Bosnian)"
+        ]
+      ]
+    },
+    {
+      "photo": "Trg_Krajine_čajavčev_i_ulaz_u_gospodsku.jpg",
+      "A_is": "off",
+      "off": "MALBAŠI CO SIEMENS LANACO PNPOJEKT VINKOP",
+      "on": "Malbašić SIEMENS LANACO Pnpoject VINKOP",
+      "recased": "Malbašić co\nSIEMENS\nLANACO\nPnpojekt\nVINKOP",
+      "src_changed": true,
+      "notes": [
+        [
+          "MALBAŠIĆ CO",
+          "recased (shouted, Bosnian)"
+        ],
+        [
+          "SIEMENS",
+          "calm — left as read"
+        ],
+        [
+          "LANACO",
+          "calm — left as read"
+        ],
+        [
+          "PNPOJEKT",
+          "recased (shouted, Bosnian)"
+        ],
+        [
+          "VINKOP",
+          "calm — left as read"
+        ]
+      ]
+    },
+    {
+      "photo": "Tuzla_-_INA_petrol_station_2019_.jpg",
+      "A_is": "on",
+      "off": "NA CLASS 2.26 2.3 2.2 0-24 SHOP CAF WASH CLASS PLUS FUEL FOR ALL TEMPERATURES",
+      "on": "NA CLASS 2.26 2.3 2.2 0-24 SHOP CAF WASH Class plus fuel for all temperatures",
+      "recased": "NA CLASS 2.26 2.3 2.2\n0-24 SHOP CAFÉ WASH\nClass plus gorivo za sve temperature",
+      "src_changed": true,
+      "notes": [
+        [
+          "NA CLASS 2.26 2.3 2.2",
+          "calm — left as read"
+        ],
+        [
+          "0-24 SHOP CAFÉ WASH",
+          "kept — read as a foreign line"
+        ],
+        [
+          "CLASS PLUS GORIVO ZA SVE TEMPERATURE",
+          "recased (shouted, Bosnian)"
+        ]
+      ]
+    }
+  ]
+}
