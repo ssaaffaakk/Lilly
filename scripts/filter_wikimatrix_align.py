@@ -48,13 +48,20 @@ class Encoder(Protocol):
 class LaBSEEncoder:
     """Minimal mean-pooling wrapper; avoids a separate sentence-transformers dep."""
 
-    def __init__(self, model_name: str, device: str = "cpu") -> None:
+    def __init__(self, model_name: str, device: str | None = None) -> None:
         try:
             import torch
             from transformers import AutoModel, AutoTokenizer
         except ImportError as exc:  # pragma: no cover - environment error
             raise SystemExit("LaBSE needs the repository's torch and transformers dependencies") from exc
         self.torch = torch
+        if device is None:
+            if torch.cuda.is_available():
+                device = "cuda"
+            elif hasattr(torch.backends, "mps") and torch.backends.mps.is_available():
+                device = "mps"
+            else:
+                device = "cpu"
         self.tokenizer = AutoTokenizer.from_pretrained(model_name)
         self.model = AutoModel.from_pretrained(model_name).to(device).eval()
         self.device = device
@@ -149,6 +156,24 @@ def write_scores(path: Path, scored: Sequence[tuple[Pair, float]], threshold: fl
                 fh.write(f"{pair.source}\t{pair.bs}\t{pair.en}\t{score:.6f}\t{str(score >= threshold).lower()}\n")
 
 
+def rewrite_train_tsv(input_path: Path, output_path: Path, scored: Sequence[tuple[Pair, float]], threshold: float) -> int:
+    scores_by_pair = {(pair.bs, pair.en): score for pair, score in scored}
+    kept_count = 0
+    with input_path.open(encoding="utf-8") as fin, output_path.open("w", encoding="utf-8") as fout:
+        for line in fin:
+            fields = line.rstrip("\n").split("\t")
+            if len(fields) != 3:
+                continue
+            source, bs, en = fields
+            if source == TARGET_CORPUS:
+                score = scores_by_pair.get((bs, en))
+                if score is not None and score < threshold:
+                    continue
+            fout.write(f"{source}\t{bs}\t{en}\n")
+            kept_count += 1
+    return kept_count
+
+
 def main(argv: Sequence[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--input", type=Path, default=DEFAULT_INPUT)
@@ -160,6 +185,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     ap.add_argument("--all", action="store_true", help="score all WikiMatrix rows (owner-gated)")
     ap.add_argument("--write-scores", type=Path)
     ap.add_argument("--write-kept", type=Path)
+    ap.add_argument("--rewrite-train-tsv", type=Path, help="rewrite train.tsv keeping only WikiMatrix pairs with score >= threshold")
     ap.add_argument("--examples", type=int, default=20)
     args = ap.parse_args(argv)
     if not 0 < args.threshold < 1:
@@ -183,6 +209,9 @@ def main(argv: Sequence[str] | None = None) -> int:
         write_scores(args.write_scores, scored, args.threshold, kept_only=False)
     if args.write_kept:
         write_scores(args.write_kept, scored, args.threshold, kept_only=True)
+    if args.rewrite_train_tsv:
+        total_kept = rewrite_train_tsv(args.input, args.rewrite_train_tsv, scored, args.threshold)
+        print(f"rewrote {args.rewrite_train_tsv}: {total_kept:,} total rows kept")
     return 0
 
 

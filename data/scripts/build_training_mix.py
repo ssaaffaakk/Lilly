@@ -368,7 +368,7 @@ def read_rows(path: Path) -> list:
     return rows
 
 
-def build(direction="bs-en", verbose=True):
+def build(direction="bs-en", verbose=True, allow_filtered=False):
     C = COUNTS[direction]
     log = print if verbose else (lambda *a, **k: None)
 
@@ -383,11 +383,16 @@ def build(direction="bs-en", verbose=True):
     # on its own first and the sum only afterwards.
     train_rows = read_rows(TRAIN)
     extra_rows = read_rows(EXTRA)
-    check("input rows [data/clean/train.tsv]", len(train_rows), 313_612,
-          "The filter's output, and nothing else — this file is never appended to. "
-          "If it moved, download_data.py, clean_data.py or filter_train_data.py did. "
-          "If it is ~351,889 the extra corpus has been concatenated onto it and the "
-          "extras are about to be counted twice.")
+    if allow_filtered:
+        if not (300_000 <= len(train_rows) <= 313_612):
+            raise Drift(f"filtered train.tsv row count {len(train_rows):,} outside expected range [300,000, 313,612]")
+        log(f"allow_filtered: train.tsv has {len(train_rows):,} rows (shipped: 313,612, dropped by LaBSE: {313_612 - len(train_rows):,})")
+    else:
+        check("input rows [data/clean/train.tsv]", len(train_rows), 313_612,
+              "The filter's output, and nothing else — this file is never appended to. "
+              "If it moved, download_data.py, clean_data.py or filter_train_data.py did. "
+              "If it is ~351,889 the extra corpus has been concatenated onto it and the "
+              "extras are about to be counted twice.")
     check("input rows [data/extra/extra-train.tsv]", len(extra_rows), 38_277,
           "The pinned extra corpus, uploaded by scripts/kaggle_train.py rather than "
           "re-harvested. download_extra_data.py does not return this file: the harvest "
@@ -395,8 +400,9 @@ def build(direction="bs-en", verbose=True):
           "and a later re-harvest returned 38,280. Re-measure every count below with "
           "--dry-run before using a corpus this script has not seen.")
     rows = train_rows + extra_rows
-    check("input rows", len(rows), 351_889,
-          "data/clean/train.tsv (313,612) + data/extra/extra-train.tsv (38,277).")
+    if not allow_filtered:
+        check("input rows", len(rows), 351_889,
+              "data/clean/train.tsv (313,612) + data/extra/extra-train.tsv (38,277).")
     log(f"in: {len(rows):,} rows")
 
     # ---- step 1 ------------------------------------------------------
@@ -690,12 +696,14 @@ def main() -> int:
     ap.add_argument("--direction", default="bs-en", choices=sorted(COUNTS),
                     help="which base's tokenizer measures the step-6 cap, and "
                          "which way round the pair is fed to it")
+    ap.add_argument("--allow-filtered", action="store_true",
+                    help="allow train.tsv filtered by LaBSE WikiMatrix alignment filter")
     args = ap.parse_args()
     if any(v is None for v in COUNTS[args.direction].values()):
         raise SystemExit(f"the {args.direction} counts have not been measured yet; "
                          f"see COUNTS at the top of this file")
 
-    mix, holdout, final, _, _, prov4, stripped = build(args.direction)
+    mix, holdout, final, _, _, prov4, stripped = build(args.direction, allow_filtered=args.allow_filtered)
 
     # The point of the whole recipe, measured on what was actually produced.
     # Everything above is bookkeeping; these three numbers are the deliverable.
