@@ -467,8 +467,8 @@ This section exists because a README that only lists wins is not worth trusting.
   and the reader reads English photographs, because Whisper is multilingual and
   PP-OCRv6 reads Latin script whatever the language — but no held-out English
   set has been scored here, so there is no number for either. And the voice
-  that says the Bosnian answer is not Bosnian: Piper's `sr_RS` voice, Serbian
-  phonemes over recordings its card attributes to the Sorbian Institute, with
+  that says the Bosnian answer is not Bosnian: Piper's `sr_RS` (Bosnian/Serbian)
+  voice, Serbian phonemes over recordings its card attributes to the Sorbian Institute, with
   numbers spelled out in the Serbian form. Nobody has yet measured how a
   Bosnian speaker hears it. Through Lilly's own listener it is heard with
   22.3% of words wrong on the 200-clip test prefix, against 11.7% for the

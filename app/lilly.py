@@ -70,7 +70,7 @@ OPTIONAL = {
         "    python3 scripts/build_translator.py --direction en-bs"),
     SPEAK_BS_DIR: (
         "the Bosnian voice (spoken replies). Not in the bundle: it is Piper's "
-        "public sr_RS voice, fetched from upstream by\n"
+        "public sr_RS (Bosnian/Serbian) voice, fetched from upstream by\n"
         "    python3 scripts/fetch_models.py\n"
         "or on its own:\n"
         "    python3 scripts/fetch_speak_bs.py"),

@@ -10,7 +10,7 @@ when it stops being true; a stale handoff is worse than none.
 > **8 Sep 2026, night:** every ability runs the other way. `/api/speech` and
 > `/api/photo` take `direction=en-bs`, `/api/speak` takes `language=bs`, and
 > the page sends the direction the arrow shows. The one new part is
-> `models/lilly/speak-bs/`, Piper's Serbian voice, fetched from
+> `models/lilly/speak-bs/`, Piper's Bosnian/Serbian voice, fetched from
 > `rhasspy/piper-voices` by `scripts/fetch_speak_bs.py` (and by
 > `fetch_models.py`), never from the bundle. Nothing about English hearing or
 > reading is measured; the README says so. On main since 9 Sep. Speaker 0 is

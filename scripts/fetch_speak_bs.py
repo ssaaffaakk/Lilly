@@ -89,7 +89,7 @@ def fetch_bosnian_voice(speaker: int = 0, force: bool = False, dest: Path = DEST
     (dest / "built.json").write_text(json.dumps({
         "base": f"{UPSTREAM_REPO}/{UPSTREAM_DIR}/{UPSTREAM_NAME}",
         "engine": "piper",
-        "language": "sr (Serbian Latin; there is no Bosnian voice in Piper)",
+        "language": "bs/sr (Bosnian/Serbian Latin; there is no Bosnian voice in Piper)",
         "speaker": speaker,
         "voice_md5": md5_of(dest / "voice.onnx"),
         "license": "MIT (voice); CC-BY-NC-SA-4.0 (training recordings, see MODEL_CARD)",
