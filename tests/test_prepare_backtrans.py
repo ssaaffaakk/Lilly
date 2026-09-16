@@ -62,6 +62,37 @@ def test_deterministic_sample():
     assert a == b and len(a) == 10
 
 
+def test_three_shards_are_balanced_gap_free_and_reconstruct_sample():
+    holdout = {"x"}
+    lines = [f"bosanska rečenica broj {i} ovdje" for i in range(50)]
+    whole, _ = prep.prepare(list(lines), holdout, n=10, min_tok=3,
+                            max_tok=60, seed=7)
+    shards, reports = [], []
+    for index in range(3):
+        shard, report = prep.prepare(
+            list(lines), holdout, n=10, min_tok=3, max_tok=60, seed=7,
+            shard_index=index, shard_count=3)
+        shards.extend(shard)
+        reports.append(report)
+    assert shards == whole
+    assert [r["kept"] for r in reports] == [4, 3, 3]
+    assert all(r["sample_kept"] == 10 for r in reports)
+
+
+def test_shard_arguments_must_be_paired_and_in_range():
+    holdout = {"x"}
+    lines = ["bosanska rečenica broj jedan"]
+    for kwargs in ({"shard_index": 0}, {"shard_count": 3},
+                   {"shard_index": 3, "shard_count": 3}):
+        try:
+            prep.prepare(lines, holdout, n=0, min_tok=3, max_tok=60, seed=1,
+                         **kwargs)
+        except ValueError:
+            pass
+        else:
+            raise AssertionError(f"invalid shard arguments were accepted: {kwargs}")
+
+
 def test_bench_targets_reads_bs_column(tmp_path):
     tsv = tmp_path / "cases.tsv"
     tsv.write_text("case_id\ten\tbs\nc1\tHello\tZdravo svijete danas\n", encoding="utf-8")

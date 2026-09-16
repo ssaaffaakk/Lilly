@@ -41,6 +41,18 @@ def kaggle_user() -> str:
 def jobs() -> dict:
     user = kaggle_user()
     return {
+        "translation-en-bs-backtrans-producer-0": {
+            "slug": f"{user}/lilly-backtrans-en-bs-producer-0",
+            "done_names": ("backtrans-shard-0.tsv.gz",), "min_bytes": 1_000_000},
+        "translation-en-bs-backtrans-producer-1": {
+            "slug": f"{user}/lilly-backtrans-en-bs-producer-1",
+            "done_names": ("backtrans-shard-1.tsv.gz",), "min_bytes": 1_000_000},
+        "translation-en-bs-backtrans-producer-2": {
+            "slug": f"{user}/lilly-backtrans-en-bs-producer-2",
+            "done_names": ("backtrans-shard-2.tsv.gz",), "min_bytes": 1_000_000},
+        "translation-en-bs-backtrans": {
+            "slug": f"{user}/lilly-backtrans-en-bs",
+            "done_names": ("lilly-adapter-en-bs-backtrans.zip",), "min_bytes": 1_000_000},
         # The ordinal re-measurement: a small zip of JSON and markdown.
         "ordinals-remeasure": {
             "slug": f"{user}/lilly-ordinals-remeasure",

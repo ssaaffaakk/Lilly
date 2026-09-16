@@ -28,6 +28,7 @@ deterministic given `--seed`.
 """
 import argparse
 import csv
+import hashlib
 import json
 import random
 import re
@@ -37,6 +38,15 @@ from pathlib import Path
 
 _WS = re.compile(r"\s+")
 _STRIP = re.compile(r"[^\w\s]", re.UNICODE)
+
+
+def ordered_hash(lines) -> str:
+    """Content-and-order fingerprint used to prove shard union identity."""
+    digest = hashlib.blake2b(digest_size=32)
+    for line in lines:
+        digest.update(line.encode("utf-8"))
+        digest.update(b"\n")
+    return digest.hexdigest()
 
 
 def normalize(s: str) -> str:
@@ -100,8 +110,21 @@ def build_holdout(holdout_files, bench_file, parallel_file) -> set:
     return keys
 
 
-def prepare(lines, holdout: set, n: int, min_tok: int, max_tok: int, seed: int):
-    """Clean, de-duplicate, hold out, then sample. Returns (kept, report)."""
+def shard_bounds(total: int, shard_index: int, shard_count: int) -> tuple[int, int]:
+    """Return a balanced, gap-free slice of ``range(total)`` for one shard."""
+    if shard_count < 1:
+        raise ValueError("shard_count must be at least 1")
+    if not 0 <= shard_index < shard_count:
+        raise ValueError(f"shard_index {shard_index} is outside [0, {shard_count})")
+    width, remainder = divmod(total, shard_count)
+    start = shard_index * width + min(shard_index, remainder)
+    stop = start + width + (1 if shard_index < remainder else 0)
+    return start, stop
+
+
+def prepare(lines, holdout: set, n: int, min_tok: int, max_tok: int, seed: int,
+            shard_index: int | None = None, shard_count: int | None = None):
+    """Clean, de-duplicate, sample, then optionally return one exact shard."""
     report = {"read": 0, "kept": 0, "sample_n": n, "seed": seed,
               "dropped": {"too short": 0, "too long": 0, "url/boilerplate": 0,
                           "duplicate": 0, "holdout": 0}}
@@ -132,6 +155,16 @@ def prepare(lines, holdout: set, n: int, min_tok: int, max_tok: int, seed: int):
     if n and len(kept) > n:
         random.Random(seed).shuffle(kept)
         kept = kept[:n]
+    sample_kept = len(kept)
+    report["sample_order_hash"] = ordered_hash(kept)
+    if (shard_index is None) != (shard_count is None):
+        raise ValueError("shard_index and shard_count must be provided together")
+    if shard_index is not None and shard_count is not None:
+        start, stop = shard_bounds(sample_kept, shard_index, shard_count)
+        kept = kept[start:stop]
+        report.update({"sample_kept": sample_kept, "shard_index": shard_index,
+                       "shard_count": shard_count, "shard_start": start,
+                       "shard_stop": stop})
     report["kept"] = len(kept)
     report["holdout_size"] = len(holdout)
     return kept, report
@@ -148,6 +181,10 @@ def main() -> int:
     ap.add_argument("--min-tokens", type=int, default=3)
     ap.add_argument("--max-tokens", type=int, default=60)
     ap.add_argument("--seed", type=int, default=20260914)
+    ap.add_argument("--shard-index", type=int, default=None,
+                    help="zero-based deterministic shard to emit")
+    ap.add_argument("--shard-count", type=int, default=None,
+                    help="number of balanced shards in the sampled corpus")
     ap.add_argument("--out", required=True)
     ap.add_argument("--report", default=None)
     args = ap.parse_args()
@@ -158,7 +195,8 @@ def main() -> int:
               "FLORES and the bench cannot leak into training", file=sys.stderr)
         return 1
     kept, report = prepare(load_lines(Path(args.input)), holdout, args.n,
-                           args.min_tokens, args.max_tokens, args.seed)
+                           args.min_tokens, args.max_tokens, args.seed,
+                           args.shard_index, args.shard_count)
     Path(args.out).write_text("\n".join(kept) + "\n", encoding="utf-8")
     print(json.dumps(report, indent=2, ensure_ascii=False))
     if args.report:

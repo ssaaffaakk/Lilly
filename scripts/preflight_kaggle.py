@@ -15,6 +15,7 @@ OUTSIDE = REPO / "training" / "Lilly_Outside_Baseline_Kaggle.ipynb"
 SPEECH_INSTR = REPO / "training" / "Lilly_Speech_Instrument_Kaggle.ipynb"
 TRANSLATION = REPO / "training" / "Lilly_Translation_Kaggle.ipynb"
 BACKTRANS = REPO / "training" / "Lilly_Backtrans_EnBs_Kaggle.ipynb"
+BACKTRANS_PRODUCER = REPO / "training" / "Lilly_Backtrans_Producer_Kaggle.ipynb"
 ORDINALS = REPO / "training" / "Lilly_Ordinals_Kaggle.ipynb"
 SPEAK_BS = REPO / "training" / "Lilly_Speak_BS_Kaggle.ipynb"
 SPEAK_PARLA = REPO / "training" / "Lilly_Speak_Parla_Kaggle.ipynb"
@@ -590,63 +591,78 @@ def check_translation(text: str) -> None:
         fail("translation: cell 0 must set DIRECTION and ARM in the committed file")
 
 
-def check_backtrans(text: str) -> None:
-    """Run B (PREREGISTRATION.md, "Run B -- back-translation from MaCoCu-bs").
-
-    The one variable is the training data. The guards are the offload contract,
-    a fingerprint-pinned forward build, the leakage-proof holdout, the 1:1 mix,
-    training through the shipped recipe, the four deciding bars scored at home on
-    the served path, and a generation step that fails loud rather than
-    under-produce a partial mix as if it were the pre-registered run."""
-    check_offload(text, "backtrans")
+def check_backtrans_producer(text: str) -> None:
+    """Run B producer: one exact, content-bound third; never a model."""
+    check_offload(text, "backtrans producer")
     if "/kaggle/working/Lilly" in text or 'os.chdir("/kaggle/working")' in text:
-        fail("backtrans must clone to /kaggle/temp")
+        fail("backtrans producer must clone to scratch")
     if "/kaggle/temp" not in text:
-        fail("backtrans must clone to /kaggle/temp")
+        fail("backtrans producer must select /kaggle/temp")
     if '\"/kaggle/temp/' in text or "'/kaggle/temp/" in text:
-        fail("backtrans must not hardcode files under /kaggle/temp -- that directory is "
-             "not present on every Kaggle image, and setup may select /tmp as SCRATCH")
+        fail("backtrans producer must derive files from SCRATCH")
     if 'MACOCU = str(SCRATCH / "macocu-bs-latin.txt")' not in text:
-        fail("backtrans must derive the extracted MaCoCu path from the same SCRATCH "
-             "directory selected during setup")
-    if 'BT_SRC = str(SCRATCH / "backtrans-bs.txt")' not in text:
-        fail("backtrans must derive its prepared sentence path from the same SCRATCH "
-             "directory selected during setup")
-    if 'DIRECTION == "en-bs"' not in text or 'ARM == "lora"' not in text:
-        fail("backtrans is the reply LoRA and must assert DIRECTION==en-bs, ARM==lora")
+        fail("backtrans producer must derive MaCoCu from SCRATCH")
+    if 'BT_SRC = str(SCRATCH / f"backtrans-bs-{SHARD_INDEX}.txt")' not in text:
+        fail("backtrans producer must derive its shard source from SCRATCH")
+    if "BACKTRANS_N = 1_000_000" not in text or "SHARD_COUNT = 3" not in text:
+        fail("backtrans producer must preserve the registered 1M sample as three shards")
+    if "SHARD_INDEX = 0  # launcher replaces" not in text:
+        fail("backtrans producer lost the launcher's committed shard marker")
     if "FORWARD_FINGERPRINT" not in text or "1aedcc11231cdf50817ff12f99ff0d1e" not in text:
-        fail("backtrans must pin the shipped bs-en forward build by fingerprint before "
-             "back-translating -- a different forward model is a different experiment")
+        fail("backtrans producer must pin the shipped forward build")
     if "build_fingerprint(d) == FORWARD_FINGERPRINT" not in text:
-        fail("backtrans must SELECT the forward build by fingerprint, not by filename")
+        fail("backtrans producer must select the forward build by fingerprint")
     if "scripts/prepare_backtrans_bs.py" not in text:
-        fail("backtrans must hold out FLORES/bench/parallel via prepare_backtrans_bs.py")
+        fail("backtrans producer must use the leakage-proof sampler")
     if "data/flores/dev.bs" not in text or "data/flores/devtest.bs" not in text \
             or '"bench/cases.tsv"' not in text:
-        fail("backtrans holdout must cover FLORES dev+devtest bs and bench/cases.tsv")
+        fail("backtrans producer holdout must cover FLORES and bench")
     if '"--parallel", "data/clean/train-mix.tsv"' not in text:
-        fail("backtrans holdout must also exclude the existing en-bs mix (--parallel)")
+        fail("backtrans producer must exclude the existing en-bs mix")
+    if '"--shard-index", str(SHARD_INDEX)' not in text or '"--shard-count", str(SHARD_COUNT)' not in text:
+        fail("backtrans producer must request its deterministic shard")
     if "from app.translate import Engine" not in text or 'direction="bs-en"' not in text:
-        fail("backtrans must back-translate through the product path "
-             "(app.translate.Engine on the bs-en forward build)")
+        fail("backtrans producer must use app.translate.Engine")
     if "0400" not in text:
-        fail("backtrans must keep only Latin MaCoCu lines (drop Cyrillic, \\u0400-\\u04FF) -- "
-             "raw MaCoCu-bs mixes scripts and Cyrillic targets would train en-bs to write "
-             "the wrong script")
+        fail("backtrans producer must drop Cyrillic MaCoCu lines")
     if "MAX_BT_SECONDS" not in text or "raise SystemExit" not in text:
-        fail("backtrans must fail loud on the 12h wall, never under-produce silently")
+        fail("backtrans producer must fail loud on its wall cap")
+    for required in ("sample_order_hash", "source_order_hash", "pair_order_hash",
+                     '"status": "complete"', '"rows": len(pairs)',
+                     '"format_version": FORMAT_VERSION', "assert len(pairs) == expected"):
+        if required not in text: fail(f"backtrans producer missing {required}")
+    if "training/train_translation.py" in text or "lilly-adapter-en-bs-backtrans" in text:
+        fail("backtrans producer must never train or create adapter output")
+
+
+def check_backtrans(text: str) -> None:
+    """Run B consumer: validate the exact 1M union, then train fixed 1:1 mix."""
+    check_offload(text, "backtrans consumer")
+    if "/kaggle/working/Lilly" in text or 'os.chdir("/kaggle/working")' in text:
+        fail("backtrans consumer must clone to scratch")
+    if "from scripts.backtrans_dataset import validate_union" not in text:
+        fail("backtrans consumer must revalidate the producer dataset")
+    for required in ('union["rows"] == BACKTRANS_N', 'union["missing"] == 0',
+                     'union["duplicate_sources"] == 0', "BACKTRANS_N = 1_000_000",
+                     "SHARD_COUNT = 3"):
+        if required not in text: fail(f"backtrans consumer missing {required}")
+    for forbidden in ("MACOCU_RAW", "from app.translate import Engine", "MAX_BT_SECONDS"):
+        if forbidden in text: fail(f"backtrans consumer must not regenerate data ({forbidden})")
+    if 'len(real_up) == BACKTRANS_N and len(synth) == BACKTRANS_N' not in text:
+        fail("backtrans consumer must prove exact 1M real + 1M synthetic")
     if "train-mix-backtrans.tsv" not in text \
             or '"--data", "data/clean/train-mix-backtrans.tsv"' not in text:
-        fail("backtrans must train on the 1:1 mixed file via --data")
+        fail("backtrans consumer must train on verified 1:1 mix")
     if 'run("python3", "-u", "training/train_translation.py"' not in text:
-        fail("backtrans must run train_translation.py unbuffered (python -u)")
+        fail("backtrans consumer must run trainer unbuffered")
     if "evaluate_app.py" not in text or "bosnian_form_rate.py" not in text:
-        fail("backtrans must point the four deciding bars at the served path at home, "
-             "not gate on the in-run evaluate.py")
+        fail("backtrans consumer must point deciding bars at served path")
+    if "/kaggle/working/backtrans-union.json" not in text:
+        fail("backtrans consumer must preserve union manifest")
     trainproof = text.find("OFF.check_trainproof()")
     zip_at = text.find("/kaggle/working/{name}")
     if trainproof < 0 or zip_at < 0 or zip_at < trainproof:
-        fail("backtrans must scan the tee (check_trainproof) before it zips the adapter")
+        fail("backtrans consumer must scan tee before adapter zip")
 
 
 def main() -> int:
@@ -655,6 +671,7 @@ def main() -> int:
                      (OUTSIDE, check_outside),
                      (SPEECH_INSTR, check_speech_instrument),
                      (TRANSLATION, check_translation),
+                     (BACKTRANS_PRODUCER, check_backtrans_producer),
                      (BACKTRANS, check_backtrans),
                      (ORDINALS, check_ordinals),
                      (SPEAK_BS, check_speak_bs),
@@ -686,12 +703,22 @@ def main() -> int:
         fail("kaggle_train.py must carry the arm each translation job launches and check the "
              "notebook's ARM against it -- an arm that does not match its pre-registration "
              "trains to the end and returns a model nobody registered")
-    if '"translation-en-bs-backtrans"' not in kaggle_train or "push_forward_build" not in kaggle_train:
-        fail("kaggle_train.py must carry the Run B job and push the fingerprint-checked "
-             "bs-en forward build for the back-translation")
+    producer_jobs = [f'"translation-en-bs-backtrans-producer-{i}"' for i in range(3)]
+    if any(job not in kaggle_train for job in producer_jobs) or kaggle_train.count('"producer_shard":') < 3:
+        fail("kaggle_train.py must carry all three deterministic Run B producer jobs")
+    if "push_forward_build" not in kaggle_train:
+        fail("Run B producers must attach the fingerprint-checked forward build")
     if '"needs_macocu": True' not in kaggle_train or "require_macocu" not in kaggle_train:
-        fail("kaggle_train.py must require the owner-uploaded MaCoCu-bs dataset for Run B "
+        fail("kaggle_train.py producers must require the owner-uploaded MaCoCu-bs dataset "
              "(it is 730M words, too large to push from the Mac)")
+    if '"needs_backtrans_pairs": True' not in kaggle_train or "push_backtrans_pairs" not in kaggle_train \
+            or "validate_backtrans_union" not in kaggle_train:
+        fail("Run B consumer must attach only the fully validated producer dataset")
+    consumer_job = kaggle_train.split('"translation-en-bs-backtrans":', 1)[1].split("},", 1)[0]
+    if "needs_forward_build" in consumer_job or "needs_macocu" in consumer_job:
+        fail("Run B consumer must not attach MaCoCu or forward generator build")
+    if '"KernelWorkerStatus.COMPLETE"' not in kaggle_train:
+        fail("producer fetch/publish must refuse ERROR/CANCEL/partial Output")
     if '"needs_translator_builds": True' not in kaggle_train or "push_translator_builds" not in kaggle_train:
         fail("kaggle_train.py must upload both served builds (checked by fingerprint) for ordinals-remeasure")
     if '"needs_listen_shipped": True' not in kaggle_train or "push_listen_shipped" not in kaggle_train:

@@ -31,6 +31,13 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import state as repo_state
+from backtrans_dataset import (FORWARD_FINGERPRINT as BACKTRANS_FORWARD_FINGERPRINT,
+                               FORMAT_VERSION as BACKTRANS_FORMAT_VERSION,
+                               SAMPLE_N as BACKTRANS_SAMPLE_N,
+                               SEED as BACKTRANS_SEED,
+                               SHARD_COUNT as BACKTRANS_SHARD_COUNT,
+                               shard_bounds as backtrans_shard_bounds,
+                               validate_union as validate_backtrans_union)
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 KAGGLE = str(REPO_ROOT / ".venv" / "bin" / "kaggle")
@@ -107,12 +114,36 @@ JOBS = {
                     "direction": "en-bs", "arm": "lora",
                     "weights": WEIGHTS_EN_BS,
                     "weights_slug": "lilly-translate-en-bs-base"},
-    # Run B (PREREGISTRATION.md, "Run B -- reply ... back-translation from
-    # MaCoCu-bs"): the shipped en-bs LoRA recipe on the existing mix PLUS a 1:1
-    # slice of back-translated MaCoCu-bs. It attaches the en-bs base, the pinned
-    # corpus, the shipped bs-en forward build (fingerprint-checked; it does the
-    # back-translation), and the owner-uploaded MaCoCu-bs dataset. The BT
-    # inference and the training are the GPU steps; the launch is owner-gated.
+    # Run B producer shards. The monolith reached 411,019/1M at its 9h cap;
+    # preserve the experiment as three balanced deterministic shards.
+    "translation-en-bs-backtrans-producer-0": {
+                    "notebook": "Lilly_Backtrans_Producer_Kaggle.ipynb",
+                    "slug": "lilly-backtrans-en-bs-producer-0",
+                    "title": "Lilly backtrans en bs producer 0",
+                    "needs_weights": True, "needs_corpus": True,
+                    "direction": "en-bs", "arm": "lora", "weights": WEIGHTS_EN_BS,
+                    "weights_slug": "lilly-translate-en-bs-base",
+                    "needs_forward_build": True, "needs_macocu": True,
+                    "producer_shard": 0, "fetch_subdir": "backtrans-en-bs-producer-0"},
+    "translation-en-bs-backtrans-producer-1": {
+                    "notebook": "Lilly_Backtrans_Producer_Kaggle.ipynb",
+                    "slug": "lilly-backtrans-en-bs-producer-1",
+                    "title": "Lilly backtrans en bs producer 1",
+                    "needs_weights": True, "needs_corpus": True,
+                    "direction": "en-bs", "arm": "lora", "weights": WEIGHTS_EN_BS,
+                    "weights_slug": "lilly-translate-en-bs-base",
+                    "needs_forward_build": True, "needs_macocu": True,
+                    "producer_shard": 1, "fetch_subdir": "backtrans-en-bs-producer-1"},
+    "translation-en-bs-backtrans-producer-2": {
+                    "notebook": "Lilly_Backtrans_Producer_Kaggle.ipynb",
+                    "slug": "lilly-backtrans-en-bs-producer-2",
+                    "title": "Lilly backtrans en bs producer 2",
+                    "needs_weights": True, "needs_corpus": True,
+                    "direction": "en-bs", "arm": "lora", "weights": WEIGHTS_EN_BS,
+                    "weights_slug": "lilly-translate-en-bs-base",
+                    "needs_forward_build": True, "needs_macocu": True,
+                    "producer_shard": 2, "fetch_subdir": "backtrans-en-bs-producer-2"},
+    # Consumer: same locked 1:1 recipe, with a verified producer dataset.
     "translation-en-bs-backtrans": {"notebook": "Lilly_Backtrans_EnBs_Kaggle.ipynb",
                     "slug": "lilly-backtrans-en-bs",
                     "title": "Lilly backtrans en bs",
@@ -120,7 +151,7 @@ JOBS = {
                     "direction": "en-bs", "arm": "lora",
                     "weights": WEIGHTS_EN_BS,
                     "weights_slug": "lilly-translate-en-bs-base",
-                    "needs_forward_build": True, "needs_macocu": True},
+                    "needs_backtrans_pairs": True},
     # A measurement job, not a training pass: it loads no Lilly weights, ships
     # no model, and its Output is a small zip of JSON. The fail-stop rules still
     # apply -- a run that scored a partial FLORES download, or that produced empty
@@ -703,6 +734,46 @@ def push_corpus(user: str) -> str:
     return slug
 
 
+def push_backtrans_pairs(user: str) -> str:
+    """Publish only the exact union of three COMPLETE Run B producer shards."""
+    output_root = REPO_ROOT / "models" / "kaggle-output"
+    union_input = STAGING / "backtrans-union-input"
+    if union_input.exists():
+        shutil.rmtree(union_input)
+    union_input.mkdir(parents=True)
+    for index in range(BACKTRANS_SHARD_COUNT):
+        producer_slug = f"{user}/lilly-backtrans-en-bs-producer-{index}"
+        state = subprocess.run([KAGGLE, "kernels", "status", producer_slug],
+                               text=True, capture_output=True).stdout
+        if "KernelWorkerStatus.COMPLETE" not in state:
+            raise SystemExit(f"producer {index} is not COMPLETE ({state.strip() or 'unknown'}); partial refused")
+        local = output_root / f"backtrans-en-bs-producer-{index}"
+        reports = list(local.glob(f"backtrans-shard-{index}.json"))
+        data = list(local.glob(f"backtrans-shard-{index}.tsv.gz"))
+        if len(reports) != 1 or len(data) != 1:
+            raise SystemExit(f"producer {index} not fetched cleanly to {local}; run its --fetch")
+        shutil.copy2(reports[0], union_input / reports[0].name)
+        shutil.copy2(data[0], union_input / data[0].name)
+    manifest = validate_backtrans_union(union_input)
+    content_id = manifest["pair_order_hash"][:16]
+    name, slug = f"lilly-backtrans-en-bs-{content_id}", f"{user}/lilly-backtrans-en-bs-{content_id}"
+    stage = STAGING / "dataset" / name
+    if stage.exists(): shutil.rmtree(stage)
+    stage.mkdir(parents=True)
+    for source in sorted(union_input.iterdir()): shutil.copy2(source, stage / source.name)
+    manifest["publisher_git"] = repo_state.git("rev-parse", "HEAD")
+    (stage / "backtrans-union.json").write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
+    (stage / "dataset-metadata.json").write_text(json.dumps({
+        "title": f"Lilly Run B backtranslation {content_id}", "id": slug,
+        "licenses": [{"name": "other"}]}, indent=1))
+    existing = subprocess.run([KAGGLE, "datasets", "status", slug], text=True, capture_output=True)
+    if "ready" in existing.stdout.lower():
+        print(f"verified Run B dataset already ready: {slug}"); return slug
+    run(KAGGLE, "datasets", "create", "-p", stage, "-r", "zip")
+    wait_until_ready(slug)
+    return slug
+
+
 def push_read_pass1(user: str) -> str:
     """Pass-1 lilly.pth + user_network, so heavy pass-2 continues instead of restarting.
 
@@ -964,7 +1035,14 @@ def push_notebook(user: str, job: dict, datasets: list) -> str:
     notebook = REPO_ROOT / "training" / job["notebook"]
     stage = STAGING / job["slug"]
     stage.mkdir(parents=True, exist_ok=True)
-    (stage / notebook.name).write_text(notebook.read_text())
+    notebook_text = notebook.read_text()
+    if "producer_shard" in job:
+        marker = "SHARD_INDEX = 0  # launcher replaces this in its staged copy for producer 0/1/2"
+        if notebook_text.count(marker) != 1:
+            raise SystemExit(f"{notebook.name} lost the single producer shard marker")
+        notebook_text = notebook_text.replace(
+            marker, f"SHARD_INDEX = {job['producer_shard']}  # fixed by committed launcher job", 1)
+    (stage / notebook.name).write_text(notebook_text)
     # Kaggle derives the notebook's address from its TITLE, not from the id in
     # this file. A title that does not match sends the push to whatever kernel
     # the title resolves to — which once put the speech notebook into the
@@ -1089,7 +1167,39 @@ def main() -> int:
         print(f"{slug} is already running; watching it, not pushing another version")
         return watch(slug)
     if args.fetch:
-        out = REPO_ROOT / "models" / "kaggle-output"
+        output_root = REPO_ROOT / "models" / "kaggle-output"
+        output_root.mkdir(parents=True, exist_ok=True)
+        if "producer_shard" in job:
+            current = status(slug)
+            if "KernelWorkerStatus.COMPLETE" not in current:
+                raise SystemExit(f"refusing producer Output from {current or 'unknown status'}")
+            index = int(job["producer_shard"])
+            temp = Path(tempfile.mkdtemp(prefix=f"backtrans-producer-{index}-", dir=output_root))
+            run(KAGGLE, "kernels", "output", slug, "-p", temp)
+            report_path = temp / f"backtrans-shard-{index}.json"
+            if not report_path.is_file(): raise SystemExit(f"COMPLETE producer {index} has no manifest")
+            report = json.loads(report_path.read_text(encoding="utf-8"))
+            expected_start, expected_stop = backtrans_shard_bounds(
+                BACKTRANS_SAMPLE_N, index, BACKTRANS_SHARD_COUNT)
+            required = {"format_version": BACKTRANS_FORMAT_VERSION, "status": "complete",
+                        "sample_n": BACKTRANS_SAMPLE_N, "sample_kept": BACKTRANS_SAMPLE_N,
+                        "seed": BACKTRANS_SEED, "shard_index": index,
+                        "shard_count": BACKTRANS_SHARD_COUNT, "shard_start": expected_start,
+                        "shard_stop": expected_stop, "rows": expected_stop - expected_start,
+                        "forward_fingerprint": BACKTRANS_FORWARD_FINGERPRINT}
+            wrong = {k: (report.get(k), v) for k, v in required.items() if report.get(k) != v}
+            data_path = temp / str(report.get("data_file") or "")
+            if wrong or not data_path.is_file() or data_path.stat().st_size < 1_000_000:
+                raise SystemExit(f"producer {index} manifest gate failed: wrong={wrong}, data={data_path}")
+            target = output_root / job["fetch_subdir"]
+            if target.exists():
+                stamp = time.strftime("%Y%m%dT%H%M%SZ", time.gmtime())
+                backup = target.with_name(target.name + f".previous-{stamp}")
+                target.rename(backup); print(f"kept previous fetch at {backup}")
+            temp.rename(target)
+            print(f"\nfetched COMPLETE producer shard {index} to {target}")
+            return 0
+        out = output_root
         out.mkdir(parents=True, exist_ok=True)
         run(KAGGLE, "kernels", "output", slug, "-p", out)
         print(f"\nfetched to {out}")
@@ -1235,6 +1345,8 @@ def main() -> int:
         datasets.append(push_forward_build(user))
     if job.get("needs_macocu"):
         datasets.append(require_macocu(user))
+    if job.get("needs_backtrans_pairs"):
+        datasets.append(push_backtrans_pairs(user))
     if job.get("needs_ocr_harvest"):
         hv = push_ocr_harvest(user)
         if hv is None:

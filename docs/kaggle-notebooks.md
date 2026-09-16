@@ -415,7 +415,37 @@ Artifacts:
 
 ---
 
-## 7. Eval contract (promotion gates)
+## 7. Translation Run B — producer dataset, then consumer
+
+The first Run B notebook reached 411,019 of the locked 1,000,000 MaCoCu-bs
+sentences at its 9-hour generation cap (12.7 sentences/s). Generation alone
+projects to 21.9 hours, so it must not be relaunched as one generation+training
+session and `BACKTRANS_N` must not be reduced.
+
+The legal split preserves the experiment exactly: three producer jobs rebuild
+the same deterministic sample and emit balanced disjoint ranges of 333,334 /
+333,333 / 333,333 rows. Only COMPLETE outputs are fetched. The launcher proves
+one million rows, zero missing/duplicate normalized Bosnian sources, the full
+source/order hash, each pair hash, one git SHA, and the shipped forward-build
+fingerprint before publishing a content-addressed Kaggle dataset. The consumer
+repeats validation and builds exactly 1M up-sampled real + 1M synthetic rows.
+
+Producer Output is data, never a model. Consumer COMPLETE + adapter zip still
+does not install anything until all four pre-registered served-path bars pass.
+
+```bash
+python3 scripts/kaggle_train.py translation-en-bs-backtrans-producer-0
+python3 scripts/kaggle_train.py translation-en-bs-backtrans-producer-1
+# after one GPU slot is free:
+python3 scripts/kaggle_train.py translation-en-bs-backtrans-producer-2
+# fetch each only after COMPLETE, then launch the validated consumer:
+python3 scripts/kaggle_train.py translation-en-bs-backtrans-producer-0 --fetch
+python3 scripts/kaggle_train.py translation-en-bs-backtrans-producer-1 --fetch
+python3 scripts/kaggle_train.py translation-en-bs-backtrans-producer-2 --fetch
+python3 scripts/kaggle_train.py translation-en-bs-backtrans
+```
+
+## 8. Eval contract (promotion gates)
 
 | Notebook | Correctness gate (must stay green) | Shippable Output |
 | :--- | :--- | :--- |
@@ -432,7 +462,7 @@ Illegal “optimizations”:
 
 ---
 
-## 8. Markdown must match code
+## 9. Markdown must match code
 
 Agents read the header and “optimize” against it.
 
@@ -447,7 +477,7 @@ Fix doc drift in the **same** change as the code.
 
 ---
 
-## 9. Launcher and poller rules
+## 10. Launcher and poller rules
 
 ### `scripts/kaggle_train.py`
 
@@ -471,7 +501,7 @@ alone is not — it is written before the photograph gate.
 
 ---
 
-## 10. Preflight is part of the notebook change
+## 11. Preflight is part of the notebook change
 
 When you edit a notebook, add/adjust checks in `scripts/preflight_kaggle.py`
 so the forbidden string or missing required string fails closed.
@@ -493,7 +523,7 @@ then add a check when possible.
 
 ---
 
-## 11. Checklist before you push a notebook change
+## 12. Checklist before you push a notebook change
 
 ```text
 [ ] preflight exits 0
@@ -511,13 +541,16 @@ then add a check when possible.
 
 ---
 
-## 12. Related files
+## 13. Related files
 
 | File | Role |
 | :--- | :--- |
 | `training/Lilly_Speech_Kaggle.ipynb` | Speech half 1 |
 | `training/Lilly_Speech_Kaggle_Half2.ipynb` | Speech half 2 |
 | `training/Lilly_OCR_Kaggle.ipynb` | OCR pass-11 (refused; do not relaunch) |
+| `training/Lilly_Backtrans_Producer_Kaggle.ipynb` | Run B deterministic producer shard (three jobs, data only) |
+| `training/Lilly_Backtrans_EnBs_Kaggle.ipynb` | Run B verified-dataset consumer and LoRA training |
+| `scripts/backtrans_dataset.py` | Producer union count/hash/fingerprint validator |
 | `training/RESULTS-ocr-pass11.md` | Pass-11 crop-gate numbers |
 | `scripts/preflight_kaggle.py` | Launch gate |
 | `scripts/kaggle_train.py` | Push + sign-letters required |
