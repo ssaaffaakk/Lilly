@@ -476,6 +476,16 @@ def require_macocu(user: str) -> str:
     if "ready" in state:
         print(f"MaCoCu-bs dataset ready: {slug}")
         return slug
+    # The status endpoint can return 403 for a just-created private dataset even
+    # when the owner can list its files.  Require the exact corpus file and its
+    # known byte count before treating that fallback as ready.
+    files = subprocess.run([KAGGLE, "datasets", "files", slug, "--csv"],
+                           text=True, capture_output=True)
+    wanted = "MaCoCu-bs-1.0.xml,7813553716,"
+    if files.returncode == 0 and any(line.startswith(wanted)
+                                     for line in files.stdout.splitlines()):
+        print(f"MaCoCu-bs dataset ready (file manifest): {slug}")
+        return slug
     raise SystemExit(
         f"MaCoCu-bs is not on Kaggle as {slug}. It is 730M words (CC0, CLARIN.SI "
         f"11356/1808) -- too large to upload from the Mac. Create it once on Kaggle "
