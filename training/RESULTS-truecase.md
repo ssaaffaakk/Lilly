@@ -40,12 +40,22 @@ adds bs-en, which the report did not measure: caps hurt it about as much.
 
 ## Status
 
-**Staged, off by default.** `app/translate.py` calls the restorer only when
-`LILLY_TRUECASE` is set, following the repo's existing opt-in pattern
-(`LILLY_READER`, `LILLY_PADDLE_CYRILLIC_RESCUE`). With the flag unset, behaviour
-is byte-for-byte unchanged. Shipping it as the default is a product change and
-needs its own pre-registration and a photograph-bar measurement first (the
-report says the honest bar is a score on photographs, not uppercased FLORES). That photograph bar now exists: `training/RESULTS-truecase-photos.md` drives the flag through the served `bs-en` engine on the 40 Commons photographs' own OCR, off against on, and lays out the 13 it changes side by side — the A/B the default-on decision is gated behind. The decision itself stays open.
+**Staged, off by default.** The restorer is applied on the photograph path only
+(`app.lilly.translate_photo`, behind `LILLY_TRUECASE`), following the repo's
+existing opt-in pattern (`LILLY_READER`, `LILLY_PADDLE_CYRILLIC_RESCUE`). It used
+to sit inside `Engine.translate`, which meant it also reached typed text and both
+directions; it was re-scoped 16 Sep so only the camera can recase, and line by
+line — a line is recased only when it is shouted **and** `app.detect` reads it as
+the source language, so an English caption or a brand on the same sign is left
+alone. With the flag unset, behaviour is byte-for-byte unchanged. Shipping it as
+the default is a product change and needs its own pre-registration and a
+photograph-bar measurement first (the report says the honest bar is a score on
+photographs, not uppercased FLORES). That photograph bar exists:
+`training/RESULTS-truecase-photos.md` drives the flag through the served `bs-en`
+photograph path on the 40 Commons photographs' own OCR, off against on, and lays
+out the **9** it changes side by side with a blind verdict slot each — the A/B
+the default-on decision is gated behind. The decision itself stays open, and
+ships only on a clear majority of *better* with no serious regressions.
 
 ## Known limitation
 

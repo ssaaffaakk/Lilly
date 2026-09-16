@@ -14,8 +14,16 @@ It is staged, not shipped. The flag LILLY_TRUECASE turns it on (default off),
 because the report's 25.5 chrF2 is a diagnostic measured on uppercased FLORES
 sentences: real signs are shorter, and the honest bar for the product is a score
 on photographs. That needs its own pre-registration and a photograph-bar
-measurement first. Until then app.translate.Engine behaves exactly as it does
-today unless the flag is set.
+measurement first. Until then the app behaves exactly as it does today unless
+the flag is set.
+
+Two entry points, one restorer. restore_sentence_case rewrites a whole string
+and is what the FLORES diagnostic measures. restore_photo_text is the one the
+product runs: it lives in app.lilly.translate_photo, not in the shared
+Engine.translate, so only the camera path can recase and typed/chat translation
+is never touched; and it works line by line, rewriting a line only when it is
+both shouted and in the language being translated from, so a foreign caption or
+a brand on the same sign is left alone.
 """
 import os
 import re
@@ -168,3 +176,35 @@ def restore_sentence_case(text: str) -> tuple:
 
     restored = "".join(out)
     return restored, restored != text
+
+
+def restore_photo_text(text: str, source_lang: str = "bs") -> tuple:
+    """Recase a photograph's OCR text line by line. -> (text, changed).
+
+    Truecasing helps the translator read a shouted sign in the language it is
+    translating *from*. A photograph often carries a second language as well --
+    a Bosnian plaque beside an English caption, a Latin brand, a person's name
+    -- and recasing those neither helps the translation nor is safe (it
+    lowercases a name into an ordinary word), so a line is rewritten only when
+    it is both predominantly upper-case and detected as `source_lang`. Every
+    other line -- the calm lines, the foreign-language lines, the short brand
+    tokens under the shout threshold -- is returned byte-for-byte.
+
+    Line by line, on the newlines the reader already puts between regions, so a
+    misread on one line cannot pull the next out of case. This is the
+    photograph-path restorer app.lilly.translate_photo runs behind
+    LILLY_TRUECASE; restore_sentence_case above is the whole-string one the
+    FLORES diagnostic uses. The language check is app.detect's classifier, which
+    reads case-folded n-grams, so a shouted line is classified by its letters
+    exactly as an ordinary one would be.
+    """
+    from app.detect import detect_language
+    out, changed = [], False
+    for line in text.split("\n"):
+        if is_predominantly_upper(line) and detect_language(line) == source_lang:
+            restored, line_changed = restore_sentence_case(line)
+            out.append(restored)
+            changed = changed or line_changed
+        else:
+            out.append(line)
+    return "\n".join(out), changed

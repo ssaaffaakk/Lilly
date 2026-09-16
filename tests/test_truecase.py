@@ -1,9 +1,11 @@
 """The truecaser: shouted text in, sentence case out, or nothing at all.
 
-The pure function is tested without a model, because that is the part that
-decides whether a served request is rewritten. The wiring test uses the fake
-engine from tests/test_engine.py's pattern so it needs no CTranslate2 build: it
-checks the flag is the only thing that lets the recaser touch a request.
+restore_sentence_case is tested without a model, because that is the part that
+decides whether a line is rewritten. The wiring tests use the fake engine from
+tests/test_engine.py's pattern so they need no CTranslate2 build: they check
+that translate() no longer recases at all (the flag moved to the photograph
+path), and that the photo restorer recases a shouted source-language line while
+leaving a foreign caption alone.
 """
 import pytest
 
@@ -104,7 +106,7 @@ def test_an_unknown_flag_value_stops_the_process(monkeypatch):
         truecase.enabled()
 
 
-# --- the served path ---------------------------------------------------------
+# --- the engine no longer recases: the flag moved to the photo path ----------
 
 class FakeTokenizer:
     """Whitespace tokens, as in tests/test_engine.py; ids are vocabulary slots."""
@@ -154,19 +156,53 @@ def engine():
     return e
 
 
-def test_engine_leaves_shouted_text_untouched_when_the_flag_is_unset(engine, monkeypatch):
+def test_engine_leaves_shouted_text_untouched_with_the_flag_unset(engine, monkeypatch):
     monkeypatch.delenv("LILLY_TRUECASE", raising=False)
     engine.translate("DANGER HIGH VOLTAGE KEEP OUT")
     assert engine.translator.sources == ["DANGER HIGH VOLTAGE KEEP OUT"], \
-        "with LILLY_TRUECASE unset the served path must not touch the source"
+        "translate() must not touch the source"
 
 
-def test_engine_recases_shouted_text_only_when_the_flag_is_set(engine, monkeypatch):
+def test_engine_leaves_shouted_text_untouched_even_with_the_flag_set(engine, monkeypatch):
+    # Truecasing moved to app.lilly.translate_photo, so translate() never recases
+    # whatever the flag says -- typed text and both directions are unaffected.
     monkeypatch.setenv("LILLY_TRUECASE", "1")
     engine.translate("DANGER HIGH VOLTAGE KEEP OUT")
-    assert engine.translator.sources == ["Danger high voltage keep out"]
+    assert engine.translator.sources == ["DANGER HIGH VOLTAGE KEEP OUT"], \
+        "the flag no longer reaches translate(); only the photo path recases"
 
-    # ...and ordinary text is still untouched with the flag on.
-    engine.translator.sources.clear()
-    engine.translate("Dobar dan, kako ste?")
-    assert engine.translator.sources == ["Dobar dan, kako ste?"]
+
+# --- the photograph path -----------------------------------------------------
+
+def test_photo_text_recases_bosnian_lines_and_keeps_foreign_ones():
+    # A Bosnian line and an English caption on one sign: recase the first, leave
+    # the second. app.detect reads each line's language from its case-folded grams.
+    text = "ŠIROKI BRIJEG OTVORENO SVAKI DAN\nWELCOME TO OUR RESTAURANT PLEASE COME IN"
+    out, changed = truecase.restore_photo_text(text, "bs")
+    first, second = out.split("\n")
+    assert first == "Široki brijeg otvoreno svaki dan"
+    assert second == "WELCOME TO OUR RESTAURANT PLEASE COME IN"
+    assert changed is True
+
+
+def test_photo_text_recases_the_source_language_you_ask_for():
+    # An en-bs photograph reads an English sign, so there it is the English line
+    # to recase; the same restorer, told the source is English.
+    text = "WELCOME TO OUR RESTAURANT PLEASE COME IN"
+    assert truecase.restore_photo_text(text, "en")[0] == \
+        "Welcome to our restaurant please come in"
+
+
+def test_photo_text_leaves_calm_and_short_lines_alone():
+    # Not shouted, too few letters, no letters -- none is touched, changed False.
+    text = "Dobar dan\nWC\n1234"
+    assert truecase.restore_photo_text(text, "bs") == (text, False)
+
+
+def test_photo_source_is_recased_only_behind_the_flag(monkeypatch):
+    from app.lilly import Lilly
+    shout = "ČUVAJ SE OPASAN PAS U DVORIŠTU"
+    monkeypatch.delenv("LILLY_TRUECASE", raising=False)
+    assert Lilly._recase_photo_source(shout, "bs") == shout
+    monkeypatch.setenv("LILLY_TRUECASE", "1")
+    assert Lilly._recase_photo_source(shout, "bs") == "Čuvaj se opasan pas u dvorištu"

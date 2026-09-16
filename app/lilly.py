@@ -193,12 +193,32 @@ class Lilly:
         bosnian = self.listen(audio_path)
         return bosnian, (self.translate(bosnian, truncate=True) if bosnian else "")
 
+    @staticmethod
+    def _recase_photo_source(text: str, source_lang: str) -> str:
+        """The photograph's text as the translator should see it.
+
+        Only the camera path recases, and only when LILLY_TRUECASE is on: a
+        shouted sign in the source language is put back into ordinary case so
+        the translator, trained on ordinary case, stops mangling it. The raw
+        text stays what the page shows as "read"; this feeds translate()/reply()
+        only. Off, and with a calm or foreign line, it returns text unchanged.
+        """
+        from app import truecase
+        if text and truecase.enabled():
+            return truecase.restore_photo_text(text, source_lang)[0]
+        return text
+
     def translate_photo(self, image_path: str, direction: str = "bs-en") -> tuple:
+        # The pair returned is the raw read (what the page shows); only the text
+        # handed to translate/reply is recased, and only behind LILLY_TRUECASE,
+        # so with the flag off this is byte-for-byte the old behaviour.
         if check_direction(direction) == "en-bs":
             english = self.read(image_path)
-            return (self.reply(english, truncate=True) if english else ""), english
+            return (self.reply(self._recase_photo_source(english, "en"),
+                               truncate=True) if english else ""), english
         bosnian = self.read(image_path)
-        return bosnian, (self.translate(bosnian, truncate=True) if bosnian else "")
+        return bosnian, (self.translate(self._recase_photo_source(bosnian, "bs"),
+                                        truncate=True) if bosnian else "")
 
     def converse(self, audio_path: str) -> tuple:
         """Spoken either language -> (bosnian, english, heard).
@@ -230,18 +250,26 @@ class Lilly:
         from app.ocr import scan_regions
         text, regions = scan_regions(image_path)
         out = []
+        # Region by region, the source language of the direction: each box's
+        # own text is recased on its own (behind LILLY_TRUECASE), so the box a
+        # user reads keeps its raw text while its translation gets the ordinary
+        # case. Same restorer as translate_photo, one region at a time.
         if check_direction(direction) == "en-bs":
             english = text
-            bosnian = self.reply(english, truncate=True) if english else ""
+            bosnian = self.reply(self._recase_photo_source(english, "en"),
+                                 truncate=True) if english else ""
             for box, source in regions:
+                rsrc = self._recase_photo_source(source, "en")
                 out.append({"box": box, "source": source,
-                            "translated": self.reply(source, truncate=True) if source else ""})
+                            "translated": self.reply(rsrc, truncate=True) if rsrc else ""})
         else:
             bosnian = text
-            english = self.translate(bosnian, truncate=True) if bosnian else ""
+            english = self.translate(self._recase_photo_source(bosnian, "bs"),
+                                     truncate=True) if bosnian else ""
             for box, source in regions:
+                rsrc = self._recase_photo_source(source, "bs")
                 out.append({"box": box, "source": source,
-                            "translated": self.translate(source, truncate=True) if source else ""})
+                            "translated": self.translate(rsrc, truncate=True) if rsrc else ""})
         return bosnian, english, out
 
     def translate_document(self, document_path: str, direction: str = "bs-en") -> tuple:

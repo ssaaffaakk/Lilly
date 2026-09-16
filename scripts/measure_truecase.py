@@ -10,12 +10,18 @@ product's path rather than a PyTorch model around it.
 
 Per direction, three variants of the same source against the same reference:
 
-    A  the source as written            (the chat path, LILLY_TRUECASE unset)
+    A  the source as written            (the chat path, no recasing)
     B  the source uppercased            (what a sign looks like to the translator)
-    C  the source uppercased, then truecased by Engine with LILLY_TRUECASE=1
+    C  the source uppercased, then restored by app.truecase.restore_sentence_case
 
-C is deliberately not a direct call into app/truecase.py: it goes through the
-flag, so what is measured is the wiring that would ship.
+C calls the restorer directly. It used to go through LILLY_TRUECASE inside
+Engine.translate, but the shipped wiring moved to the photograph path
+(app.lilly.translate_photo, line by line) and no longer sits in translate at
+all -- so a whole-sentence FLORES source has no flag to toggle. That is fine
+here: FLORES is single sentences in one language, and this is a diagnostic of
+the restorer's effect on translation, not of the photograph path. The number
+is unchanged, because the flag only ever called this same restorer on the whole
+string.
 
     .venv/bin/python3 scripts/measure_truecase.py --limit 200
 
@@ -31,7 +37,6 @@ without paying for the translations again.
 """
 import argparse
 import json
-import os
 import sys
 import time
 from multiprocessing import Pool
@@ -58,18 +63,18 @@ def _engine(direction: str):
 def _translate_task(task: dict) -> tuple:
     """One (direction, variant, block of rows); returns hypotheses by row index.
 
-    The environment is set per task, not per process: truecase.enabled() reads
-    LILLY_TRUECASE on every translate call, and a worker may run an A/B task
-    before a C task.
+    Variant C uppercases the source and then restores it with the same restorer
+    the photograph path runs, applied to the whole sentence (FLORES rows are one
+    sentence in one language, so the line-wise photo restorer would do the same
+    thing here). A and B feed the source straight through.
     """
-    if task["variant"] == "C":
-        os.environ["LILLY_TRUECASE"] = "1"
-    else:
-        os.environ.pop("LILLY_TRUECASE", None)
+    from app.truecase import restore_sentence_case
     engine = _engine(task["direction"])
     hyps = {}
     for i, line in zip(task["idxs"], task["lines"]):
         source = line.upper() if task["variant"] in ("B", "C") else line
+        if task["variant"] == "C":
+            source = restore_sentence_case(source)[0]
         hyps[i] = engine.translate(source)
     return task["direction"], task["variant"], hyps
 
@@ -104,9 +109,6 @@ def main() -> int:
                     choices=["en-bs", "bs-en"])
     ap.add_argument("--out", default="/tmp/lilly_truecase_measure.json")
     args = ap.parse_args()
-
-    # The parent must never be the thing that turns the recaser on.
-    os.environ.pop("LILLY_TRUECASE", None)
 
     rows = {d: rows_for(d, args.limit) for d in args.directions}
     # Two blocks per (direction, variant) so four workers stay busy while one
