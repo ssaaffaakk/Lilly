@@ -252,6 +252,9 @@ STAGING = REPO_ROOT / "models" / "kaggle-staging"     # gitignored, under models
 
 
 def username() -> str:
+    configured = os.environ.get("KAGGLE_USERNAME", "").strip()
+    if configured:
+        return configured
     token = Path.home() / ".kaggle" / "kaggle.json"
     if not token.exists():
         raise SystemExit(
