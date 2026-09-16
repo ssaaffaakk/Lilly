@@ -1,23 +1,14 @@
-# RESULTS — truecase on real photographs — 16 September 2026
+# RESULTS — truecase on real photographs (blind A/B) — 16 September 2026
 
-The photograph bar `training/RESULTS-truecase.md` left open: does the truecaser help on real signs, not uppercased FLORES? No English reference exists for these signs, so this is an A/B for a blind pass or the owner to read, not a chrF2. Nothing here trains or changes the served build.
+Does the photograph-path truecaser help on real signs? No English reference exists for these signs, so this is a **blind, randomised A/B** for a pass or the owner to read — not a chrF2. Nothing here trains or changes the served build.
 
-Re-measured 16 Sep after the restorer was re-scoped: it now lives on the photograph path (`Lilly.translate_photo`), not inside `translate()`, and runs line by line — a line is recased only when it is shouted **and** `app.detect` reads it as Bosnian, so an English caption or a brand on the same sign is left alone. The earlier version recased the whole blob through `translate()` and touched typed text too.
+- Reader: **shipped** PP-OCRv6 at floor 0.9 (`paddle:PP-OCRv6_medium_det+PP-OCRv6_medium_rec:3.7.0:rec>=0.9`), cv2 `4.10.0`, OCR read fresh this run `2026-09-16T10:56:27.615000+00:00` under the cv2 gate, product-path parity `40/40 identical` (`scan()` == `scan_regions()[0]` on all 40 — both photo paths measured).
+- Engine: `bs-en` `app.translate.Engine`, the camera's default direction.
+- Each photo shows the OCR text and two renderings, **A** and **B**, in random balanced order. One is today's output, one is the candidate. The mapping is **not given to the evaluator** — only its SHA-256 is committed (`truecase-photos-key.sha256`); the key (`training/truecase-photos-key.json`) is revealed and checked against that hash after the verdicts are locked.
 
-- Reader: PP-OCRv6 cached output, fingerprint `afa719f3435ca2fe` (`data/ocr/real-photos/reader-output-paddle-v6.json`), the reader `app/ocr.py` serves.
-- Engine: `bs-en` `app.translate.Engine`, the camera's default direction (`Lilly.translate_photo`).
-- Method: OFF = whole OCR text through `translate()` (shipped today). ON = `restore_photo_text` line by line, then `translate()` — the flag up on the photograph path.
+**Pre-registered gate (locked before these numbers existed).** Default-on ships only if, on the changed photographs, the candidate is **better in at least two thirds** of them AND there is **no serious regression**. Serious regression = a place / person / brand name corrupted, a new repetition or hallucination, or a correct English line broken.
 
-## What the flag did
-
-| | count | of 40 |
-|---|---|---|
-| photographs with OCR text | 33 | 82% |
-| source the flag recased | 9 | 22% |
-| had a shouted English line kept back | 7 | 17% |
-| **translation the flag changed** | **9** | **22%** |
-
-The recaser fires only on predominantly-uppercase lines (≥8 letters, ≥80% upper) that `app.detect` reads as Bosnian. The 9 below are where a user would see a different answer; label each **better / same / worse** against OFF.
+8 of 30 photographs with text render differently; label each and note any serious regression.
 
 ---
 
@@ -26,38 +17,26 @@ The recaser fires only on predominantly-uppercase lines (≥8 letters, ≥80% up
 **Sign (OCR, as read)**
 
 ```
-JSTROUGARSINOGTNL RANCA FERDINANDA INJEGOVU SUPRUO SOFIJU
+RANCA FERDINANDA INJEGOVU SUPRUO SOFIJU
 FROM THIS PLACE ON 28 JUNE 1914 GAVRILO PRINCIP ASSASSINATED THE HEIR TO THE AUSTRO-HUNGARIAN THRONE FRANZ FERDINAND AND HIS WIFE SOFLA
 11.08.201810:46
 ```
 
-**What the restorer did, line by line**
-
-- `JSTROUGARSINOGTNL RANCA FERDINANDA INJEGOVU SUPRUO SOFIJU` — recased (shouted, Bosnian)
-- `FROM THIS PLACE ON 28 JUNE 1914 GAVRILO PRINCIP ASSASSINATED THE HEIR TO THE AUSTRO-HUNGARIAN THRONE FRANZ FERDINAND AND HIS WIFE SOFLA` — kept — read as English
-- `11.08.201810:46` — calm — left as read
-
-**Source after recasing (what ON translates)**
+**Rendering A**
 
 ```
-Jstrougarsinogtnl ranca ferdinanda injegovu supruo sofiju
-FROM THIS PLACE ON 28 JUNE 1914 GAVRILO PRINCIP ASSASSINATED THE HEIR TO THE AUSTRO-HUNGARIAN THRONE FRANZ FERDINAND AND HIS WIFE SOFLA
-11.08.201810:46
+Ranca ferdinanda and his rival Sofia FROM THIS PLACE ON 28 JUNE 1914 GAVRILO PRINCIPLE ASSASSINATED THE HEIR TO THE AUSTRO-HUNGARIAN THRONE FRANZ FERDINAND AND HIS WIFE SOFLA 11.08.201810:46
 ```
 
-**Translation — flag OFF (shipped today)**
+**Rendering B**
 
 ```
-JSTROUGARSINOGNL RANCA FERDINAND INJEGOVA SURUVA SOFIA FROM THIS PLACE ON 28 JUNE 1914 GAVRILO PRINCIPLE ASSASSINATED THE HEIR TO THE AUSTRO-HUNGARIAN THRONE FRANZ FERDINAND AND HIS WIFE SOFLA 11.08.201810:46
+RANCA FERDINANDA INJEGOVA SURUVA SOFIA FROM THIS PLACE ON 28 JUNE 1914 GAVRILO PRINCIPLE ASSASSINATED THE HEIR TO THE AUSTRO-HUNGARIAN THRONE FRANZ FERDINAND AND HIS WIFE SOFLA 11.08.201810:46
 ```
 
-**Translation — flag ON (candidate)**
+**Verdict: A better / B better / same — _____**
 
-```
-Jstrougarsinogtnl rance ferdinanda and his crush Sofia FROM THIS PLACE ON 28 JUNE 1914 GAVRILO PRINCIPLE ASSASSINATED THE HEIR TO THE AUSTRO-HUNGARIAN THRONE FRANZ FERDINAND AND HIS WIFE SOFLA 11.08.201810:46
-```
-
-**Verdict (blind): better / same / worse — _____**
+**Serious regression? (name corrupted / new repetition or hallucination / a correct English line broken) — _____**
 
 ---
 
@@ -66,35 +45,24 @@ Jstrougarsinogtnl rance ferdinanda and his crush Sofia FROM THIS PLACE ON 28 JUN
 **Sign (OCR, as read)**
 
 ```
-6P0A
 DOBRO DOŠLI U BOSNU I HERCEGOVINU BROD WELCOME TO BOSNIA AND HERZEGOVINA BROD
 ```
 
-**What the restorer did, line by line**
-
-- `6P0A` — calm — left as read
-- `DOBRO DOŠLI U BOSNU I HERCEGOVINU BROD WELCOME TO BOSNIA AND HERZEGOVINA BROD` — recased (shouted, Bosnian)
-
-**Source after recasing (what ON translates)**
+**Rendering A**
 
 ```
-6P0A
-Dobro došli u Bosnu i Hercegovinu brod welcome to bosnia and herzegovina brod
+WELCOME TO BOSNIA AND HERZEGOVINA
 ```
 
-**Translation — flag OFF (shipped today)**
+**Rendering B**
 
 ```
-6P0A WELCOME TO BOSNIA AND HERZEGOVINA
+Welcome to Bosnia and Herzegovina ship welcome to Bosnia and Herzegovina ship
 ```
 
-**Translation — flag ON (candidate)**
+**Verdict: A better / B better / same — _____**
 
-```
-6P0A Welcome to Bosnia and Herzegovina ship welcome to Bosnia and Herzegovina ship
-```
-
-**Verdict (blind): better / same / worse — _____**
+**Serious regression? (name corrupted / new repetition or hallucination / a correct English line broken) — _____**
 
 ---
 
@@ -103,84 +71,27 @@ Dobro došli u Bosnu i Hercegovinu brod welcome to bosnia and herzegovina brod
 **Sign (OCR, as read)**
 
 ```
-CIPS-TNZLA
 GIPS
 ENTAR ODOVA LASER-
 GIPS
 T80-K-611
 ```
 
-**What the restorer did, line by line**
-
-- `CIPS-TNZLA` — recased (shouted, Bosnian)
-- `GIPS` — calm — left as read
-- `ENTAR ODOVA LASER-` — recased (shouted, Bosnian)
-- `GIPS` — calm — left as read
-- `T80-K-611` — calm — left as read
-
-**Source after recasing (what ON translates)**
+**Rendering A**
 
 ```
-Cips-tnzla
-GIPS
-Entar odova laser-
-GIPS
-T80-K-611
+GIPS ENTAR ODOVA LASER- GIPS T80-K-611
 ```
 
-**Translation — flag OFF (shipped today)**
+**Rendering B**
 
 ```
-CIPS-TNZLA GIPS ENTAR ODOVA LASER- GIPS T80-K-611
+GIPS Entar odova laser GIPS T80-K-611
 ```
 
-**Translation — flag ON (candidate)**
+**Verdict: A better / B better / same — _____**
 
-```
-Cyps-tnzla GIPS Entar odova laser GIPS T80-K-611
-```
-
-**Verdict (blind): better / same / worse — _____**
-
----
-
-### Mis_Irbina_Street_in_Sarajevo_03.jpg
-
-**Sign (OCR, as read)**
-
-```
-BEERKA UDARAPONOVO
-A38-0-357
-an A90-T-292
-```
-
-**What the restorer did, line by line**
-
-- `BEERKA UDARAPONOVO` — recased (shouted, Bosnian)
-- `A38-0-357` — calm — left as read
-- `an A90-T-292` — calm — left as read
-
-**Source after recasing (what ON translates)**
-
-```
-Beerka udaraponovo
-A38-0-357
-an A90-T-292
-```
-
-**Translation — flag OFF (shipped today)**
-
-```
-BEERKA UDARAPONOVO A38-0357 A90-T-292
-```
-
-**Translation — flag ON (candidate)**
-
-```
-Beerka strikes again A38-0357 A90-T-292
-```
-
-**Verdict (blind): better / same / worse — _____**
+**Serious regression? (name corrupted / new repetition or hallucination / a correct English line broken) — _____**
 
 ---
 
@@ -194,33 +105,21 @@ POGINULIM BORCIMA S
 SUTJESKE
 ```
 
-**What the restorer did, line by line**
-
-- `OVDJE POCIVA 33O1 BORAC SA` — recased (shouted, Bosnian)
-- `POGINULIM BORCIMA S` — recased (shouted, Bosnian)
-- `SUTJESKE` — recased (shouted, Bosnian)
-
-**Source after recasing (what ON translates)**
-
-```
-Ovdje pociva 33o1 borac sa
-Poginulim borcima s
-Sutjeske
-```
-
-**Translation — flag OFF (shipped today)**
+**Rendering A**
 
 ```
 33O1 BORAC WITH HERE MURDERED FIGHTERS SUTJESKA
 ```
 
-**Translation — flag ON (candidate)**
+**Rendering B**
 
 ```
 Here rests a 33o1 fighter with Deadly Fighters Sutjeska
 ```
 
-**Verdict (blind): better / same / worse — _____**
+**Verdict: A better / B better / same — _____**
+
+**Serious regression? (name corrupted / new repetition or hallucination / a correct English line broken) — _____**
 
 ---
 
@@ -229,53 +128,27 @@ Here rests a 33o1 fighter with Deadly Fighters Sutjeska
 **Sign (OCR, as read)**
 
 ```
-StAIl
 SOUVENIRS SHOP Giuseppe
 MINIMARKET
-CO&DV CENTAN SHOP
-ASRS
-GOND ORO RE CIGORETI
-YARAC
+SHOP
 SHO
 ```
 
-**What the restorer did, line by line**
-
-- `StAIl` — calm — left as read
-- `SOUVENIRS SHOP Giuseppe` — calm — left as read
-- `MINIMARKET` — recased (shouted, Bosnian)
-- `CO&DV CENTAN SHOP` — kept — read as English
-- `ASRS` — calm — left as read
-- `GOND ORO RE CIGORETI` — kept — read as English
-- `YARAC` — calm — left as read
-- `SHO` — calm — left as read
-
-**Source after recasing (what ON translates)**
+**Rendering A**
 
 ```
-StAIl
-SOUVENIRS SHOP Giuseppe
-Minimarket
-CO&DV CENTAN SHOP
-ASRS
-GOND ORO RE CIGORETI
-YARAC
-SHO
+SOUVENIRS SHOP Giuseppe Minimarket SHOP SHO
 ```
 
-**Translation — flag OFF (shipped today)**
+**Rendering B**
 
 ```
-Stall SOUVENIRS SHOP Giuseppe MINIMARKET CO&DV CENTAN SHOP ASRS GOND ORO RE CIGORETI YARAC SHO
+SOUVENIRS SHOP Giuseppe MINIMARKET SHOP SHO
 ```
 
-**Translation — flag ON (candidate)**
+**Verdict: A better / B better / same — _____**
 
-```
-Stall SOUVENIRS SHOP Giuseppe Minimarket CO&DV CENTAN SHOP ASRS GOND ORO RE CIGORETI YARAC SHO
-```
-
-**Verdict (blind): better / same / worse — _____**
+**Serious regression? (name corrupted / new repetition or hallucination / a correct English line broken) — _____**
 
 ---
 
@@ -289,33 +162,21 @@ UVUEKNAT.MJESTU
 BRIJESK ZVON
 ```
 
-**What the restorer did, line by line**
-
-- `ŠIROKI BRIJEG` — recased (shouted, Bosnian)
-- `UVUEKNAT.MJESTU` — recased (shouted, Bosnian)
-- `BRIJESK ZVON` — recased (shouted, Bosnian)
-
-**Source after recasing (what ON translates)**
-
-```
-Široki brijeg
-Uvueknat.Mjestu
-Brijesk zvon
-```
-
-**Translation — flag OFF (shipped today)**
-
-```
-SILVER BRIDGE UVEKNAT.PLACE BRIJESK ZVON
-```
-
-**Translation — flag ON (candidate)**
+**Rendering A**
 
 ```
 Wide hill Uvueknat. Brijesek bell
 ```
 
-**Verdict (blind): better / same / worse — _____**
+**Rendering B**
+
+```
+SILVER BRIDGE UVEKNAT.PLACE BRIJESK ZVON
+```
+
+**Verdict: A better / B better / same — _____**
+
+**Serious regression? (name corrupted / new repetition or hallucination / a correct English line broken) — _____**
 
 ---
 
@@ -329,42 +190,23 @@ SIEMENS
 LANACO
 PNPOJEKT
 VINKOP
-5
 ```
 
-**What the restorer did, line by line**
-
-- `MALBAŠIĆ CO` — recased (shouted, Bosnian)
-- `SIEMENS` — calm — left as read
-- `LANACO` — calm — left as read
-- `PNPOJEKT` — recased (shouted, Bosnian)
-- `VINKOP` — calm — left as read
-- `5` — calm — left as read
-
-**Source after recasing (what ON translates)**
+**Rendering A**
 
 ```
-Malbašić co
-SIEMENS
-LANACO
-Pnpojekt
-VINKOP
-5
+MALBAŠI CO SIEMENS LANACO PNPOJEKT VINKOP
 ```
 
-**Translation — flag OFF (shipped today)**
+**Rendering B**
 
 ```
-MALBAŠI CO SIEMENS LANACO PNPOJEKT VINKOP 5
+Malbašić SIEMENS LANACO Pnpoject VINKOP
 ```
 
-**Translation — flag ON (candidate)**
+**Verdict: A better / B better / same — _____**
 
-```
-Malbašić SIEMENS LANACO Pnpoject VINKOP 5
-```
-
-**Verdict (blind): better / same / worse — _____**
+**Serious regression? (name corrupted / new repetition or hallucination / a correct English line broken) — _____**
 
 ---
 
@@ -373,48 +215,30 @@ Malbašić SIEMENS LANACO Pnpoject VINKOP 5
 **Sign (OCR, as read)**
 
 ```
-NA CLASS 2.26 2.3 2.2 05 1.2
-INA EP
+NA CLASS 2.26 2.3 2.2
 0-24 SHOP CAFÉ WASH
--PUN
 CLASS PLUS GORIVO ZA SVE TEMPERATURE
 ```
 
-**What the restorer did, line by line**
-
-- `NA CLASS 2.26 2.3 2.2 05 1.2` — calm — left as read
-- `INA EP` — calm — left as read
-- `0-24 SHOP CAFÉ WASH` — kept — read as English
-- `-PUN` — calm — left as read
-- `CLASS PLUS GORIVO ZA SVE TEMPERATURE` — recased (shouted, Bosnian)
-
-**Source after recasing (what ON translates)**
+**Rendering A**
 
 ```
-NA CLASS 2.26 2.3 2.2 05 1.2
-INA EP
-0-24 SHOP CAFÉ WASH
--PUN
-Class plus gorivo za sve temperature
+NA CLASS 2.26 2.3 2.2 0-24 SHOP CAF WASH Class plus fuel for all temperatures
 ```
 
-**Translation — flag OFF (shipped today)**
+**Rendering B**
 
 ```
-NA CLASS 2.26 2.3 05 1.2 INA EP 0-24 SHOP CAF WASH -PUN CLASS PLUS FUEL FOR ALL TEMPERATURES
+NA CLASS 2.26 2.3 2.2 0-24 SHOP CAF WASH CLASS PLUS FUEL FOR ALL TEMPERATURES
 ```
 
-**Translation — flag ON (candidate)**
+**Verdict: A better / B better / same — _____**
 
-```
-NA CLASS 2.26 2.3 05 1.2 INA EP 0-24 SHOP CAF WASH -PUN Class plus fuel for all temperatures
-```
-
-**Verdict (blind): better / same / worse — _____**
+**Serious regression? (name corrupted / new repetition or hallucination / a correct English line broken) — _____**
 
 ---
 
-## The judgement this bar needs
+## After the verdicts are locked
 
-For each pair above, fill the blind verdict: is the flag-ON English a better rendering of the sign than flag-OFF, the same, or worse? Turning the flag on by default is a product change; per the pre-registration it ships only on a clear majority of **better** with no serious regressions. Tally the verdicts here before the call — this file is the evidence, not the call itself.
+Fill every A/B and regression line above and commit them. Then reveal `training/truecase-photos-key.json`, check its SHA-256 against `truecase-photos-key.sha256`, unblind, and tally against the gate. This file is the evidence; the default-on decision is the tally.
 

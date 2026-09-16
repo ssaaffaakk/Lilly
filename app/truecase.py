@@ -182,13 +182,16 @@ def restore_photo_text(text: str, source_lang: str = "bs") -> tuple:
     """Recase a photograph's OCR text line by line. -> (text, changed).
 
     Truecasing helps the translator read a shouted sign in the language it is
-    translating *from*. A photograph often carries a second language as well --
-    a Bosnian plaque beside an English caption, a Latin brand, a person's name
-    -- and recasing those neither helps the translation nor is safe (it
-    lowercases a name into an ordinary word), so a line is rewritten only when
-    it is both predominantly upper-case and detected as `source_lang`. Every
-    other line -- the calm lines, the foreign-language lines, the short brand
-    tokens under the shout threshold -- is returned byte-for-byte.
+    translating *from*. A photograph often carries a second language too -- a
+    Bosnian plaque beside an English caption -- and recasing that does not help
+    the translation, so a line is rewritten only when it is both predominantly
+    upper-case and detected as `source_lang`; a line the classifier reads as the
+    other language, and a short token under the shout threshold, are returned
+    byte-for-byte. This is a heuristic, not named-entity recognition: it protects
+    a *foreign-language* line, not names inside a source-language one. An
+    in-language proper noun outside the small PROPER_FORMS list is still recased
+    and can then be translated literally (ŠIROKI BRIJEG -> "Široki brijeg" ->
+    "Wide hill") -- a measured residual, not a solved case.
 
     Line by line, on the newlines the reader already puts between regions, so a
     misread on one line cannot pull the next out of case. This is the
