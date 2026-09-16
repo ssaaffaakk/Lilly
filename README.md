@@ -3,6 +3,8 @@
 <p align="center"><strong>A Bosnian translator you can type into, talk to, or point a camera at — running entirely on your own machine.</strong></p>
 
 <p align="center">
+  <!-- Live demo: swap this URL for your own deployment (e.g. the Render URL) once it is up. -->
+  <a href="https://huggingface.co/spaces/Safak11/Lilly-api"><img src="https://img.shields.io/badge/%E2%96%B6%20try%20it-live%20demo-7c3aed.svg" alt="Live demo"></a>
   <a href="#run-it"><img src="https://img.shields.io/badge/python-3.12+-3776AB.svg" alt="Python 3.12+"></a>
   <a href="#whats-inside"><img src="https://img.shields.io/badge/FastAPI-0.115+-009688.svg" alt="FastAPI"></a>
   <a href="#how-well-it-works"><img src="https://img.shields.io/badge/offline-no%20network%20at%20inference-2ea043.svg" alt="Offline"></a>
@@ -14,6 +16,12 @@
 </p>
 
 <p align="center">
+  <strong><a href="https://huggingface.co/spaces/Safak11/Lilly-api">▶ Try it live</a></strong> — type Bosnian, talk to it, or point a camera at a sign. Nothing to install.<br>
+  <sub><a href="#run-it">Or run the whole thing offline on your own machine →</a></sub>
+</p>
+
+<p align="center">
+  <a href="https://huggingface.co/spaces/Safak11/Lilly-api">Try it</a> ·
   <a href="#why-i-built-it">Why</a> ·
   <a href="#see-it-work">Examples</a> ·
   <a href="#run-it">Run it</a> ·

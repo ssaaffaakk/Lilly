@@ -1,0 +1,42 @@
+# Render Blueprint for Lilly — https://render.com/docs/blueprint-spec
+#
+# Deploys the FastAPI app from the repo-root Dockerfile, which already binds
+# ${PORT} and mounts /data for corrections, so nothing else has to change.
+# One-click: push this file, then New > Blueprint on Render and point it here.
+#
+# ─────────────────────────────────────────────────────────────────────────────
+# READ THIS BEFORE YOU PICK A PLAN — it is the difference between a working demo
+# and a container that dies on boot:
+#
+#   The app loads ~1.3–1.6 GB of weights into ONE process (whisper-large-v3 int8
+#   alone is ~1.5 GB — see the Dockerfile's "each worker loads its own full
+#   1.3 GB" note). Render's Free and Starter tiers are 512 MB RAM and the
+#   process will be OOM-killed during startup, every time.
+#
+#   • Use at least "standard" (2 GB). "pro" (4 GB) is safer with the large
+#     listener loaded and leaves room for a request while the models are warm.
+#   • The Docker image is large (~3–4 GB after the weight fetch) and the build
+#     downloads them, so the first deploy is slow. That is normal.
+#
+#   Already-free alternative: the Hugging Face Space (Safak11/Lilly-api) runs
+#   this same app on 16 GB CPU hardware for free. Only move to Render if you
+#   want your own URL and control — not to save money on a demo.
+# ─────────────────────────────────────────────────────────────────────────────
+
+services:
+  - type: web
+    name: lilly
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    plan: standard            # 2 GB RAM. free/starter (512 MB) OOM on the weights.
+    healthCheckPath: /health
+    autoDeploy: false         # deploy on your say-so, not on every push
+    envVars:
+      - key: PORT
+        value: 8000           # matches the Dockerfile's EXPOSE and HEALTHCHECK
+      - key: LILLY_DB
+        value: /data/feedback.db
+    disk:
+      name: lilly-data        # corrections survive redeploys (the Dockerfile's VOLUME /data)
+      mountPath: /data
+      sizeGB: 1
