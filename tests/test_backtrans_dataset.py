@@ -1,5 +1,5 @@
 """Run B producer shards must reconstruct one exact registered sample."""
-import gzip, importlib.util, json, sys
+import gzip, importlib.util, json, subprocess, sys
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[1]
@@ -7,6 +7,14 @@ sys.path.insert(0, str(REPO / "scripts"))
 spec = importlib.util.spec_from_file_location("backtrans_dataset", REPO / "scripts/backtrans_dataset.py")
 dataset = importlib.util.module_from_spec(spec); spec.loader.exec_module(dataset)
 import prepare_backtrans_bs as prep  # noqa: E402
+
+
+def test_kaggle_notebook_package_import_works_from_repo_root():
+    probe = subprocess.run(
+        [sys.executable, "-c",
+         "from scripts.backtrans_dataset import FORMAT_VERSION, pair_hash"],
+        cwd=REPO, text=True, capture_output=True)
+    assert probe.returncode == 0, probe.stderr
 
 
 def write_three_shards(root: Path):

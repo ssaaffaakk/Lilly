@@ -8,7 +8,10 @@ import hashlib
 import json
 from pathlib import Path
 
-from prepare_backtrans_bs import normalize, shard_bounds
+try:
+    from .prepare_backtrans_bs import normalize, shard_bounds
+except ImportError:  # Direct execution/import with scripts/ on sys.path.
+    from prepare_backtrans_bs import normalize, shard_bounds
 
 SAMPLE_N = 1_000_000
 SHARD_COUNT = 3

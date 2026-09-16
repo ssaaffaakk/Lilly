@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import subprocess
 import sys
 from pathlib import Path
 
@@ -30,6 +31,16 @@ def read_nb(path: Path) -> str:
 def fail(msg: str) -> None:
     print(f"PREFLIGHT FAIL: {msg}", file=sys.stderr)
     sys.exit(1)
+
+
+def check_backtrans_module_import() -> None:
+    """Exercise the package import path used inside the Kaggle notebook."""
+    probe = subprocess.run(
+        [sys.executable, "-c",
+         "from scripts.backtrans_dataset import FORMAT_VERSION, pair_hash"],
+        cwd=REPO, text=True, capture_output=True)
+    if probe.returncode:
+        fail("backtrans helper package import failed: " + probe.stderr.strip())
 
 
 def check_offload(text: str, name: str) -> None:
@@ -666,6 +677,7 @@ def check_backtrans(text: str) -> None:
 
 
 def main() -> int:
+    check_backtrans_module_import()
     for path, fn in ((SPEECH, check_speech), (SPEECH2, check_speech_half2),
                      (OCR, check_ocr), (OCR_PADDLE, check_ocr_paddle),
                      (OUTSIDE, check_outside),
