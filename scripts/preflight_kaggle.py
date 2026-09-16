@@ -603,6 +603,12 @@ def check_backtrans(text: str) -> None:
         fail("backtrans must clone to /kaggle/temp")
     if "/kaggle/temp" not in text:
         fail("backtrans must clone to /kaggle/temp")
+    if 'MACOCU = "/kaggle/temp/macocu-bs-latin.txt"' in text:
+        fail("backtrans must write the extracted MaCoCu file under SCRATCH -- "
+             "/kaggle/temp is not present on every Kaggle image, and setup falls back to /tmp")
+    if 'MACOCU = str(SCRATCH / "macocu-bs-latin.txt")' not in text:
+        fail("backtrans must derive the extracted MaCoCu path from the same SCRATCH "
+             "directory selected during setup")
     if 'DIRECTION == "en-bs"' not in text or 'ARM == "lora"' not in text:
         fail("backtrans is the reply LoRA and must assert DIRECTION==en-bs, ARM==lora")
     if "FORWARD_FINGERPRINT" not in text or "1aedcc11231cdf50817ff12f99ff0d1e" not in text:
