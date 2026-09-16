@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
-"""Re-score the shipped reader on FULL-RESOLUTION test-v2 photos — run on the Mac.
+"""Prepare the shipped-reader score on Commons originals — Mac only when approved.
 
-Pre-registered in training/PREREGISTRATION.md, "the reader on full-resolution
-inputs". The committed test-v2 photos are downscales (e.g.
+DEFERRED: do not run this until the amendment drafted in
+training/FEASIBILITY-ocr-open-levers-2026-09-16.md is copied into
+training/PREREGISTRATION.md and the owner approves the one held-out look. The
+committed test-v2 photos are downscales (e.g.
 20130606_Mostar_034.jpg is 1280 px on disk but 3968x2976 on Commons). The app
 reads at up to 2 MP (~1633 px), so on a real high-resolution upload the reader
 gets more detail than the 1280 px benchmark. This fetches each test-v2 photo's
@@ -34,7 +36,7 @@ from pathlib import Path
 REPO = Path(__file__).resolve().parents[1]
 V2 = REPO / "data" / "ocr" / "real-photos" / "test-v2"
 OUT = REPO / "training" / "highres"
-CACHE = OUT / "reader-output-fullres.json"        # {"reader": fp, "readings": {name: text}}
+CACHE = OUT / "reader-output-fullres.json"        # evaluate_ocr cache schema 2
 ORIG = OUT / "_orig.tmp"                            # one photo at a time, deleted after read
 UA = {"User-Agent": "Lilly-OCR-research/1.0 (github.com/ssaaffaakk/Lilly)"}
 BASELINE = REPO / "training" / "paddle-floor" / "test-v2-floor0.9.json"  # the downscaled score
@@ -64,20 +66,37 @@ def main() -> int:
     os.environ.setdefault("LILLY_PADDLE_REC_THRESH", "0.9")
     sys.path.insert(0, str(REPO))
     sys.path.insert(0, str(REPO / "training"))
-    from app.ocr import scan
-    from evaluate_ocr import reader_fingerprint  # same stamp evaluate_ocr expects
+    import cv2
+    from PIL import Image
+    from app.ocr import MAX_WORKING_PIXELS, reader_identity, scan
+    from evaluate_ocr import (
+        file_sha256,
+        load_reading_cache,
+        reader_cache_context,
+        write_reading_cache,
+    )
+
+    expected = "paddle:PP-OCRv6_medium_det+PP-OCRv6_medium_rec:3.7.0:rec>=0.9"
+    identity = reader_identity()
+    if identity != expected:
+        raise SystemExit(f"reader is {identity!r}, not shipped {expected!r}")
+    if cv2.__version__ != "4.10.0":
+        raise SystemExit(
+            f"cv2 is {cv2.__version__}, not the shipped 4.10.0; do not read"
+        )
 
     OUT.mkdir(parents=True, exist_ok=True)
     truth = json.loads((V2 / "truth-v2.json").read_text(encoding="utf-8"))["photos"]
     names = [n for n in sorted(truth) if truth[n].get("lines")]  # photos with text
 
-    cache = json.loads(CACHE.read_text(encoding="utf-8")) if CACHE.is_file() else {"reader": None, "readings": {}}
-    have = cache["readings"]
-    fp = reader_fingerprint()
-    if cache.get("reader") not in (None, fp) and have:
-        print(f"cache was written by a different reader ({cache['reader']} != {fp}); starting fresh")
-        have = {}
-    cache["reader"] = fp
+    context = reader_cache_context(full=False)  # originals still enter shipped scan's 2 MP cap
+    have = load_reading_cache(CACHE, context)
+    for name, entry in have.items():
+        if not isinstance(entry, dict) or not all(
+            field in entry
+            for field in ("text", "source_sha256", "original_size", "working_size")
+        ):
+            raise SystemExit(f"{CACHE} entry {name!r} has incomplete provenance")
 
     missed = []
     for i, name in enumerate(names, 1):
@@ -89,22 +108,38 @@ def main() -> int:
             time.sleep(1.5)
             continue
         try:
-            have[name] = scan(str(ORIG))
+            source_hash = file_sha256(ORIG)
+            with Image.open(ORIG) as image:
+                width, height = image.size
+            scale = min(1.0, (MAX_WORKING_PIXELS / (width * height)) ** 0.5)
+            working = [max(int(width * scale), 1), max(int(height * scale), 1)]
+            reading = scan(str(ORIG))
+            have[name] = {
+                "source_sha256": source_hash,
+                "text": reading,
+                "source_url": (
+                    "https://commons.wikimedia.org/wiki/Special:FilePath/"
+                    + urllib.parse.quote(name.replace("_", " "))
+                ),
+                "original_size": [width, height],
+                "working_size": working,
+            }
+            write_reading_cache(CACHE, context, have)
         except Exception as exc:
             missed.append(name)
             print(f"  {i}/{len(names)} {name[:45]}: read failed {exc}", flush=True)
         finally:
             if ORIG.exists():
                 ORIG.unlink()
-        cache["readings"] = have
-        CACHE.write_text(json.dumps(cache, ensure_ascii=False, indent=1), encoding="utf-8")
-        print(f"  {i}/{len(names)} {name[:45]}: {len(have.get(name,'').split())} words", flush=True)
+        words = have.get(name, {}).get("text", "").split()
+        print(f"  {i}/{len(names)} {name[:45]}: {len(words)} words", flush=True)
         time.sleep(1.5)
 
-    read = len(have)
+    read = sum(name in have for name in names)
     print(f"\nread {read}/{len(names)} photos at full resolution; {len(missed)} could not be fetched/read")
-    if len(missed) > len(names) * 0.15:
-        print("more than 15% missing — do not score a holey set; re-run to retry the misses, then score")
+    missing = [name for name in names if name not in have]
+    if missed or missing or read != len(names):
+        print("the held-out gate requires 132/132 originals; no local downscale may fill a hole")
         (OUT / "missed.json").write_text(json.dumps(missed, ensure_ascii=False, indent=1), encoding="utf-8")
         return 1
 
@@ -114,7 +149,8 @@ def main() -> int:
     subprocess.run([sys.executable, "training/evaluate_ocr.py",
                     "--json", str(out_json), "--out", str(OUT / "test-v2-fullres.md"),
                     "--cache", str(CACHE), "--truth", str(V2 / "truth-v2.json"),
-                    "--photos", str(V2 / "photos"), "--sample", str(V2 / "sample.txt")],
+                    "--photos", str(V2 / "photos"), "--sample", str(V2 / "sample.txt"),
+                    "--sealed-cache"],
                    cwd=REPO, check=True)
     d = json.loads(out_json.read_text(encoding="utf-8"))
     b = json.loads(BASELINE.read_text(encoding="utf-8"))

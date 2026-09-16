@@ -66,11 +66,11 @@ not all 132. That is enough to justify a measurement, not enough to predict a
 pass. The informal 8/4/2 MP single-photo check in `app/ocr.py` remains a
 negative prior; it is not a substitute for this paired held-out comparison.
 
-### Readiness issue in the existing Mac script
+### Readiness issue found in the existing Mac script
 
 There is no `training/highres/` result or reading cache today: this look has not
-run. The script is close to ready but cannot support the requested 132-photo
-gate unchanged:
+run. The 16 September feasibility read found that the script could not support
+the requested 132-photo gate unchanged:
 
 - it permits up to 15% failed original fetches;
 - it then invokes `evaluate_ocr.py` with the same cache and the committed
@@ -84,6 +84,14 @@ registered treatment** and refuse otherwise. It must also record original and
 working dimensions per photograph, keep the high-resolution cache separate,
 and compute the paired interval before printing a verdict. This is measurement
 plumbing only; it is not a change to `app/ocr.py`.
+
+**Measurement-guard update, 16 September; still no run:** cache schema 2 now
+binds each reading to the source SHA-256 and exact reader/runtime/treatment.
+`fetch_highres_and_score.py` records original and working dimensions, requires
+132/132, and invokes the scorer in sealed-cache mode; a missing original can no
+longer fall through to the committed downscale. The paired interval/reporting
+path still needs to be wired under the pre-registration before owner approval
+can start the one look.
 
 ## Lever 2 — CRAFT detection with PP-OCRv6 recognition
 
