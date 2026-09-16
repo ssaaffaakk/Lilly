@@ -1,8 +1,9 @@
 # RESULTS — truecase photograph A/B, unblinded — 16 September 2026
 
 The blind verdicts in `training/truecase-photos-blind-verdicts-codex.md` were
-locked at commit `35859a0`, before the A/B key was opened, and unblinded here
-against the sealed key `training/truecase-photos-key.json`.
+locked at commit `e87c656`, judged against the blind form as it stood at
+`35859a0` (where the key's SHA-256 commitment was sealed), before the A/B key was
+opened, and unblinded here against `training/truecase-photos-key.json`.
 
 - Key integrity: SHA-256 `d943f7b9c0fc19fea8b28fb98c285fb80d64da4b96ca579e263cab45f6550e10`,
   verified to match the commitment committed at `35859a0`
@@ -39,8 +40,8 @@ serious regressions: **4**.
 ## Verdict
 
 The candidate **fails the gate on both arms**: 3 of 8 better against the ≥ 6/8
-bar, and 4 serious regressions against the zero bar. Two of the three photographs
-where the candidate is the better rendering still carry a serious candidate-side
+bar, and 4 serious regressions against the zero bar. One of the three photographs
+where the candidate is the better rendering still carries a serious candidate-side
 defect (`Trg-žrtava` literalises the place name to "Wide hill"). Recasing helps
 the readability of a plain Bosnian sign, but on the real product input it also
 lets the translator hallucinate ("rival") and mangle names and repeat bilingual
