@@ -290,15 +290,24 @@ def check_outside(text: str) -> None:
 
 
 def check_speech_instrument(text: str) -> None:
-    """The last look at whisper-large-v3-turbo language token candidate. The pre-registration fixes the clip set, the
-    decode, and that it is judged once; the notebook must not be able to drift
-    from any of that between launches."""
+    """The last look at the whisper-large-v3-turbo language-token candidate.
+
+    The pre-registration fixes the clip set, decode, two exact builds and that
+    the candidate is judged once; the notebook must not drift between launch
+    preparation and scoring.
+    """
     if "/kaggle/working/stdout.txt" not in text or "Popen" not in text:
         fail("speech instrument: run() must Popen+tee into /kaggle/working/stdout.txt")
     if "/kaggle/temp" not in text:
         fail("speech instrument: must clone to /kaggle/temp")
     if "!= 925" not in text:
         fail("speech instrument: must assert all 925 FLEURS bs_ba test clips before scoring")
+    if text.count("# 4. The clips") != 1 or "download_speech_data.py" not in text:
+        fail("speech instrument: must download and count the 925-clip test split exactly once; "
+             "the turbo notebook once replaced this cell with a duplicate listener cell")
+    if text.count("# 5. The two listeners") != 1:
+        fail("speech instrument: must contain exactly one listener identity cell; a stale "
+             "large-v3 cell after the turbo cell would replace and reject the candidate")
     if '"--clips", "all"' not in text:
         fail("speech instrument: the pre-registration fixes --clips all; not distinct, not first200")
     if '"--decode", "rubric"' not in text:
@@ -306,6 +315,9 @@ def check_speech_instrument(text: str) -> None:
     if "openai/whisper-large-v3-turbo" not in text:
         fail("speech instrument: must check the candidate's built.json is whisper-large-v3-turbo "
              "before scoring -- the wrong zip would be scored under its name")
+    if '"openai/whisper-large-v3"' in text or "e6bb58483586b06c" in text:
+        fail("speech instrument: stale large-v3 identity/fingerprint remains; this run scores "
+             "the 12 September turbo candidate, not the 1 September large-v3 build")
     if "train_speech.py" in text:
         fail("speech instrument: is a measurement; it must not train")
     if "check_trainproof" not in text:
@@ -313,10 +325,15 @@ def check_speech_instrument(text: str) -> None:
     if "LILLY_SPEECH_DEVICE" not in text:
         fail("speech instrument: must opt the listener onto the GPU by env -- "
              "app.speech defaults to CPU int8 and 925 clips x large-v3 misses the wall")
-    if "lilly-listen-small-previous" not in text or "a76342f6ab59b382" not in text:
-        fail("speech instrument: the baseline must be the gate's listen-previous from the "
-             "lilly-listen-small-previous dataset, and baseline listener must be checked against "
-             "fingerprint a76342f6ab59b382 before scoring")
+    if ("lilly-listen-small-previous" not in text or
+            "a76342f6ab59b382" not in text or "68551c164934dccd" not in text):
+        fail("speech instrument: baseline and candidate must be pinned before scoring: "
+             "listen-previous a76342f6ab59b382 and turbo 68551c164934dccd")
+    if "lilly-listen-large-v3-turbo-langtoken" not in text:
+        fail("speech instrument: must attach the turbo candidate from its own dataset slug, "
+             "not the immutable lilly-listen-large-v3 dataset used by voice jobs")
+    if "v4 — listen — one language token per clip" not in text or "listen (turbo langtoken)" not in text:
+        fail("speech instrument: generated report must name the v4 pre-registration and turbo arm")
     if "scripts/fetch_models.py" in text:
         fail("speech instrument: must not read either listener off the Hugging Face bundle -- "
              "its listen/ has been whisper-large-v3 since 4 September; version 3 died on it")
@@ -648,8 +665,12 @@ def main() -> int:
     if "needs_ocr_sign_letters" not in kaggle_train or "push_ocr_sign_letters" not in kaggle_train:
         fail("kaggle_train.py must push lilly-ocr-sign-letters for pass-8")
     if '"needs_listen_candidate": True' not in kaggle_train or "push_listen_candidate" not in kaggle_train:
-        fail("kaggle_train.py must attach the large-v3 candidate as the lilly-listen-large-v3 dataset "
-             "for speech-instrument -- the lilly-speech-half2 kernel Output is no longer attachable")
+        fail("kaggle_train.py must attach the turbo language-token candidate for speech-instrument")
+    if ("speech-langtoken-half2" not in kaggle_train or
+            "lilly-listen-large-v3-turbo-langtoken" not in kaggle_train or
+            "68551c164934dccd" not in kaggle_train):
+        fail("kaggle_train.py must read the separately fetched 12 September turbo zip, pin "
+             "fingerprint 68551c164934dccd and upload it under its own dataset slug")
     if '"needs_listen_previous": True' not in kaggle_train or "push_listen_previous" not in kaggle_train:
         fail("kaggle_train.py must attach the gate's baseline listener as lilly-listen-small-previous")
     if '"arm": "fullft"' not in kaggle_train or '"arm": "lora"' not in kaggle_train:

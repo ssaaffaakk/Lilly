@@ -41,11 +41,13 @@ KAGGLE = str(REPO_ROOT / ".venv" / "bin" / "kaggle")
 # folder and its own dataset slug, and the notebook checks the label on arrival.
 WEIGHTS = REPO_ROOT / "models" / "lilly" / "translate"
 WEIGHTS_EN_BS = REPO_ROOT / "models" / "lilly" / "translate-en-bs"
-# The whisper-large-v3 candidate, as half-2 packaged it on 1 September. Its
-# model.bin is byte-identical (md5 2bd74590...) to models/lilly/listen, the
-# build the gate scored on 200 clips; the instrument must score that build and
-# no other.
-LISTEN_CANDIDATE = REPO_ROOT / "models" / "kaggle-output" / "speech-half2" / "lilly-listen.zip"
+# The whisper-large-v3-turbo language-token candidate, as half-2 packaged it on
+# 12 September. Keep it separate from speech-half2/: that directory holds the
+# 1 September large-v3 build (fingerprint e6bb58483586b06c), which is not this
+# experiment. The full instrument must score these exact bytes and no other.
+LISTEN_CANDIDATE = (REPO_ROOT / "models" / "kaggle-output" /
+                    "speech-langtoken-half2" / "lilly-listen.zip")
+LISTEN_CANDIDATE_FINGERPRINT = "68551c164934dccd"
 # The baseline the instrument compares against: the whisper-small build the gate
 # re-measured at 34.9% (training/SPEECHBENCH-gate.txt). It used to be read off
 # the published Hugging Face bundle, whose listen/ turned out to have been
@@ -138,9 +140,10 @@ JOBS = {
     "speech":      {"notebook": "Lilly_Speech_Kaggle.ipynb",
                     "slug": "lilly-speech", "title": "Lilly speech",
                     "needs_weights": False, "needs_corpus": False},
-    # The full speech instrument (PREREGISTRATION.md, "v3 -- speech -- the full
-    # instrument"): 925 clips, both listeners, gate rows + rubric WER. A
-    # measurement, not a training pass; it reads large-v3 from half-2's Output.
+    # The full speech instrument (PREREGISTRATION.md, "v4 -- listen -- one
+    # language token per clip"): 925 clips, both listeners, gate rows + rubric
+    # WER. A measurement, not a training pass; it reads the 12 September turbo
+    # candidate from the separately fetched half-2 Output.
     "speech-instrument": {"notebook": "Lilly_Speech_Instrument_Kaggle.ipynb",
                     "slug": "lilly-speech-instrument",
                     "title": "Lilly speech instrument",
@@ -149,7 +152,7 @@ JOBS = {
                     # that kernel answered "Permission 'kernels.get' was denied",
                     # the push said "not valid kernel sources" and ran anyway, and
                     # version 2 died at the attach cell. The candidate now comes
-                    # from a dataset built out of the zip fetched on 1 September.
+                    # from a dataset built out of the zip fetched on 12 September.
                     "needs_listen_candidate": True,
                     "needs_listen_previous": True},
     "speech-half2": {"notebook": "Lilly_Speech_Kaggle_Half2.ipynb",
@@ -447,7 +450,7 @@ def require_macocu(user: str) -> str:
 
 
 def push_listen_candidate(user: str) -> str:
-    """The large-v3 candidate, unpacked, as a dataset the instrument can attach.
+    """The turbo language-token candidate as a dataset the instrument can attach.
 
     Unpacked rather than the zip itself: Kaggle extracts archives it is handed
     as dataset files, so a dataset "holding lilly-listen.zip" may hold its
@@ -455,11 +458,16 @@ def push_listen_candidate(user: str) -> str:
     nothing. The notebook accepts either shape and checks built.json before
     scoring, so what is attached here is the build, not a filename.
     """
-    slug = f"{user}/lilly-listen-large-v3"
-    stage = STAGING / "dataset" / "lilly-listen-large-v3"
+    # Do not reuse lilly-listen-large-v3: the voice jobs use that immutable
+    # dataset for the shipped large-v3 listener (e6bb...). A ready status on
+    # that slug would otherwise skip upload and hand the instrument wrong bytes.
+    dataset_name = "lilly-listen-large-v3-turbo-langtoken"
+    slug = f"{user}/{dataset_name}"
+    stage = STAGING / "dataset" / dataset_name
     if not LISTEN_CANDIDATE.is_file():
-        raise SystemExit(f"no candidate at {LISTEN_CANDIDATE} -- it is half-2's Output, "
-                         f"fetched with scripts/kaggle_train.py speech-half2 --fetch")
+        raise SystemExit(f"no candidate at {LISTEN_CANDIDATE} -- fetch the 12 September "
+                         f"afaksrmeli/lilly-speech-half2 Output there; do not use the "
+                         f"1 September zip in models/kaggle-output/speech-half2")
     stage.mkdir(parents=True, exist_ok=True)
     with zipfile.ZipFile(LISTEN_CANDIDATE) as zf:
         members = [m for m in zf.namelist() if m.startswith("models/lilly/listen/") and not m.endswith("/")]
@@ -470,13 +478,14 @@ def push_listen_candidate(user: str) -> str:
             if not target.exists() or target.stat().st_size != zf.getinfo(m).file_size:
                 target.write_bytes(zf.read(m))
     built = json.loads((stage / "built.json").read_text(encoding="utf-8"))
-    if built.get("base") not in ("openai/whisper-large-v3-turbo", "openai/whisper-large-v3"):
-        raise SystemExit(f"{LISTEN_CANDIDATE} built.json says {built} -- wrong base for candidate zip")
+    if built.get("base") != "openai/whisper-large-v3-turbo":
+        raise SystemExit(f"{LISTEN_CANDIDATE} built.json says {built} -- not the turbo candidate")
     got = listener_fingerprint(stage)
-    if GATE_FINGERPRINTS.get("listen") and got != GATE_FINGERPRINTS["listen"]:
-        raise SystemExit(f"candidate fingerprint {got} is not expected fingerprint {GATE_FINGERPRINTS['listen']}")
+    if got != LISTEN_CANDIDATE_FINGERPRINT:
+        raise SystemExit(f"candidate fingerprint {got} is not the pinned turbo fingerprint "
+                         f"{LISTEN_CANDIDATE_FINGERPRINT}")
     (stage / "dataset-metadata.json").write_text(json.dumps({
-        "title": "Lilly listen large v3", "id": slug,
+        "title": "Lilly listen large v3 turbo langtoken", "id": slug,
         "licenses": [{"name": "other"}]}, indent=1))
 
     existing = subprocess.run([KAGGLE, "datasets", "status", slug],
