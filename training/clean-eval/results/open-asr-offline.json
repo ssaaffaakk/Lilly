@@ -1,0 +1,15 @@
+{
+  "schema": 1,
+  "harness": "huggingface/open_asr_leaderboard",
+  "harness_commit": "4ef4a26b8588ccc140868be36f8c34acc839afe6",
+  "normalizer": "ml_normalizer(lang=bs)",
+  "listener": "listen",
+  "listener_fingerprint": "e6bb58483586b06c",
+  "clips": 925,
+  "wrong": 2252,
+  "words": 18409,
+  "wer": 12.233146830354718,
+  "official_submission": false,
+  "uploaded": false,
+  "caveat": "The current Open ASR multilingual dataset matrix does not register Bosnian. This is its pinned normalizer/scoring logic applied offline to Lilly's hash-pinned FLEURS bs predictions, not a leaderboard entry."
+}

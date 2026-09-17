@@ -42,16 +42,7 @@ weights are the ones the 43.25 / 30.73 BLEU numbers were taken on.
 
 **Translate** (Kaggle, owner authorized 17 Sep 2026): `evaluate_app.py --fresh --split all` through `app.translate.Engine` for **both** directions on all 2,009 FLORES-200 pairs. Builds are fingerprint-checked before a sentence is translated. Empty output or a partial FLORES download is ERROR, not a score. No training.
 
-**Listen** (Kaggle, owner authorized): the committed manifest freezes each clip
-by audio and transcript SHA-256 before decoding. The official held-out FLEURS
-read-speech set is the clean cohort (925); noisy-but-understandable and
-human-unintelligible remain explicit zero rows rather than manufacturing noisy
-audio. `probe_speech_clips.py` records SNR, bandwidth, clipping and duration as
-diagnostic metadata only; those measurements never assign human legibility.
-WER runs through `app.speech.transcribe` per cohort, alongside the two registered
-gates (Bosnian-term recall and Croatian substitution). The exact shipped build
-and baseline are fingerprint checked. The Open ASR normalizer/scorer is also
-run offline on the same predictions, as supplementary non-submission evidence.
+**Listen** (Kaggle, **done 17 Sep 2026**, COMPLETE): `safak3as/lilly-listen-clean-eval`, git `48471303`. 925/925 clips. Shipped large-v3 **11.52%** WER (2170/18836); small **35.37%**. Term recall 60.4% → 88.5% (holds). Croatian 0.96% → 6.25%, p = 0.0175 (**FAIL**, same refusal as the product row). Open ASR offline 12.23%, not a submission. Product 11.9% on 200 is unchanged. `training/RESULTS-speech-listen-clean-eval.md`.
 
 **Read** (Kaggle, owner authorized): the 40 original-resolution Commons files
 are pinned by page revision, original URL, byte count, dimensions and SHA-1.

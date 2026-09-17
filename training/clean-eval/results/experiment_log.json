@@ -1,0 +1,17 @@
+{
+  "job": "listen-clean-eval",
+  "run_id": "Batch",
+  "started": "2026-09-17T19:24:59Z",
+  "git": "48471303379ddb208e17ecee0a73c8c117e1897d",
+  "status": "complete",
+  "error": null,
+  "metrics": {
+    "speech_clips": 925,
+    "manifest_sha256": "908cb93c92c5fe262f7e6b3cb7bc43ba45a02f8ce3f36a83cc5c189ca1d50f7c"
+  },
+  "artifacts": [
+    "lilly-listen-clean-eval.zip"
+  ],
+  "hardware": "Tesla T4",
+  "ended": "2026-09-17T20:08:10Z"
+}
