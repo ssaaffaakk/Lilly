@@ -37,6 +37,7 @@ def write_three_shards(root: Path):
         report.update({"format_version": dataset.FORMAT_VERSION, "status": "complete",
                        "rows": len(rows), "forward_fingerprint": "forward-test",
                        "forward_normalized": 0,
+                       "forward_decode_fallbacks": {"alternative": 0, "greedy": 0},
                        "git": "deadbeef", "data_file": data_name,
                        "source_order_hash": prep.ordered_hash(source),
                        "pair_order_hash": dataset.pair_hash(rows)})
@@ -115,3 +116,18 @@ def test_validate_union_refuses_disabled_model_vocabulary_gate(tmp_path):
         assert "model-vocabulary gate was not enabled" in str(exc)
     else:
         raise AssertionError("disabled model-vocabulary gate was accepted")
+
+
+def test_validate_union_refuses_missing_decoder_fallback_accounting(tmp_path):
+    write_three_shards(tmp_path)
+    report_path = tmp_path / "backtrans-shard-2.json"
+    report = json.loads(report_path.read_text(encoding="utf-8"))
+    del report["forward_decode_fallbacks"]
+    report_path.write_text(json.dumps(report), encoding="utf-8")
+    try:
+        dataset.validate_union(tmp_path, expected_n=10, shard_count=3,
+                               forward_fingerprint="forward-test", seed=7)
+    except SystemExit as exc:
+        assert "invalid forward_decode_fallbacks" in str(exc)
+    else:
+        raise AssertionError("missing decoder fallback accounting was accepted")

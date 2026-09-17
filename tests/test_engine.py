@@ -37,6 +37,11 @@ class Hypothesis:
         self.hypotheses = [tokens]
 
 
+class Alternatives:
+    def __init__(self, hypotheses):
+        self.hypotheses = hypotheses
+
+
 class LeakyEcho:
     """Echoes every sentence with the base model's tag leak in front of it."""
 
@@ -87,3 +92,30 @@ def test_a_long_sentence_is_cut_to_the_sentence_cap_not_refused(engine):
     words = " ".join(f"w{i}x" for i in range(MAX_SENTENCE_TOKENS * 2))
     assert len(engine.translate(words).split()) == MAX_SENTENCE_TOKENS
     assert MAX_SENTENCE_TOKENS * 2 > MAX_INPUT_TOKENS or True  # the cap, not the budget, applies
+
+
+def test_generation_decoder_selects_first_nonempty_beam_without_changing_default(engine):
+    class AlternativeDecoder:
+        def translate_batch(self, group, beam_size, max_decoding_length, **kwargs):
+            assert beam_size == 4 and kwargs == {
+                "num_hypotheses": 4, "return_alternatives": True, "disable_unk": True}
+            return [Alternatives([[""], ["translated"], ["unused"]]) for _ in group]
+
+    engine.translator = AlternativeDecoder()
+    out, diagnostics = engine.translate_nonempty("Dobar dan")
+    assert out == "translated"
+    assert diagnostics == {"alternative": 1, "greedy": 0}
+
+
+def test_generation_decoder_retries_greedily_when_all_beams_decode_empty(engine):
+    class GreedyDecoder:
+        def translate_batch(self, group, beam_size, max_decoding_length, **kwargs):
+            if beam_size == 4:
+                return [Alternatives([[""], [""], [""], [""]]) for _ in group]
+            assert beam_size == 1 and kwargs == {"disable_unk": True}
+            return [Alternatives([["greedy-result"]]) for _ in group]
+
+    engine.translator = GreedyDecoder()
+    out, diagnostics = engine.translate_nonempty("Dobar dan")
+    assert out == "greedy-result"
+    assert diagnostics == {"alternative": 0, "greedy": 1}

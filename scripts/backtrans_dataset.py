@@ -17,7 +17,7 @@ SAMPLE_N = 1_000_000
 SHARD_COUNT = 3
 SEED = 20260914
 FORWARD_FINGERPRINT = "1aedcc11231cdf50817ff12f99ff0d1e"
-FORMAT_VERSION = 2
+FORMAT_VERSION = 3
 
 
 def pair_hash(rows) -> str:
@@ -66,6 +66,17 @@ def validate_model_vocabulary_gate(report: dict, label: str = "producer report")
     return gate
 
 
+def validate_decode_fallbacks(report: dict, label: str = "producer report") -> dict:
+    """Validate accounting for non-empty alternative/greedy decoder recovery."""
+    fallbacks = report.get("forward_decode_fallbacks")
+    if not isinstance(fallbacks, dict) or set(fallbacks) != {"alternative", "greedy"}:
+        raise SystemExit(f"{label}: invalid forward_decode_fallbacks={fallbacks!r}")
+    if any(not isinstance(v, int) or isinstance(v, bool) or v < 0
+           for v in fallbacks.values()):
+        raise SystemExit(f"{label}: invalid forward_decode_fallbacks={fallbacks!r}")
+    return fallbacks
+
+
 def validate_union(root: Path, *, expected_n: int = SAMPLE_N,
                    shard_count: int = SHARD_COUNT,
                    forward_fingerprint: str = FORWARD_FINGERPRINT,
@@ -80,6 +91,7 @@ def validate_union(root: Path, *, expected_n: int = SAMPLE_N,
     union_pair_digest = hashlib.blake2b(digest_size=32)
     seen, duplicate_sources, shard_records = set(), 0, []
     forward_normalized = 0
+    forward_decode_fallbacks = {"alternative": 0, "greedy": 0}
     sample_hash = producer_git = source_filter_accounting = vocabulary_gate = None
     total = 0
 
@@ -103,6 +115,9 @@ def validate_union(root: Path, *, expected_n: int = SAMPLE_N,
                 or normalized < 0 or normalized > want_rows):
             raise SystemExit(f"{report_path.name}: invalid forward_normalized={normalized!r}")
         forward_normalized += normalized
+        this_decode_fallbacks = validate_decode_fallbacks(report, report_path.name)
+        for kind, count in this_decode_fallbacks.items():
+            forward_decode_fallbacks[kind] += count
         this_accounting = {
             "dropped": report.get("dropped"),
             "pathological_reasons": validate_source_filter_report(report, report_path.name),
@@ -166,6 +181,7 @@ def validate_union(root: Path, *, expected_n: int = SAMPLE_N,
                               "range": [start, stop], "data_file": data_path.name,
                               "report_file": report_path.name,
                               "forward_normalized": normalized,
+                              "forward_decode_fallbacks": this_decode_fallbacks,
                               "source_order_hash": got_source_hash,
                               "pair_order_hash": got_pair_hash})
 
@@ -179,6 +195,7 @@ def validate_union(root: Path, *, expected_n: int = SAMPLE_N,
             "rows": total, "missing": missing, "duplicate_sources": duplicate_sources,
             "shard_count": shard_count, "seed": seed,
             "forward_normalized": forward_normalized,
+            "forward_decode_fallbacks": forward_decode_fallbacks,
             "source_filter_accounting": source_filter_accounting,
             "model_vocabulary_gate": vocabulary_gate,
             "forward_fingerprint": forward_fingerprint, "producer_git": producer_git,

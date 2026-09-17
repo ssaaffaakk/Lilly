@@ -632,6 +632,8 @@ def check_backtrans_producer(text: str) -> None:
         fail("backtrans producer must use the leakage-proof sampler")
     if "forward_input(bs)" not in text or "forward_normalized" not in text:
         fail("backtrans producer must normalize joined punctuation and account for every changed source")
+    if "translate_nonempty" not in text or "GPU non-empty decoder probes passed" not in text:
+        fail("backtrans producer must prove the GPU non-empty beam-selection contract")
     if "empty translation after deterministic source normalization" not in text:
         fail("backtrans producer must still fail loud on an empty normalized translation")
     if "data/flores/dev.bs" not in text or "data/flores/devtest.bs" not in text \
@@ -651,6 +653,7 @@ def check_backtrans_producer(text: str) -> None:
         fail("backtrans producer must fail loud on its wall cap")
     for required in ("sample_order_hash", "source_order_hash", "pair_order_hash",
                      '"forward_normalized": forward_normalized',
+                     '"forward_decode_fallbacks": forward_decode_fallbacks',
                      '"status": "complete"', '"rows": len(pairs)',
                      '"format_version": FORMAT_VERSION', "assert len(pairs) == expected"):
         if required not in text: fail(f"backtrans producer missing {required}")

@@ -140,6 +140,25 @@ class Engine:
         strip_tags=False returns the model's output with any leaked language
         tag left in. Only a measurement wants that (LANGUAGE_TAG above).
         """
+        translated, _ = self._translate(text, truncate=truncate, strip_tags=strip_tags,
+                                        require_nonempty=False)
+        return translated
+
+    def translate_nonempty(self, text: str, truncate: bool = False,
+                           strip_tags: bool = True) -> tuple[str, dict]:
+        """Decode for data generation, selecting a valid beam before retrying.
+
+        GPU quantisation can rank an all-special-token hypothesis first even
+        when other beams decode normally.  Product translation remains exactly
+        unchanged; Run B explicitly opts into four decoded alternatives and a
+        greedy retry.  The caller receives accounting and still fails if every
+        deterministic hypothesis is empty.
+        """
+        return self._translate(text, truncate=truncate, strip_tags=strip_tags,
+                               require_nonempty=True)
+
+    def _translate(self, text: str, truncate: bool, strip_tags: bool,
+                   require_nonempty: bool) -> tuple[str, dict]:
         # Truecasing an all-caps source (a shouted sign) is a large win for the
         # translator, but it belongs to the photograph, not to every translation:
         # it used to sit here and so touched typed text and both directions too.
@@ -170,20 +189,45 @@ class Engine:
                 break
             total += len(tokens)
         if not tokenised:
-            return ""
+            return "", {"alternative": 0, "greedy": 0}
 
         out = []
+        diagnostics = {"alternative": 0, "greedy": 0}
         for group in self._grouped(tokenised):
             with _translate_lock:
-                results = self.translator.translate_batch(
-                    group, beam_size=4, max_decoding_length=MAX_SENTENCE_TOKENS)
-            for result in results:
-                ids = self.tokenizer.convert_tokens_to_ids(result.hypotheses[0])
-                decoded = self.tokenizer.decode(ids, skip_special_tokens=True)
-                if strip_tags:
-                    decoded = LANGUAGE_TAG.sub("", decoded).strip()
+                if require_nonempty:
+                    results = self.translator.translate_batch(
+                        group, beam_size=4, max_decoding_length=MAX_SENTENCE_TOKENS,
+                        num_hypotheses=4, return_alternatives=True, disable_unk=True)
+                else:
+                    results = self.translator.translate_batch(
+                        group, beam_size=4, max_decoding_length=MAX_SENTENCE_TOKENS)
+            for source_tokens, result in zip(group, results):
+                decoded = ""
+                for hypothesis_index, hypothesis in enumerate(result.hypotheses):
+                    ids = self.tokenizer.convert_tokens_to_ids(hypothesis)
+                    candidate = self.tokenizer.decode(ids, skip_special_tokens=True)
+                    if strip_tags:
+                        candidate = LANGUAGE_TAG.sub("", candidate).strip()
+                    if candidate:
+                        decoded = candidate
+                        if hypothesis_index:
+                            diagnostics["alternative"] += 1
+                        break
+                if require_nonempty and not decoded:
+                    with _translate_lock:
+                        retry = self.translator.translate_batch(
+                            [source_tokens], beam_size=1,
+                            max_decoding_length=MAX_SENTENCE_TOKENS,
+                            disable_unk=True)[0]
+                    ids = self.tokenizer.convert_tokens_to_ids(retry.hypotheses[0])
+                    decoded = self.tokenizer.decode(ids, skip_special_tokens=True)
+                    if strip_tags:
+                        decoded = LANGUAGE_TAG.sub("", decoded).strip()
+                    if decoded:
+                        diagnostics["greedy"] += 1
                 out.append(decoded)
-        return " ".join(out)
+        return " ".join(out), diagnostics
 
     @staticmethod
     def _grouped(tokenised: list):

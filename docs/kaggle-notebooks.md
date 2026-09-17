@@ -446,6 +446,15 @@ target and the manifest's source/hash. Each shard records how many forward
 inputs changed, and an empty hypothesis after this normalization is still a
 hard failure with no partial Output.
 
+The pinned GPU decoder can numerically rank an all-special-token beam first
+even for a clean, fully in-vocabulary Bosnian headline. Producers therefore use
+`Engine.translate_nonempty`, which keeps the product's default decode unchanged
+but asks the same beam search for four deterministic hypotheses, selects the
+first non-empty decoded beam, and retries greedily only if all four are empty.
+Both fallback counts are written to every schema-v3 manifest. Known GPU-empty clean and
+leetspeak rows are probed before generation; if the alternatives and greedy
+retry are all empty, the producer still exits nonzero and emits no shard.
+
 Producer Output is data, never a model. Consumer COMPLETE + adapter zip still
 does not install anything until all four pre-registered served-path bars pass.
 
