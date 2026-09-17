@@ -250,7 +250,7 @@ pass marks were written down before each run (see
 | **Reply**, English → Bosnian | 2,009 FLORES-200 pairs, as the user sees them | 31.23 BLEU / 60.93 chrF2 through the app's own path; the adapter alone on whole rows reads 29.57 / 58.96 | **32.22 BLEU / 61.55 chrF2**, **0** leaks; writes the Bosnian form of a contested word **99.2%** of the time (base 94.3%) | cleared all four bars 8 Sep; **in the bundle since 8 Sep**; the served build scored 12 Sep (`training/RESULTS-product-en-bs.md`) |
 | **Listen**, whisper-small | 200 held-out FLEURS clips | 38.5% word error | **34.9%** word error; Bosnian term recall 65.9% → 68.2% | the listener that cleared its gate; kept as the baseline |
 | **Listen**, whisper-large-v3 | the same 200, then all 925 | — | 11.9% word error on the 200; **14.1%** on 925 against small's 39.5% | **shipped since 8 Sep by the owner's decision, refused at its gate**: writes Croatian forms more often (1.1% → 6.1%); closed to further looks, see below |
-| **Read** | 40 Commons photographs; `test-v2`, 132 with text | first reader: 36.0% of sign words found, 224 invented | **67.0% found, 65 invented** on the 40; **57.8% found, 450 invented** on `test-v2` | shipped (PP-OCRv6, untrained) |
+| **Read** | 40 Commons photographs; `test-v2`, 132 with text | first reader: 36.0% of sign words found, 224 invented | **67.0% found, 65 invented** on the 40; **57.8% found, 450 invented** on `test-v2`. Fresh Kaggle re-run of the same reader 17 Sep: **67.9% / 72 invented** on the 40 (no change); on the 21 frozen **clean** photographs **82.5%** (273/331), which does not replace 67.0% | shipped (PP-OCRv6, untrained) |
 
 ### How to read the numbers
 
@@ -263,7 +263,10 @@ pass marks were written down before each run (see
 - **Words found and invented** (photographs): the share of the words on the
   signs that the reader read correctly, and how many words it produced that are
   on no sign at all. The second number matters as much as the first, because
-  recall can always be bought by guessing more.
+  recall can always be bought by guessing more. The **67.0%** product number
+  still includes every photograph in the 40, hard frames too. A higher
+  percentage on *clean* signs is the same reader with those frames taken out
+  of the mix — not a better model (`training/RESULTS-ocr-read-clean-eval.md`).
 - **Published**: the public bundle `Safak11/lilly` carries exactly the builds
   these numbers were measured on. The publisher checks each one by content
   fingerprint and refuses any other; the listener goes up only under a
@@ -415,6 +418,19 @@ The confidence floor is there because without it PP-OCRv6 read 60.0% and
 invented 2,373. The engine was chosen by a rule written before the run
 (`training/PREREGISTRATION.md`), on the big set, not the small one: the 40
 alone had said the fine-tuned reader read 54.7%, and the 132 say 34.6%.
+
+On 17 Sep 2026 the same shipped reader was run fresh on Kaggle through
+`app.ocr.scan` on the 40 originals, with human-legibility cohorts frozen
+before inference (`training/RESULTS-ocr-read-clean-eval.md`). Per photograph
+on all 40 it re-read **67.9% found, 72 invented** — not a gain on 67.0 / 65.
+On the 21 photographs labelled **clean** (sharp, a person can read them) it
+found **273 of 331 words (82.5%)**, 53 invented. Noisy-but-still-readable
+photographs are reported separately (14/36). The one photograph a person
+cannot read is not a score against the reader.
+
+The product read score is unchanged. The clean-sign figure looks higher
+because hard and blurry frames are not mixed into that percentage. **82.5%
+is that slice, not a new product default.**
 
 ### Thresholds are written before the run
 

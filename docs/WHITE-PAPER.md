@@ -306,6 +306,18 @@ Cyrillic. Diacritics (č, ć, đ, š, ž) are the reader's weakest column: only 
 1,702 real labels carry any of them (10.6%), and đ appears 8 times total in the
 labelled set.
 
+**Clean-eval (17 Sep 2026).** The owner required that a reader not be judged on
+photographs a human cannot read. Job `read-clean-eval` ran the shipped
+`app.ocr.scan` path once on Kaggle (git `94415fc`, COMPLETE) on the 40
+hash-pinned Commons originals. Cohorts were frozen before inference: 21 clean,
+6 noisy-but-understandable, 1 human-unintelligible, 12 no-text. Product number
+unchanged: **67.0% / 65 invented** on the 40; this run re-measured **67.9% / 72**.
+On the clean cohort: **273/331 words (82.5%)**, 53 invented. Noisy 14/36. The
+unintelligible photograph is excluded from the capability claim. The product
+read score is unchanged; the clean-sign figure looks higher because hard and
+blurry frames are not mixed into that percentage.
+`training/RESULTS-ocr-read-clean-eval.md`. test-v2 remains the robustness set.
+
 ### 4.5 Text-to-speech
 
 **English.** Kokoro-82M, stock weights, Apache-2.0. No fine-tuning.
@@ -513,6 +525,7 @@ by the owner's decision) spans six rubric bands.
 | EasyOCR, stock | 48.0% / 188 | 30.0% / — |
 | EasyOCR, fine-tuned on real crops | 54.5% / 182 | 34.6% / 2,071 |
 | **PP-OCRv6, stock, floor 0.9 (shipped)** | **67.0% / 65** | **57.8% / 450** |
+| same reader, Kaggle clean-eval 17 Sep (not a new model) | 67.9% / 72 on the 40; **82.5% (273/331)** on 21 frozen-clean photographs | (test-v2 not re-run) |
 
 **Industry context.** The rubric grades photograph reading on strict end-to-end word
 F1 (ICDAR2015 Task 4.4 matching) with a recall floor. The photograph score is
