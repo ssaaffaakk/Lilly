@@ -106,6 +106,21 @@ def jobs() -> dict:
             "done_names": ("lilly-speak-youtube-results.zip",),
             "min_bytes": 20_000,
         },
+        "listen-clean-eval": {
+            "slug": f"{user}/lilly-listen-clean-eval",
+            "done_names": ("lilly-listen-clean-eval.zip",),
+            "min_bytes": 20_000,
+        },
+        "read-clean-eval": {
+            "slug": f"{user}/lilly-read-clean-eval",
+            "done_names": ("lilly-read-clean-eval.zip",),
+            "min_bytes": 10_000,
+        },
+        "translation-clean-eval": {
+            "slug": f"{user}/lilly-translation-clean-eval",
+            "done_names": ("lilly-translation-clean-eval.zip",),
+            "min_bytes": 20_000,
+        },
     }
 
 

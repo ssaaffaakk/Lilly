@@ -240,6 +240,13 @@ JOBS = {
                     "title": "Lilly read clean eval",
                     "needs_weights": False, "needs_corpus": False,
                     "needs_ocr_shipped": True, "needs_ocr_commons40": True},
+    # Fresh served-path FLORES for both directions. Not a training pass.
+    "translation-clean-eval": {"notebook": "Lilly_Translation_Clean_Eval_Kaggle.ipynb",
+                    "slug": "lilly-translation-clean-eval",
+                    "title": "Lilly translation clean eval",
+                    "needs_weights": False, "needs_corpus": False,
+                    "needs_translator_builds": True,
+                    "needs_translator_en_bs_builds": True},
     # The Bosnian voice (PREREGISTRATION.md, "v5 -- speak -- a Bosnian voice
     # from FLEURS"): Piper fine-tuned from its sr_RS checkpoint on the FLEURS
     # bs_ba train clips, clustered by speaker on the box, and judged through
@@ -398,6 +405,15 @@ TRANSLATOR_BUILDS = {
                              "the untuned int8 build the fine-tune is measured against"),
 }
 
+EN_BS_TRANSLATOR_BUILDS = {
+    "lilly-translator-en-bs": (REPO_ROOT / "models" / "lilly" / "translator-en-bs",
+                              "6f240bb14aa56ea7ae1c8a19cb25faab",
+                              "the served English→Bosnian int8 build"),
+    "lilly-translator-en-bs-base": (REPO_ROOT / "models" / "lilly" / "translator-en-bs-base",
+                                   "6809c7a1665b9fd0246e6374cebcce52",
+                                   "the untuned English→Bosnian int8 build"),
+}
+
 
 def translator_build_fingerprint(build: Path) -> str:
     """Identical to training/evaluate_app.py's build_fingerprint."""
@@ -422,6 +438,40 @@ def push_translator_builds(user: str) -> list:
     """
     slugs = []
     for name, (source, want, what) in TRANSLATOR_BUILDS.items():
+        if not (source / "model.bin").is_file():
+            raise SystemExit(f"no build at {source} -- {what}")
+        got = translator_build_fingerprint(source)
+        if got != want:
+            raise SystemExit(f"{source} is build {got}, not {want}: {what}. "
+                             "Not uploading a build the numbers do not describe.")
+        slug = f"{user}/{name}"
+        stage = STAGING / "dataset" / name
+        stage.mkdir(parents=True, exist_ok=True)
+        for f in source.iterdir():
+            if f.is_file():
+                target = stage / f.name
+                if not target.exists() or target.stat().st_size != f.stat().st_size:
+                    target.write_bytes(f.read_bytes())
+        (stage / "dataset-metadata.json").write_text(json.dumps({
+            "title": "Lilly " + name.replace("lilly-", "").replace("-", " "), "id": slug,
+            "licenses": [{"name": "other"}]}, indent=1))
+        existing = subprocess.run([KAGGLE, "datasets", "status", slug],
+                                  text=True, capture_output=True)
+        if "ready" in existing.stdout.lower():
+            print(f"dataset already there: {slug} (build {got})")
+        else:
+            mb = sum(f.stat().st_size for f in stage.iterdir()) / 1048576
+            print(f"uploading {mb:.0f} MB to {slug} (build {got})")
+            run(KAGGLE, "datasets", "create", "-p", stage, "-r", "zip")
+            wait_until_ready(slug)
+        slugs.append(slug)
+    return slugs
+
+
+def push_translator_en_bs_builds(user: str) -> list:
+    """The two served English→Bosnian int8 builds, fingerprint-checked first."""
+    slugs = []
+    for name, (source, want, what) in EN_BS_TRANSLATOR_BUILDS.items():
         if not (source / "model.bin").is_file():
             raise SystemExit(f"no build at {source} -- {what}")
         got = translator_build_fingerprint(source)
@@ -1381,6 +1431,9 @@ def main() -> int:
         elif args.job == "read-clean-eval":
             print("  unzip lilly-read-clean-eval.zip into training/clean-eval/results/;")
             print("  it is evidence only: do not train, install, or change defaults.")
+        elif args.job == "translation-clean-eval":
+            print("  unzip lilly-translation-clean-eval.zip into training/clean-eval/results/;")
+            print("  it is evidence only: do not install weights or change defaults.")
         elif args.job == "speak-youtube":
             print("  unzip lilly-speak-youtube-results.zip into training/speak-youtube/ and write the")
             print("    outcome into RESULTS-speak-youtube.md and PREREGISTRATION.md whichever way it fell.")
@@ -1507,6 +1560,8 @@ def main() -> int:
         datasets.append(push_youtube_voice(user))
     if job.get("needs_translator_builds"):
         datasets.extend(push_translator_builds(user))
+    if job.get("needs_translator_en_bs_builds"):
+        datasets.extend(push_translator_en_bs_builds(user))
     if job.get("needs_listen_previous"):
         datasets.append(push_listen_previous(user))
     if job.get("needs_forward_build"):

@@ -40,11 +40,7 @@ weights are the ones the 43.25 / 30.73 BLEU numbers were taken on.
 
 ## 4. Fresh evaluation — protocol (no cherry-picking)
 
-**Translate** (not part of these launches): a future Kaggle job may run
-`evaluate_app.py --direction {bs-en,en-bs} --split all --fresh` through
-`app.translate.Engine`. The stopped local partial is not evidence. FLORES is
-uniformly clean professional text, so the clean/noisy/unreadable split does not
-apply there.
+**Translate** (Kaggle, owner authorized 17 Sep 2026): `evaluate_app.py --fresh --split all` through `app.translate.Engine` for **both** directions on all 2,009 FLORES-200 pairs. Builds are fingerprint-checked before a sentence is translated. Empty output or a partial FLORES download is ERROR, not a score. No training.
 
 **Listen** (Kaggle, owner authorized): the committed manifest freezes each clip
 by audio and transcript SHA-256 before decoding. The official held-out FLEURS
@@ -93,6 +89,6 @@ test-v2 stays a **separate robustness** result, not a replacement.
 
 ## 7. Owner decisions
 
-1. Both Kaggle eval jobs are authorized: Listen and Read, eval-only and fail-stop.
+1. The Kaggle eval jobs are authorized: Listen, Read, and Translate (both directions), eval-only and fail-stop.
 2. Open ASR is offline comparison only. No public submission or upload.
 3. Nothing here changes a product default, publishes, installs, or retrains.

@@ -18,6 +18,7 @@ OUTSIDE = REPO / "training" / "Lilly_Outside_Baseline_Kaggle.ipynb"
 SPEECH_INSTR = REPO / "training" / "Lilly_Speech_Instrument_Kaggle.ipynb"
 LISTEN_CLEAN = REPO / "training" / "Lilly_Listen_Clean_Eval_Kaggle.ipynb"
 READ_CLEAN = REPO / "training" / "Lilly_Read_Clean_Eval_Kaggle.ipynb"
+TRANSLATE_CLEAN = REPO / "training" / "Lilly_Translation_Clean_Eval_Kaggle.ipynb"
 TRANSLATION = REPO / "training" / "Lilly_Translation_Kaggle.ipynb"
 BACKTRANS = REPO / "training" / "Lilly_Backtrans_EnBs_Kaggle.ipynb"
 BACKTRANS_PRODUCER = REPO / "training" / "Lilly_Backtrans_Producer_Kaggle.ipynb"
@@ -463,6 +464,30 @@ def check_read_clean_eval(text: str) -> None:
             fail(f"read clean eval must not train or export ({forbidden!r} present)")
 
 
+def check_translation_clean_eval(text: str) -> None:
+    check_offload(text, "translation-clean-eval")
+    for needle, why in (
+        ("__LAUNCHER_GIT_COMMIT__", "must be replaced with the exact pushed commit at launch"),
+        ("download_flores.py", "must fetch FLORES on the box"),
+        ("!= 2009", "must refuse a partial FLORES download"),
+        ("evaluate_app.py", "must score through the served Engine path"),
+        ("--fresh", "must not reuse cached hypotheses"),
+        ('"--split", "all"', "must score all 2,009 pairs"),
+        ('"--direction", direction', "must run both directions"),
+        ("1aedcc11231cdf50817ff12f99ff0d1e", "must pin the shipped bs→en build"),
+        ("348a984c324510cee218dfce8a7228e8", "must pin the bs→en base"),
+        ("6f240bb14aa56ea7ae1c8a19cb25faab", "must pin the shipped en→bs build"),
+        ("6809c7a1665b9fd0246e6374cebcce52", "must pin the en→bs base"),
+        ("empty translations", "must refuse empty output"),
+        ("lilly-translation-clean-eval.zip", "must package evidence, not weights"),
+    ):
+        if needle not in text:
+            fail(f"translation clean eval: {why} ({needle!r} missing)")
+    for forbidden in ("train_translation.py", "lilly-adapter.zip", "lilly-adapter-en-bs.zip"):
+        if forbidden in text:
+            fail(f"translation clean eval must not train ({forbidden!r} present)")
+
+
 def check_speak_bs(text: str) -> None:
     """The Bosnian voice: pre-registered data, judge, bar and package order
     (PREREGISTRATION.md, "v5 -- speak -- a Bosnian voice from FLEURS")."""
@@ -803,6 +828,7 @@ def main() -> int:
                      (SPEECH_INSTR, check_speech_instrument),
                      (LISTEN_CLEAN, check_listen_clean_eval),
                      (READ_CLEAN, check_read_clean_eval),
+                     (TRANSLATE_CLEAN, check_translation_clean_eval),
                      (TRANSLATION, check_translation),
                      (BACKTRANS_PRODUCER, check_backtrans_producer),
                      (BACKTRANS, check_backtrans),
@@ -854,6 +880,11 @@ def main() -> int:
         fail("producer fetch/publish must refuse ERROR/CANCEL/partial Output")
     if '"needs_translator_builds": True' not in kaggle_train or "push_translator_builds" not in kaggle_train:
         fail("kaggle_train.py must upload both served builds (checked by fingerprint) for ordinals-remeasure")
+    if '"needs_translator_en_bs_builds": True' not in kaggle_train \
+            or "push_translator_en_bs_builds" not in kaggle_train:
+        fail("kaggle_train.py must attach fingerprint-checked en→bs builds for translation-clean-eval")
+    if '"translation-clean-eval"' not in kaggle_train:
+        fail("kaggle_train.py must register translation-clean-eval")
     if '"needs_listen_shipped": True' not in kaggle_train or "push_listen_shipped" not in kaggle_train:
         fail("kaggle_train.py must attach the shipped listener (fingerprint-checked) for speak-bs")
     if '"needs_ocr_shipped": True' not in kaggle_train or "push_ocr_shipped" not in kaggle_train:

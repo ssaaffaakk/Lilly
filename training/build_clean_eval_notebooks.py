@@ -322,6 +322,123 @@ OFF.finish("complete", [ZIP.name])
 print("wrote", ZIP, ZIP.stat().st_size, "bytes; eval only, no training or default change")
 '''
 
+TRANS_PIP = '''\
+NEEDED = ["ctranslate2", "transformers", "sentencepiece", "sacrebleu", "sacremoses"]
+pins = {}
+for line in Path("requirements.txt").read_text(encoding="utf-8").splitlines():
+    line = line.split("#")[0].strip()
+    if "==" in line:
+        pins[line.split("==")[0].strip().lower()] = line
+run(sys.executable, "-m", "pip", "install", "-q", *[pins.get(n, n) for n in NEEDED])
+import ctranslate2
+if ctranslate2.get_cuda_device_count() < 1:
+    raise SystemExit("CTranslate2 sees no CUDA device")
+print("ctranslate2", ctranslate2.__version__, "cuda devices", ctranslate2.get_cuda_device_count())
+'''
+
+TRANS_FLORES = '''\
+reachable("https://dl.fbaipublicfiles.com")
+run(sys.executable, "data/scripts/download_flores.py")
+sizes = {p.name: sum(1 for _ in p.open(encoding="utf-8"))
+         for p in sorted((CLONE / "data" / "flores").glob("*.??"))}
+print(sizes)
+pairs = sizes.get("devtest.bs", 0) + sizes.get("dev.bs", 0)
+if pairs != 2009:
+    raise SystemExit(f"FLORES came back as {pairs} pairs, not 2009")
+OFF.metric("flores_pairs", pairs, stage="data")
+'''
+
+TRANS_BUILDS = '''\
+PINS = {
+    "translator": "1aedcc11231cdf50817ff12f99ff0d1e",
+    "translator-base": "348a984c324510cee218dfce8a7228e8",
+    "translator-en-bs": "6f240bb14aa56ea7ae1c8a19cb25faab",
+    "translator-en-bs-base": "6809c7a1665b9fd0246e6374cebcce52",
+}
+
+def build_fingerprint(build):
+    digest = hashlib.blake2b(digest_size=16)
+    for name in sorted(f.name for f in build.iterdir() if f.is_file()):
+        if name in ("built.json", "dataset-metadata.json"):
+            continue
+        digest.update(name.encode("utf-8"))
+        with open(build / name, "rb") as handle:
+            for chunk in iter(lambda: handle.read(1 << 20), b""):
+                digest.update(chunk)
+    return digest.hexdigest()
+
+attached = {}
+for marker in Path("/kaggle/input").rglob("built.json"):
+    parent = marker.parent
+    if (parent / "model.bin").is_file() and (parent / "source.spm").is_file():
+        attached[build_fingerprint(parent)] = parent
+print("attached builds", {k: str(v) for k, v in attached.items()})
+for name, want in PINS.items():
+    if want not in attached:
+        raise SystemExit(f"{name} fingerprint {want} not attached; found {sorted(attached)}")
+    dest = CLONE / "models" / "lilly" / name
+    if dest.exists():
+        shutil.rmtree(dest)
+    shutil.copytree(attached[want], dest, ignore=shutil.ignore_patterns("dataset-metadata.json"))
+    got = build_fingerprint(dest)
+    if got != want:
+        raise SystemExit(f"{name} copied as {got}, expected {want}")
+    print(name, got)
+'''
+
+TRANS_SCORE = '''\
+JOBS = (
+    ("bs-en", Path("/kaggle/working/app-hypotheses-bs-en.json"),
+     Path("/kaggle/working/RESULTS-product-fresh-bs-en.md"),
+     PINS["translator"], PINS["translator-base"]),
+    ("en-bs", Path("/kaggle/working/app-hypotheses-en-bs.json"),
+     Path("/kaggle/working/RESULTS-product-fresh-en-bs.md"),
+     PINS["translator-en-bs"], PINS["translator-en-bs-base"]),
+)
+for direction, saved, report, tuned_fp, base_fp in JOBS:
+    smoke = SCRATCH / f"smoke-{direction}.json"
+    run(sys.executable, "training/evaluate_app.py", "--fresh", "--limit", "8",
+        "--direction", direction, "--saved", str(smoke),
+        "--out", str(SCRATCH / f"smoke-{direction}.md"))
+    smoke_payload = json.loads(smoke.read_text(encoding="utf-8"))
+    if smoke_payload["n"] != 8:
+        raise SystemExit(f"{direction} smoke scored {smoke_payload['n']}, not 8")
+    if any(not h.strip() for h in smoke_payload["base"] + smoke_payload["lilly"]):
+        raise SystemExit(f"{direction} smoke produced empty translations")
+    run(sys.executable, "training/evaluate_app.py", "--fresh", "--split", "all",
+        "--direction", direction, "--saved", str(saved), "--out", str(report))
+    payload = json.loads(saved.read_text(encoding="utf-8"))
+    if payload["n"] != 2009 or len(payload["base"]) != 2009 or len(payload["lilly"]) != 2009:
+        raise SystemExit(f"{direction} is not all 2,009 pairs: {payload['n']}")
+    if any(not h.strip() for h in payload["base"] + payload["lilly"]):
+        raise SystemExit(f"{direction}: empty translations — a hole is not a score")
+    if payload.get("lilly_build") != tuned_fp or payload.get("base_build") != base_fp:
+        raise SystemExit(f"{direction} wrong builds {payload.get('lilly_build')} {payload.get('base_build')}")
+    OFF.metric(f"{direction}_n", payload["n"], stage="eval")
+    print(direction, "ok", tuned_fp)
+'''
+
+TRANS_PACKAGE = '''\
+OFF.check_trainproof(TEE)
+files = [
+    Path("/kaggle/working/app-hypotheses-bs-en.json"),
+    Path("/kaggle/working/app-hypotheses-en-bs.json"),
+    Path("/kaggle/working/RESULTS-product-fresh-bs-en.md"),
+    Path("/kaggle/working/RESULTS-product-fresh-en-bs.md"),
+]
+for path in files:
+    if not path.is_file() or path.stat().st_size == 0:
+        raise SystemExit(f"missing result {path}")
+ZIP = Path("/kaggle/working/lilly-translation-clean-eval.zip")
+with zipfile.ZipFile(ZIP, "w", zipfile.ZIP_DEFLATED) as archive:
+    for path in files:
+        archive.write(path, path.name)
+if ZIP.stat().st_size < 20_000:
+    raise SystemExit(f"result zip too small: {ZIP.stat().st_size}")
+OFF.finish("complete", [ZIP.name])
+print("wrote", ZIP, ZIP.stat().st_size, "bytes; eval only, no training or default change")
+'''
+
 
 def notebook(markdown: str, job: str, cells: list[str]) -> dict:
     rendered = []
@@ -364,6 +481,15 @@ install, product-default change, or publication.
         [SETUP, CLONE, SPEECH_PIP, SPEECH_DATA, SPEECH_MODELS, SPEECH_SCORE, SPEECH_PACKAGE]))
     write("Lilly_Read_Clean_Eval_Kaggle.ipynb", notebook(
         read_md, "read-clean-eval", [SETUP, CLONE, OCR_PIP, OCR_DATA, OCR_SCORE, OCR_PACKAGE]))
+    trans_md = """# Lilly Translate — clean shipped-model evaluation
+
+Eval only: both served CTranslate2 builds, both directions, all 2,009 FLORES-200
+pairs through `app.translate.Engine` (`evaluate_app.py --fresh --split all`).
+No training, install, product-default change, or publication.
+"""
+    write("Lilly_Translation_Clean_Eval_Kaggle.ipynb", notebook(
+        trans_md, "translation-clean-eval",
+        [SETUP, CLONE, TRANS_PIP, TRANS_FLORES, TRANS_BUILDS, TRANS_SCORE, TRANS_PACKAGE]))
     return 0
 
 
