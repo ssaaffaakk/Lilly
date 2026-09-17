@@ -72,7 +72,7 @@ print("exact code commit", got_commit)
 
 SPEECH_PIP = '''\
 packages = ["faster-whisper==1.2.1", "ctranslate2==4.8.1", "soundfile==0.14.0",
-            "pyarrow==25.0.1", "huggingface-hub==1.31.0", "transformers==4.49.0"]
+            "pyarrow==25.0.1", "huggingface-hub==0.36.0", "transformers==4.49.0"]
 run(sys.executable, "-m", "pip", "install", "-q", *packages)
 import ctranslate2, faster_whisper, soundfile
 print("runtime", faster_whisper.__version__, ctranslate2.__version__, soundfile.__version__)
