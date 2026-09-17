@@ -38,6 +38,10 @@ from pathlib import Path
 
 _WS = re.compile(r"\s+")
 _STRIP = re.compile(r"[^\w\s]", re.UNICODE)
+_PUNCT_RUN = re.compile(r"([.!?])\1+")
+_MISSING_SENTENCE_SPACE = re.compile(r"(?<=[.!?])(?=[^\s.!?])")
+_LONG_TOKEN = re.compile(r"\S{81,}")
+_LONG_NUMBER = re.compile(r"\d{19,}")
 
 
 def ordered_hash(lines) -> str:
@@ -57,6 +61,32 @@ def normalize(s: str) -> str:
     """
     s = unicodedata.normalize("NFKC", s).casefold()
     s = _STRIP.sub(" ", s)
+    return _WS.sub(" ", s).strip()
+
+
+def is_pathological_source(s: str) -> bool:
+    """Reject web-noise tokens that the pinned forward model cannot decode.
+
+    MaCoCu contains occasional forum exaggerations such as a hundred-digit
+    number in one token.  They pass a word-count limit but the shipped bs->en
+    build collapses to an all-UNK/empty hypothesis.  Filter the defect class
+    before the deterministic one-million-row sample is drawn, so a rejected
+    source is replaced by another clean source rather than skipped at runtime.
+    """
+    return bool(_LONG_TOKEN.search(s) or _LONG_NUMBER.search(s))
+
+
+def forward_input(s: str) -> str:
+    """Make implicit sentence boundaries visible to the shipped app splitter.
+
+    Web comments often join sentences as ``tekst..sljedece``.  Lilly's served
+    splitter intentionally expects whitespace after punctuation, and the long
+    unsplit string can collapse the forward decoder to an empty hypothesis.
+    This normalization changes punctuation spacing only; the original Bosnian
+    row remains the training target and the source/hash recorded in manifests.
+    """
+    s = _PUNCT_RUN.sub(r"\1", s)
+    s = _MISSING_SENTENCE_SPACE.sub(" ", s)
     return _WS.sub(" ", s).strip()
 
 
@@ -127,7 +157,7 @@ def prepare(lines, holdout: set, n: int, min_tok: int, max_tok: int, seed: int,
     """Clean, de-duplicate, sample, then optionally return one exact shard."""
     report = {"read": 0, "kept": 0, "sample_n": n, "seed": seed,
               "dropped": {"too short": 0, "too long": 0, "url/boilerplate": 0,
-                          "duplicate": 0, "holdout": 0}}
+                          "pathological source": 0, "duplicate": 0, "holdout": 0}}
     seen = set()
     kept = []
     for line in lines:
@@ -138,6 +168,9 @@ def prepare(lines, holdout: set, n: int, min_tok: int, max_tok: int, seed: int,
             continue
         if len(toks) > max_tok:
             report["dropped"]["too long"] += 1
+            continue
+        if is_pathological_source(line):
+            report["dropped"]["pathological source"] += 1
             continue
         if "http://" in line or "https://" in line or line.count("|") > 2:
             report["dropped"]["url/boilerplate"] += 1

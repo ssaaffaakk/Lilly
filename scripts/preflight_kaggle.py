@@ -37,7 +37,10 @@ def check_backtrans_module_import() -> None:
     """Exercise the package import path used inside the Kaggle notebook."""
     probe = subprocess.run(
         [sys.executable, "-c",
-         "from scripts.backtrans_dataset import FORMAT_VERSION, pair_hash"],
+         "from scripts.backtrans_dataset import FORMAT_VERSION, pair_hash; "
+         "from scripts.prepare_backtrans_bs import forward_input, is_pathological_source, ordered_hash; "
+         "assert forward_input('a..b') == 'a. b'; "
+         "assert is_pathological_source('x ' + '1' * 19)"],
         cwd=REPO, text=True, capture_output=True)
     if probe.returncode:
         fail("backtrans helper package import failed: " + probe.stderr.strip())
@@ -625,6 +628,10 @@ def check_backtrans_producer(text: str) -> None:
         fail("backtrans producer must select the forward build by fingerprint")
     if "scripts/prepare_backtrans_bs.py" not in text:
         fail("backtrans producer must use the leakage-proof sampler")
+    if "forward_input(bs)" not in text or "forward_normalized" not in text:
+        fail("backtrans producer must normalize joined punctuation and account for every changed source")
+    if "empty translation after deterministic source normalization" not in text:
+        fail("backtrans producer must still fail loud on an empty normalized translation")
     if "data/flores/dev.bs" not in text or "data/flores/devtest.bs" not in text \
             or '"bench/cases.tsv"' not in text:
         fail("backtrans producer holdout must cover FLORES and bench")
@@ -639,6 +646,7 @@ def check_backtrans_producer(text: str) -> None:
     if "MAX_BT_SECONDS" not in text or "raise SystemExit" not in text:
         fail("backtrans producer must fail loud on its wall cap")
     for required in ("sample_order_hash", "source_order_hash", "pair_order_hash",
+                     '"forward_normalized": forward_normalized',
                      '"status": "complete"', '"rows": len(pairs)',
                      '"format_version": FORMAT_VERSION', "assert len(pairs) == expected"):
         if required not in text: fail(f"backtrans producer missing {required}")

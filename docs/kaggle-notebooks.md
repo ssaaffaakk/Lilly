@@ -430,6 +430,16 @@ source/order hash, each pair hash, one git SHA, and the shipped forward-build
 fingerprint before publishing a content-addressed Kaggle dataset. The consumer
 repeats validation and builds exactly 1M up-sampled real + 1M synthetic rows.
 
+MaCoCu web noise must be handled before that deterministic sample is drawn.
+Sources with an 81+ character whitespace-free token or a 19+ digit run are
+rejected and replaced from the remaining clean pool; they are never skipped by
+a producer. For joined web punctuation such as `tekst..sljedece`, the producer
+collapses punctuation runs and exposes sentence boundaries only for the
+forward decode. The original Bosnian source remains the synthetic pair's
+target and the manifest's source/hash. Each shard records how many forward
+inputs changed, and an empty hypothesis after this normalization is still a
+hard failure with no partial Output.
+
 Producer Output is data, never a model. Consumer COMPLETE + adapter zip still
 does not install anything until all four pre-registered served-path bars pass.
 

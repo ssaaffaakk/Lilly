@@ -54,6 +54,23 @@ def test_filters_and_dedup():
     assert rep["dropped"]["too long"] == 1
 
 
+def test_pathological_long_tokens_are_filtered_before_sampling():
+    noisy = "nogomet je " + "1" + "0" * 99 + " puta bolji"
+    clean = "nogomet je danas mnogo bolji"
+    kept, rep = prep.prepare([noisy, clean], {"x"}, n=1, min_tok=3,
+                             max_tok=60, seed=1)
+    assert kept == [clean]
+    assert rep["dropped"]["pathological source"] == 1
+
+
+def test_forward_input_exposes_joined_sentence_boundaries_only():
+    raw = "prva recenica..druga recenica...treca?cetvrta"
+    assert prep.forward_input(raw) == (
+        "prva recenica. druga recenica. treca? cetvrta")
+    ordinary = "Ovo je obična rečenica. Ovo je druga."
+    assert prep.forward_input(ordinary) == ordinary
+
+
 def test_deterministic_sample():
     holdout = {"x"}
     lines = [f"bosanska rečenica broj {i} ovdje" for i in range(50)]

@@ -1210,6 +1210,10 @@ def main() -> int:
                         "shard_stop": expected_stop, "rows": expected_stop - expected_start,
                         "forward_fingerprint": BACKTRANS_FORWARD_FINGERPRINT}
             wrong = {k: (report.get(k), v) for k, v in required.items() if report.get(k) != v}
+            normalized = report.get("forward_normalized")
+            if (not isinstance(normalized, int) or isinstance(normalized, bool)
+                    or normalized < 0 or normalized > expected_stop - expected_start):
+                wrong["forward_normalized"] = (normalized, "integer within shard row count")
             data_path = temp / str(report.get("data_file") or "")
             if wrong or not data_path.is_file() or data_path.stat().st_size < 1_000_000:
                 raise SystemExit(f"producer {index} manifest gate failed: wrong={wrong}, data={data_path}")

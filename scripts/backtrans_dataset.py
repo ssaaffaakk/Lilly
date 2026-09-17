@@ -45,6 +45,7 @@ def validate_union(root: Path, *, expected_n: int = SAMPLE_N,
     union_source_digest = hashlib.blake2b(digest_size=32)
     union_pair_digest = hashlib.blake2b(digest_size=32)
     seen, duplicate_sources, shard_records = set(), 0, []
+    forward_normalized = 0
     sample_hash = producer_git = None
     total = 0
 
@@ -63,6 +64,11 @@ def validate_union(root: Path, *, expected_n: int = SAMPLE_N,
         want_rows = stop - start
         if report.get("rows") != want_rows or report.get("kept") != want_rows:
             raise SystemExit(f"{report_path.name}: expected {want_rows} rows")
+        normalized = report.get("forward_normalized")
+        if (not isinstance(normalized, int) or isinstance(normalized, bool)
+                or normalized < 0 or normalized > want_rows):
+            raise SystemExit(f"{report_path.name}: invalid forward_normalized={normalized!r}")
+        forward_normalized += normalized
 
         this_sample_hash = report.get("sample_order_hash")
         if not this_sample_hash:
@@ -112,6 +118,7 @@ def validate_union(root: Path, *, expected_n: int = SAMPLE_N,
         shard_records.append({"index": expected_index, "rows": shard_rows,
                               "range": [start, stop], "data_file": data_path.name,
                               "report_file": report_path.name,
+                              "forward_normalized": normalized,
                               "source_order_hash": got_source_hash,
                               "pair_order_hash": got_pair_hash})
 
@@ -124,6 +131,7 @@ def validate_union(root: Path, *, expected_n: int = SAMPLE_N,
     return {"format_version": FORMAT_VERSION, "status": "complete", "sample_n": expected_n,
             "rows": total, "missing": missing, "duplicate_sources": duplicate_sources,
             "shard_count": shard_count, "seed": seed,
+            "forward_normalized": forward_normalized,
             "forward_fingerprint": forward_fingerprint, "producer_git": producer_git,
             "source_order_hash": union_source_hash,
             "pair_order_hash": union_pair_digest.hexdigest(), "shards": shard_records}

@@ -12,7 +12,8 @@ import prepare_backtrans_bs as prep  # noqa: E402
 def test_kaggle_notebook_package_import_works_from_repo_root():
     probe = subprocess.run(
         [sys.executable, "-c",
-         "from scripts.backtrans_dataset import FORMAT_VERSION, pair_hash"],
+         "from scripts.backtrans_dataset import FORMAT_VERSION, pair_hash; "
+         "from scripts.prepare_backtrans_bs import forward_input, is_pathological_source, ordered_hash"],
         cwd=REPO, text=True, capture_output=True)
     assert probe.returncode == 0, probe.stderr
 
@@ -28,6 +29,7 @@ def write_three_shards(root: Path):
             fh.write("\n".join(rows) + "\n")
         report.update({"format_version": dataset.FORMAT_VERSION, "status": "complete",
                        "rows": len(rows), "forward_fingerprint": "forward-test",
+                       "forward_normalized": 0,
                        "git": "deadbeef", "data_file": data_name,
                        "source_order_hash": prep.ordered_hash(source),
                        "pair_order_hash": dataset.pair_hash(rows)})
@@ -61,3 +63,18 @@ def test_validate_union_refuses_a_duplicate_even_when_count_is_full(tmp_path):
         assert "duplicate_sources=1" in str(exc)
     else:
         raise AssertionError("duplicate producer source was accepted")
+
+
+def test_validate_union_refuses_missing_normalization_accounting(tmp_path):
+    write_three_shards(tmp_path)
+    report_path = tmp_path / "backtrans-shard-1.json"
+    report = json.loads(report_path.read_text(encoding="utf-8"))
+    del report["forward_normalized"]
+    report_path.write_text(json.dumps(report), encoding="utf-8")
+    try:
+        dataset.validate_union(tmp_path, expected_n=10, shard_count=3,
+                               forward_fingerprint="forward-test", seed=7)
+    except SystemExit as exc:
+        assert "invalid forward_normalized=None" in str(exc)
+    else:
+        raise AssertionError("producer without normalization accounting was accepted")
