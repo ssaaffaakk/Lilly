@@ -42,6 +42,9 @@ _PUNCT_RUN = re.compile(r"([.!?])\1+")
 _MISSING_SENTENCE_SPACE = re.compile(r"(?<=[.!?])(?=[^\s.!?])")
 _LONG_TOKEN = re.compile(r"\S{81,}")
 _LONG_NUMBER = re.compile(r"\d{19,}")
+_REPEATED_ALNUM = re.compile(r"([^\W_])\1{5,}", re.UNICODE | re.IGNORECASE)
+_NON_ASCII = re.compile(r"[^\x00-\x7f]")
+_ASCII_LATIN = re.compile(r"[A-Za-z]")
 
 
 def ordered_hash(lines) -> str:
@@ -64,16 +67,36 @@ def normalize(s: str) -> str:
     return _WS.sub(" ", s).strip()
 
 
-def is_pathological_source(s: str) -> bool:
-    """Reject web-noise tokens that the pinned forward model cannot decode.
+def source_rejection_reason(s: str) -> str | None:
+    """Name a source-quality defect that is invalid for Bosnian-Latin Run B.
 
     MaCoCu contains occasional forum exaggerations such as a hundred-digit
-    number in one token.  They pass a word-count limit but the shipped bs->en
-    build collapses to an all-UNK/empty hypothesis.  Filter the defect class
-    before the deterministic one-million-row sample is drawn, so a rejected
-    source is replaced by another clean source rather than skipped at runtime.
+    number or a long repeated letter, and even lines written entirely in other
+    scripts.  They pass a whitespace-token limit but the shipped bs->en build
+    can collapse to an empty hypothesis.  This is a source-language validity
+    gate, applied before the deterministic one-million-row sample is drawn.
     """
-    return bool(_LONG_TOKEN.search(s) or _LONG_NUMBER.search(s))
+    if _LONG_TOKEN.search(s) or _LONG_NUMBER.search(s):
+        return "long token/number"
+    if _REPEATED_ALNUM.search(s):
+        return "repeated alphanumeric"
+
+    latin_letters = len(_ASCII_LATIN.findall(s))
+    for match in _NON_ASCII.finditer(s):
+        ch = match.group()
+        if not ch.isalpha():
+            continue
+        if "LATIN" not in unicodedata.name(ch, ""):
+            return "non-Latin script"
+        latin_letters += 1
+    if latin_letters < 3:
+        return "no Latin text"
+    return None
+
+
+def is_pathological_source(s: str) -> bool:
+    """Compatibility predicate for the named source-quality gate."""
+    return source_rejection_reason(s) is not None
 
 
 def forward_input(s: str) -> str:
@@ -157,7 +180,8 @@ def prepare(lines, holdout: set, n: int, min_tok: int, max_tok: int, seed: int,
     """Clean, de-duplicate, sample, then optionally return one exact shard."""
     report = {"read": 0, "kept": 0, "sample_n": n, "seed": seed,
               "dropped": {"too short": 0, "too long": 0, "url/boilerplate": 0,
-                          "pathological source": 0, "duplicate": 0, "holdout": 0}}
+                          "pathological source": 0, "duplicate": 0, "holdout": 0},
+              "pathological_reasons": {}}
     seen = set()
     kept = []
     for line in lines:
@@ -169,8 +193,11 @@ def prepare(lines, holdout: set, n: int, min_tok: int, max_tok: int, seed: int,
         if len(toks) > max_tok:
             report["dropped"]["too long"] += 1
             continue
-        if is_pathological_source(line):
+        pathological_reason = source_rejection_reason(line)
+        if pathological_reason:
             report["dropped"]["pathological source"] += 1
+            reasons = report["pathological_reasons"]
+            reasons[pathological_reason] = reasons.get(pathological_reason, 0) + 1
             continue
         if "http://" in line or "https://" in line or line.count("|") > 2:
             report["dropped"]["url/boilerplate"] += 1

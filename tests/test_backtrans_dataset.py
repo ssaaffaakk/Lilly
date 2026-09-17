@@ -78,3 +78,18 @@ def test_validate_union_refuses_missing_normalization_accounting(tmp_path):
         assert "invalid forward_normalized=None" in str(exc)
     else:
         raise AssertionError("producer without normalization accounting was accepted")
+
+
+def test_validate_union_refuses_inconsistent_source_filter_accounting(tmp_path):
+    write_three_shards(tmp_path)
+    report_path = tmp_path / "backtrans-shard-0.json"
+    report = json.loads(report_path.read_text(encoding="utf-8"))
+    report["pathological_reasons"] = {"non-Latin script": 1}
+    report_path.write_text(json.dumps(report), encoding="utf-8")
+    try:
+        dataset.validate_union(tmp_path, expected_n=10, shard_count=3,
+                               forward_fingerprint="forward-test", seed=7)
+    except SystemExit as exc:
+        assert "inconsistent source-filter accounting" in str(exc)
+    else:
+        raise AssertionError("inconsistent source-filter accounting was accepted")

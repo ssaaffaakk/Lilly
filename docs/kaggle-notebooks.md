@@ -431,9 +431,11 @@ fingerprint before publishing a content-addressed Kaggle dataset. The consumer
 repeats validation and builds exactly 1M up-sampled real + 1M synthetic rows.
 
 MaCoCu web noise must be handled before that deterministic sample is drawn.
-Sources with an 81+ character whitespace-free token or a 19+ digit run are
-rejected and replaced from the remaining clean pool; they are never skipped by
-a producer. For joined web punctuation such as `tekst..sljedece`, the producer
+Sources with an 81+ character whitespace-free token, a 19+ digit run, six
+repeated alphanumeric characters, fewer than three Latin letters, or any
+alphabetic character from a non-Latin script are rejected and replaced from
+the remaining clean pool; they are never skipped by a producer. For joined web
+punctuation such as `tekst..sljedece`, the producer
 collapses punctuation runs and exposes sentence boundaries only for the
 forward decode. The original Bosnian source remains the synthetic pair's
 target and the manifest's source/hash. Each shard records how many forward

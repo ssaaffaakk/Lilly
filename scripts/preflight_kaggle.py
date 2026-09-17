@@ -38,9 +38,11 @@ def check_backtrans_module_import() -> None:
     probe = subprocess.run(
         [sys.executable, "-c",
          "from scripts.backtrans_dataset import FORMAT_VERSION, pair_hash; "
-         "from scripts.prepare_backtrans_bs import forward_input, is_pathological_source, ordered_hash; "
+         "from scripts.prepare_backtrans_bs import forward_input, is_pathological_source, ordered_hash, source_rejection_reason; "
          "assert forward_input('a..b') == 'a. b'; "
-         "assert is_pathological_source('x ' + '1' * 19)"],
+         "assert is_pathological_source('x ' + '1' * 19); "
+         "assert source_rejection_reason('mjau' + 'u' * 20 + ' me odbio') == 'repeated alphanumeric'; "
+         "assert source_rejection_reason('مَّثَلُ الْجَنَّةِ الَّتِي وُعِدَ') == 'non-Latin script'"],
         cwd=REPO, text=True, capture_output=True)
     if probe.returncode:
         fail("backtrans helper package import failed: " + probe.stderr.strip())

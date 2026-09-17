@@ -61,6 +61,25 @@ def test_pathological_long_tokens_are_filtered_before_sampling():
                              max_tok=60, seed=1)
     assert kept == [clean]
     assert rep["dropped"]["pathological source"] == 1
+    assert rep["pathological_reasons"] == {"long token/number": 1}
+
+
+def test_non_latin_and_repeated_letter_noise_are_filtered_before_sampling():
+    repeated = (
+        "mjauuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu me odbi deckoto ze j**enje "
+        "u krevet mjauuuuuuuuuuuuuuuuuuuuuuuuuuu k**va sa p***a pomazite")
+    arabic = "مَّثَلُ الْجَنَّةِ الَّتِي وُعِدَ الْمُتَّقُونَ"
+    symbols = "*** --- !!!"
+    clean = "Čista bosanska rečenica ostaje u uzorku."
+    kept, rep = prep.prepare([repeated, arabic, symbols, clean], {"x"}, n=4,
+                             min_tok=3, max_tok=60, seed=1)
+    assert kept == [clean]
+    assert rep["dropped"]["pathological source"] == 3
+    assert rep["pathological_reasons"] == {
+        "repeated alphanumeric": 1,
+        "non-Latin script": 1,
+        "no Latin text": 1,
+    }
 
 
 def test_forward_input_exposes_joined_sentence_boundaries_only():

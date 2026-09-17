@@ -37,6 +37,7 @@ from backtrans_dataset import (FORWARD_FINGERPRINT as BACKTRANS_FORWARD_FINGERPR
                                SEED as BACKTRANS_SEED,
                                SHARD_COUNT as BACKTRANS_SHARD_COUNT,
                                shard_bounds as backtrans_shard_bounds,
+                               validate_source_filter_report,
                                validate_union as validate_backtrans_union)
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -1214,6 +1215,7 @@ def main() -> int:
             if (not isinstance(normalized, int) or isinstance(normalized, bool)
                     or normalized < 0 or normalized > expected_stop - expected_start):
                 wrong["forward_normalized"] = (normalized, "integer within shard row count")
+            validate_source_filter_report(report, f"producer {index} manifest")
             data_path = temp / str(report.get("data_file") or "")
             if wrong or not data_path.is_file() or data_path.stat().st_size < 1_000_000:
                 raise SystemExit(f"producer {index} manifest gate failed: wrong={wrong}, data={data_path}")

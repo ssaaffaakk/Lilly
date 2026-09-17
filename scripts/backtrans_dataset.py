@@ -17,7 +17,7 @@ SAMPLE_N = 1_000_000
 SHARD_COUNT = 3
 SEED = 20260914
 FORWARD_FINGERPRINT = "1aedcc11231cdf50817ff12f99ff0d1e"
-FORMAT_VERSION = 1
+FORMAT_VERSION = 2
 
 
 def pair_hash(rows) -> str:
@@ -30,6 +30,24 @@ def pair_hash(rows) -> str:
 
 def _digest_key(text: str) -> bytes:
     return hashlib.blake2b(normalize(text).encode("utf-8"), digest_size=16).digest()
+
+
+def validate_source_filter_report(report: dict, label: str = "producer report") -> dict:
+    """Prove that named pre-sample source rejections add up exactly."""
+    dropped = report.get("dropped")
+    reasons = report.get("pathological_reasons")
+    if not isinstance(dropped, dict) or not isinstance(reasons, dict):
+        raise SystemExit(f"{label}: missing source-filter accounting")
+    pathological = dropped.get("pathological source")
+    valid_values = all(isinstance(v, int) and not isinstance(v, bool) and v >= 0
+                       for v in reasons.values())
+    if (not isinstance(pathological, int) or isinstance(pathological, bool)
+            or pathological < 0 or not valid_values
+            or sum(reasons.values()) != pathological):
+        raise SystemExit(
+            f"{label}: inconsistent source-filter accounting: "
+            f"dropped={pathological!r}, reasons={reasons!r}")
+    return reasons
 
 
 def validate_union(root: Path, *, expected_n: int = SAMPLE_N,
@@ -46,7 +64,7 @@ def validate_union(root: Path, *, expected_n: int = SAMPLE_N,
     union_pair_digest = hashlib.blake2b(digest_size=32)
     seen, duplicate_sources, shard_records = set(), 0, []
     forward_normalized = 0
-    sample_hash = producer_git = None
+    sample_hash = producer_git = source_filter_accounting = None
     total = 0
 
     for expected_index, report_path in enumerate(reports):
@@ -69,6 +87,14 @@ def validate_union(root: Path, *, expected_n: int = SAMPLE_N,
                 or normalized < 0 or normalized > want_rows):
             raise SystemExit(f"{report_path.name}: invalid forward_normalized={normalized!r}")
         forward_normalized += normalized
+        this_accounting = {
+            "dropped": report.get("dropped"),
+            "pathological_reasons": validate_source_filter_report(report, report_path.name),
+        }
+        if source_filter_accounting is None:
+            source_filter_accounting = this_accounting
+        elif this_accounting != source_filter_accounting:
+            raise SystemExit(f"{report_path.name}: producer source-filter accounting differs")
 
         this_sample_hash = report.get("sample_order_hash")
         if not this_sample_hash:
@@ -132,6 +158,7 @@ def validate_union(root: Path, *, expected_n: int = SAMPLE_N,
             "rows": total, "missing": missing, "duplicate_sources": duplicate_sources,
             "shard_count": shard_count, "seed": seed,
             "forward_normalized": forward_normalized,
+            "source_filter_accounting": source_filter_accounting,
             "forward_fingerprint": forward_fingerprint, "producer_git": producer_git,
             "source_order_hash": union_source_hash,
             "pair_order_hash": union_pair_digest.hexdigest(), "shards": shard_records}
