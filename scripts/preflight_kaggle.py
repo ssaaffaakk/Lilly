@@ -437,6 +437,8 @@ def check_read_clean_eval(text: str) -> None:
     for needle, why in (
         ("__LAUNCHER_GIT_COMMIT__", "must be replaced with the exact pushed commit at launch"),
         ("fetch_pinned_ocr_photos.py", "must fetch hash-pinned original Commons photos"),
+        ("commons40-sha1.json", "must attach the frozen 40-photo dataset, not download live from Commons (HTTP 429)"),
+        ("--local-source", "must read the photos from the attached dataset, still verified against the manifest"),
         ("ocr-commons-40.tsv", "must use the frozen human-legibility manifest"),
         ("lilly-ocr-ppocrv6-shipped", "must require the exact shipped Paddle weight dataset"),
         ("85218d2e3d98f5a21c58b4220627be923a97aee5db3cc71f39536ab31ac53960",
@@ -853,6 +855,8 @@ def main() -> int:
         fail("kaggle_train.py must attach the shipped listener (fingerprint-checked) for speak-bs")
     if '"needs_ocr_shipped": True' not in kaggle_train or "push_ocr_shipped" not in kaggle_train:
         fail("kaggle_train.py must attach the SHA-256-pinned shipped PP-OCRv6 weights for read-clean-eval")
+    if '"needs_ocr_commons40": True' not in kaggle_train or "push_ocr_commons40" not in kaggle_train:
+        fail("kaggle_train.py must attach the hash-pinned 40-photo dataset for read-clean-eval (Commons 429)")
     poller_speak = (REPO / "scripts" / "kaggle_poll.py").read_text(encoding="utf-8")
     speak_job = poller_speak.split('"speak-bs":', 1)[1][:400] if '"speak-bs":' in poller_speak else ""
     if "lilly-speak-bs-results.zip" not in speak_job or '"lilly-speak-bs.zip"' in speak_job:

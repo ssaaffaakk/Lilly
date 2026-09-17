@@ -18,6 +18,7 @@ downloads kaggle.json. Put it at ~/.kaggle/kaggle.json and chmod 600 it. Nothing
 else about the account is touched.
 """
 import argparse
+import csv
 import hashlib
 import json
 import os
@@ -238,7 +239,7 @@ JOBS = {
                     "slug": "lilly-read-clean-eval",
                     "title": "Lilly read clean eval",
                     "needs_weights": False, "needs_corpus": False,
-                    "needs_ocr_shipped": True},
+                    "needs_ocr_shipped": True, "needs_ocr_commons40": True},
     # The Bosnian voice (PREREGISTRATION.md, "v5 -- speak -- a Bosnian voice
     # from FLEURS"): Piper fine-tuned from its sr_RS checkpoint on the FLEURS
     # bs_ba train clips, clustered by speaker on the box, and judged through
@@ -696,6 +697,55 @@ def push_ocr_shipped(user: str) -> str:
         return slug
     mb = sum((stage / p).stat().st_size for p in OCR_SHIPPED_HASHES) / 1048576
     print(f"uploading {mb:.0f} MB to {slug} (six SHA-256-pinned Paddle files)")
+    run(KAGGLE, "datasets", "create", "-p", stage, "-r", "zip")
+    wait_until_ready(slug)
+    return slug
+
+
+def push_ocr_commons40(user: str) -> str:
+    """The 40 original Commons photos, frozen as a dataset the Read eval attaches.
+
+    A Kaggle datacenter IP downloading them live from Commons is throttled with
+    HTTP 429 ("contact noc@wikimedia.org"), which killed two Read runs. These are
+    the same originals: every file is verified byte-for-byte against the committed
+    manifest here, and again in the notebook, so the frozen source is provably the
+    Commons bytes. Stage the photos first with training/fetch_pinned_ocr_photos.py.
+    """
+    dataset_name = "lilly-ocr-commons-40"
+    slug = f"{user}/{dataset_name}"
+    stage = STAGING / dataset_name
+    manifest = REPO_ROOT / "training" / "clean-eval" / "ocr-commons-40.tsv"
+    with manifest.open(encoding="utf-8", newline="") as fh:
+        rows = list(csv.DictReader(fh, delimiter="\t"))
+    if len(rows) != 40 or len({r["file"] for r in rows}) != 40:
+        raise SystemExit(f"OCR manifest is not exactly 40 unique photographs: {len(rows)}")
+    if not stage.is_dir():
+        raise SystemExit(
+            f"no staged photos at {stage}.\n"
+            f"Fetch them first:  python3 training/fetch_pinned_ocr_photos.py "
+            f"--manifest {manifest} --out {stage}")
+    marker = {}
+    for row in rows:
+        photo = stage / row["file"]
+        if not photo.is_file():
+            raise SystemExit(f"missing staged photo {photo}; re-run the local fetch")
+        data = photo.read_bytes()
+        got = hashlib.sha1(data).hexdigest()
+        if got != row["commons_sha1"] or len(data) != int(row["bytes"]):
+            raise SystemExit(f"staged photo {row['file']} does not match the manifest")
+        marker[row["file"]] = got
+    (stage / "commons40-sha1.json").write_text(
+        json.dumps(marker, indent=2) + "\n", encoding="utf-8")
+    (stage / "dataset-metadata.json").write_text(json.dumps({
+        "title": "Lilly OCR commons 40", "id": slug,
+        "licenses": [{"name": "other"}]}, indent=1))
+    existing = subprocess.run([KAGGLE, "datasets", "status", slug],
+                              text=True, capture_output=True)
+    if "ready" in existing.stdout.lower():
+        print(f"dataset already there: {slug} (40 hash-pinned Commons originals)")
+        return slug
+    mb = sum((stage / r["file"]).stat().st_size for r in rows) / 1048576
+    print(f"uploading {mb:.0f} MB to {slug} (40 hash-pinned Commons originals)")
     run(KAGGLE, "datasets", "create", "-p", stage, "-r", "zip")
     wait_until_ready(slug)
     return slug
@@ -1440,6 +1490,8 @@ def main() -> int:
         datasets.append(push_ocr_sign_letters(user))
     if job.get("needs_ocr_shipped"):
         datasets.append(push_ocr_shipped(user))
+    if job.get("needs_ocr_commons40"):
+        datasets.append(push_ocr_commons40(user))
     if job.get("needs_listen_candidate"):
         datasets.append(push_listen_candidate(user))
     if job.get("needs_listen_shipped"):

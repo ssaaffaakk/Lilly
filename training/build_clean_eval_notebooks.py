@@ -153,7 +153,7 @@ if OPEN_ASR.exists():
     shutil.rmtree(OPEN_ASR)
 run("git", "clone", "-q", "https://github.com/huggingface/open_asr_leaderboard.git", str(OPEN_ASR))
 run("git", "-C", str(OPEN_ASR), "checkout", "-q", OPEN_ASR_COMMIT)
-run(sys.executable, "-m", "pip", "install", "-q", "num2words==0.5.14")
+run(sys.executable, "-m", "pip", "install", "-q", "num2words==0.5.14", "kaldialign==0.9.1")
 OPEN_ASR_JSON = Path("/kaggle/working/open-asr-offline.json")
 run(sys.executable, "training/open_asr_offline_score.py", "--predictions", str(WER),
     "--harness", str(OPEN_ASR), "--harness-commit", OPEN_ASR_COMMIT,
@@ -224,8 +224,17 @@ if hashlib.sha256(MANIFEST.read_bytes()).hexdigest() != source["manifest_sha256"
 PHOTOS = SCRATCH / "ocr-commons-originals"
 if PHOTOS.exists():
     shutil.rmtree(PHOTOS)
+# The 40 originals are attached as a frozen dataset, not downloaded live: a
+# Kaggle datacenter IP pulling 40 multi-MB Commons originals is throttled with
+# HTTP 429 ("contact noc@wikimedia.org"), which killed earlier runs. The fetch
+# script still verifies every byte against the committed manifest, so this is
+# the same photographs, only from a pinned source instead of a rate-limited one.
+photo_markers = list(Path("/kaggle/input").rglob("commons40-sha1.json"))
+if len(photo_markers) != 1:
+    raise SystemExit(f"need one attached lilly-ocr-commons-40 dataset, found {photo_markers}")
+PHOTO_SRC = photo_markers[0].parent
 run(sys.executable, "training/fetch_pinned_ocr_photos.py", "--manifest", str(MANIFEST),
-    "--out", str(PHOTOS))
+    "--out", str(PHOTOS), "--local-source", str(PHOTO_SRC))
 if len(list(PHOTOS.iterdir())) != 40:
     raise SystemExit("OCR source fetch is not exactly 40 originals")
 # Exact shipped Paddle detector/recogniser bytes, attached as a private Kaggle
