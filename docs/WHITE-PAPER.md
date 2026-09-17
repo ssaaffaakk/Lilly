@@ -86,6 +86,7 @@ the file it lives in. The last is today.
 | Photographs — words found, pooled | **< 10%** | 16.9% (63 of 373) | **69.4%** |
 | Photographs — words invented that are on no sign | **> 280** | 224 | **65** |
 | Speech — word error, 200 held-out clips | **> 55%** | 38.5% (`training/RESULTS-speech.md`) | **11.9%** (whisper-large-v3, shipped by decision, refused at its gate; the gated whisper-small reads 34.9%) |
+| Speech — words heard right, 925 clean FLEURS (the large ear the app uses) | — | — | **16666 / 18836** (11.52% wrong) |
 | Translation — BLEU on FLORES devtest, as the user sees it | **< 30** | 37.72, with the language tag leaked into 308 of 1,012 outputs (`training/RESULTS-devtest.md`) | **43.25**, leaked into **0** (re-measured 8 Sep on a T4 after the ordinal splitter fix) |
 | Reply, English → Bosnian — chrF2 on FLORES-200, as the user sees it | — | 58.96, the base as downloaded (`training/RESULTS-en-bs.md`) | **61.55** through the app's own path (`training/RESULTS-product-en-bs.md`, measured 12 Sep); the adapter alone on whole rows reads 60.00 |
 
@@ -269,8 +270,10 @@ Bosnian form), label gap 21.8 → 22.5 points.
   Cleared all three pre-registered gate rows. Stays in the bundle as the baseline.
 
 - **whisper-large-v3** (~1.55B parameters): the shipped listener. Fine-tuned with LoRA
-  on the same data. Word error: 11.9% on the 200-clip prefix, 14.1% on all 925 clips.
-  **Refused at its gate**, twice:
+  on the same data. Word error: **11.9%** on the 200-clip prefix. On all 925 clean
+  FLEURS clips through the app path (Kaggle `listen-clean-eval`, 17 Sep 2026):
+  **16666 / 18836** words heard right (11.52% wrong). The earlier instrument
+  number on 925 was 14.1%. **Refused at its gate**, twice:
   - Gate run (7 September): refused by one word on the Croatian substitution row.
   - Pre-registered last look (8 September, all 925 clips): refused again — Croatian
     substitution 1.1% → 6.1% (p = 0.018), the same two words (*Europom* for *evropom*,
@@ -491,10 +494,12 @@ the art.
 | whisper-small, stock | 38.5% | — | — |
 | whisper-small, fine-tuned (gated) | **34.9%** | 68.2% | 3.3% |
 | whisper-large-v3, fine-tuned (refused at gate, shipped by owner's decision) | **11.9%** | 89.1% | 6.5% |
+| same large ear, 925 clean FLEURS, product path (17 Sep) | **11.52%** (**16666 / 18836** heard right) | 88.5% | 6.25% (p = 0.0175 vs small 0.96%) |
 | Human recordings | 11.7% | — | — |
 
-On all 925 test clips, the large-v3 listener reads 14.1% word error against the
-small's 39.5%.
+On all 925 test clips the earlier instrument read 14.1% word error against the
+small's 39.5%. The 17 Sep clean-eval is the app path on the same 925; it does
+not replace **11.9%** on 200. `training/RESULTS-speech-listen-clean-eval.md`.
 
 **Where Lilly stands against the industry.** The rubric (`training/RUBRIC.md`)
 places speech recognition on a scale anchored to real published systems:
