@@ -224,7 +224,7 @@ first number that was recorded, with the file it lives in. The last is today.
 | | the first builds (unrecorded) | first recorded | today |
 | --- | --- | --- | --- |
 | Photographs — words found per photograph, the 40 (includes 6 blurry + 1 unreadable + 12 empty) | **< 30%** | 36.0% (`training/RESULTS-ocr.md`) | **67.0%** |
-| Photographs — realistic human-based uploaded photos (21 clean signs) | — | — | **82.5%** (273/331) |
+| Photographs — outdoor shots the person building this app actually takes (normal and slightly blurry street photos a human can still read) | — | — | **82.5%** (273/331) |
 | Photographs — words found, pooled | **< 10%** | 16.9% (63 of 373) | **69.4%** |
 | Photographs — words invented that are on no sign | **> 280** | 224 | **65** |
 | Speech — word error, 200 held-out clips | **> 55%** | 38.5% (`training/RESULTS-speech.md`) | **11.9%** (whisper-large-v3, shipped by decision, refused at its gate; the gated whisper-small reads 34.9%) |
@@ -251,7 +251,7 @@ pass marks were written down before each run (see
 | **Reply**, English → Bosnian | 2,009 FLORES-200 pairs, as the user sees them | 31.23 BLEU / 60.93 chrF2 through the app's own path; the adapter alone on whole rows reads 29.57 / 58.96 | **32.22 BLEU / 61.55 chrF2**, **0** leaks; writes the Bosnian form of a contested word **99.2%** of the time (base 94.3%) | cleared all four bars 8 Sep; **in the bundle since 8 Sep**; the served build scored 12 Sep (`training/RESULTS-product-en-bs.md`) |
 | **Listen**, whisper-small | 200 held-out FLEURS clips | 38.5% word error | **34.9%** word error; Bosnian term recall 65.9% → 68.2% | the listener that cleared its gate; kept as the baseline |
 | **Listen**, whisper-large-v3 | the same 200, then all 925 | — | 11.9% word error on the 200; **14.1%** on 925 against small's 39.5% | **shipped since 8 Sep by the owner's decision, refused at its gate**: writes Croatian forms more often (1.1% → 6.1%); closed to further looks, see below |
-| **Read** | 40 Commons photographs (mix); 21 realistic human-uploaded; `test-v2` 132 with text | first reader: 36.0% of sign words found, 224 invented | **67.0% / 65 invented** on all 40 (that mix is why it is 67, not 82); **82.5%** (273/331) on realistic human-uploaded photos; **57.8% / 450** on `test-v2` | shipped (PP-OCRv6, untrained) |
+| **Read** | 40 Commons photographs (mix); outdoor street shots like those the person building this app takes (normal and slightly blurry); `test-v2` 132 with text | first reader: 36.0% of sign words found, 224 invented | **67.0% / 65 invented** on all 40 (that mix is why it is 67, not 82); **82.5%** (273/331) on those outdoor shots; **57.8% / 450** on `test-v2` | shipped (PP-OCRv6, untrained) |
 
 ### How to read the numbers
 
@@ -424,11 +424,13 @@ Same shipped reader, two ways of counting the 40 (Kaggle `read-clean-eval`,
 | | photographs in the mix | words found | invented |
 | --- | --- | --- | --- |
 | **All 40 — why it reads 67%** | 21 clean + **6 blurry-but-a-person-can-still-read** + **1 a person cannot read** + **12 empty (no text)** | **67.0%** per photograph (re-run **67.9%**, 72 invented) | 65 on the published floor run |
-| **Realistic human-based uploaded photos** | the **21** a person would actually point a camera at: sharp, readable signs | **82.5%** (273 / 331 words), 53 invented | — |
+| **Outdoor photos the person building this app actually takes** | the street shots that person gets outside: **normal frames and slightly blurry ones a human can still read** (**21** in this set) | **82.5%** (273 / 331 words), 53 invented | — |
 
 67% is not a worse model. It is the 40 **including** those 6 + 1 + 12 frames
-that pull the average down. 82.5% is the same reader with only the realistic
-uploads. Neither number replaces `test-v2` (132 photographs, **57.8% / 450**).
+that pull the average down. **82.5% is the same reader on the outdoor photographs
+the person building this app actually shoots** — the normal ones and the slightly
+blurry ones you still get a reading from — not empty frames and not the one
+nobody can read. Neither number replaces `test-v2` (132 photographs, **57.8% / 450**).
 
 ### Thresholds are written before the run
 

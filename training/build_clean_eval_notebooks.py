@@ -153,7 +153,14 @@ if OPEN_ASR.exists():
     shutil.rmtree(OPEN_ASR)
 run("git", "clone", "-q", "https://github.com/huggingface/open_asr_leaderboard.git", str(OPEN_ASR))
 run("git", "-C", str(OPEN_ASR), "checkout", "-q", OPEN_ASR_COMMIT)
-run(sys.executable, "-m", "pip", "install", "-q", "num2words==0.5.14", "kaldialign==0.9.1")
+# Pinned Open ASR eval_utils imports kaldialign.batch_error_rate. That name
+# exists only from kaldialign 0.12.0 (June 2026). 0.9.1 installs and then
+# ImportError's the scorer — listen-clean-eval ERROR on safak3as, 17 Sep 2026.
+run(sys.executable, "-m", "pip", "install", "-q", "num2words==0.5.14", "kaldialign==0.12.0")
+import kaldialign
+from kaldialign import batch_error_rate
+if getattr(kaldialign, "__version__", "") != "0.12.0":
+    raise SystemExit(f"kaldialign {getattr(kaldialign, '__version__', '?')}, need 0.12.0")
 OPEN_ASR_JSON = Path("/kaggle/working/open-asr-offline.json")
 run(sys.executable, "training/open_asr_offline_score.py", "--predictions", str(WER),
     "--harness", str(OPEN_ASR), "--harness-commit", OPEN_ASR_COMMIT,

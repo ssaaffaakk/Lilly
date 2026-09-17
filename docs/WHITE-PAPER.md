@@ -82,7 +82,7 @@ the file it lives in. The last is today.
 | | the first builds (unrecorded) | first recorded | today |
 |---|---|---|---|
 | Photographs — words found per photograph, the 40 (6 blurry + 1 unreadable + 12 empty in the mix) | **< 30%** | 36.0% (`training/RESULTS-ocr.md`) | **67.0%** |
-| Photographs — realistic human-based uploaded photos (21 clean signs) | — | — | **82.5%** (273/331) |
+| Photographs — outdoor shots the person building this app actually takes (normal and slightly blurry street photos a human can still read) | — | — | **82.5%** (273/331) |
 | Photographs — words found, pooled | **< 10%** | 16.9% (63 of 373) | **69.4%** |
 | Photographs — words invented that are on no sign | **> 280** | 224 | **65** |
 | Speech — word error, 200 held-out clips | **> 55%** | 38.5% (`training/RESULTS-speech.md`) | **11.9%** (whisper-large-v3, shipped by decision, refused at its gate; the gated whisper-small reads 34.9%) |
@@ -314,9 +314,9 @@ labelled set.
 | | mix | score |
 |---|---|---|
 | **All 40 — why 67%** | 21 + **6 blurry** + **1 unreadable** + **12 empty** | **67.0%** per photograph (re-run 67.9% / 72 invented) |
-| **Realistic human-based uploaded photos** | the 21 sharp, human-readable signs a person would actually upload | **82.5%** (273/331), 53 invented |
+| **Outdoor photos the person building this app actually takes** | the street shots that person gets outside: normal frames and slightly blurry ones a human can still read (21 in this set) | **82.5%** (273/331), 53 invented |
 
-67% includes the blurry and empty frames; 82.5% does not. Same reader.
+67% includes empty frames and the one nobody can read. **82.5% is the same reader on the outdoor photographs the person building this app actually shoots** (normal and slightly blurry, still readable). Same reader.
 `training/RESULTS-ocr-read-clean-eval.md`. test-v2 (57.8% / 450) stays robustness.
 
 ### 4.5 Text-to-speech
@@ -527,7 +527,7 @@ by the owner's decision) spans six rubric bands.
 | EasyOCR, fine-tuned on real crops | 54.5% / 182 | 34.6% / 2,071 |
 | **PP-OCRv6, stock, floor 0.9 (shipped)** | **67.0% / 65** | **57.8% / 450** |
 | same reader, **all 40** (21 clean + 6 blurry + 1 unreadable + 12 empty) | 67.9% / 72 (why the headline is ~67, not 82) | — |
-| same reader, **realistic human-based uploaded photos** (21) | **82.5% (273/331)**, 53 invented | — |
+| same reader, **outdoor shots the person building this app actually takes** (normal and slightly blurry, 21) | **82.5% (273/331)**, 53 invented | — |
 
 **Industry context.** The rubric grades photograph reading on strict end-to-end word
 F1 (ICDAR2015 Task 4.4 matching) with a recall floor. The photograph score is

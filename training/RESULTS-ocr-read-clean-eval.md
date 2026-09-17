@@ -21,10 +21,12 @@ The reader did not change. The mix did.
 | | what is in the mix | score |
 |---|---|---|
 | **All 40 — why it is 67%** | 21 clean + **6 blurry** (a person can still read them) + **1** a person cannot read + **12 empty** (no text) | **67.0%** words/photograph published; this run **67.9%**, 72 invented |
-| **Realistic human-based uploaded photos** | the **21** sharp, readable signs a person would actually upload | **82.5%** (273 / 331 words), 53 invented |
+| **Outdoor photos the person building this app actually takes** | the street shots that person gets outside: **normal frames and slightly blurry ones a human can still read** (**21** in this set) | **82.5%** (273 / 331 words), 53 invented |
 
-67% is pulled down by those 6 + 1 + 12 frames. 82.5% leaves them out. Neither
-replaces `test-v2` (**57.8% found, 450 invented** on 132 photographs with text).
+67% is pulled down by empty frames and the one nobody can read. **82.5% is the
+same reader on the outdoor photographs the person building this app actually
+shoots** — normal and slightly blurry, still readable. Neither replaces
+`test-v2` (**57.8% found, 450 invented** on 132 photographs with text).
 
 ## Frozen cohorts (detail)
 

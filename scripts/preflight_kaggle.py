@@ -422,12 +422,15 @@ def check_listen_clean_eval(text: str) -> None:
         ("4ef4a26b8588ccc140868be36f8c34acc839afe6",
          "must pin the supplementary Open ASR scoring code"),
         ("open_asr_offline_score.py", "must score the same predictions offline"),
+        ("kaldialign==0.12.0", "Open ASR eval_utils needs batch_error_rate; 0.9.1 does not export it"),
+        ("from kaldialign import batch_error_rate",
+         "must refuse a kaldialign install that lacks the Open ASR API"),
         ("lilly-listen-clean-eval.zip", "must package evidence, not weights"),
     ):
         if needle not in text:
             fail(f"listen clean eval: {why} ({needle!r} missing)")
     for forbidden in ("openai/whisper-large-v3-turbo", "training/train_speech.py",
-                      "lilly-listen.zip"):
+                      "lilly-listen.zip", "kaldialign==0.9.1"):
         if forbidden in text:
             fail(f"listen clean eval must evaluate the shipped model only ({forbidden!r} present)")
 
