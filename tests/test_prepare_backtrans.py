@@ -82,6 +82,16 @@ def test_non_latin_and_repeated_letter_noise_are_filtered_before_sampling():
     }
 
 
+def test_three_repeated_letters_are_filtered_at_measured_decoder_boundary():
+    producer0 = "auuu predobar je,stvarno pre pre predobar,neka bude sa srecom"
+    producer1 = (
+        'skinula prvu, oooo, već vidim, moja duša pjeva, a um zadovoljno '
+        'trlja ručice Hvala ti što si me "natjerala" da ju pročitam')
+    assert prep.source_rejection_reason(producer0) == "repeated alphanumeric"
+    assert prep.source_rejection_reason(producer1) == "repeated alphanumeric"
+    assert prep.source_rejection_reason("auu je uzvik sa dva ponovljena slova") is None
+
+
 def test_forward_input_exposes_joined_sentence_boundaries_only():
     raw = "prva recenica..druga recenica...treca?cetvrta"
     assert prep.forward_input(raw) == (

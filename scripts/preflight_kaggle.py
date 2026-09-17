@@ -41,7 +41,7 @@ def check_backtrans_module_import() -> None:
          "from scripts.prepare_backtrans_bs import forward_input, is_pathological_source, ordered_hash, source_rejection_reason; "
          "assert forward_input('a..b') == 'a. b'; "
          "assert is_pathological_source('x ' + '1' * 19); "
-         "assert source_rejection_reason('mjau' + 'u' * 20 + ' me odbio') == 'repeated alphanumeric'; "
+         "assert source_rejection_reason('auuu predobar je') == 'repeated alphanumeric'; "
          "assert source_rejection_reason('مَّثَلُ الْجَنَّةِ الَّتِي وُعِدَ') == 'non-Latin script'"],
         cwd=REPO, text=True, capture_output=True)
     if probe.returncode:

@@ -431,7 +431,7 @@ fingerprint before publishing a content-addressed Kaggle dataset. The consumer
 repeats validation and builds exactly 1M up-sampled real + 1M synthetic rows.
 
 MaCoCu web noise must be handled before that deterministic sample is drawn.
-Sources with an 81+ character whitespace-free token, a 19+ digit run, six
+Sources with an 81+ character whitespace-free token, a 19+ digit run, three
 repeated alphanumeric characters, fewer than three Latin letters, or any
 alphabetic character from a non-Latin script are rejected and replaced from
 the remaining clean pool. After deterministic shuffling, every candidate is

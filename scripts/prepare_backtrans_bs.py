@@ -43,7 +43,7 @@ _PUNCT_RUN = re.compile(r"([.!?])\1+")
 _MISSING_SENTENCE_SPACE = re.compile(r"(?<=[.!?])(?=[^\s.!?])")
 _LONG_TOKEN = re.compile(r"\S{81,}")
 _LONG_NUMBER = re.compile(r"\d{19,}")
-_REPEATED_ALNUM = re.compile(r"([^\W_])\1{5,}", re.UNICODE | re.IGNORECASE)
+_REPEATED_ALNUM = re.compile(r"([^\W_])\1{2,}", re.UNICODE | re.IGNORECASE)
 _NON_ASCII = re.compile(r"[^\x00-\x7f]")
 _ASCII_LATIN = re.compile(r"[A-Za-z]")
 
