@@ -1,0 +1,18 @@
+{
+  "dataset": "google/fleurs",
+  "config": "bs_ba",
+  "split": "test",
+  "revision": "168de341b3db6859a9bac1c50a2ef5e3b47647e0",
+  "parquet_url": "https://huggingface.co/datasets/google/fleurs/resolve/168de341b3db6859a9bac1c50a2ef5e3b47647e0/bs_ba/test/0000.parquet",
+  "parquet_size": 714890422,
+  "parquet_sha256": "7c587762fb5bbd0baa3ca527d1cac9b5fdddec67e34d572f2c77081f97e7b5dc",
+  "expected_clips": 925,
+  "manifest": "speech-fleurs-bs-test.tsv",
+  "manifest_sha256": "908cb93c92c5fe262f7e6b3cb7bc43ba45a02f8ce3f36a83cc5c189ca1d50f7c",
+  "cohort_counts": {
+    "clean": 925,
+    "noisy_but_understandable": 0,
+    "human_unintelligible": 0
+  },
+  "classification_note": "No cohort was inferred from SNR or model output. This is the curated FLEURS held-out read-speech split; it has no deliberately noisy or unintelligible cohort. Zero counts are reported rather than fabricating corruptions."
+}

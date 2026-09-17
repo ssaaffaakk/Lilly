@@ -2,6 +2,8 @@
 """Preflight checks before pushing Kaggle notebooks. Run via scripts/state.py or directly."""
 from __future__ import annotations
 
+import csv
+import hashlib
 import json
 import subprocess
 import sys
@@ -14,6 +16,8 @@ OCR = REPO / "training" / "Lilly_OCR_Kaggle.ipynb"
 OCR_PADDLE = REPO / "training" / "Lilly_OCR_Paddle_Kaggle.ipynb"
 OUTSIDE = REPO / "training" / "Lilly_Outside_Baseline_Kaggle.ipynb"
 SPEECH_INSTR = REPO / "training" / "Lilly_Speech_Instrument_Kaggle.ipynb"
+LISTEN_CLEAN = REPO / "training" / "Lilly_Listen_Clean_Eval_Kaggle.ipynb"
+READ_CLEAN = REPO / "training" / "Lilly_Read_Clean_Eval_Kaggle.ipynb"
 TRANSLATION = REPO / "training" / "Lilly_Translation_Kaggle.ipynb"
 BACKTRANS = REPO / "training" / "Lilly_Backtrans_EnBs_Kaggle.ipynb"
 BACKTRANS_PRODUCER = REPO / "training" / "Lilly_Backtrans_Producer_Kaggle.ipynb"
@@ -360,6 +364,100 @@ def check_speech_instrument(text: str) -> None:
              "Output stopped being attachable on 7 September and version 2 died at the attach cell")
 
 
+def check_clean_eval_manifests() -> None:
+    root = REPO / "training" / "clean-eval"
+    speech_tsv = root / "speech-fleurs-bs-test.tsv"
+    speech_source = json.loads((root / "speech-source.json").read_text(encoding="utf-8"))
+    if hashlib.sha256(speech_tsv.read_bytes()).hexdigest() != speech_source.get("manifest_sha256"):
+        fail("clean speech manifest hash does not match speech-source.json")
+    with speech_tsv.open(encoding="utf-8", newline="") as fh:
+        speech = list(csv.DictReader(fh, delimiter="\t"))
+    if len(speech) != 925 or len({(r["audio_sha256"], r["transcript_sha256"]) for r in speech}) != 925:
+        fail("clean speech manifest must hold 925 unique audio/transcript identities")
+    counts = {name: sum(r["cohort"] == name for r in speech)
+              for name in ("clean", "noisy_but_understandable", "human_unintelligible")}
+    if counts != {"clean": 925, "noisy_but_understandable": 0, "human_unintelligible": 0}:
+        fail(f"clean speech cohort counts drifted: {counts}")
+    if (speech_source.get("revision") != "168de341b3db6859a9bac1c50a2ef5e3b47647e0"
+            or speech_source.get("parquet_sha256") !=
+            "7c587762fb5bbd0baa3ca527d1cac9b5fdddec67e34d572f2c77081f97e7b5dc"):
+        fail("FLEURS source revision/parquet hash is not pinned")
+
+    ocr_tsv = root / "ocr-commons-40.tsv"
+    ocr_source = json.loads((root / "ocr-source.json").read_text(encoding="utf-8"))
+    if hashlib.sha256(ocr_tsv.read_bytes()).hexdigest() != ocr_source.get("manifest_sha256"):
+        fail("clean OCR manifest hash does not match ocr-source.json")
+    with ocr_tsv.open(encoding="utf-8", newline="") as fh:
+        photos = list(csv.DictReader(fh, delimiter="\t"))
+    if len(photos) != 40 or len({r["file"] for r in photos}) != 40:
+        fail("clean OCR manifest must hold exactly 40 unique photographs")
+    counts = {name: sum(r["cohort"] == name for r in photos)
+              for name in ("clean", "noisy_but_understandable", "human_unintelligible", "no_text")}
+    if counts != {"clean": 21, "noisy_but_understandable": 6,
+                  "human_unintelligible": 1, "no_text": 12}:
+        fail(f"clean OCR cohort counts drifted: {counts}")
+    for row in photos:
+        if (len(row.get("commons_sha1", "")) != 40 or not row.get("original_url", "").startswith("https://")
+                or int(row.get("bytes", 0)) <= 0 or int(row.get("commons_lastrevid", 0)) <= 0):
+            fail(f"OCR source identity is incomplete for {row.get('file')}")
+    external = (REPO / "training" / "open_asr_offline_score.py").read_text(encoding="utf-8")
+    if '"official_submission": False' not in external or '"uploaded": False' not in external:
+        fail("Open ASR supplementary scorer must say non-submission and no upload")
+
+
+def check_listen_clean_eval(text: str) -> None:
+    check_offload(text, "listen-clean-eval")
+    for needle, why in (
+        ("__LAUNCHER_GIT_COMMIT__", "must be replaced with the exact pushed commit at launch"),
+        ("fetch_pinned_fleurs_test.py", "must fetch the pinned FLEURS parquet"),
+        ("speech-fleurs-bs-test.tsv", "must validate the frozen clip manifest"),
+        ("!= 925", "must refuse a partial test split"),
+        ('"--clips", "all"', "must run the registered gates on all clips"),
+        ("speech_legibility_report.py", "must report WER by frozen cohort"),
+        ("term_recall_not_below_baseline", "must apply the registered term-recall gate"),
+        ("croatian_substitution_not_above_baseline", "must apply the registered Croatian gate"),
+        ("a76342f6ab59b382", "must pin the small baseline"),
+        ("e6bb58483586b06c", "must pin the shipped large-v3 listener"),
+        ("LILLY_SPEECH_DEVICE", "must use the app path on GPU"),
+        ("4ef4a26b8588ccc140868be36f8c34acc839afe6",
+         "must pin the supplementary Open ASR scoring code"),
+        ("open_asr_offline_score.py", "must score the same predictions offline"),
+        ("lilly-listen-clean-eval.zip", "must package evidence, not weights"),
+    ):
+        if needle not in text:
+            fail(f"listen clean eval: {why} ({needle!r} missing)")
+    for forbidden in ("openai/whisper-large-v3-turbo", "training/train_speech.py",
+                      "lilly-listen.zip"):
+        if forbidden in text:
+            fail(f"listen clean eval must evaluate the shipped model only ({forbidden!r} present)")
+
+
+def check_read_clean_eval(text: str) -> None:
+    check_offload(text, "read-clean-eval")
+    for needle, why in (
+        ("__LAUNCHER_GIT_COMMIT__", "must be replaced with the exact pushed commit at launch"),
+        ("fetch_pinned_ocr_photos.py", "must fetch hash-pinned original Commons photos"),
+        ("ocr-commons-40.tsv", "must use the frozen human-legibility manifest"),
+        ("lilly-ocr-ppocrv6-shipped", "must require the exact shipped Paddle weight dataset"),
+        ("85218d2e3d98f5a21c58b4220627be923a97aee5db3cc71f39536ab31ac53960",
+         "must pin the shipped detector weights in committed code"),
+        ("1b01c79a914587933f615569e75de54f2e638ebb5d3f3b3c1b38c24ede8c7319",
+         "must pin the shipped recogniser weights in committed code"),
+        ("PP-OCRv6_medium_det+PP-OCRv6_medium_rec:3.7.0:rec>=0.9",
+         "must assert the shipped reader identity"),
+        ("shipped-scan-2mp-cap", "must score the real app scan path"),
+        ('raw["photographs"] != 28', "must assert all 28 text-bearing photos were scored"),
+        ("all_40", "must report all 40 including no-text controls"),
+        ("ocr_legibility_report.py", "must report recall and invention by frozen cohort"),
+        ("lilly-read-clean-eval.zip", "must package evidence only"),
+    ):
+        if needle not in text:
+            fail(f"read clean eval: {why} ({needle!r} missing)")
+    for forbidden in ("training/train_ocr.py", "tools/train.py", "tools/export_model.py"):
+        if forbidden in text:
+            fail(f"read clean eval must not train or export ({forbidden!r} present)")
+
+
 def check_speak_bs(text: str) -> None:
     """The Bosnian voice: pre-registered data, judge, bar and package order
     (PREREGISTRATION.md, "v5 -- speak -- a Bosnian voice from FLEURS")."""
@@ -693,10 +791,13 @@ def check_backtrans(text: str) -> None:
 
 def main() -> int:
     check_backtrans_module_import()
+    check_clean_eval_manifests()
     for path, fn in ((SPEECH, check_speech), (SPEECH2, check_speech_half2),
                      (OCR, check_ocr), (OCR_PADDLE, check_ocr_paddle),
                      (OUTSIDE, check_outside),
                      (SPEECH_INSTR, check_speech_instrument),
+                     (LISTEN_CLEAN, check_listen_clean_eval),
+                     (READ_CLEAN, check_read_clean_eval),
                      (TRANSLATION, check_translation),
                      (BACKTRANS_PRODUCER, check_backtrans_producer),
                      (BACKTRANS, check_backtrans),
@@ -750,6 +851,8 @@ def main() -> int:
         fail("kaggle_train.py must upload both served builds (checked by fingerprint) for ordinals-remeasure")
     if '"needs_listen_shipped": True' not in kaggle_train or "push_listen_shipped" not in kaggle_train:
         fail("kaggle_train.py must attach the shipped listener (fingerprint-checked) for speak-bs")
+    if '"needs_ocr_shipped": True' not in kaggle_train or "push_ocr_shipped" not in kaggle_train:
+        fail("kaggle_train.py must attach the SHA-256-pinned shipped PP-OCRv6 weights for read-clean-eval")
     poller_speak = (REPO / "scripts" / "kaggle_poll.py").read_text(encoding="utf-8")
     speak_job = poller_speak.split('"speak-bs":', 1)[1][:400] if '"speak-bs":' in poller_speak else ""
     if "lilly-speak-bs-results.zip" not in speak_job or '"lilly-speak-bs.zip"' in speak_job:
@@ -796,7 +899,7 @@ def main() -> int:
     offload = (REPO / "training" / "kaggle_offload.py").read_text(encoding="utf-8")
     if "experiment_log.json" not in offload or "scan_trainproof" not in offload:
         fail("training/kaggle_offload.py must write experiment_log.json and scan the tee")
-    print("preflight ok: speech half-1 + half-2 + instrument, OCR, outside-baseline, translation, backtrans, ordinals, speak-bs, speak-parla, speak-control, speak-youtube notebooks")
+    print("preflight ok: speech half-1 + half-2 + instrument + clean eval, OCR + clean eval, outside-baseline, translation, backtrans, ordinals, speak-bs, speak-parla, speak-control, speak-youtube notebooks")
     return 0
 
 

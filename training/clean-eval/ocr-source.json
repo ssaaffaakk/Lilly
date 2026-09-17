@@ -1,0 +1,15 @@
+{
+  "schema": 1,
+  "provider": "Wikimedia Commons API",
+  "expected_photos": 40,
+  "expected_text_photos": 28,
+  "cohort_counts": {
+    "clean": 21,
+    "noisy_but_understandable": 6,
+    "human_unintelligible": 1,
+    "no_text": 12
+  },
+  "manifest": "ocr-commons-40.tsv",
+  "manifest_sha256": "5614d4040b79801262301735351c7871a099cda8843d6ebb0aca1bb196d6b472",
+  "classification_note": "Cohorts were frozen by viewing original photographs before fresh PaddleOCR inference. Image heuristics and model predictions were not used."
+}

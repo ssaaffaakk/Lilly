@@ -75,6 +75,15 @@ OCR_CROPS2 = REPO_ROOT / "data" / "ocr" / "crops2"
 # place only is one that will eventually be skipped.
 OCR_PHOTOS = REPO_ROOT / "data" / "ocr" / "real-photos" / "harvested-trainable"
 OCR_SIGN_LETTERS = REPO_ROOT / "data" / "ocr" / "sign-letters"
+OCR_SHIPPED_CACHE = Path.home() / ".paddlex" / "official_models"
+OCR_SHIPPED_HASHES = {
+    "PP-OCRv6_medium_det/inference.pdiparams": "85218d2e3d98f5a21c58b4220627be923a97aee5db3cc71f39536ab31ac53960",
+    "PP-OCRv6_medium_det/inference.yml": "7298d5ead546584af2504d03355f881ac7a7bc0eb1e282d3e159277c1d0af871",
+    "PP-OCRv6_medium_det/inference.json": "0f1a7ec35da36173529c7a60238b7f7919e3831929c3f700ad90ad4896adecd5",
+    "PP-OCRv6_medium_rec/inference.pdiparams": "1b01c79a914587933f615569e75de54f2e638ebb5d3f3b3c1b38c24ede8c7319",
+    "PP-OCRv6_medium_rec/inference.yml": "991b700facf5b50a7de193468207d5f4255b538dde0d312ae3b7c7a9b6873129",
+    "PP-OCRv6_medium_rec/inference.json": "0b2e25e990bd072f1bf77d59d67d508bce6c4bd44af6624e0fb27d6da2cd00e8",
+}
 # The extra corpus travels with the run instead of being re-harvested on Kaggle.
 # data/extra/ is gitignored, so the notebook used to rebuild it up there with
 # download_extra_data.py -- and a live web corpus does not come back
@@ -189,6 +198,15 @@ JOBS = {
                     # from a dataset built out of the zip fetched on 12 September.
                     "needs_listen_candidate": True,
                     "needs_listen_previous": True},
+    # Fresh eval of the model the product actually ships. The FLEURS parquet
+    # and every clip/transcript are pinned in training/clean-eval; the two
+    # listener datasets are fingerprint-checked before decode.
+    "listen-clean-eval": {"notebook": "Lilly_Listen_Clean_Eval_Kaggle.ipynb",
+                    "slug": "lilly-listen-clean-eval",
+                    "title": "Lilly listen clean eval",
+                    "needs_weights": False, "needs_corpus": False,
+                    "needs_listen_shipped": True,
+                    "needs_listen_previous": True},
     "speech-half2": {"notebook": "Lilly_Speech_Kaggle_Half2.ipynb",
                     "slug": "lilly-speech-half2", "title": "Lilly speech half2",
                     "needs_weights": False, "needs_corpus": False,
@@ -213,6 +231,14 @@ JOBS = {
                     "slug": "lilly-ocr-paddle", "title": "Lilly ocr paddle",
                     "needs_weights": False, "needs_corpus": False,
                     "needs_ocr_crops": True},
+    # Fresh eval of the shipped, untrained PP-OCRv6 configuration. The job
+    # downloads only the 40 original Commons files named and hashed by the
+    # committed manifest. It trains and installs nothing.
+    "read-clean-eval": {"notebook": "Lilly_Read_Clean_Eval_Kaggle.ipynb",
+                    "slug": "lilly-read-clean-eval",
+                    "title": "Lilly read clean eval",
+                    "needs_weights": False, "needs_corpus": False,
+                    "needs_ocr_shipped": True},
     # The Bosnian voice (PREREGISTRATION.md, "v5 -- speak -- a Bosnian voice
     # from FLEURS"): Piper fine-tuned from its sr_RS checkpoint on the FLEURS
     # bs_ba train clips, clustered by speaker on the box, and judged through
@@ -641,6 +667,40 @@ def push_youtube_voice(user: str) -> str:
     return slug
 
 
+def push_ocr_shipped(user: str) -> str:
+    """Pin the exact official PP-OCRv6 detector/recogniser bytes the app ships."""
+    dataset_name = "lilly-ocr-ppocrv6-shipped"
+    slug = f"{user}/{dataset_name}"
+    stage = STAGING / "dataset" / dataset_name
+    stage.mkdir(parents=True, exist_ok=True)
+    for relative, expected in OCR_SHIPPED_HASHES.items():
+        source = OCR_SHIPPED_CACHE / relative
+        if not source.is_file():
+            raise SystemExit(f"missing shipped Paddle weight {source}; initialize app.ocr once")
+        got = hashlib.sha256(source.read_bytes()).hexdigest()
+        if got != expected:
+            raise SystemExit(f"shipped Paddle weight {relative} is {got}, expected {expected}")
+        target = stage / relative
+        target.parent.mkdir(parents=True, exist_ok=True)
+        if not target.is_file() or hashlib.sha256(target.read_bytes()).hexdigest() != expected:
+            shutil.copy2(source, target)
+    (stage / "weights-sha256.json").write_text(
+        json.dumps(OCR_SHIPPED_HASHES, indent=2) + "\n", encoding="utf-8")
+    (stage / "dataset-metadata.json").write_text(json.dumps({
+        "title": "Lilly OCR PP OCRv6 shipped", "id": slug,
+        "licenses": [{"name": "apache-2.0"}]}, indent=1))
+    existing = subprocess.run([KAGGLE, "datasets", "status", slug],
+                              text=True, capture_output=True)
+    if "ready" in existing.stdout.lower():
+        print(f"dataset already there: {slug} (six SHA-256-pinned Paddle files)")
+        return slug
+    mb = sum((stage / p).stat().st_size for p in OCR_SHIPPED_HASHES) / 1048576
+    print(f"uploading {mb:.0f} MB to {slug} (six SHA-256-pinned Paddle files)")
+    run(KAGGLE, "datasets", "create", "-p", stage, "-r", "zip")
+    wait_until_ready(slug)
+    return slug
+
+
 def push_ocr_photos(user: str) -> str:
     """The photographs to cut crops from, as a dataset the notebook can attach."""
     slug = f"{user}/lilly-ocr-photos"
@@ -1061,6 +1121,15 @@ def push_notebook(user: str, job: dict, datasets: list) -> str:
     stage = STAGING / job["slug"]
     stage.mkdir(parents=True, exist_ok=True)
     notebook_text = notebook.read_text()
+    # Eval notebooks are launched from the exact commit the launcher verified,
+    # not whatever main happens to point at when Kaggle reaches the clone cell.
+    commit_marker = "__LAUNCHER_GIT_COMMIT__"
+    if commit_marker in notebook_text:
+        if notebook_text.count(commit_marker) != 1:
+            raise SystemExit(f"{notebook.name} has {notebook_text.count(commit_marker)} commit markers")
+        head = subprocess.check_output(
+            ["git", "rev-parse", "HEAD"], cwd=REPO_ROOT, text=True).strip()
+        notebook_text = notebook_text.replace(commit_marker, head)
     if "producer_shard" in job:
         marker = "SHARD_INDEX = 0  # launcher replaces this in its staged copy for producer 0/1/2"
         if notebook_text.count(marker) != 1:
@@ -1249,6 +1318,12 @@ def main() -> int:
             print("    speech-instrument.md is the raw report. Then write the outcome")
             print("    into RESULTS-speech.md and PREREGISTRATION.md whichever way it")
             print("    fell. DOES NOT SHIP means rule 3: large-v3 is closed.")
+        elif args.job == "listen-clean-eval":
+            print("  unzip lilly-listen-clean-eval.zip into training/clean-eval/results/;")
+            print("  it is evidence only: do not install weights or change defaults.")
+        elif args.job == "read-clean-eval":
+            print("  unzip lilly-read-clean-eval.zip into training/clean-eval/results/;")
+            print("  it is evidence only: do not train, install, or change defaults.")
         elif args.job == "speak-youtube":
             print("  unzip lilly-speak-youtube-results.zip into training/speak-youtube/ and write the")
             print("    outcome into RESULTS-speak-youtube.md and PREREGISTRATION.md whichever way it fell.")
@@ -1363,6 +1438,8 @@ def main() -> int:
         datasets.append(push_ocr_crops(user))
     if job.get("needs_ocr_sign_letters"):
         datasets.append(push_ocr_sign_letters(user))
+    if job.get("needs_ocr_shipped"):
+        datasets.append(push_ocr_shipped(user))
     if job.get("needs_listen_candidate"):
         datasets.append(push_listen_candidate(user))
     if job.get("needs_listen_shipped"):
