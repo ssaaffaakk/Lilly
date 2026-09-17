@@ -150,9 +150,11 @@ class Engine:
 
         GPU quantisation can rank an all-special-token hypothesis first even
         when other beams decode normally.  Product translation remains exactly
-        unchanged; Run B explicitly opts into four decoded alternatives and a
-        greedy retry.  The caller receives accounting and still fails if every
-        deterministic hypothesis is empty.
+        unchanged; Run B retries an empty result with four decoded alternatives
+        and then greedily.  Normal rows use the original one-hypothesis call, so
+        recovery does not double the seven-hour producer wall.  The caller
+        receives accounting and still fails if every deterministic hypothesis
+        is empty.
         """
         return self._translate(text, truncate=truncate, strip_tags=strip_tags,
                                require_nonempty=True)
@@ -195,13 +197,8 @@ class Engine:
         diagnostics = {"alternative": 0, "greedy": 0}
         for group in self._grouped(tokenised):
             with _translate_lock:
-                if require_nonempty:
-                    results = self.translator.translate_batch(
-                        group, beam_size=4, max_decoding_length=MAX_SENTENCE_TOKENS,
-                        num_hypotheses=4, return_alternatives=True, disable_unk=True)
-                else:
-                    results = self.translator.translate_batch(
-                        group, beam_size=4, max_decoding_length=MAX_SENTENCE_TOKENS)
+                results = self.translator.translate_batch(
+                    group, beam_size=4, max_decoding_length=MAX_SENTENCE_TOKENS)
             for source_tokens, result in zip(group, results):
                 decoded = ""
                 for hypothesis_index, hypothesis in enumerate(result.hypotheses):
@@ -214,6 +211,22 @@ class Engine:
                         if hypothesis_index:
                             diagnostics["alternative"] += 1
                         break
+                if require_nonempty and not decoded:
+                    with _translate_lock:
+                        alternatives = self.translator.translate_batch(
+                            [source_tokens], beam_size=4,
+                            max_decoding_length=MAX_SENTENCE_TOKENS,
+                            num_hypotheses=4, return_alternatives=True,
+                            disable_unk=True)[0]
+                    for hypothesis in alternatives.hypotheses:
+                        ids = self.tokenizer.convert_tokens_to_ids(hypothesis)
+                        candidate = self.tokenizer.decode(ids, skip_special_tokens=True)
+                        if strip_tags:
+                            candidate = LANGUAGE_TAG.sub("", candidate).strip()
+                        if candidate:
+                            decoded = candidate
+                            diagnostics["alternative"] += 1
+                            break
                 if require_nonempty and not decoded:
                     with _translate_lock:
                         retry = self.translator.translate_batch(

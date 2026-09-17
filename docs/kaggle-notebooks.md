@@ -449,8 +449,10 @@ hard failure with no partial Output.
 The pinned GPU decoder can numerically rank an all-special-token beam first
 even for a clean, fully in-vocabulary Bosnian headline. Producers therefore use
 `Engine.translate_nonempty`, which keeps the product's default decode unchanged
-but asks the same beam search for four deterministic hypotheses, selects the
-first non-empty decoded beam, and retries greedily only if all four are empty.
+and runs that same one-hypothesis call first. Only an empty result is retried
+with four deterministic beam hypotheses; it selects the first non-empty decoded
+beam and retries greedily only if all four are empty. Normal rows therefore keep
+the measured producer throughput instead of paying for four returned beams.
 Both fallback counts are written to every schema-v3 manifest. Known GPU-empty clean and
 leetspeak rows are probed before generation; if the alternatives and greedy
 retry are all empty, the producer still exits nonzero and emits no shard.

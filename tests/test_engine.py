@@ -94,9 +94,18 @@ def test_a_long_sentence_is_cut_to_the_sentence_cap_not_refused(engine):
     assert MAX_SENTENCE_TOKENS * 2 > MAX_INPUT_TOKENS or True  # the cap, not the budget, applies
 
 
+def test_generation_decoder_keeps_original_call_for_nonempty_rows(engine):
+    out, diagnostics = engine.translate_nonempty("Dobar dan")
+    assert out == "Dobar dan"
+    assert diagnostics == {"alternative": 0, "greedy": 0}
+    assert len(engine.translator.batches) == 1
+
+
 def test_generation_decoder_selects_first_nonempty_beam_without_changing_default(engine):
     class AlternativeDecoder:
         def translate_batch(self, group, beam_size, max_decoding_length, **kwargs):
+            if not kwargs:
+                return [Alternatives([[""]]) for _ in group]
             assert beam_size == 4 and kwargs == {
                 "num_hypotheses": 4, "return_alternatives": True, "disable_unk": True}
             return [Alternatives([[""], ["translated"], ["unused"]]) for _ in group]
@@ -110,6 +119,8 @@ def test_generation_decoder_selects_first_nonempty_beam_without_changing_default
 def test_generation_decoder_retries_greedily_when_all_beams_decode_empty(engine):
     class GreedyDecoder:
         def translate_batch(self, group, beam_size, max_decoding_length, **kwargs):
+            if beam_size == 4 and not kwargs:
+                return [Alternatives([[""]]) for _ in group]
             if beam_size == 4:
                 return [Alternatives([[""], [""], [""], [""]]) for _ in group]
             assert beam_size == 1 and kwargs == {"disable_unk": True}
