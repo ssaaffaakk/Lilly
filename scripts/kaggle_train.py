@@ -734,6 +734,11 @@ def push_ocr_commons40(user: str) -> str:
         if got != row["commons_sha1"] or len(data) != int(row["bytes"]):
             raise SystemExit(f"staged photo {row['file']} does not match the manifest")
         marker[row["file"]] = got
+        sha_dir = stage / "by-sha1"
+        sha_dir.mkdir(exist_ok=True)
+        sha_copy = sha_dir / row["commons_sha1"]
+        if not sha_copy.is_file() or sha_copy.read_bytes() != data:
+            sha_copy.write_bytes(data)
     (stage / "commons40-sha1.json").write_text(
         json.dumps(marker, indent=2) + "\n", encoding="utf-8")
     (stage / "dataset-metadata.json").write_text(json.dumps({
@@ -741,12 +746,14 @@ def push_ocr_commons40(user: str) -> str:
         "licenses": [{"name": "other"}]}, indent=1))
     existing = subprocess.run([KAGGLE, "datasets", "status", slug],
                               text=True, capture_output=True)
-    if "ready" in existing.stdout.lower():
-        print(f"dataset already there: {slug} (40 hash-pinned Commons originals)")
-        return slug
     mb = sum((stage / r["file"]).stat().st_size for r in rows) / 1048576
-    print(f"uploading {mb:.0f} MB to {slug} (40 hash-pinned Commons originals)")
-    run(KAGGLE, "datasets", "create", "-p", stage, "-r", "zip")
+    if "ready" in existing.stdout.lower():
+        print(f"updating {mb:.0f} MB on {slug} (SHA-1 copies; zip names are not identity)")
+        run(KAGGLE, "datasets", "version", "-p", stage, "-m",
+            "SHA-1 copies so Unicode zip names cannot hide a photo", "-r", "zip")
+    else:
+        print(f"uploading {mb:.0f} MB to {slug} (40 hash-pinned Commons originals)")
+        run(KAGGLE, "datasets", "create", "-p", stage, "-r", "zip")
     wait_until_ready(slug)
     return slug
 

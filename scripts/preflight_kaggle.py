@@ -857,6 +857,13 @@ def main() -> int:
         fail("kaggle_train.py must attach the SHA-256-pinned shipped PP-OCRv6 weights for read-clean-eval")
     if '"needs_ocr_commons40": True' not in kaggle_train or "push_ocr_commons40" not in kaggle_train:
         fail("kaggle_train.py must attach the hash-pinned 40-photo dataset for read-clean-eval (Commons 429)")
+    if "by-sha1" not in kaggle_train:
+        fail("kaggle_train.py must upload SHA-1 copies of the 40 photos "
+             "(Kaggle zip names are not identity; Međugorje_Banner.jpg vanished)")
+    fetch_photos = (REPO / "training" / "fetch_pinned_ocr_photos.py").read_text(encoding="utf-8")
+    if "index_local_source" not in fetch_photos or "by-sha1" not in fetch_photos:
+        fail("fetch_pinned_ocr_photos.py must find attached photos by commons_sha1, "
+             "not only by the zip entry name")
     poller_speak = (REPO / "scripts" / "kaggle_poll.py").read_text(encoding="utf-8")
     speak_job = poller_speak.split('"speak-bs":', 1)[1][:400] if '"speak-bs":' in poller_speak else ""
     if "lilly-speak-bs-results.zip" not in speak_job or '"lilly-speak-bs.zip"' in speak_job:

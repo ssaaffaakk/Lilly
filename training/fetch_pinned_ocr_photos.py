@@ -11,7 +11,22 @@ import urllib.request
 from pathlib import Path
 
 
-def fetch_bytes(row: dict, local_source: Path | None) -> bytes:
+SKIP_SOURCE_NAMES = {"dataset-metadata.json", "commons40-sha1.json"}
+
+
+def index_local_source(local_source: Path) -> dict[str, Path]:
+    """Map SHA-1 → file. Kaggle's zip step can rename Unicode filenames."""
+    index: dict[str, Path] = {}
+    for path in sorted(local_source.rglob("*")):
+        if not path.is_file() or path.name in SKIP_SOURCE_NAMES:
+            continue
+        digest = hashlib.sha1(path.read_bytes()).hexdigest()
+        index.setdefault(digest, path)
+    return index
+
+
+def fetch_bytes(row: dict, local_source: Path | None,
+                sha_index: dict[str, Path] | None = None) -> bytes:
     """Return the photo's bytes, from an attached dataset dir or from Commons.
 
     A Kaggle datacenter IP downloading 40 multi-megabyte originals from Commons
@@ -19,12 +34,27 @@ def fetch_bytes(row: dict, local_source: Path | None) -> bytes:
     attaches the same originals as a frozen dataset and reads them here instead.
     The manifest verification below is identical either way, so a mismatch still
     fail-stops and the "local" path is provably the same bytes as Commons.
+
+    Identity on the attached dataset is commons_sha1, not the zip entry name:
+    v1 of lilly-ocr-commons-40 lost Međugorje_Banner.jpg under the Unicode
+    filename and ERROR'd the Read eval at 9/40.
     """
     if local_source is not None:
         source = local_source / row["file"]
-        if not source.is_file():
-            raise SystemExit(f"{row['file']}: not in attached photo dataset {local_source}")
-        return source.read_bytes()
+        if source.is_file():
+            return source.read_bytes()
+        sha_copy = local_source / "by-sha1" / row["commons_sha1"]
+        if sha_copy.is_file():
+            return sha_copy.read_bytes()
+        if sha_index is None:
+            sha_index = index_local_source(local_source)
+        hashed = sha_index.get(row["commons_sha1"])
+        if hashed is None:
+            raise SystemExit(
+                f"{row['file']}: not in attached photo dataset {local_source} "
+                f"(no file named that, and no file with commons_sha1 "
+                f"{row['commons_sha1']})")
+        return hashed.read_bytes()
     request = urllib.request.Request(row["original_url"], headers={"User-Agent": "Lilly/1.0"})
     for attempt in range(5):
         try:
@@ -54,10 +84,11 @@ def main() -> int:
     if len(rows) != 40 or len({r["file"] for r in rows}) != 40:
         raise SystemExit(f"OCR manifest is not exactly 40 unique photographs: {len(rows)}")
     args.out.mkdir(parents=True, exist_ok=True)
+    sha_index = index_local_source(args.local_source) if args.local_source else None
     from PIL import Image
     for index, row in enumerate(rows, 1):
         path = args.out / row["file"]
-        data = fetch_bytes(row, args.local_source)
+        data = fetch_bytes(row, args.local_source, sha_index)
         got_sha1 = hashlib.sha1(data).hexdigest()
         if len(data) != int(row["bytes"]) or got_sha1 != row["commons_sha1"]:
             raise SystemExit(f"{row['file']}: Commons bytes changed or download is partial")
