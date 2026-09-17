@@ -19,6 +19,7 @@ filter and not a selection.
         --holdout flores.bs-dev flores.bs-devtest flores.bs-test \
         --bench bench/cases.tsv \
         --parallel data/extra/train-mix-en-bs.tsv \
+        --tokenizer-dir models/lilly-translator \
         --n 1000000 --out backtrans-bs.txt --report backtrans-report.json
 
 `--holdout` files are one sentence per line; `--bench` is the tsv whose `bs`
@@ -99,6 +100,38 @@ def is_pathological_source(s: str) -> bool:
     return source_rejection_reason(s) is not None
 
 
+def select_model_vocabulary(lines: list[str], n: int, tokenizer,
+                            batch_size: int = 4096) -> tuple[list[str], dict]:
+    """Fill the final sample only with sources known by the pinned tokenizer.
+
+    This gate runs after deterministic shuffling and replaces an out-of-vocab
+    candidate with the next clean candidate.  It is therefore pre-sample source
+    validation, not a runtime skip after translation has started.
+    """
+    want = n or len(lines)
+    selected = []
+    checked = rejected_unknown = 0
+    for start in range(0, len(lines), batch_size):
+        chunk = lines[start:start + batch_size]
+        encoded = tokenizer([forward_input(s) for s in chunk],
+                            add_special_tokens=False)["input_ids"]
+        if len(encoded) != len(chunk):
+            raise RuntimeError("tokenizer returned the wrong batch size")
+        for source, ids in zip(chunk, encoded):
+            checked += 1
+            if tokenizer.unk_token_id in ids:
+                rejected_unknown += 1
+                continue
+            selected.append(source)
+            if len(selected) == want:
+                return selected, {"enabled": True, "checked": checked,
+                                  "rejected_unknown": rejected_unknown,
+                                  "accepted": len(selected)}
+    return selected, {"enabled": True, "checked": checked,
+                      "rejected_unknown": rejected_unknown,
+                      "accepted": len(selected)}
+
+
 def forward_input(s: str) -> str:
     """Make implicit sentence boundaries visible to the shipped app splitter.
 
@@ -176,7 +209,8 @@ def shard_bounds(total: int, shard_index: int, shard_count: int) -> tuple[int, i
 
 
 def prepare(lines, holdout: set, n: int, min_tok: int, max_tok: int, seed: int,
-            shard_index: int | None = None, shard_count: int | None = None):
+            shard_index: int | None = None, shard_count: int | None = None,
+            tokenizer=None):
     """Clean, de-duplicate, sample, then optionally return one exact shard."""
     report = {"read": 0, "kept": 0, "sample_n": n, "seed": seed,
               "dropped": {"too short": 0, "too long": 0, "url/boilerplate": 0,
@@ -211,10 +245,19 @@ def prepare(lines, holdout: set, n: int, min_tok: int, max_tok: int, seed: int,
             continue
         seen.add(key)
         kept.append(line)
-    # Deterministic sample down to n.
+    # Deterministic sample down to n.  Model-vocabulary validation happens
+    # after shuffling so a rejected candidate is replaced by the next clean
+    # candidate, identically in every producer.
     if n and len(kept) > n:
         random.Random(seed).shuffle(kept)
-        kept = kept[:n]
+    if tokenizer is not None:
+        kept, vocabulary_gate = select_model_vocabulary(kept, n, tokenizer)
+    else:
+        if n:
+            kept = kept[:n]
+        vocabulary_gate = {"enabled": False, "checked": 0,
+                           "rejected_unknown": 0, "accepted": len(kept)}
+    report["model_vocabulary_gate"] = vocabulary_gate
     sample_kept = len(kept)
     report["sample_order_hash"] = ordered_hash(kept)
     if (shard_index is None) != (shard_count is None):
@@ -237,6 +280,8 @@ def main() -> int:
     ap.add_argument("--holdout", nargs="*", default=[], help="FLORES bs files to exclude")
     ap.add_argument("--bench", default=None, help="bench/cases.tsv (its bs column excluded)")
     ap.add_argument("--parallel", default=None, help="existing en-bs tsv (its bs side excluded)")
+    ap.add_argument("--tokenizer-dir", required=True,
+                    help="pinned bs-en tokenizer; unknown-token candidates are rejected")
     ap.add_argument("--n", type=int, default=1_000_000, help="max kept sentences (0 = all)")
     ap.add_argument("--min-tokens", type=int, default=3)
     ap.add_argument("--max-tokens", type=int, default=60)
@@ -254,9 +299,11 @@ def main() -> int:
         print("refusing to run with an EMPTY holdout — pass --holdout/--bench so "
               "FLORES and the bench cannot leak into training", file=sys.stderr)
         return 1
+    from transformers import AutoTokenizer
+    tokenizer = AutoTokenizer.from_pretrained(args.tokenizer_dir)
     kept, report = prepare(load_lines(Path(args.input)), holdout, args.n,
                            args.min_tokens, args.max_tokens, args.seed,
-                           args.shard_index, args.shard_count)
+                           args.shard_index, args.shard_count, tokenizer)
     Path(args.out).write_text("\n".join(kept) + "\n", encoding="utf-8")
     print(json.dumps(report, indent=2, ensure_ascii=False))
     if args.report:

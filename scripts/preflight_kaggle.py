@@ -639,6 +639,8 @@ def check_backtrans_producer(text: str) -> None:
         fail("backtrans producer holdout must cover FLORES and bench")
     if '"--parallel", "data/clean/train-mix.tsv"' not in text:
         fail("backtrans producer must exclude the existing en-bs mix")
+    if '"--tokenizer-dir", FORWARD_DIR' not in text:
+        fail("backtrans producer must reject sources unknown to the pinned forward tokenizer")
     if '"--shard-index", str(SHARD_INDEX)' not in text or '"--shard-count", str(SHARD_COUNT)' not in text:
         fail("backtrans producer must request its deterministic shard")
     if "from app.translate import Engine" not in text or 'direction="bs-en"' not in text:

@@ -90,6 +90,25 @@ def test_forward_input_exposes_joined_sentence_boundaries_only():
     assert prep.forward_input(ordinary) == ordinary
 
 
+def test_model_vocabulary_gate_replaces_unknown_candidate_before_sample():
+    class FakeTokenizer:
+        unk_token_id = 99
+
+        def __call__(self, texts, add_special_tokens=False):
+            assert add_special_tokens is False
+            return {"input_ids": [[99] if "ᴅᴀɴ" in text else [1, 2]
+                                  for text in texts]}
+
+    lines = ["ᴅᴀɴ otvorenih vrata", "prva čista bosanska rečenica",
+             "druga čista bosanska rečenica"]
+    kept, report = prep.prepare(lines, {"x"}, n=2, min_tok=3, max_tok=60,
+                                seed=0, tokenizer=FakeTokenizer())
+    assert len(kept) == 2
+    assert "ᴅᴀɴ otvorenih vrata" not in kept
+    assert report["model_vocabulary_gate"] == {
+        "enabled": True, "checked": 3, "rejected_unknown": 1, "accepted": 2}
+
+
 def test_deterministic_sample():
     holdout = {"x"}
     lines = [f"bosanska rečenica broj {i} ovdje" for i in range(50)]

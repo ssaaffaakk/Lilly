@@ -19,10 +19,17 @@ def test_kaggle_notebook_package_import_works_from_repo_root():
 
 
 def write_three_shards(root: Path):
+    class FakeTokenizer:
+        unk_token_id = 99
+
+        def __call__(self, texts, add_special_tokens=False):
+            return {"input_ids": [[1, 2] for _ in texts]}
+
     lines = [f"bosanska rečenica broj {i} ovdje" for i in range(10)]
     for index in range(3):
         source, report = prep.prepare(list(lines), {"x"}, n=10, min_tok=3, max_tok=60,
-                                      seed=7, shard_index=index, shard_count=3)
+                                      seed=7, shard_index=index, shard_count=3,
+                                      tokenizer=FakeTokenizer())
         rows = [f"backtrans-macocu\t{bs}\tenglish {i}" for i, bs in enumerate(source)]
         data_name = f"backtrans-shard-{index}.tsv.gz"
         with gzip.open(root / data_name, "wt", encoding="utf-8") as fh:
@@ -93,3 +100,18 @@ def test_validate_union_refuses_inconsistent_source_filter_accounting(tmp_path):
         assert "inconsistent source-filter accounting" in str(exc)
     else:
         raise AssertionError("inconsistent source-filter accounting was accepted")
+
+
+def test_validate_union_refuses_disabled_model_vocabulary_gate(tmp_path):
+    write_three_shards(tmp_path)
+    report_path = tmp_path / "backtrans-shard-0.json"
+    report = json.loads(report_path.read_text(encoding="utf-8"))
+    report["model_vocabulary_gate"]["enabled"] = False
+    report_path.write_text(json.dumps(report), encoding="utf-8")
+    try:
+        dataset.validate_union(tmp_path, expected_n=10, shard_count=3,
+                               forward_fingerprint="forward-test", seed=7)
+    except SystemExit as exc:
+        assert "model-vocabulary gate was not enabled" in str(exc)
+    else:
+        raise AssertionError("disabled model-vocabulary gate was accepted")

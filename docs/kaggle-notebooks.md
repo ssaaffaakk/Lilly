@@ -434,7 +434,11 @@ MaCoCu web noise must be handled before that deterministic sample is drawn.
 Sources with an 81+ character whitespace-free token, a 19+ digit run, six
 repeated alphanumeric characters, fewer than three Latin letters, or any
 alphabetic character from a non-Latin script are rejected and replaced from
-the remaining clean pool; they are never skipped by a producer. For joined web
+the remaining clean pool. After deterministic shuffling, every candidate is
+also checked against the exact pinned forward tokenizer; any source containing
+an unknown token is replaced by the next clean candidate before the final
+one-million-row sample is bound. These are pre-sample gates, never producer
+runtime skips. For joined web
 punctuation such as `tekst..sljedece`, the producer
 collapses punctuation runs and exposes sentence boundaries only for the
 forward decode. The original Bosnian source remains the synthetic pair's

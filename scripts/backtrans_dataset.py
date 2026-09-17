@@ -50,6 +50,22 @@ def validate_source_filter_report(report: dict, label: str = "producer report") 
     return reasons
 
 
+def validate_model_vocabulary_gate(report: dict, label: str = "producer report") -> dict:
+    """Require a complete, deterministic pre-sample tokenizer gate."""
+    gate = report.get("model_vocabulary_gate")
+    if not isinstance(gate, dict) or gate.get("enabled") is not True:
+        raise SystemExit(f"{label}: model-vocabulary gate was not enabled")
+    checked = gate.get("checked")
+    rejected = gate.get("rejected_unknown")
+    accepted = gate.get("accepted")
+    values = (checked, rejected, accepted)
+    if (any(not isinstance(v, int) or isinstance(v, bool) or v < 0 for v in values)
+            or checked != rejected + accepted
+            or accepted != report.get("sample_kept")):
+        raise SystemExit(f"{label}: inconsistent model-vocabulary gate: {gate!r}")
+    return gate
+
+
 def validate_union(root: Path, *, expected_n: int = SAMPLE_N,
                    shard_count: int = SHARD_COUNT,
                    forward_fingerprint: str = FORWARD_FINGERPRINT,
@@ -64,7 +80,7 @@ def validate_union(root: Path, *, expected_n: int = SAMPLE_N,
     union_pair_digest = hashlib.blake2b(digest_size=32)
     seen, duplicate_sources, shard_records = set(), 0, []
     forward_normalized = 0
-    sample_hash = producer_git = source_filter_accounting = None
+    sample_hash = producer_git = source_filter_accounting = vocabulary_gate = None
     total = 0
 
     for expected_index, report_path in enumerate(reports):
@@ -95,6 +111,11 @@ def validate_union(root: Path, *, expected_n: int = SAMPLE_N,
             source_filter_accounting = this_accounting
         elif this_accounting != source_filter_accounting:
             raise SystemExit(f"{report_path.name}: producer source-filter accounting differs")
+        this_vocabulary_gate = validate_model_vocabulary_gate(report, report_path.name)
+        if vocabulary_gate is None:
+            vocabulary_gate = this_vocabulary_gate
+        elif this_vocabulary_gate != vocabulary_gate:
+            raise SystemExit(f"{report_path.name}: producer model-vocabulary gate differs")
 
         this_sample_hash = report.get("sample_order_hash")
         if not this_sample_hash:
@@ -159,6 +180,7 @@ def validate_union(root: Path, *, expected_n: int = SAMPLE_N,
             "shard_count": shard_count, "seed": seed,
             "forward_normalized": forward_normalized,
             "source_filter_accounting": source_filter_accounting,
+            "model_vocabulary_gate": vocabulary_gate,
             "forward_fingerprint": forward_fingerprint, "producer_git": producer_git,
             "source_order_hash": union_source_hash,
             "pair_order_hash": union_pair_digest.hexdigest(), "shards": shard_records}
