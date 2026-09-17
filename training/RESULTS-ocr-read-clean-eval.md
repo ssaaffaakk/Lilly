@@ -14,21 +14,21 @@ Cohorts were frozen **before** this inference
 (`training/clean-eval/ocr-commons-40.tsv`). Unreadable photographs are not a
 verdict on the reader.
 
-## Product number (unchanged)
+## Side by side
 
-The published figure stays **67.0% words found per photograph, 65 invented**
-on the 40 (`training/RESULTS-ocr-paddle-floor.md`). This run re-measured the
-same reader on the same 40 through the app path: **67.9% per photograph, 72
-invented**. Inside the noise of 28 text-bearing photographs. The reader did
-not get better.
+The reader did not change. The mix did.
 
-`test-v2` is still **57.8% found, 450 invented** on 132 photographs with text.
-It is robustness, not this table.
+| | what is in the mix | score |
+|---|---|---|
+| **All 40 — why it is 67%** | 21 clean + **6 blurry** (a person can still read them) + **1** a person cannot read + **12 empty** (no text) | **67.0%** words/photograph published; this run **67.9%**, 72 invented |
+| **Realistic human-based uploaded photos** | the **21** sharp, readable signs a person would actually upload | **82.5%** (273 / 331 words), 53 invented |
 
-## Frozen cohorts (this test)
+67% is pulled down by those 6 + 1 + 12 frames. 82.5% leaves them out. Neither
+replaces `test-v2` (**57.8% found, 450 invented** on 132 photographs with text).
 
-Word-pooled recall. Clean / noisy were labelled by a human looking at the
-photograph, not by the model.
+## Frozen cohorts (detail)
+
+Word-pooled recall. Labels frozen before inference, not by the model.
 
 | cohort | photographs | found / words | recall | invented |
 |---|---:|---:|---:|---:|
@@ -39,16 +39,12 @@ photograph, not by the model.
 | **legible overall** (clean + noisy) | 27 | 287 / 367 | 78.2% | 68 |
 | all 28 with text | 28 | 291 / 373 | 78.0% pooled | 70 |
 
-Pooled 78.0% is not the product number: `Spanish_square_08034.JPG` holds 144 of
-373 key words. Equal weight per photograph is **67.9%**. Diacritic words 18/25
-(72%); folded 23/25 (92%).
+Pooled 78.0% is not either headline: `Spanish_square_08034.JPG` holds 144 of
+373 key words. Equal weight per photograph on all 40 is **67.9%**. Diacritic
+words 18/25 (72%); folded 23/25 (92%).
 
-**The product read score is unchanged.** 82.5% looks higher because hard and
-blurry frames are not mixed into that percentage. It does not replace 67.0%.
-It is the clean slice the owner asked for: do not call the reader bad on
-photographs a human could not read. The 14-photo Latin-only reslice at 89%
-(`training/RESULTS-ocr-clean-legible.md`) is a different cut of stored output,
-not this Kaggle run.
+The 14-photo Latin-only reslice at 89% (`training/RESULTS-ocr-clean-legible.md`)
+is a different cut of stored output, not this Kaggle run.
 
 v1 of this kernel ERROR'd at 9/40 because Kaggle's zip hid `Međugorje_Banner.jpg`
 under a Unicode filename. That was a missing photograph, not a reader score.

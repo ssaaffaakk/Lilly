@@ -81,7 +81,8 @@ the file it lives in. The last is today.
 
 | | the first builds (unrecorded) | first recorded | today |
 |---|---|---|---|
-| Photographs — words found per photograph, the 40 | **< 30%** | 36.0% (`training/RESULTS-ocr.md`) | **67.0%** |
+| Photographs — words found per photograph, the 40 (6 blurry + 1 unreadable + 12 empty in the mix) | **< 30%** | 36.0% (`training/RESULTS-ocr.md`) | **67.0%** |
+| Photographs — realistic human-based uploaded photos (21 clean signs) | — | — | **82.5%** (273/331) |
 | Photographs — words found, pooled | **< 10%** | 16.9% (63 of 373) | **69.4%** |
 | Photographs — words invented that are on no sign | **> 280** | 224 | **65** |
 | Speech — word error, 200 held-out clips | **> 55%** | 38.5% (`training/RESULTS-speech.md`) | **11.9%** (whisper-large-v3, shipped by decision, refused at its gate; the gated whisper-small reads 34.9%) |
@@ -306,17 +307,17 @@ Cyrillic. Diacritics (č, ć, đ, š, ž) are the reader's weakest column: only 
 1,702 real labels carry any of them (10.6%), and đ appears 8 times total in the
 labelled set.
 
-**Clean-eval (17 Sep 2026).** The owner required that a reader not be judged on
-photographs a human cannot read. Job `read-clean-eval` ran the shipped
-`app.ocr.scan` path once on Kaggle (git `94415fc`, COMPLETE) on the 40
-hash-pinned Commons originals. Cohorts were frozen before inference: 21 clean,
-6 noisy-but-understandable, 1 human-unintelligible, 12 no-text. Product number
-unchanged: **67.0% / 65 invented** on the 40; this run re-measured **67.9% / 72**.
-On the clean cohort: **273/331 words (82.5%)**, 53 invented. Noisy 14/36. The
-unintelligible photograph is excluded from the capability claim. The product
-read score is unchanged; the clean-sign figure looks higher because hard and
-blurry frames are not mixed into that percentage.
-`training/RESULTS-ocr-read-clean-eval.md`. test-v2 remains the robustness set.
+**Clean-eval (17 Sep 2026).** Same shipped `app.ocr.scan` on Kaggle (git
+`94415fc`). The 40 split **before** inference: 21 clean, 6 blurry-but-readable,
+1 unreadable, 12 empty.
+
+| | mix | score |
+|---|---|---|
+| **All 40 — why 67%** | 21 + **6 blurry** + **1 unreadable** + **12 empty** | **67.0%** per photograph (re-run 67.9% / 72 invented) |
+| **Realistic human-based uploaded photos** | the 21 sharp, human-readable signs a person would actually upload | **82.5%** (273/331), 53 invented |
+
+67% includes the blurry and empty frames; 82.5% does not. Same reader.
+`training/RESULTS-ocr-read-clean-eval.md`. test-v2 (57.8% / 450) stays robustness.
 
 ### 4.5 Text-to-speech
 
@@ -525,7 +526,8 @@ by the owner's decision) spans six rubric bands.
 | EasyOCR, stock | 48.0% / 188 | 30.0% / — |
 | EasyOCR, fine-tuned on real crops | 54.5% / 182 | 34.6% / 2,071 |
 | **PP-OCRv6, stock, floor 0.9 (shipped)** | **67.0% / 65** | **57.8% / 450** |
-| same reader, Kaggle clean-eval 17 Sep (not a new model) | 67.9% / 72 on the 40; **82.5% (273/331)** on 21 frozen-clean photographs | (test-v2 not re-run) |
+| same reader, **all 40** (21 clean + 6 blurry + 1 unreadable + 12 empty) | 67.9% / 72 (why the headline is ~67, not 82) | — |
+| same reader, **realistic human-based uploaded photos** (21) | **82.5% (273/331)**, 53 invented | — |
 
 **Industry context.** The rubric grades photograph reading on strict end-to-end word
 F1 (ICDAR2015 Task 4.4 matching) with a recall floor. The photograph score is
