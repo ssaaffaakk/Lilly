@@ -6,7 +6,10 @@ import argparse
 import csv
 import hashlib
 import json
+import sys
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from training.evaluate_speech import edits, normalise
 from training.speech_bench import clip_key, fingerprint

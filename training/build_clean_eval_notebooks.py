@@ -14,11 +14,14 @@ COMMIT_MARKER = "__LAUNCHER_GIT_COMMIT__"
 SETUP = '''\
 import hashlib, json, os, shutil, subprocess, sys, urllib.error, urllib.request, zipfile
 from pathlib import Path
-import torch
-assert torch.cuda.is_available(), "Kaggle GPU is required for this heavy evaluation"
 os.environ["CUDA_VISIBLE_DEVICES"] = "0"
-GPU = torch.cuda.get_device_name(0)
-print(torch.cuda.device_count(), "GPU(s), using", GPU)
+try:
+    GPU = subprocess.check_output(
+        ["nvidia-smi", "--query-gpu=name", "--format=csv,noheader"], text=True
+    ).splitlines()[0].strip()
+except (FileNotFoundError, IndexError, subprocess.CalledProcessError) as exc:
+    raise SystemExit(f"Kaggle GPU is required for this heavy evaluation: {exc}")
+print("using GPU", GPU)
 
 def reachable(url):
     try:
@@ -189,18 +192,27 @@ print("wrote", ZIP, ZIP.stat().st_size, "bytes; eval only, no weights or default
 '''
 
 OCR_PIP = '''\
+# EasyOCR supplies the shipped app path's paragraph grouper.  Pin its Torch
+# dependency to CPU so it cannot replace Paddle 3.3.1's CUDA 12.6 libraries
+# with Kaggle Torch's CUDA 12.8 libraries.  Nothing is imported before all
+# installs finish, avoiding a mixed old/new Pillow module cache in this kernel.
+run(sys.executable, "-m", "pip", "install", "-q", "torch==2.8.0", "torchvision==0.23.0",
+    "--index-url", "https://download.pytorch.org/whl/cpu")
 run(sys.executable, "-m", "pip", "install", "-q", "paddlepaddle-gpu==3.3.1",
     "-i", "https://www.paddlepaddle.org.cn/packages/stable/cu126/")
 run(sys.executable, "-m", "pip", "install", "-q", "paddleocr==3.7.0",
     "easyocr==1.7.2", "opencv-contrib-python==4.10.0.84",
-    "opencv-python-headless==4.10.0.84", "pillow==12.3.0")
-import cv2, paddle, paddleocr
+    "opencv-python-headless==4.10.0.84", "pillow==10.4.0")
+import cv2, paddle, paddleocr, torch
 if not paddle.device.is_compiled_with_cuda() or paddle.device.cuda.device_count() < 1:
     raise SystemExit("paddlepaddle-gpu has no CUDA")
 if paddle.__version__ != "3.3.1" or paddleocr.__version__ != "3.7.0" or cv2.__version__ != "4.10.0":
     raise SystemExit(f"OCR runtime drift: paddle={paddle.__version__}, "
                      f"paddleocr={paddleocr.__version__}, cv2={cv2.__version__}")
-print("OCR runtime", paddle.__version__, paddleocr.__version__, cv2.__version__)
+if torch.cuda.is_available() or "+cpu" not in torch.__version__:
+    raise SystemExit(f"EasyOCR helper Torch is not isolated on CPU: {torch.__version__}")
+print("OCR runtime", paddle.__version__, paddleocr.__version__, cv2.__version__,
+      "helper torch", torch.__version__)
 '''
 
 OCR_DATA = '''\
