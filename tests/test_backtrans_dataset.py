@@ -131,3 +131,55 @@ def test_validate_union_refuses_missing_decoder_fallback_accounting(tmp_path):
         assert "invalid forward_decode_fallbacks" in str(exc)
     else:
         raise AssertionError("missing decoder fallback accounting was accepted")
+
+
+# --- producer-code equivalence gate: one commit, or a git-verified proof --------
+# The shard `git` field is provenance, not integrity: the producer notebook clones
+# `main` at run time, so an unrelated commit (an eval job, a doc) can advance it
+# between two shards without changing producer output. resolve_producer_git checks
+# the real invariant — the bytes of PRODUCER_PATHS — instead of the SHA string.
+
+def test_resolve_producer_git_single_commit_needs_no_git():
+    assert dataset.resolve_producer_git(["abc", "abc", "abc"]) == ("abc", None)
+
+
+def test_resolve_producer_git_refuses_unresolvable_commit():
+    # Two well-formed SHAs that no clone can resolve: cannot verify => refuse.
+    try:
+        dataset.resolve_producer_git(["0" * 40, "1" * 40])
+    except SystemExit as exc:
+        assert "cannot be checked from git" in str(exc)
+    else:
+        raise AssertionError("union across unverifiable commits was accepted")
+
+
+def test_resolve_producer_git_refuses_differing_producer_code(monkeypatch):
+    monkeypatch.setattr(dataset, "_producer_paths_tree_hash",
+                        lambda sha: {"a": "hash-A", "b": "hash-B"}[sha])
+    try:
+        dataset.resolve_producer_git(["a", "b"])
+    except SystemExit as exc:
+        assert "PRODUCER CODE DIFFERS" in str(exc)
+    else:
+        raise AssertionError("commits with differing producer code were accepted")
+
+
+def test_resolve_producer_git_accepts_git_verified_equivalent_commits(monkeypatch):
+    monkeypatch.setattr(dataset, "_producer_paths_tree_hash", lambda sha: "same-hash")
+    git, paths_hash = dataset.resolve_producer_git(["b", "a"])
+    assert git == ["a", "b"] and paths_hash == "same-hash"
+
+
+def test_run_b_union_commits_are_producer_equivalent():
+    # The real Run B union spans these two commits (shards 0/1 at ab62ba64,
+    # shard 2 at 7b719d06). They must carry byte-identical producer code.
+    import pytest
+    shards01 = "ab62ba64591d3f389cc17c8d2cbb973741afbb43"
+    shard2 = "7b719d06fe7e15811656a685452e3c74d3fd01f9"
+    h01 = dataset._producer_paths_tree_hash(shards01)
+    h2 = dataset._producer_paths_tree_hash(shard2)
+    if h01 is None or h2 is None:
+        pytest.skip("Run B commits not resolvable in this checkout (shallow clone)")
+    assert h01 == h2, "Run B shard commits no longer carry identical producer code"
+    git, paths_hash = dataset.resolve_producer_git([shards01, shard2, shards01])
+    assert git == sorted({shards01, shard2}) and paths_hash == h01

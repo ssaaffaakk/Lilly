@@ -6,6 +6,8 @@ import argparse
 import gzip
 import hashlib
 import json
+import subprocess
+import sys
 from pathlib import Path
 
 try:
@@ -18,6 +20,23 @@ SHARD_COUNT = 3
 SEED = 20260914
 FORWARD_FINGERPRINT = "1aedcc11231cdf50817ff12f99ff0d1e"
 FORMAT_VERSION = 3
+
+# Every repo file whose bytes decide a producer shard's output. The producer
+# notebook (Lilly_Backtrans_Producer_Kaggle.ipynb) clones `main` at run time, so
+# the `git` SHA a shard records is only whichever tip that clone happened to pull
+# — unrelated commits (docs, eval jobs) move it between shards without touching a
+# byte of producer output. Provenance, not integrity: the source/pair/sample
+# hashes below are what actually pin the bytes. This is the set we compare across
+# commits to tell a spurious SHA gap from a real producer-code change.
+PRODUCER_PATHS = (
+    "training/Lilly_Backtrans_Producer_Kaggle.ipynb",
+    "scripts/prepare_backtrans_bs.py",
+    "scripts/backtrans_dataset.py",
+    "app",
+    "training/kaggle_offload.py",
+    "data/scripts",
+    "requirements.txt",
+)
 
 
 def pair_hash(rows) -> str:
@@ -77,6 +96,68 @@ def validate_decode_fallbacks(report: dict, label: str = "producer report") -> d
     return fallbacks
 
 
+def _producer_paths_tree_hash(sha: str) -> str | None:
+    """Content hash of exactly PRODUCER_PATHS at `sha`, or None if git cannot
+    resolve that commit in this checkout.
+
+    Uses `git ls-tree`, so it reads the object store directly — no working-tree
+    checkout, no network. Two commits whose producer files are byte-identical
+    hash the same; adding, removing, or editing any producer file changes the
+    hash. None means "cannot verify" (git missing, or the commit is not in this
+    clone's history), which the caller treats as a refusal, never a pass."""
+    repo = Path(__file__).resolve().parent.parent
+    try:
+        listing = subprocess.run(
+            ["git", "-C", str(repo), "ls-tree", "-r", "--full-tree", sha, "--",
+             *PRODUCER_PATHS],
+            capture_output=True, text=True, check=True).stdout
+    except (OSError, subprocess.CalledProcessError):
+        return None
+    rows = sorted(line for line in listing.splitlines() if line.strip())
+    if not rows:
+        return None
+    digest = hashlib.blake2b(digest_size=32)
+    for line in rows:
+        digest.update(line.encode("utf-8"))
+        digest.update(b"\n")
+    return digest.hexdigest()
+
+
+def resolve_producer_git(producer_gits) -> tuple:
+    """One provenance for the union, or a git-verified proof that several commits
+    carry byte-identical producer code.
+
+    The old gate required every shard's `git` string to match, which refuses a
+    perfectly good union the moment an unrelated commit (an eval job, a doc)
+    advances `main` between two shards. This checks the invariant the SHA string
+    was only a proxy for: it hashes exactly the files that define producer output
+    at each distinct commit and requires them equal. It fails closed — a commit
+    it cannot resolve, or producer code that actually differs, refuses the union.
+    Owner-sanctioned relaxation of git *string* equality; the fingerprint, sample
+    hash, and row-count gates in validate_union still stand."""
+    distinct = sorted(set(producer_gits))
+    if len(distinct) == 1:
+        return distinct[0], None
+    hashes = {sha: _producer_paths_tree_hash(sha) for sha in distinct}
+    unresolved = sorted(sha for sha, digest in hashes.items() if digest is None)
+    if unresolved:
+        raise SystemExit(
+            "producer shards span commits " + ", ".join(distinct) + " but producer-code "
+            "equivalence cannot be checked from git for " + ", ".join(unresolved) + ". "
+            "Run validate_union inside a full clone that contains those commits, or "
+            "re-produce every shard at one producer commit.")
+    if len(set(hashes.values())) != 1:
+        raise SystemExit(
+            "producer shards span commits whose PRODUCER CODE DIFFERS: "
+            + json.dumps(hashes) + ". Refusing the union — re-produce every shard at "
+            "one producer commit.")
+    paths_hash = next(iter(hashes.values()))
+    print("producer spans " + str(len(distinct)) + " commits (" + ", ".join(distinct)
+          + "); PRODUCER_PATHS byte-identical at " + paths_hash[:16]
+          + " — union permitted.", file=sys.stderr, flush=True)
+    return distinct, paths_hash
+
+
 def validate_union(root: Path, *, expected_n: int = SAMPLE_N,
                    shard_count: int = SHARD_COUNT,
                    forward_fingerprint: str = FORWARD_FINGERPRINT,
@@ -92,7 +173,8 @@ def validate_union(root: Path, *, expected_n: int = SAMPLE_N,
     seen, duplicate_sources, shard_records = set(), 0, []
     forward_normalized = 0
     forward_decode_fallbacks = {"alternative": 0, "greedy": 0}
-    sample_hash = producer_git = source_filter_accounting = vocabulary_gate = None
+    sample_hash = source_filter_accounting = vocabulary_gate = None
+    producer_gits = []
     total = 0
 
     for expected_index, report_path in enumerate(reports):
@@ -142,10 +224,7 @@ def validate_union(root: Path, *, expected_n: int = SAMPLE_N,
         this_git = report.get("git")
         if not this_git:
             raise SystemExit(f"{report_path.name}: missing producer git SHA")
-        if producer_git is None:
-            producer_git = this_git
-        elif this_git != producer_git:
-            raise SystemExit(f"{report_path.name}: producer git SHA differs")
+        producer_gits.append(this_git)
 
         data_path = report_path.parent / str(report.get("data_file"))
         if not data_path.is_file():
@@ -191,6 +270,7 @@ def validate_union(root: Path, *, expected_n: int = SAMPLE_N,
     union_source_hash = union_source_digest.hexdigest()
     if union_source_hash != sample_hash:
         raise SystemExit("producer shards do not reconstruct the registered source order")
+    producer_git, producer_paths_hash = resolve_producer_git(producer_gits)
     return {"format_version": FORMAT_VERSION, "status": "complete", "sample_n": expected_n,
             "rows": total, "missing": missing, "duplicate_sources": duplicate_sources,
             "shard_count": shard_count, "seed": seed,
@@ -199,6 +279,7 @@ def validate_union(root: Path, *, expected_n: int = SAMPLE_N,
             "source_filter_accounting": source_filter_accounting,
             "model_vocabulary_gate": vocabulary_gate,
             "forward_fingerprint": forward_fingerprint, "producer_git": producer_git,
+            "producer_paths_hash": producer_paths_hash,
             "source_order_hash": union_source_hash,
             "pair_order_hash": union_pair_digest.hexdigest(), "shards": shard_records}
 
