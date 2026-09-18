@@ -51,6 +51,34 @@ def _digest_key(text: str) -> bytes:
     return hashlib.blake2b(normalize(text).encode("utf-8"), digest_size=16).digest()
 
 
+def resolve_shard_data(report_dir: Path, data_file: str) -> Path | None:
+    """Locate a shard's rows whether stored gzipped or decompressed.
+
+    The producer writes backtrans-shard-N.tsv.gz and the report names that, but
+    Kaggle expands a standalone .gz when it ingests a dataset, so the union it
+    serves the consumer holds backtrans-shard-N.tsv instead. The rows are
+    byte-identical, so accept whichever name is present."""
+    named = report_dir / data_file
+    if named.is_file():
+        return named
+    if data_file.endswith(".gz"):
+        expanded = report_dir / data_file[:-3]
+        if expanded.is_file():
+            return expanded
+    return None
+
+
+def open_shard_text(data_path: Path):
+    """Open a shard's rows as text whether it is gzip or the plain form a store
+    decompressed it to. Detected by magic bytes, not extension, so a Kaggle-
+    expanded .tsv and a producer .tsv.gz both read correctly."""
+    with open(data_path, "rb") as probe:
+        gzipped = probe.read(2) == b"\x1f\x8b"
+    if gzipped:
+        return gzip.open(data_path, "rt", encoding="utf-8")
+    return open(data_path, "rt", encoding="utf-8")
+
+
 def validate_source_filter_report(report: dict, label: str = "producer report") -> dict:
     """Prove that named pre-sample source rejections add up exactly."""
     dropped = report.get("dropped")
@@ -226,13 +254,13 @@ def validate_union(root: Path, *, expected_n: int = SAMPLE_N,
             raise SystemExit(f"{report_path.name}: missing producer git SHA")
         producer_gits.append(this_git)
 
-        data_path = report_path.parent / str(report.get("data_file"))
-        if not data_path.is_file():
+        data_path = resolve_shard_data(report_path.parent, str(report.get("data_file")))
+        if data_path is None:
             raise SystemExit(f"{report_path.name}: missing {report.get('data_file')}")
         shard_source_digest = hashlib.blake2b(digest_size=32)
         shard_pair_digest = hashlib.blake2b(digest_size=32)
         shard_rows = 0
-        with gzip.open(data_path, "rt", encoding="utf-8") as fh:
+        with open_shard_text(data_path) as fh:
             for line_no, line in enumerate(fh, 1):
                 row = line.rstrip("\n")
                 fields = row.split("\t")

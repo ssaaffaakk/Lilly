@@ -52,6 +52,23 @@ def test_validate_union_proves_exact_gap_free_order(tmp_path):
     assert [s["rows"] for s in got["shards"]] == [4, 3, 3]
 
 
+def test_validate_union_reads_a_store_decompressed_tsv(tmp_path):
+    # Kaggle expands a standalone .gz when it ingests a dataset: the report still
+    # names backtrans-shard-0.tsv.gz, but the union served to the consumer holds
+    # the decompressed backtrans-shard-0.tsv. The rows are identical, so the union
+    # must still validate and record the name actually present.
+    write_three_shards(tmp_path)
+    gz = tmp_path / "backtrans-shard-0.tsv.gz"
+    plain = tmp_path / "backtrans-shard-0.tsv"
+    with gzip.open(gz, "rt", encoding="utf-8") as fh:
+        plain.write_text(fh.read(), encoding="utf-8")
+    gz.unlink()
+    got = dataset.validate_union(tmp_path, expected_n=10, shard_count=3,
+                                 forward_fingerprint="forward-test", seed=7)
+    assert got["rows"] == 10 and got["missing"] == 0 and got["duplicate_sources"] == 0
+    assert got["shards"][0]["data_file"] == "backtrans-shard-0.tsv"
+
+
 def test_validate_union_refuses_a_duplicate_even_when_count_is_full(tmp_path):
     write_three_shards(tmp_path)
     data = tmp_path / "backtrans-shard-2.tsv.gz"
