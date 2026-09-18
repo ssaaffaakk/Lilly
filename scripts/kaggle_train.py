@@ -918,18 +918,26 @@ def push_corpus(user: str) -> str:
 
 
 def push_backtrans_pairs(user: str) -> str:
-    """Publish only the exact union of three COMPLETE Run B producer shards."""
+    """Publish the exact 1M Run B union, or reuse it if already built.
+
+    validate_backtrans_union is the integrity gate: it refuses anything that is
+    not exactly the registered 1M sample (seed, fingerprint, per-shard hashes,
+    git-verified producer-code equivalence, gap-free reconstruction), and the
+    consumer notebook re-runs that same gate on Kaggle before it trains. The
+    dataset is content-addressed by pair_order_hash, so a dataset already ready
+    under that id IS the validated union, and the launching account need not be
+    the one that ran the producer kernels. That is what lets Run B finish on a
+    second account when the first runs out of GPU hours: a fresh build still
+    confirms each producer kernel COMPLETE under the launching user, but a
+    producer that ran on another account is noted, not refused, because the
+    local files it left already passed validate_union above.
+    """
     output_root = REPO_ROOT / "models" / "kaggle-output"
     union_input = STAGING / "backtrans-union-input"
     if union_input.exists():
         shutil.rmtree(union_input)
     union_input.mkdir(parents=True)
     for index in range(BACKTRANS_SHARD_COUNT):
-        producer_slug = f"{user}/lilly-backtrans-en-bs-producer-{index}"
-        state = subprocess.run([KAGGLE, "kernels", "status", producer_slug],
-                               text=True, capture_output=True).stdout
-        if "KernelWorkerStatus.COMPLETE" not in state:
-            raise SystemExit(f"producer {index} is not COMPLETE ({state.strip() or 'unknown'}); partial refused")
         local = output_root / f"backtrans-en-bs-producer-{index}"
         reports = list(local.glob(f"backtrans-shard-{index}.json"))
         data = list(local.glob(f"backtrans-shard-{index}.tsv.gz"))
@@ -940,6 +948,21 @@ def push_backtrans_pairs(user: str) -> str:
     manifest = validate_backtrans_union(union_input)
     content_id = manifest["pair_order_hash"][:16]
     name, slug = f"lilly-backtrans-en-bs-{content_id}", f"{user}/lilly-backtrans-en-bs-{content_id}"
+    existing = subprocess.run([KAGGLE, "datasets", "status", slug], text=True, capture_output=True)
+    if "ready" in existing.stdout.lower():
+        print(f"verified Run B dataset already ready: {slug}"); return slug
+    produced_elsewhere = []
+    for index in range(BACKTRANS_SHARD_COUNT):
+        producer_slug = f"{user}/lilly-backtrans-en-bs-producer-{index}"
+        state = subprocess.run([KAGGLE, "kernels", "status", producer_slug],
+                               text=True, capture_output=True).stdout
+        if "KernelWorkerStatus.COMPLETE" not in state:
+            produced_elsewhere.append(index)
+    if produced_elsewhere:
+        print(f"producer shard(s) {produced_elsewhere} did not run under {user} "
+              f"(produced on another account). The union is content-addressed and "
+              f"passed validate_union, and the consumer re-validates it on Kaggle, "
+              f"so it is accepted on that content proof, not on this account's kernels.")
     stage = STAGING / "dataset" / name
     if stage.exists(): shutil.rmtree(stage)
     stage.mkdir(parents=True)
@@ -949,9 +972,6 @@ def push_backtrans_pairs(user: str) -> str:
     (stage / "dataset-metadata.json").write_text(json.dumps({
         "title": f"Lilly Run B backtranslation {content_id}", "id": slug,
         "licenses": [{"name": "other"}]}, indent=1))
-    existing = subprocess.run([KAGGLE, "datasets", "status", slug], text=True, capture_output=True)
-    if "ready" in existing.stdout.lower():
-        print(f"verified Run B dataset already ready: {slug}"); return slug
     run(KAGGLE, "datasets", "create", "-p", stage, "-r", "zip")
     wait_until_ready(slug)
     return slug
