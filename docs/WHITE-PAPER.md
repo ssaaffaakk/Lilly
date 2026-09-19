@@ -16,7 +16,7 @@ browser-based interface.
 
 On the 1,012-sentence FLORES-200 devtest half, both directions measured through
 the serving path a user actually meets, the translator scores 43.25 BLEU /
-68.10 chrF2 (Bosnian → English) and 32.45 BLEU / 61.75 chrF2
+68.10 chrF2 (Bosnian → English) and 32.22 BLEU / 61.55 chrF2
 (English → Bosnian). The
 speech recogniser achieves 11.9% word error rate on 200 held-out FLEURS clips —
 a whisper-large-v3 fine-tune shipped by the owner's decision after it was refused
@@ -216,6 +216,24 @@ and the phonemiser is not the cause of the refusals.
 
 **YouTube line.** The 8,329 clips from seven Bosnian lecturers. Training staged but
 blocked on GPU quota as of 10 September 2026.
+
+### 3.5 Where the bytes live
+
+GitHub holds the lists, the answer keys, the credits files, and every results
+file. It does not hold the photographs or the cleaned parallel sentences — they
+are too large, and losing the Mac would lose them. Those archives are the public
+dataset [`Safak11/lilly-data`](https://huggingface.co/datasets/Safak11/lilly-data):
+
+| Archive | Contents |
+|---|---|
+| `translation-clean.zip` | 313,612 training pairs plus valid/test/NTREX holdout |
+| `ocr-the-40.zip` | the 40 Commons photographs the product OCR number was measured on |
+| `ocr-test-v2.zip` | test-v2 photographs, credits, both blind passes, the answer key |
+| `ocr-harvest.zip` | harvested Commons sign photographs and `CREDITS.tsv` |
+| `ocr-crops.zip` | crops cut from the harvest, with the human labels |
+
+FLORES-200 and FLEURS stay with their publishers. The 20,240 Mapillary frames
+are on Kaggle (`afaksrmeli/lilly-mapillary-photos`) and are not a train set.
 
 ---
 
@@ -683,6 +701,8 @@ Every weight file is bound to a content fingerprint. The listener goes up only u
 a fingerprint named on the command line (`--allow-listen <fingerprint>`), because it
 did not clear its gate. `scripts/fetch_models.py` checks the listener it receives
 against the gated one, saying so out loud if an older fetch left the wrong build.
+`scripts/pack_datasets.py` zips the photographs and parallel sentences git does
+not hold and uploads them to `Safak11/lilly-data`.
 
 ### 8.3 Version control
 
@@ -789,13 +809,15 @@ hardware, and the time.
 
 All evaluation scripts are in `training/`. All pre-registration entries, including
 amendments, are in `training/PREREGISTRATION.md`. All results files — including
-nulls and failures — are committed to the repository.
+nulls and failures — are committed to the repository. The photographs and the
+cleaned parallel sentences named by those files are
+[`Safak11/lilly-data`](https://huggingface.co/datasets/Safak11/lilly-data).
 
 ---
 
 ## 13. Current Status and Next Steps
 
-As of 12 September 2026:
+As of 19 September 2026:
 
 **Shipped and published:**
 - Translation, both directions, with the ordinal splitter fix
@@ -804,6 +826,7 @@ As of 12 September 2026:
 - English voice (Kokoro-82M, stock)
 - Bosnian voice (Piper sr_RS, stock)
 - Published weights at `Safak11/lilly` with fingerprint-bound content
+- Evaluation and training bytes at `Safak11/lilly-data`
 
 **Staged, awaiting GPU quota:**
 - speak-youtube (v8): batch-4 fix committed (6a04676), dataset uploaded, notebook
@@ -819,4 +842,4 @@ As of 12 September 2026:
 
 ---
 
-*Last updated: 12 September 2026.*
+*Last updated: 19 September 2026.*

@@ -9,6 +9,7 @@
   <a href="#whats-inside"><img src="https://img.shields.io/badge/FastAPI-0.115+-009688.svg" alt="FastAPI"></a>
   <a href="#how-well-it-works"><img src="https://img.shields.io/badge/offline-no%20network%20at%20inference-2ea043.svg" alt="Offline"></a>
   <a href="https://huggingface.co/Safak11/lilly"><img src="https://img.shields.io/badge/weights-Safak11%2Flilly-FFD21E.svg" alt="Hugging Face weights"></a>
+  <a href="docs/WHITE-PAPER.md"><img src="https://img.shields.io/badge/paper-white%20paper-111827.svg" alt="White paper"></a>
 </p>
 
 <p align="center">
@@ -17,6 +18,7 @@
 
 <p align="center">
   <strong><a href="https://huggingface.co/spaces/Safak11/Lilly-api">▶ Try it live</a></strong> — type Bosnian, talk to it, or point a camera at a sign. Nothing to install.<br>
+  <sub>On a phone, open the Space in its own tab (<a href="https://safak11-lilly-api.hf.space">safak11-lilly-api.hf.space</a>) before using the live camera.</sub><br>
   <sub><a href="#run-it">Or run the whole thing offline on your own machine →</a></sub>
 </p>
 
@@ -29,6 +31,7 @@
   <a href="#the-journey-so-far">Journey</a> ·
   <a href="#how-well-it-works">Numbers</a> ·
   <a href="#what-it-cannot-do-yet">Limits</a> ·
+  <a href="docs/WHITE-PAPER.md">Paper</a> ·
   <a href="#training">Training</a>
 </p>
 
@@ -57,7 +60,9 @@ model underneath it, and published all of them, including the ones that say a
 change did nothing. Lilly is how I show that I can work in Bosnian and that
 I can build something serious when I hit a wall.
 
-The longer version is in [`docs/STORY.md`](docs/STORY.md).
+The longer version is in [`docs/STORY.md`](docs/STORY.md). The measured write-up
+— architecture, data, every number including the failures — is
+[`docs/WHITE-PAPER.md`](docs/WHITE-PAPER.md).
 
 ---
 
@@ -580,9 +585,9 @@ of failures already paid for: [`docs/kaggle-fail-stop.md`](docs/kaggle-fail-stop
 | `models/lilly/` | Offline weights, model card, attribution notice |
 | `training/` | Notebooks, training and evaluation scripts, every results file |
 | `bench/` | The Bosnian-versus-neighbours benchmark and how its cases are built |
-| `scripts/` | `kaggle_train.py`, preflight, poll, fetch, publish |
-| `docs/` | Plans, boundaries, fail-stop rules, white paper — index in [`docs/README.md`](docs/README.md) |
-| `data/` | Corpora and OCR crops (large, usually local only) |
+| `scripts/` | `kaggle_train.py`, preflight, poll, fetch, publish, `pack_datasets.py` |
+| `docs/` | Plans, fail-stop rules, and the [white paper](docs/WHITE-PAPER.md) — index in [`docs/README.md`](docs/README.md) |
+| `data/` | Lists, keys and credits in git; photographs and cleaned parallel sentences on [`Safak11/lilly-data`](https://huggingface.co/datasets/Safak11/lilly-data) |
 | `space/` | Hugging Face Space packaging |
 
 ---
