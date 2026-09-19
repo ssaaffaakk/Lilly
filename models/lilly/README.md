@@ -163,7 +163,7 @@ To rebuild the reply direction yourself from the upstream base instead:
 ```
 
 Without `translator-en-bs/` the app still runs and `/api/reply` answers 503.
-`python3 app/lilly.py` prints which parts are installed.
+`.venv/bin/python app/lilly.py` prints which parts are installed.
 
 Every ability runs both ways. The arrow between the two language names is a
 button: swap it and Lilly hears English, reads an English photograph, answers
@@ -180,7 +180,7 @@ been measured here — see [What it cannot do yet](#what-it-cannot-do-yet).
 
 Startup is instant because each model loads on first use. Once
 `fetch_models.py` has finished, nothing reaches the network again.
-`python3 -m pytest tests` checks the parts that need no model: the sentence
+`.venv/bin/python -m pytest tests` checks the parts that need no model: the sentence
 splitter, the batch grouping, the correction store and the server's answers
 to bad input.
 
@@ -348,7 +348,7 @@ was rebuilt with the adapter merged and published on 8 September;
 `scripts/fetch_models.py` pulls it as `translator-en-bs/`. Its base, `tc-base`,
 is a smaller model than the forward direction's, so the two directions are not
 of comparable quality. Those four figures and both intervals come back out of
-the stored outputs with `python3 training/verify_published_en_bs.py`, which
+the stored outputs with `.venv/bin/python training/verify_published_en_bs.py`, which
 exits non-zero if any of them stops reproducing.
 
 Those bars were measured the way they were pre-registered: the PyTorch base plus
