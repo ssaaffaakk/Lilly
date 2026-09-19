@@ -230,13 +230,13 @@ is today.
 | | the first builds (unrecorded) | first recorded | today |
 |---|---|---|---|
 | Photographs — words found per photograph, the 40 (6 blurry + 1 unreadable + 12 empty in the mix) | **30%<** | 36.0% (`training/RESULTS-ocr.md`) | **67.0%** |
-| Photographs — outdoor shots the person building this app actually takes (normal and slightly blurry street photos a human can still read) | — | — | **82.5%** (273/331) |
+| Photographs — outdoor shots the person building this app actually takes (normal and slightly blurry street photos a human can still read) | **30%<** | — | **82.5%** (273/331) |
 | Photographs — words found, pooled | **10%<** | 16.9% (63 of 373) | **69.4%** |
 | Photographs — words invented that are on no sign | **280>** | 224 | **65** |
 | Speech — word error, 200 held-out clips | **55%>** | 38.5% (`training/RESULTS-speech.md`) | **11.9%** (whisper-large-v3, shipped by decision, refused at its gate; the gated whisper-small reads 34.9%) |
 | Speech — words heard right, 925 clean FLEURS (the large ear the app uses) | **8476< / 18836** (same 55%> bound) | — | **16666 / 18836** (11.52% wrong) |
 | Translation — BLEU on FLORES devtest, as the user sees it | **30<** | 37.72, with the language tag leaked into 308 of 1,012 outputs (`training/RESULTS-devtest.md`) | **43.25**, leaked into **0** (re-measured 8 Sep on a T4 after the ordinal splitter fix) |
-| Reply, English → Bosnian — chrF2 on FLORES-200, as the user sees it | — | 58.96, the first training (`training/RESULTS-en-bs.md`) | **61.55** through the app's own path (`training/RESULTS-product-en-bs.md`, measured 12 Sep); the adapter alone on whole rows reads 60.00 |
+| Reply, English → Bosnian — chrF2 on FLORES-200, as the user sees it | **30<** | 58.96, the first training (`training/RESULTS-en-bs.md`) | **61.55** through the app's own path (`training/RESULTS-product-en-bs.md`, measured 12 Sep); the adapter alone on whole rows reads 60.00 |
 
 ### 5.1 Translation
 
