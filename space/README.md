@@ -20,6 +20,12 @@ camera at a sign and it reads that. The English comes back written, and out loud
 if you want it. Swap the arrow and it runs the other way: say or photograph
 English, get Bosnian back — spoken too.
 
+The live camera needs this Space in its own tab
+([safak11-lilly-api.hf.space](https://safak11-lilly-api.hf.space)). The
+huggingface.co page puts Lilly inside another page, and a phone will not give
+that page a camera. Open the tab, then press the camera button; if the live
+view still cannot start, the same panel takes a still with the phone camera.
+
 Everything runs here. No API is called and nothing you send leaves this machine.
 The weights are fetched when the Space starts, so the first visit after it has
 been asleep can take a few minutes; the large listener on two CPU cores takes

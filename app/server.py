@@ -167,7 +167,16 @@ def index():
     # on 8 September 2026: the microphone flipped the arrow back to Bosnian
     # an hour after the page had stopped doing that.
     return FileResponse(APP_DIR / "web" / "index.html",
-                        headers={"Cache-Control": "no-cache"})
+                        headers={
+                            "Cache-Control": "no-cache",
+                            # The live camera and the microphone call getUserMedia
+                            # from this document. (self) is this origin. Hugging
+                            # Face still has to allow the feature on its iframe;
+                            # this header cannot grant what the parent withheld,
+                            # but without it a top-level visit (the .hf.space
+                            # URL) would also refuse the camera.
+                            "Permissions-Policy": "camera=(self), microphone=(self)",
+                        })
 
 
 @app.get("/health")

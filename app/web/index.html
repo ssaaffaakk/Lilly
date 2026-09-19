@@ -808,7 +808,8 @@
     text-overflow: ellipsis;
   }
   .cam-note { margin: 12px 4px 0; font-size: 13.5px; line-height: 1.5; color: var(--ink-2); }
-  .cam-actions { display: flex; gap: 8px; align-items: center; margin-top: 12px; }
+  .cam-note a { color: var(--accent-hi); font-weight: 600; }
+  .cam-actions { display: flex; gap: 8px; align-items: center; margin-top: 12px; flex-wrap: wrap; }
   .cam-actions .spacer { flex: 1; }
 
   /* --- History & phrasebook --------------------------------------------- */
@@ -1127,6 +1128,25 @@
     </div>
   </section>
 
+  <section class="glass camera" id="cameraPanel" hidden>
+    <div class="cam-stage" id="camStage">
+      <video id="camVideo" autoplay playsinline muted hidden></video>
+      <img id="camStill" alt="" hidden>
+      <div class="cam-overlay" id="camOverlay" aria-live="polite"></div>
+    </div>
+    <p class="cam-note" id="camNote" hidden></p>
+    <p class="cam-note" id="camEscape" hidden>
+      <a id="camOpenTab" target="_blank" rel="noopener">Open Lilly in its own tab</a>
+    </p>
+    <div class="cam-actions">
+      <button type="button" class="btn ghost" id="camClose"><span class="lbl">Close</span></button>
+      <span class="spacer"></span>
+      <button type="button" class="btn" id="camTakeShot" hidden><span class="lbl">Take a photo</span></button>
+      <button type="button" class="btn primary" id="camCapture" disabled><span class="lbl">Capture</span></button>
+    </div>
+    <input type="file" id="camShotInput" accept="image/*" capture="environment" hidden>
+  </section>
+
   <p class="hint" id="hint">Type it, say it, or photograph a sign.</p>
 
   <section class="glass result" id="result" aria-live="polite">
@@ -1176,20 +1196,6 @@
     <ul class="lib-list" id="savedList" hidden></ul>
     <div class="library-foot">
       <button type="button" class="btn ghost" id="histClear">Clear history</button>
-    </div>
-  </section>
-
-  <section class="glass camera" id="cameraPanel" hidden>
-    <div class="cam-stage" id="camStage">
-      <video id="camVideo" autoplay playsinline muted hidden></video>
-      <img id="camStill" alt="" hidden>
-      <div class="cam-overlay" id="camOverlay" aria-live="polite"></div>
-    </div>
-    <p class="cam-note" id="camNote" hidden></p>
-    <div class="cam-actions">
-      <button type="button" class="btn ghost" id="camClose"><span class="lbl">Close</span></button>
-      <span class="spacer"></span>
-      <button type="button" class="btn primary" id="camCapture" disabled><span class="lbl">Capture</span></button>
     </div>
   </section>
 </main>
@@ -2079,84 +2085,163 @@
   });
 
   /* ---- live camera ------------------------------------------------------
-     The viewfinder is a courtesy built on getUserMedia; what it captures
-     travels to the same /api/photo-boxes endpoint a photo upload would. Where
-     the browser cannot give a camera (plain http from a phone, or denied
-     permission) the panel says so and points at the photo button, which
-     needs no camera. */
+     The viewfinder is getUserMedia; the frame then travels to /api/photo-boxes
+     the same way a photo upload would. Hugging Face shows this page inside
+     another page (huggingface.co embedding *.hf.space). A phone will not give
+     a camera to that inner page: getUserMedia fails with NotAllowedError and
+     never shows a prompt. The panel then offers the Space in its own tab
+     (where the same button gets a real viewfinder) and a capture=environment
+     file input, which is the native camera and does work inside the iframe.
+     facingMode "environment" as a required constraint also fails on a laptop
+     with only a face camera, so the second try is any video. */
   let camStream = null, camStillUrl = null;
+  const CAM_MAX_SIDE = 1280;
+
+  function pageIsFramed() {
+    try { return window.self !== window.top; }
+    catch (e) { return true; }
+  }
+
+  function blobToJpeg(source, maxSide) {
+    const w0 = source.videoWidth || source.naturalWidth || source.width;
+    const h0 = source.videoHeight || source.naturalHeight || source.height;
+    if (!w0) return Promise.resolve(null);
+    let w = w0, h = h0;
+    if (Math.max(w, h) > maxSide) {
+      const s = maxSide / Math.max(w, h);
+      w = Math.round(w * s);
+      h = Math.round(h * s);
+    }
+    const canvas = document.createElement("canvas");
+    canvas.width = w;
+    canvas.height = h;
+    canvas.getContext("2d").drawImage(source, 0, 0, w, h);
+    return new Promise(res => canvas.toBlob(res, "image/jpeg", 0.85));
+  }
+
+  async function jpegForReader(file) {
+    if (typeof createImageBitmap !== "function") return file;
+    try {
+      const bitmap = await createImageBitmap(file);
+      const blob = await blobToJpeg(bitmap, CAM_MAX_SIDE);
+      bitmap.close();
+      return blob || file;
+    } catch (e) {
+      return file;
+    }
+  }
+
+  async function requestCameraStream() {
+    const tries = [
+      { video: { facingMode: { ideal: "environment" } }, audio: false },
+      { video: true, audio: false }
+    ];
+    let last = null;
+    for (const constraints of tries) {
+      try { return await navigator.mediaDevices.getUserMedia(constraints); }
+      catch (e) { last = e; }
+    }
+    throw last;
+  }
+
+  function hideCameraHelp() {
+    $("camNote").hidden = true;
+    $("camEscape").hidden = true;
+    $("camTakeShot").hidden = true;
+  }
+
+  function showCameraHelp(err) {
+    const framed = pageIsFramed();
+    const denied = err && err.name === "NotAllowedError";
+    let msg;
+    if (framed) {
+      msg = "Hugging Face shows Lilly inside another page, and this phone will "
+          + "not give that page a live camera. Open Lilly in its own tab, then "
+          + "press the camera button again — or take a photo with the phone "
+          + "camera below.";
+    } else if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      msg = window.isSecureContext
+        ? "This browser will not give Lilly a live camera. Take a photo with "
+          + "the phone camera below, or use the photo button."
+        : "Browsers only allow the camera over https, and Lilly is open over "
+          + "http. Open it at http://localhost:8000 on this machine, or take "
+          + "a photo with the phone camera below.";
+    } else if (denied) {
+      msg = "Lilly needs permission to use the camera. Allow it in the browser, "
+          + "then press the camera button again — or take a photo with the "
+          + "phone camera below.";
+    } else {
+      msg = "Lilly could not start the live camera. Take a photo with the "
+          + "phone camera below, or use the photo button.";
+    }
+    $("camCapture").disabled = true;
+    $("camNote").textContent = msg;
+    $("camNote").hidden = false;
+    $("camOpenTab").href = location.href;
+    $("camEscape").hidden = !framed;
+    $("camTakeShot").hidden = false;
+  }
 
   async function openCamera() {
     const panel = $("cameraPanel");
     if (!panel.hidden) { closeCamera(); return; }
     panel.hidden = false;
-    $("camNote").hidden = true;
+    hideCameraHelp();
     $("camCapture").querySelector(".lbl").textContent = "Capture";
+    $("camCapture").disabled = true;
+    panel.scrollIntoView({ block: "nearest" });
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-      cameraFallback(window.isSecureContext
-        ? "This browser will not give Lilly a camera. Use the photo button instead."
-        : "Browsers only allow the camera over https, and Lilly is open over "
-          + "http. Open it at http://localhost:8000 on this machine, or use "
-          + "the photo button instead.");
+      showCameraHelp(null);
       return;
     }
     try {
-      camStream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: "environment" }, audio: false
-      });
+      camStream = await requestCameraStream();
       const video = $("camVideo");
+      video.setAttribute("playsinline", "");
+      video.playsInline = true;
+      video.muted = true;
       video.srcObject = camStream;
       video.hidden = false;
-      await video.play();
+      try { await video.play(); } catch (e) {}
       $("camCapture").disabled = false;
     } catch (e) {
-      cameraFallback(e && e.name === "NotAllowedError"
-        ? "Lilly needs permission to use the camera. Allow it in the browser, "
-          + "then press the camera button again."
-        : "Lilly could not start the camera. Use the photo button instead.");
+      showCameraHelp(e);
     }
-  }
-
-  function cameraFallback(msg) {
-    $("camCapture").disabled = true;
-    const note = $("camNote");
-    note.textContent = msg;
-    note.hidden = false;
   }
 
   function closeCamera() {
     if (camStream) { camStream.getTracks().forEach(t => t.stop()); camStream = null; }
     if (camStillUrl) { URL.revokeObjectURL(camStillUrl); camStillUrl = null; }
+    $("camVideo").srcObject = null;
     $("camVideo").hidden = true;
     $("camStill").hidden = true;
     $("camOverlay").innerHTML = "";
     $("camStage").classList.remove("still");
     $("camStage").style.aspectRatio = "";
+    hideCameraHelp();
     $("cameraPanel").hidden = true;
   }
   $("camClose").addEventListener("click", closeCamera);
   $("camBtn").addEventListener("click", openCamera);
+  $("camTakeShot").addEventListener("click", () => $("camShotInput").click());
+  $("camShotInput").addEventListener("change", async () => {
+    const file = $("camShotInput").files[0];
+    $("camShotInput").value = "";
+    if (!file) return;
+    const blob = await jpegForReader(file);
+    await sendCameraFrame(blob);
+  });
 
-  $("camCapture").addEventListener("click", async () => {
-    // After a capture the stage shows the still; the same button returns to
-    // the live view for another shot.
-    if ($("camStage").classList.contains("still")) {
-      $("camStill").hidden = true;
-      $("camOverlay").innerHTML = "";
-      $("camStage").classList.remove("still");
-      $("camVideo").hidden = false;
-      $("camCapture").querySelector(".lbl").textContent = "Capture";
-      return;
-    }
-    const video = $("camVideo");
-    if (!video.videoWidth) return;
-    const canvas = document.createElement("canvas");
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-    canvas.getContext("2d").drawImage(video, 0, 0);
-    const blob = await new Promise(res => canvas.toBlob(res, "image/jpeg", 0.92));
+  async function sendCameraFrame(blob) {
     if (!blob) { fail("The camera frame could not be read. Try the capture again."); return; }
+    $("camVideo").hidden = true;
+    if (camStillUrl) URL.revokeObjectURL(camStillUrl);
+    camStillUrl = URL.createObjectURL(blob);
+    $("camStill").src = camStillUrl;
+    $("camStill").hidden = false;
+    $("camStage").classList.add("still");
     busy($("camCapture"), true);
+    busy($("camTakeShot"), true);
     setStatus("Reading the photo…", true);
     const form = new FormData();
     form.append("file", blob, "frame.jpg");
@@ -2175,7 +2260,23 @@
       fail(describe(e, "photo"));
     } finally {
       busy($("camCapture"), false);
+      busy($("camTakeShot"), false);
     }
+  }
+
+  $("camCapture").addEventListener("click", async () => {
+    // After a capture the stage shows the still; the same button returns to
+    // the live view for another shot.
+    if ($("camStage").classList.contains("still")) {
+      $("camStill").hidden = true;
+      $("camOverlay").innerHTML = "";
+      $("camStage").classList.remove("still");
+      $("camVideo").hidden = false;
+      $("camCapture").querySelector(".lbl").textContent = "Capture";
+      return;
+    }
+    const blob = await blobToJpeg($("camVideo"), CAM_MAX_SIDE);
+    await sendCameraFrame(blob);
   });
 
   /* The frame is drawn over by each region's translation, placed where the
@@ -2194,7 +2295,8 @@
     const still = $("camStill");
     still.src = camStillUrl;
     still.hidden = false;
-    $("camCapture").querySelector(".lbl").textContent = "Live view";
+    $("camCapture").querySelector(".lbl").textContent = camStream ? "Live view" : "Capture";
+    $("camCapture").disabled = !camStream;
     const place = () => {
       if (!still.naturalWidth) return;
       stage.style.aspectRatio = still.naturalWidth + " / " + still.naturalHeight;

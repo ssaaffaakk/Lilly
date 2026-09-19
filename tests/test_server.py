@@ -101,3 +101,16 @@ def test_missing_listener_is_a_503_in_the_reply_direction_too(client, tmp_path, 
 
 def test_the_page_is_revalidated_not_kept_on_heuristics(client):
     assert client.get("/").headers["cache-control"] == "no-cache"
+
+
+def test_the_page_allows_camera_and_microphone_on_this_origin(client):
+    policy = client.get("/").headers["permissions-policy"]
+    assert "camera=(self)" in policy
+    assert "microphone=(self)" in policy
+
+
+def test_the_page_has_a_phone_camera_shot_when_the_live_view_cannot_start(client):
+    html = client.get("/").text
+    assert 'id="camShotInput"' in html
+    assert 'capture="environment"' in html
+    assert 'id="camOpenTab"' in html
