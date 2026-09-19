@@ -230,8 +230,8 @@ Then the untuned base, scored the fair way. Last is today.
 | Ability | Metric | Measured on | First builds | First recorded | Untuned base | Lilly today |
 | --- | --- | --- | --- | --- | --- | --- |
 | **Translate** | BLEU | 1,012 FLORES-200 devtest, as the user sees it | **30<** | 37.72, tag in 308/1,012 (`training/RESULTS-devtest.md`) | 42.08, tag stripped | **43.25**, **0** leaks |
-| **Translate** | chrF2 | same 1,012 | — | 67.15 | 67.85 | **68.10** |
-| **Translate** | BLEU / chrF2 | 2,009 FLORES pairs, served path, tags stripped | — | — | 41.77 / 67.66 | **43.03 / 67.81** (+1.26 BLEU p = 0.001; +0.15 chrF2 p = 0.074) |
+| **Translate** | chrF2 | same 1,012 | **30<** | 67.15 | 67.85 | **68.10** |
+| **Translate** | BLEU / chrF2 | 2,009 FLORES pairs, served path, tags stripped | **30< / 30<** | — | 41.77 / 67.66 | **43.03 / 67.81** (+1.26 BLEU p = 0.001; +0.15 chrF2 p = 0.074) |
 | **Translate** | language tag in the output | 2,009 pairs | — | 576 / 2,009 (28.7%) | same | **0** |
 | **Reply** | BLEU / chrF2 | 2,009 FLORES pairs, served int8 | **30<** | 58.96 chrF2, first training (`training/RESULTS-en-bs.md`) | 31.23 / 60.93 | **32.22 / 61.55**, **0** leaks |
 | **Reply** | BLEU / chrF2 | adapter, whole rows (the bars) | — | 29.57 / 58.96 | same | **30.73 / 60.00** |

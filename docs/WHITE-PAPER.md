@@ -249,10 +249,10 @@ and today. Then both sides stripped so the leaked tag cannot take the credit.
 | | the first builds (unrecorded) | first recorded | today |
 |---|---|---|---|
 | BLEU | **30<** | 37.72 — language tag leaked into 308 of 1,012 outputs (`training/RESULTS-devtest.md`) | **43.25**, leaked into **0** |
-| chrF2 | — | 67.15 | **68.10** |
+| chrF2 | **30<** | 67.15 | **68.10** |
 
 The "first recorded" column is the untuned model as downloaded. The first
-builds, 30< BLEU, are not in the repository.
+builds, 30< BLEU and 30< chrF2, are not in the repository.
 
 Strip the tags from both sides so the fine-tune cannot take credit for
 deleting `>>eng<<`, then re-measure after the ordinal-splitter fix (2,009
@@ -260,9 +260,10 @@ pairs, 8 September 2026, Kaggle T4):
 
 | | BLEU | chrF2 |
 |---|---|---|
+| First builds (unrecorded) | **30<** | **30<** |
 | Base, tag stripped | 41.77 | 67.66 |
 | Lilly | **43.03** | **67.81** |
-| Gap | +1.26 | +0.15 |
+| Gap (Lilly − stripped base) | +1.26 | +0.15 |
 | p (paired bootstrap) | 0.001 | 0.074 |
 
 On the 1,012-sentence half with tags stripped: base 42.08 / 67.85, Lilly
