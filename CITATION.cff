@@ -1,0 +1,24 @@
+cff-version: 1.2.0
+message: "If Lilly or its measurements help your work, please cite the software and the accompanying white paper."
+type: software
+title: "Lilly: An Offline Bosnian-English Translator"
+abstract: >-
+  An offline Bosnian-English translator that accepts text, speech, and
+  photographs, then returns translation and speech through one local FastAPI
+  service. The repository publishes the serving path, held-out measurements,
+  data artifacts, and negative results.
+authors:
+  - family-names: Surmeli
+    given-names: Safak
+repository-code: "https://github.com/ssaaffaakk/Lilly"
+url: "https://huggingface.co/spaces/Safak11/Lilly-api"
+documentation: "https://github.com/ssaaffaakk/Lilly/blob/main/docs/WHITE-PAPER.md"
+date-released: 2026-09-19
+version: "2026.09.19"
+license: other
+keywords:
+  - Bosnian
+  - machine translation
+  - speech recognition
+  - OCR
+  - offline inference

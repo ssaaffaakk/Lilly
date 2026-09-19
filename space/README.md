@@ -19,6 +19,8 @@ Bosnian into English — typed, spoken, or photographed.
 [Download the weights](https://huggingface.co/Safak11/lilly) ·
 [Read the paper](https://github.com/ssaaffaakk/Lilly/blob/main/docs/WHITE-PAPER.md)
 
+![Lilly — Bosnian first](https://raw.githubusercontent.com/ssaaffaakk/Lilly/main/docs/images/lilly-hero.jpg)
+
 ## Results
 
 Measured through the shipped path, on held-out data unless noted:

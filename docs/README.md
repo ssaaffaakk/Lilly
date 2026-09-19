@@ -1,7 +1,23 @@
-# Docs index
+# Lilly docs
 
-Start here if you are new to the repo. Product pitch stays in the root
-[`README.md`](../README.md).
+![Lilly — Bosnian first](images/lilly-hero.jpg)
+
+The repository has two doors: the root [`README.md`](../README.md) is the
+product landing page; this index is the evidence, operating rules, and research
+behind it.
+
+## Reading order
+
+| Start here | What you get |
+| :--- | :--- |
+| [`README.md`](../README.md) | Product overview, live demo, local setup, measured results |
+| [`WHITE-PAPER.md`](WHITE-PAPER.md) | IMRaD write-up: system, data, methods, results, limitations |
+| [`STORY.md`](STORY.md) | Why Lilly exists and how the first builds became a measured artifact |
+| [`V4-PLAN.md`](V4-PLAN.md) | Current queue: what gets measured next and what is closed |
+
+The project is intentionally evidence-first: failures remain next to wins,
+training runs stop at known bad states, and a number does not count unless its
+test set and serving path are named.
 
 ## Live status
 

@@ -13,7 +13,7 @@
 </p>
 
 <p align="center">
-  <img src="docs/images/demo-translate.jpg" alt="Lilly translating a Bosnian sentence into English" width="760">
+  <img src="docs/images/lilly-hero.jpg" alt="Lilly — an offline Bosnian translator, photographed over Mostar at dusk" width="900">
 </p>
 
 <p align="center">
@@ -31,7 +31,11 @@
   <a href="#results">Results</a> ·
   <a href="#what-it-cannot-do-yet">Limits</a> ·
   <a href="docs/WHITE-PAPER.md">Paper</a> ·
-  <a href="#training">Training</a>
+  <a href="#training">Training</a> ·
+  <a href="docs/README.md">Docs</a> ·
+  <a href="https://huggingface.co/datasets/Safak11/lilly-data">Data</a> ·
+  <a href="CONTRIBUTING.md">Contribute</a> ·
+  <a href="CITATION.cff">Cite</a>
 </p>
 
 ## At a glance
@@ -89,6 +93,8 @@ The longer version is in [`docs/STORY.md`](docs/STORY.md). The measured write-up
 ![Four ways in: type it, say it, photograph it, or correct it](docs/images/lilly-modes.jpg)
 
 Real output from the running app, not hand-picked from a benchmark.
+
+![Lilly translating a Bosnian sentence into English](docs/images/demo-translate.jpg)
 
 **Bosnian → English**
 
@@ -591,6 +597,8 @@ of failures already paid for: [`docs/kaggle-fail-stop.md`](docs/kaggle-fail-stop
 | `docs/` | Plans, fail-stop rules, and the [white paper](docs/WHITE-PAPER.md) — index in [`docs/README.md`](docs/README.md) |
 | `data/` | Lists, keys and credits in git; photographs and cleaned parallel sentences on [`Safak11/lilly-data`](https://huggingface.co/datasets/Safak11/lilly-data) |
 | `space/` | Hugging Face Space packaging |
+| `CITATION.cff` | Citation metadata for the software and the measured artifact |
+| `CONTRIBUTING.md` | Evidence-first contribution and review guide |
 
 ---
 

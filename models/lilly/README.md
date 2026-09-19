@@ -38,7 +38,7 @@ base_model:
 </p>
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/ssaaffaakk/Lilly/main/docs/images/demo-translate.jpg" alt="Lilly translating a Bosnian sentence into English" width="760">
+  <img src="https://raw.githubusercontent.com/ssaaffaakk/Lilly/main/docs/images/lilly-hero.jpg" alt="Lilly — an offline Bosnian translator, photographed over Mostar at dusk" width="900">
 </p>
 
 <p align="center">
@@ -56,7 +56,11 @@ base_model:
   <a href="#results">Results</a> ·
   <a href="#what-it-cannot-do-yet">Limits</a> ·
   <a href="docs/WHITE-PAPER.md">Paper</a> ·
-  <a href="#training">Training</a>
+  <a href="#training">Training</a> ·
+  <a href="docs/README.md">Docs</a> ·
+  <a href="https://huggingface.co/datasets/Safak11/lilly-data">Data</a> ·
+  <a href="CONTRIBUTING.md">Contribute</a> ·
+  <a href="CITATION.cff">Cite</a>
 </p>
 
 ## At a glance
@@ -114,6 +118,8 @@ The longer version is in [`docs/STORY.md`](https://github.com/ssaaffaakk/Lilly/b
 ![Four ways in: type it, say it, photograph it, or correct it](https://raw.githubusercontent.com/ssaaffaakk/Lilly/main/docs/images/lilly-modes.jpg)
 
 Real output from the running app, not hand-picked from a benchmark.
+
+![Lilly translating a Bosnian sentence into English](https://raw.githubusercontent.com/ssaaffaakk/Lilly/main/docs/images/demo-translate.jpg)
 
 **Bosnian → English**
 
@@ -616,6 +622,8 @@ of failures already paid for: [`docs/kaggle-fail-stop.md`](https://github.com/ss
 | `docs/` | Plans, fail-stop rules, and the [white paper](https://github.com/ssaaffaakk/Lilly/blob/main/docs/WHITE-PAPER.md) — index in [`docs/README.md`](https://github.com/ssaaffaakk/Lilly/blob/main/docs/README.md) |
 | `data/` | Lists, keys and credits in git; photographs and cleaned parallel sentences on [`Safak11/lilly-data`](https://huggingface.co/datasets/Safak11/lilly-data) |
 | `space/` | Hugging Face Space packaging |
+| `CITATION.cff` | Citation metadata for the software and the measured artifact |
+| `CONTRIBUTING.md` | Evidence-first contribution and review guide |
 
 ---
 
