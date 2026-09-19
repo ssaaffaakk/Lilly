@@ -18,7 +18,11 @@ Endpoints:
 
 Every ability comes from the one Lilly object (app/lilly.py), which reads its
 weights from models/lilly/. Parts load lazily on first use, so startup is
-instant and unused features cost nothing.
+instant and unused features cost nothing. A Hugging Face Space sets
+LILLY_WARM=1 so the serving process constructs the reader and translators
+before it listens: fetch_models.py warms them in a child that then exits, and
+the first photograph used to pay that construction inside the request, long
+enough that the Space proxy dropped it.
 
 Every ability runs both ways. The uploads take an optional `direction` form
 field, "bs-en" (the default: Bosnian heard or photographed, English back) or
@@ -36,6 +40,7 @@ all of it is CPU-bound and the process has one set of weights to share.
 import os
 import re
 import tempfile
+from contextlib import asynccontextmanager
 from pathlib import Path
 
 from typing import Annotated
@@ -63,7 +68,41 @@ MAX_UPLOAD = {"/api/photo": 12 * 1024 * 1024,
 UPLOAD_CHUNK = 256 * 1024
 SAFE_SUFFIX = re.compile(r"^\.[A-Za-z0-9]{1,8}$")
 
-app = FastAPI(title="Lilly")
+
+def warm_models() -> None:
+    """Load the reader and translators in this process, before any request.
+
+    fetch_models.py warms the reader in a child that then exits, so a Space
+    that only ran the fetcher would still construct PaddleOCR on the first
+    photograph — long enough that Hugging Face's proxy drops the request and
+    the page looks like it waited and never translated. Tests and a laptop
+    `uvicorn` leave this off (LILLY_WARM unset). The large listener is not
+    loaded here: it is half a gigabyte and the first listen is already
+    documented as up to a minute on two CPU cores.
+    """
+    from app.ocr import get_paddle_reader, get_reader, reader_choice
+    from app.translate import get_engine
+    get_engine("bs-en")
+    try:
+        get_engine("en-bs")
+    except FileNotFoundError:
+        pass
+    if reader_choice() == "paddle":
+        get_paddle_reader()
+    else:
+        get_reader()
+
+
+@asynccontextmanager
+async def lifespan(_app: FastAPI):
+    if os.environ.get("LILLY_WARM") == "1":
+        print("warming models in this process (LILLY_WARM=1)", flush=True)
+        await run_in_threadpool(warm_models)
+        print("warm: first request will not construct the models", flush=True)
+    yield
+
+
+app = FastAPI(title="Lilly", lifespan=lifespan)
 
 
 # Stripped before the length check: min_length counts spaces, so a body of

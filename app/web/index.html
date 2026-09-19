@@ -1369,10 +1369,30 @@
     const next = NEXT[where] || "try again";
     const text = said(err);
 
+    if (err && err.timeout) {
+      if (where === "photo")
+        return "Lilly is still reading that photograph, and this page stopped "
+             + "waiting. On Hugging Face the first photo after sleep can take "
+             + "longer than the connection lasts — wait until the Space says "
+             + "Running, then try a smaller, sharper photo.";
+      if (where === "speech")
+        return "Lilly is still listening, and this page stopped waiting. The "
+             + "large ear on two CPU cores can take a minute for a short clip "
+             + "— record something shorter, then " + next + ".";
+      return "Lilly is still working, and this page stopped waiting. " + cap(next) + ".";
+    }
+
     // Nothing answered: fetch rejects with a TypeError before there is a status.
-    if (err instanceof TypeError)
+    // Hugging Face's proxy does this to a photograph that is still being read.
+    if (err instanceof TypeError) {
+      if (where === "photo")
+        return "The connection dropped while Lilly was still reading. On Hugging "
+             + "Face that happens when the photograph takes longer than the page "
+             + "is allowed to wait. Refresh, wait until Running, and try a "
+             + "smaller photo.";
       return "Lilly is not answering — the server stopped or the connection "
            + "dropped. Check it is running, then " + next + ".";
+    }
 
     switch (err && err.status) {
       case 413:
@@ -1458,10 +1478,31 @@
   }
 
   async function apiJson(path, options) {
-    const res = await fetch(path, options);
-    const data = await res.json().catch(() => null);
-    if (!res.ok) throw httpError(res, data);
-    return data;
+    options = options || {};
+    const timeoutMs = options.timeoutMs || 0;
+    const fetchOpts = Object.assign({}, options);
+    delete fetchOpts.timeoutMs;
+    let timer = 0;
+    if (timeoutMs) {
+      const ctrl = new AbortController();
+      if (fetchOpts.signal) {
+        fetchOpts.signal.addEventListener("abort", () => ctrl.abort(), { once: true });
+      }
+      fetchOpts.signal = ctrl.signal;
+      timer = setTimeout(() => ctrl.abort(), timeoutMs);
+    }
+    try {
+      const res = await fetch(path, fetchOpts);
+      const data = await res.json().catch(() => null);
+      if (!res.ok) throw httpError(res, data);
+      return data;
+    } catch (e) {
+      if (e && e.name === "AbortError" && timeoutMs)
+        throw Object.assign(new Error("timeout"), { timeout: true });
+      throw e;
+    } finally {
+      if (timer) clearTimeout(timer);
+    }
   }
 
   /* ---- text --------------------------------------------------------- */
@@ -1665,7 +1706,8 @@
         form.append("file", blob, "speech.webm");
         form.append("direction", isConvo() ? "auto" : direction());
         try {
-          const data = await apiJson("/api/speech", { method: "POST", body: form });
+          const data = await apiJson("/api/speech", { method: "POST", body: form,
+                                                      timeoutMs: SPEECH_WAIT_MS });
 
           // Conversation mode: the server heard whatever language it heard and
           // said which. The arrow follows the heard side, the answer is read
@@ -1725,15 +1767,55 @@
   });
 
   /* ---- photo --------------------------------------------------------- */
+  /* A phone photograph is often 12 MP HEIC. The reader already shrinks to
+     2 MP (app/ocr.py MAX_WORKING_PIXELS) and measured no gain above that, so
+     sending the original only costs upload time and first-decode on the
+     Space's two CPUs. 1600 on the long side is about that working size, and
+     drawing through a canvas turns HEIC into JPEG the reader can open. */
+  const PHOTO_MAX_SIDE = 1600;
+  const PHOTO_WAIT_MS = 90000;
+  const SPEECH_WAIT_MS = 120000;
+
+  function blobToJpeg(source, maxSide) {
+    const w0 = source.videoWidth || source.naturalWidth || source.width;
+    const h0 = source.videoHeight || source.naturalHeight || source.height;
+    if (!w0) return Promise.resolve(null);
+    let w = w0, h = h0;
+    if (Math.max(w, h) > maxSide) {
+      const s = maxSide / Math.max(w, h);
+      w = Math.round(w * s);
+      h = Math.round(h * s);
+    }
+    const canvas = document.createElement("canvas");
+    canvas.width = w;
+    canvas.height = h;
+    canvas.getContext("2d").drawImage(source, 0, 0, w, h);
+    return new Promise(res => canvas.toBlob(res, "image/jpeg", 0.85));
+  }
+
+  async function jpegForReader(file) {
+    if (typeof createImageBitmap !== "function") return file;
+    try {
+      const bitmap = await createImageBitmap(file);
+      const blob = await blobToJpeg(bitmap, PHOTO_MAX_SIDE);
+      bitmap.close();
+      return blob || file;
+    } catch (e) {
+      return file;
+    }
+  }
+
   async function readPhoto(file) {
     if (!file) return;
     busy($("photoBtn"), true);
     setStatus("Reading the photo…", true);
+    const body = await jpegForReader(file);
     const form = new FormData();
-    form.append("file", file, file.name || "photo.jpg");
+    form.append("file", body, "photo.jpg");
     form.append("direction", direction());
     try {
-      const data = await apiJson("/api/photo", { method: "POST", body: form });
+      const data = await apiJson("/api/photo", { method: "POST", body: form,
+                                                 timeoutMs: PHOTO_WAIT_MS });
       const seen = sourceOf(data);
       if (!seen) {
         fail("No text found in that photo. Take it again straight on, with the words filling the frame.");
@@ -1742,7 +1824,7 @@
       $("input").value = seen;
       document.body.classList.add("has-text");
       updateCounter();
-      showResult(data.bosnian, data.english, file);
+      showResult(data.bosnian, data.english, body);
     } catch (e) {
       fail(describe(e, "photo"));
     } finally {
@@ -2095,40 +2177,10 @@
      facingMode "environment" as a required constraint also fails on a laptop
      with only a face camera, so the second try is any video. */
   let camStream = null, camStillUrl = null;
-  const CAM_MAX_SIDE = 1280;
 
   function pageIsFramed() {
     try { return window.self !== window.top; }
     catch (e) { return true; }
-  }
-
-  function blobToJpeg(source, maxSide) {
-    const w0 = source.videoWidth || source.naturalWidth || source.width;
-    const h0 = source.videoHeight || source.naturalHeight || source.height;
-    if (!w0) return Promise.resolve(null);
-    let w = w0, h = h0;
-    if (Math.max(w, h) > maxSide) {
-      const s = maxSide / Math.max(w, h);
-      w = Math.round(w * s);
-      h = Math.round(h * s);
-    }
-    const canvas = document.createElement("canvas");
-    canvas.width = w;
-    canvas.height = h;
-    canvas.getContext("2d").drawImage(source, 0, 0, w, h);
-    return new Promise(res => canvas.toBlob(res, "image/jpeg", 0.85));
-  }
-
-  async function jpegForReader(file) {
-    if (typeof createImageBitmap !== "function") return file;
-    try {
-      const bitmap = await createImageBitmap(file);
-      const blob = await blobToJpeg(bitmap, CAM_MAX_SIDE);
-      bitmap.close();
-      return blob || file;
-    } catch (e) {
-      return file;
-    }
   }
 
   async function requestCameraStream() {
@@ -2247,7 +2299,8 @@
     form.append("file", blob, "frame.jpg");
     form.append("direction", direction());
     try {
-      const data = await apiJson("/api/photo-boxes", { method: "POST", body: form });
+      const data = await apiJson("/api/photo-boxes", { method: "POST", body: form,
+                                                       timeoutMs: PHOTO_WAIT_MS });
       drawCameraOverlay(blob, data);
       const seen = sourceOf(data);
       if (seen) {
@@ -2275,7 +2328,7 @@
       $("camCapture").querySelector(".lbl").textContent = "Capture";
       return;
     }
-    const blob = await blobToJpeg($("camVideo"), CAM_MAX_SIDE);
+    const blob = await blobToJpeg($("camVideo"), PHOTO_MAX_SIDE);
     await sendCameraFrame(blob);
   });
 

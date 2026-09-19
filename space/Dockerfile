@@ -29,7 +29,8 @@ ENV HOME=/home/lilly \
     HF_HOME=/home/lilly/.cache/huggingface \
     EASYOCR_MODULE_PATH=/home/lilly/.EasyOCR \
     LILLY_DB=/tmp/feedback.db \
-    PORT=7860
+    PORT=7860 \
+    LILLY_WARM=1
 # /app has to exist AND belong to lilly before WORKDIR touches it. WORKDIR
 # creates a missing directory as root, and fetch_models.py then writes about 2.3 GB
 # of weights into /app/models as user 1000 — which fails on permission, during the

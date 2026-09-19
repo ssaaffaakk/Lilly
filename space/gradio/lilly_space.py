@@ -33,6 +33,10 @@ ROOT = Path(__file__).resolve().parent
 os.chdir(ROOT)
 os.environ.setdefault("LILLY_DB", "/tmp/feedback.db")
 os.environ.setdefault("PADDLE_PDX_MODEL_SOURCE", "huggingface")
+# Construct the reader and translators in the serving process. fetch() below
+# warms them in a child that then exits; without this the first photograph
+# pays that construction and Hugging Face's proxy drops the request.
+os.environ.setdefault("LILLY_WARM", "1")
 
 
 def fetch() -> None:

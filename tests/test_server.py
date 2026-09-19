@@ -114,3 +114,18 @@ def test_the_page_has_a_phone_camera_shot_when_the_live_view_cannot_start(client
     assert 'id="camShotInput"' in html
     assert 'capture="environment"' in html
     assert 'id="camOpenTab"' in html
+
+
+def test_warm_models_loads_the_translator_and_the_reader(monkeypatch):
+    called = []
+    monkeypatch.setattr("app.translate.get_engine",
+                        lambda direction="bs-en": called.append(("engine", direction)))
+    monkeypatch.setattr("app.ocr.get_paddle_reader", lambda: called.append("paddle"))
+    monkeypatch.setattr("app.ocr.get_reader", lambda: called.append("easyocr"))
+    monkeypatch.setattr("app.ocr.reader_choice", lambda: "paddle")
+    from app.server import warm_models
+    warm_models()
+    assert ("engine", "bs-en") in called
+    assert ("engine", "en-bs") in called
+    assert "paddle" in called
+    assert "easyocr" not in called

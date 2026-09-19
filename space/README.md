@@ -28,8 +28,10 @@ view still cannot start, the same panel takes a still with the phone camera.
 
 Everything runs here. No API is called and nothing you send leaves this machine.
 The weights are fetched when the Space starts, so the first visit after it has
-been asleep can take a few minutes; the large listener on two CPU cores takes
-up to a minute for a ten-second clip.
+been asleep can take a few minutes; the serving process then loads the reader
+and the translators before it listens, so the first photograph is not the one
+that constructs them. The large listener on two CPU cores takes up to a minute
+for a ten-second clip.
 
 ## What it is
 
