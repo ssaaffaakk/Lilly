@@ -18,9 +18,15 @@ machine at inference time.
 Five models sit behind one FastAPI server. Speech and photographs become
 text, then go through the same translator.
 
-On the path a user actually meets: **43.25 BLEU / 68.10 chrF2** Bosnian →
-English (1,012 FLORES-200 devtest sentences) and **32.22 BLEU / 61.55 chrF2**
-English → Bosnian (2,009 FLORES-200 pairs). The listener records **11.9%**
+On the path a user actually meets, Bosnian → English on 1,012 FLORES-200
+devtest sentences is **43.25 BLEU / 68.10 chrF2**, with **0** leaked language
+tags. The first builds were **30<** BLEU (unrecorded; the owner's notes
+from that time, as a bound). The first number written down is **37.72 BLEU /
+67.15 chrF2**, the untuned model as downloaded, with `>>eng<<` in 308 of
+1,012 outputs (`training/RESULTS-devtest.md`). Strip the tags so the defect
+cannot take the credit, and the remaining gap on all 2,009 pairs is +1.26 BLEU
+(p = 0.001) and +0.15 chrF2 (p = 0.074). English → Bosnian is **32.22 BLEU /
+61.55 chrF2** (2,009 pairs). The listener records **11.9%**
 word error on 200 held-out FLEURS clips. The reader finds **67.0%** of the
 words on 40 Commons photographs (65 invented) and **57.8%** on 132 held-out
 photographs (450 invented). The 67% mix includes empty and unreadable frames;
@@ -215,12 +221,42 @@ pulled at start, not bundled. Two trained Bosnian voices were refused (see
 
 ## 5. Results
 
+The first builds were worse than the recorded columns. No measurement of
+them sits in the repository — the habit of committing a number before
+changing anything came later — so that column is the owner's notes from
+that time, written as a bound. Next is the first number written down. Last
+is today.
+
+| | the first builds (unrecorded) | first recorded | today |
+|---|---|---|---|
+| Photographs — words found per photograph, the 40 (6 blurry + 1 unreadable + 12 empty in the mix) | **30%<** | 36.0% (`training/RESULTS-ocr.md`) | **67.0%** |
+| Photographs — outdoor shots the person building this app actually takes (normal and slightly blurry street photos a human can still read) | — | — | **82.5%** (273/331) |
+| Photographs — words found, pooled | **10%<** | 16.9% (63 of 373) | **69.4%** |
+| Photographs — words invented that are on no sign | **280>** | 224 | **65** |
+| Speech — word error, 200 held-out clips | **55%>** | 38.5% (`training/RESULTS-speech.md`) | **11.9%** (whisper-large-v3, shipped by decision, refused at its gate; the gated whisper-small reads 34.9%) |
+| Speech — words heard right, 925 clean FLEURS (the large ear the app uses) | — | — | **16666 / 18836** (11.52% wrong) |
+| Translation — BLEU on FLORES devtest, as the user sees it | **30<** | 37.72, with the language tag leaked into 308 of 1,012 outputs (`training/RESULTS-devtest.md`) | **43.25**, leaked into **0** (re-measured 8 Sep on a T4 after the ordinal splitter fix) |
+| Reply, English → Bosnian — chrF2 on FLORES-200, as the user sees it | — | 58.96, the first training (`training/RESULTS-en-bs.md`) | **61.55** through the app's own path (`training/RESULTS-product-en-bs.md`, measured 12 Sep); the adapter alone on whole rows reads 60.00 |
+
 ### 5.1 Translation
 
-Measured 8 September 2026 on a Kaggle T4 after the ordinal-splitter fix,
-through the served path, language tags stripped.
+Through the served path. Same three columns as the README: the first builds
+(unrecorded, a bound from the owner's notes), the first number written down,
+and today. Then both sides stripped so the leaked tag cannot take the credit.
 
-**Bosnian → English, 2,009 FLORES-200 pairs**
+**Bosnian → English, 1,012 FLORES-200 devtest sentences, as the user sees it**
+
+| | the first builds (unrecorded) | first recorded | today |
+|---|---|---|---|
+| BLEU | **30<** | 37.72 — language tag leaked into 308 of 1,012 outputs (`training/RESULTS-devtest.md`) | **43.25**, leaked into **0** |
+| chrF2 | — | 67.15 | **68.10** |
+
+The "first recorded" column is the untuned model as downloaded. The first
+builds, 30< BLEU, are not in the repository.
+
+Strip the tags from both sides so the fine-tune cannot take credit for
+deleting `>>eng<<`, then re-measure after the ordinal-splitter fix (2,009
+pairs, 8 September 2026, Kaggle T4):
 
 | | BLEU | chrF2 |
 |---|---|---|
@@ -229,13 +265,11 @@ through the served path, language tags stripped.
 | Gap | +1.26 | +0.15 |
 | p (paired bootstrap) | 0.001 | 0.074 |
 
-On the 1,012-sentence **devtest** half, the product path is **43.25 BLEU /
-68.10 chrF2** (base 42.08 / 67.85).
-
-The base model prints `>>eng<<` (and variants) into 576 of 2,009 outputs
-(28.7%). Lilly prints it into 0. That is the fine-tune's clearest single win.
-chrF2 does not clear p = 0.05. BosnianBench term recall 91.7% → 92.2%
-(p = 0.360) does not prove a Bosnian-specific gain on this direction.
+On the 1,012-sentence half with tags stripped: base 42.08 / 67.85, Lilly
+**43.25 / 68.10**. The base still emits the tag into 576 of 2,009 outputs
+(28.7%) on screen; Lilly into 0. chrF2 does not clear p = 0.05. BosnianBench
+term recall 91.7% → 92.2% (p = 0.360) does not prove a Bosnian-specific gain
+on this direction.
 
 The ordinal splitter used to cut *5. maja 1990. godine* into three pieces.
 The fix is worth +0.89 BLEU / +0.37 chrF2 (p = 0.001, 167 of 2,009 rows).
@@ -263,7 +297,7 @@ standard the reference was written in.
 | Direction | System | Params | BLEU | chrF2 |
 |---|---|---|---|---|
 | bs → en | NLLB-200-distilled-600M | 600M | 36.49 | 63.80 |
-| bs → en | Lilly base, untouched | ~230M | 41.77 | 67.66 |
+| bs → en | Lilly base, tag stripped (37.72 as the user sees it) | ~230M | 41.77 | 67.66 |
 | bs → en | **Lilly, shipped** | **~230M** | **43.03** | **67.81** |
 | en → bs | NLLB-200-distilled-600M | 600M | 26.07 | 56.22 |
 | en → bs | **Lilly, shipped (bars / product)** | **~77M** | **29.57 / 32.22** | **58.96 / 61.55** |
@@ -280,6 +314,7 @@ capacity on this family; NLLB splits 200 languages.
 
 | Listener | Word error | Bosnian term recall | Croatian substitution |
 |---|---|---|---|
+| The first builds (unrecorded) | **55%>** | — | — |
 | whisper-small, stock | 38.5% | — | — |
 | whisper-small, fine-tuned (gated) | **34.9%** | 68.2% | 3.3% |
 | whisper-large-v3, fine-tuned (refused, shipped) | **11.9%** | 89.1% | 6.5% |
@@ -296,6 +331,8 @@ Croatian-substitution row failed. That row stays on the card.
 
 | Reader | the 40 (found / invented) | test-v2, 132 photographs (found / invented) |
 |---|---|---|
+| The first builds (unrecorded) | **30%< / 280>** | — |
+| First recorded (EasyOCR, first reader) | 36.0% / 224 | — |
 | EasyOCR, stock | 48.0% / 188 | 30.0% / — |
 | EasyOCR, fine-tuned | 54.5% / 182 | 34.6% / 2,071 |
 | **PP-OCRv6, stock, floor 0.9 (shipped)** | **67.0% / 65** | **57.8% / 450** |
