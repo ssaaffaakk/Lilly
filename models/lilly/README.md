@@ -53,8 +53,7 @@ base_model:
   <a href="#see-it-work">Examples</a> ·
   <a href="#run-it">Run it</a> ·
   <a href="#whats-inside">Inside</a> ·
-  <a href="#the-journey-so-far">Journey</a> ·
-  <a href="#how-well-it-works">Numbers</a> ·
+  <a href="#results">Results</a> ·
   <a href="#what-it-cannot-do-yet">Limits</a> ·
   <a href="docs/WHITE-PAPER.md">Paper</a> ·
   <a href="#training">Training</a>
@@ -243,46 +242,39 @@ attribution and licenses are in [`models/lilly/NOTICE.md`](https://github.com/ss
 
 ## How well it works
 
-### The journey so far
+### Results
 
-The first builds were worse than anything below. No measurement of them was
-kept in the repository — the habit of committing a number before changing
-anything came later, and is now the rule — so the first column comes from the
-owner's own notes from that time, written as a bound. The next column is the
-first number that was recorded, with the file it lives in. The last is today.
+Every "Lilly today" figure is held-out data, through the app's own path. The
+fairest thing to measure a change against is the untuned model it is built on.
+Pass marks were written down before each run (see
+[thresholds](#thresholds-are-written-before-the-run)). The first-builds column
+is the owner's notes from that time, written as a bound — no measurement of
+those builds sits in the repository. Next is the first number written down.
+Then the untuned base, scored the fair way. Last is today.
 
-| | the first builds (unrecorded) | first recorded | today |
-| --- | --- | --- | --- |
-| Photographs — words found per photograph, the 40 (includes 6 blurry + 1 unreadable + 12 empty) | **< 30%** | 36.0% (`training/RESULTS-ocr.md`) | **67.0%** |
-| Photographs — outdoor shots the person building this app actually takes (normal and slightly blurry street photos a human can still read) | — | — | **82.5%** (273/331) |
-| Photographs — words found, pooled | **< 10%** | 16.9% (63 of 373) | **69.4%** |
-| Photographs — words invented that are on no sign | **> 280** | 224 | **65** |
-| Speech — word error, 200 held-out clips | **> 55%** | 38.5% (`training/RESULTS-speech.md`) | **11.9%** (whisper-large-v3, shipped by decision, refused at its gate; the gated whisper-small reads 34.9%) |
-| Speech — words heard right, 925 clean FLEURS (the large ear the app uses) | — | — | **16666 / 18836** (11.52% wrong) |
-| Translation — BLEU on FLORES devtest, as the user sees it | **< 30** | 37.72, with the language tag leaked into 308 of 1,012 outputs (`training/RESULTS-devtest.md`) | **43.25**, leaked into **0** (re-measured 8 Sep on a T4 after the ordinal splitter fix) |
-| Reply, English → Bosnian — chrF2 on FLORES-200, as the user sees it | — | 58.96, the first training (`training/RESULTS-en-bs.md`) | **61.55** through the app's own path (`training/RESULTS-product-en-bs.md`, measured 12 Sep); the adapter alone on whole rows reads 60.00 |
+| Ability | Metric | Measured on | First builds | First recorded | Untuned base | Lilly today |
+| --- | --- | --- | --- | --- | --- | --- |
+| **Translate** | BLEU | 1,012 FLORES-200 devtest, as the user sees it | **30<** | 37.72, tag in 308/1,012 (`training/RESULTS-devtest.md`) | 42.08, tag stripped | **43.25**, **0** leaks |
+| **Translate** | chrF2 | same 1,012 | — | 67.15 | 67.85 | **68.10** |
+| **Translate** | BLEU / chrF2 | 2,009 FLORES pairs, served path, tags stripped | — | — | 41.77 / 67.66 | **43.03 / 67.81** (+1.26 BLEU p = 0.001; +0.15 chrF2 p = 0.074) |
+| **Translate** | language tag in the output | 2,009 pairs | — | 576 / 2,009 (28.7%) | same | **0** |
+| **Reply** | BLEU / chrF2 | 2,009 FLORES pairs, served int8 | — | 58.96 chrF2, first training (`training/RESULTS-en-bs.md`) | 31.23 / 60.93 | **32.22 / 61.55**, **0** leaks |
+| **Reply** | BLEU / chrF2 | adapter, whole rows (the bars) | — | 29.57 / 58.96 | same | **30.73 / 60.00** |
+| **Reply** | Bosnian form rate | 246 decided targets | — | — | 94.3% | **99.2%** (244/246) |
+| **Listen** | word error | 200 held-out FLEURS | **55%>** | 38.5% (`training/RESULTS-speech.md`) | 38.5% stock small; gated small **34.9%** | **11.9%** large-v3 (refused at its gate, shipped) |
+| **Listen** | words heard right | 925 clean FLEURS, product path | — | — | — | **16666 / 18836** (11.52% wrong) |
+| **Listen** | Croatian substitution | 925 clean FLEURS | — | — | gated small 0.96% | 6.25% (p = 0.0175, FAIL) |
+| **Read** | words found / invented | 40 Commons (6 blurry + 1 unreadable + 12 empty) | **30%< / 280>** | 36.0% / 224 (`training/RESULTS-ocr.md`) | EasyOCR fine-tune 54.5% / 182 | **67.0% / 65** PP-OCRv6 floor 0.9 |
+| **Read** | words found | 21 outdoor shots a human can still read | — | — | — | **82.5%** (273/331) |
+| **Read** | words found, pooled | the 40 | **10%<** | 16.9% (63 of 373) | — | **69.4%** |
+| **Read** | words found / invented | test-v2, 132 photographs | — | — | EasyOCR fine-tune 34.6% / 2,071 | **57.8% / 450** |
+| **Speak** | word error, heard by Lilly | FLEURS prefix, 200 clips | — | — | human 11.7% | **22.3%** (Piper sr_RS, stock) |
 
 One recorded moment says what the early period was like: the reader scored
 about 75% on synthetic text and **36% the first time it was pointed at real
 photographs** (`training/RESULTS-ocr-dataset.md`). The 75% was never a real
 number. Everything after that was measured on real photographs, real audio and
 held-out sentences.
-
-### Where the credit goes
-
-The fairest thing to measure a change against is the untuned model it is built
-on. Every "Lilly today" figure below is measured on data the model never
-trained on, through the app's own code path, against exactly that base. The
-pass marks were written down before each run (see
-[thresholds](#thresholds-are-written-before-the-run)).
-
-| Ability | Measured on | Untuned base | Lilly today | Where it stands |
-| --- | --- | --- | --- | --- |
-| **Translate**, Bosnian → English | 1,012 FLORES devtest sentences, as the user sees them | 42.08 BLEU / 67.85 chrF2 with its tag stripped; the base emits its language tag into 576 of 2,009 outputs, which the app strips since 8 Sep | **43.25 BLEU / 68.10 chrF2**, **0** leaks | shipped; re-measured 8 Sep on a T4 after the ordinal splitter fix |
-| **Reply**, English → Bosnian | 2,009 FLORES-200 pairs, as the user sees them | 31.23 BLEU / 60.93 chrF2 through the app's own path; the adapter alone on whole rows reads 29.57 / 58.96 | **32.22 BLEU / 61.55 chrF2**, **0** leaks; writes the Bosnian form of a contested word **99.2%** of the time (base 94.3%) | cleared all four bars 8 Sep; **in the bundle since 8 Sep**; the served build scored 12 Sep (`training/RESULTS-product-en-bs.md`) |
-| **Listen**, whisper-small | 200 held-out FLEURS clips | 38.5% word error | **34.9%** word error; Bosnian term recall 65.9% → 68.2% | the listener that cleared its gate; kept as the baseline |
-| **Listen**, whisper-large-v3 | 200 held-out; then 925 clean FLEURS | — | **11.9%** word error on the 200; **16666 / 18836** heard right on the 925 (11.52% wrong); earlier instrument 14.1% vs small 39.5% | **shipped since 8 Sep by the owner's decision, refused at its gate**: writes Croatian forms more often (0.96% → 6.25% on this 925, p = 0.0175); closed to further looks, see below |
-| **Read** | 40 Commons photographs (mix); outdoor street shots like those the person building this app takes (normal and slightly blurry); `test-v2` 132 with text | first reader: 36.0% of sign words found, 224 invented | **67.0% / 65 invented** on all 40 (that mix is why it is 67, not 82); **82.5%** (273/331) on those outdoor shots; **57.8% / 450** on `test-v2` | shipped (PP-OCRv6, untrained) |
 
 ### How to read the numbers
 
@@ -291,7 +283,7 @@ pass marks were written down before each run (see
   translation. Higher is better. chrF2 counts characters, so it is the fairer
   measure for a heavily inflected language, and it is the one that decides here.
   A difference of a point or so is noise unless a paired bootstrap says
-  otherwise; every gain quoted above has one.
+  otherwise; every gain in [Results](#results) has one.
 - **Words found and invented** (photographs): the share of the words on the
   signs that the reader read correctly, and how many words it produced that are
   on no sign at all. The second number matters as much as the first, because
@@ -305,21 +297,14 @@ pass marks were written down before each run (see
 
 ### Translation
 
-Held-out FLORES-200 Bosnian–English, through the app's own path.
-
-| | the first builds (unrecorded) | first recorded | today |
-| --- | --- | --- | --- |
-| BLEU, 1,012 devtest pairs | **< 30** | 37.72 — the model's language tag leaked into 308 of 1,012 outputs (`training/RESULTS-devtest.md`) | **43.25**, leaked into **0** |
-| chrF2, 1,012 devtest pairs | — | 67.15 | **68.10** |
-
-The "first recorded" column is the untuned model as downloaded. Scored with its
-leaked tags stripped, so the defect cannot take credit, the fine-tuning is worth
-**+1.26 BLEU** at p = 0.001 and **+0.15 chrF2** at p = 0.074, which does not
-clear 0.05, on all 2,009 pairs (`training/RESULTS-product.md`; on the devtest
-half +1.17 / +0.25). In plain terms: it makes word-level accuracy better, it
-removes a defect from every third output, and it does not move chrF2 by an
-amount the bootstrap can see. The first builds, under 30 BLEU, did not manage
-any of that.
+The numbers are in [Results](#results). The "first recorded" column is the
+untuned model as downloaded. Scored with its leaked tags stripped, so the
+defect cannot take credit, the fine-tuning is worth **+1.26 BLEU** at
+p = 0.001 and **+0.15 chrF2** at p = 0.074, which does not clear 0.05, on all
+2,009 pairs (`training/RESULTS-product.md`; on the devtest half +1.17 / +0.25).
+In plain terms: it makes word-level accuracy better, it removes a defect from
+every third output, and it does not move chrF2 by an amount the bootstrap can
+see. The first builds, 30< BLEU, did not manage any of that.
 
 **Re-measured on 8 September 2026 after the splitter fix.** Until that day
 `app.translate.Engine` cut a Bosnian date into pieces (*5. maja 1990. godine*
@@ -371,27 +356,15 @@ and is unaffected by it. Full report: `training/RESULTS-product-en-bs.md` and
 
 ### Speech
 
-200 held-out FLEURS Bosnian clips, the same clips in every column. "Today" is
-the listener the bundle ships, whisper-large-v3, shipped by the owner's
-decision and refused at its gate; the gated whisper-small stays beside it as
-the baseline.
-
-| | the first builds (unrecorded) | first recorded | today |
-| --- | --- | --- | --- |
-| Word error rate | **> 55%** | 38.5% (stock Whisper-small, `training/RESULTS-speech.md`) | **11.9%** (whisper-large-v3, shipped by decision, refused at its gate; the gated whisper-small reads 34.9%) |
-
-Same shipped large ear, two ways of counting (Kaggle `listen-clean-eval`,
-17 Sep 2026, `training/RESULTS-speech-listen-clean-eval.md`):
-
-| | what was scored | heard right |
-| --- | --- | --- |
-| **200 held-out — why the product number is 11.9%** | the prefix that has always been the headline | **11.9%** word error |
-| **925 clean FLEURS — the large ear the app actually uses** | all 925 / 925 pinned test clips, product decode path | **16666 / 18836** words (11.52% wrong) |
+The numbers are in [Results](#results). "Today" is the listener the bundle
+ships, whisper-large-v3, shipped by the owner's decision and refused at its
+gate; the gated whisper-small stays beside it as the baseline.
 
 11.9% is not a worse listener. It is the 200-clip headline. **16666/18836 is
-the same large ear on every clean test recording.** The Croatian gate still
-FAILS (0.96% → 6.25%, p = 0.0175). The earlier 14.1% on 925 was a different
-instrument, not this product-path run.
+the same large ear on every clean test recording** (Kaggle `listen-clean-eval`,
+17 Sep 2026, `training/RESULTS-speech-listen-clean-eval.md`). The Croatian gate
+still FAILS (0.96% → 6.25%, p = 0.0175). The earlier 14.1% on 925 was a
+different instrument, not this product-path run.
 
 The two listeners against each other on the same 200 clips, one scorer, one
 process (`training/SPEECHBENCH-gate.txt`, 7 September):
@@ -444,15 +417,16 @@ it writes the Croatian form of a word where the Bosnian one was said.
 
 ### Photographs
 
-Two sets of Bosnian signs from Wikimedia Commons, each transcribed by two
-readers independently, seeing neither each other's work nor any model's guess;
-only words both of them saw are in the answer key. The 40 are the original set
-(373 agreed words). `test-v2` is 280 photographs drawn from the same pool, 132
-with text, 2,907 agreed words, never trained on by anything.
+The numbers are in [Results](#results). Two sets of Bosnian signs from
+Wikimedia Commons, each transcribed by two readers independently, seeing
+neither each other's work nor any model's guess; only words both of them saw
+are in the answer key. The 40 are the original set (373 agreed words).
+`test-v2` is 280 photographs drawn from the same pool, 132 with text, 2,907
+agreed words, never trained on by anything.
 
 | | the 40 | `test-v2` (132 photographs) |
 | --- | --- | --- |
-| **the first builds (unrecorded)** | **< 30% found, > 280 invented** | — |
+| **the first builds (unrecorded)** | **30%< found, 280> invented** | — |
 | **first recorded** — the first reader (`training/RESULTS-ocr.md`) | **36.0% found, 224 invented** | — |
 | EasyOCR, stock | 48.0% found, 188 invented | 30.0% found |
 | EasyOCR fine-tuned on real crops (the reader until 5 Sep 2026) | 54.5% found, 182 invented | 34.6% found, 2,071 invented |
@@ -476,6 +450,15 @@ that pull the average down. **82.5% is the same reader on the outdoor photograph
 the person building this app actually shoots** — the normal ones and the slightly
 blurry ones you still get a reading from — not empty frames and not the one
 nobody can read. Neither number replaces `test-v2` (132 photographs, **57.8% / 450**).
+
+### Speak
+
+The numbers are in [Results](#results). English is Kokoro-82M, stock. Bosnian
+is Piper `sr_RS`, stock — filed under Serbian, trained on Sorbian recordings.
+Two voices trained here did not ship (FLEURS 53.9%, parliament 51.9%). A
+control held the same recipe within four points of the checkpoint, so the
+recordings were the fault, not the pipeline. Details under
+[What it cannot do yet](#what-it-cannot-do-yet).
 
 ### Thresholds are written before the run
 
