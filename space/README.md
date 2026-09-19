@@ -33,7 +33,7 @@ Measured through the shipped path, on held-out data unless noted:
 | Read | **67.0% found / 65 invented** | 40 Commons photographs |
 
 The listener was shipped by the owner's decision after failing a pre-registered
-Croatian-variety gate; the reader's larger held-out test-v2 score is **57.8% / 450**
+variety gate; the reader's larger held-out test-v2 score is **57.8% / 450**
 on 132 photographs with text. Full methods, intervals, and failed runs are in
 the [model card](https://huggingface.co/Safak11/lilly) and
 [white paper](https://github.com/ssaaffaakk/Lilly/blob/main/docs/WHITE-PAPER.md).
@@ -68,7 +68,7 @@ where it lives:
 | listen | Whisper large-v3, fine-tuned on Bosnian speech; shipped 8 Sep 2026 by the owner's decision after it was refused at its pre-registered gate (the gated whisper-small stays the baseline) |
 | read | PaddleOCR PP-OCRv6, off the shelf, chosen by a pre-registered rule over the fine-tuned EasyOCR one |
 | speak | Kokoro-82M, as published, for English |
-| speak-bs | Piper's `sr_RS-serbski_institut-medium` for the Bosnian reply — filed under Serbian, trained on the Sorbian Institute's recordings by its own card; Piper has no Bosnian voice. Pulled from `rhasspy/piper-voices` at start, not from the bundle |
+| speak-bs | Piper's `sr_RS-serbski_institut-medium` for the Bosnian reply — a stock regional voice from upstream; Piper has no Bosnian checkpoint. Pulled from `rhasspy/piper-voices` at start, not from the bundle |
 
 ## How well it works
 
@@ -78,7 +78,7 @@ the model card carries the full tables and the method.
 | | the first builds (unrecorded) | first recorded | today |
 |---|---|---|---|
 | Translation, BLEU on FLORES devtest, as the user sees it | **< 30** | 37.72, language tag leaked into 308 of 1,012 outputs | **43.25**, leaked into **0** (re-measured 8 Sep on a T4 after the ordinal splitter fix) |
-| Speech, word error on 200 held-out clips | **> 55%** | 38.5% | **11.9%**, whisper-large-v3, shipped 8 Sep by the owner's decision, refused at its gate (Croatian forms 1.1% → 6.1%); the gated whisper-small reads 34.9% |
+| Speech, word error on 200 held-out clips | **> 55%** | 38.5% | **11.9%**, whisper-large-v3, shipped 8 Sep by the owner's decision, refused at its gate (regional forms 1.1% → 6.1%); the gated whisper-small reads 34.9% |
 | Photographs, words found per photograph, 40 real Commons photographs | **< 30%** | 36.0% | **67.0%** |
 | Photographs, words invented that are on no sign | **> 280** | 224 | **65** |
 
@@ -101,7 +101,7 @@ has yet measured a photograph taken on a phone in Bosnia.
 
 And the 11.9% listener cleared two of the three pre-registered gate rows by a
 wide margin and failed the third twice — by one word on 200 clips, then by
-1.1% → 6.1% Croatian substitution (p = 0.018) on all 925, the same two words
+1.1% → 6.1% regional-form substitution (p = 0.018) on all 925, the same two words
 each time. By the rule written before either run it gets no further look. The
 owner then shipped it anyway, on 8 September, for what it gets right (14.1%
 against 39.5% of words wrong on 925 clips) and accepting what it gets wrong;

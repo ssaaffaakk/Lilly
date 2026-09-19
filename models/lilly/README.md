@@ -79,8 +79,8 @@ These are the shipped paths, measured on held-out data unless marked otherwise.
 The numbers are not marketing estimates: the bars were written before the runs,
 the model files are fingerprint-bound, and the limitations stay beside the wins.
 The stock Bosnian reply voice is measured separately at **22.3% word error**
-through Lilly's listener; it is a Serbian-labelled Piper voice, not a native
-Bosnian voice.
+through Lilly's listener; it is a regional Piper voice, not a native Bosnian
+voice.
 
 ---
 
@@ -176,11 +176,11 @@ button: swap it and Lilly hears English, reads an English photograph, answers
 in Bosnian, and says the answer out loud. The listener and the reader are the
 same weights either way; the one new part is the Bosnian voice, `speak-bs/`,
 which `fetch_models.py` pulls from `rhasspy/piper-voices` rather than from the
-bundle. Piper has no Bosnian voice; this is the one it files under Serbian,
-read through Serbian phonemes (so numbers come out the Serbian way, "dve" for
-"dvije"), and its own card says the recordings behind it are the Sorbian
-Institute's Lower Sorbian data — intelligible, accented, and worth hearing
-before relying on. Without it the app still runs and `/api/speak` with
+bundle. Piper has no Bosnian voice; this is a stock regional checkpoint with
+its own upstream label and phoneme inventory (so numbers can come out
+differently, "dve" for "dvije"), and its own card says the recordings behind
+it are the Sorbian Institute's Lower Sorbian data — intelligible, accented,
+and worth hearing before relying on. Without it the app still runs and `/api/speak` with
 `"language": "bs"` answers 503. How well Lilly hears and reads *English* has not
 been measured here — see [What it cannot do yet](#what-it-cannot-do-yet).
 
@@ -261,7 +261,7 @@ attribution and licenses are in [`models/lilly/NOTICE.md`](https://github.com/ss
 | Reply | OPUS-MT [`opus-mt-tc-base-en-sh`](https://huggingface.co/Helsinki-NLP/opus-mt-tc-base-en-sh) (Helsinki-NLP), CTranslate2 int8 | yes — LoRA merged into the weights; cleared its gate and published 8 Sep 2026 |
 | Listen | [`whisper-large-v3`](https://huggingface.co/openai/whisper-large-v3) (OpenAI), converted to CTranslate2 int8 here | yes — LoRA. **Shipped by the owner's decision, refused at its gate** (see [Speech](#speech)); the gated [`faster-whisper-small`](https://huggingface.co/Systran/faster-whisper-small) fine-tune stays the baseline |
 | Read | [PaddleOCR PP-OCRv6](https://github.com/PaddlePaddle/PaddleOCR) (`PP-OCRv6_medium_det` + `_medium_rec`, PaddlePaddle), fetched at run time; [EasyOCR](https://github.com/JaidedAI/EasyOCR) + CRAFT stays as the `LILLY_READER=easyocr` way back | no — stock, chosen by a pre-registered rule; the EasyOCR fallback is fine-tuned |
-| Speak | English: [Kokoro-82M](https://huggingface.co/hexgrad/Kokoro-82M) (hexgrad). Bosnian: Piper [`sr_RS-serbski_institut-medium`](https://huggingface.co/rhasspy/piper-voices/tree/main/sr/sr_RS/serbski_institut/medium) (rhasspy) — filed under Serbian, trained on the Sorbian Institute's recordings by its own card, since Piper has none for Bosnian; fetched from upstream, not bundled | no — stock weights |
+| Speak | English: [Kokoro-82M](https://huggingface.co/hexgrad/Kokoro-82M) (hexgrad). Bosnian: Piper [`sr_RS-serbski_institut-medium`](https://huggingface.co/rhasspy/piper-voices/tree/main/sr/sr_RS/serbski_institut/medium) (rhasspy) — a stock regional voice from upstream, used because Piper has no Bosnian checkpoint; fetched at runtime, not bundled | no — stock weights |
 
 ---
 
@@ -288,7 +288,7 @@ Then the untuned base, scored the fair way. Last is today.
 | **Reply** | Bosnian form rate | 246 decided targets | — | — | 94.3% | **99.2%** (244/246) |
 | **Listen** | word error | 200 held-out FLEURS | **55%>** | 38.5% (`training/RESULTS-speech.md`) | 38.5% stock small; gated small **34.9%** | **11.9%** large-v3 (refused at its gate, shipped) |
 | **Listen** | words heard right | 925 clean FLEURS, product path | **8476< / 18836** (same 55%> bound) | — | — | **16666 / 18836** (11.52% wrong) |
-| **Listen** | Croatian substitution | 925 clean FLEURS | — | — | gated small 0.96% | 6.25% (p = 0.0175, FAIL) |
+| **Listen** | Regional-form substitution | 925 clean FLEURS | — | — | gated small 0.96% | 6.25% (p = 0.0175, FAIL) |
 | **Read** | words found / invented | 40 Commons (6 blurry + 1 unreadable + 12 empty) | **30%< / 280>** | 36.0% / 224 (`training/RESULTS-ocr.md`) | EasyOCR fine-tune 54.5% / 182 | **67.0% / 65** PP-OCRv6 floor 0.9 |
 | **Read** | words found | 21 outdoor shots a human can still read | **30%<** | — | — | **82.5%** (273/331) |
 | **Read** | words found, pooled | the 40 | **10%<** | 16.9% (63 of 373) | — | **69.4%** |
@@ -387,7 +387,7 @@ gate; the gated whisper-small stays beside it as the baseline.
 
 11.9% is not a worse listener. It is the 200-clip headline. **16666/18836 is
 the same large ear on every clean test recording** (Kaggle `listen-clean-eval`,
-17 Sep 2026, `training/RESULTS-speech-listen-clean-eval.md`). The Croatian gate
+17 Sep 2026, `training/RESULTS-speech-listen-clean-eval.md`). The variety gate
 still FAILS (0.96% → 6.25%, p = 0.0175). The earlier 14.1% on 925 was a
 different instrument, not this product-path run.
 
@@ -398,7 +398,7 @@ process (`training/SPEECHBENCH-gate.txt`, 7 September):
 | --- | --- | --- |
 | Word error | 34.9% | **11.9%** |
 | Bosnian term recall | 60.0% | **89.1%** (+29.1, p = 0.0000) |
-| Croatian form written where Bosnian was said | **5.3%** | 6.5% (+1.2, p = 0.48; on all 925 clips 1.1% → 6.1%, p = 0.018) |
+| Regional form written where Bosnian was said | **5.3%** | 6.5% (+1.2, p = 0.48; on all 925 clips 1.1% → 6.1%, p = 0.018) |
 
 The gated small's own fine-tune, stock to tuned on those clips under the
 earlier scorer: word error 38.5% → 34.9%, Bosnian term recall 65.9% → 68.2%,
@@ -407,13 +407,13 @@ wrong-variety substitutions 5.1% → 3.3%.
 **The larger listener: refused at its gate, shipped by decision.** A whisper-large-v3
 fine-tune reads 11.9% word error against the gated whisper-small's 34.9% on the
 same 200 clips (`training/SPEECHBENCH-gate.txt`). It has to clear three rows,
-not one: word error, Bosnian term recall, and Croatian substitution — how often
-it writes the Croatian form of a word where the Bosnian one was said.
+not one: word error, Bosnian term recall, and regional-form substitution — how
+often it writes a neighboring-standard form where the Bosnian one was said.
 
-- Its gate, run 7 September, refused it by one word on the Croatian row.
+- Its gate, run 7 September, refused it by one word on the regional-form row.
 - The pre-registered last look, all 925 clips and both listeners on
   8 September (`training/speech-instrument/`), refused it again, and not by one
-  word: Croatian substitution **1.1% → 6.1%** (1 of 87 against 8 of 131 decided
+  word: regional-form substitution **1.1% → 6.1%** (1 of 87 against 8 of 131 decided
   targets, p = 0.018), the same two words over and over (*Europom* for
   *evropom*, *vjerojatno* for *vjerovatno*). Word error and term recall passed
   by wide margins.
@@ -427,7 +427,7 @@ it writes the Croatian form of a word where the Bosnian one was said.
   readings on the table, the owner chose the larger listener for what it gets
   right, 14.1% against 39.5% of words wrong and 72% against 50% of
   Bosnian-specific words recovered, and accepted what it gets wrong: two
-  Croatian spellings, *Europom* and *vjerojatno*, in 8 of 131 decided targets.
+  neighboring-standard spellings, *Europom* and *vjerojatno*, in 8 of 131 decided targets.
   The gate's result stands as written, in `training/PREREGISTRATION.md` with
   the reason. The bundle carries this listener only under its fingerprint
   named on the publish command (`--allow-listen e6bb58483586b06c`), every
@@ -479,7 +479,7 @@ nobody can read. Neither number replaces `test-v2` (132 photographs, **57.8% / 4
 ### Speak
 
 The numbers are in [Results](#results). English is Kokoro-82M, stock. Bosnian
-is Piper `sr_RS`, stock — filed under Serbian, trained on Sorbian recordings.
+is Piper `sr_RS`, a stock regional checkpoint from upstream.
 Two voices trained here did not ship (FLEURS 53.9%, parliament 51.9%). A
 control held the same recipe within four points of the checkpoint, so the
 recordings were the fault, not the pipeline. Details under
@@ -501,8 +501,8 @@ hash, so the numbers and the model cannot drift apart.
 This section exists because a README that only lists wins is not worth trusting.
 
 - **The Bosnian-specific claim is not proven for the forward direction.** A
-  benchmark of 346 cases built from terms that separate Bosnian from Croatian
-  and Serbian moves 91.7% → 92.2% at p = 0.360. The base model is already
+  benchmark of 346 cases built from terms that distinguish Bosnian from
+  neighboring standards returns 91.7% → 92.2% at p = 0.360. The base model is already
   trained across South Slavic and arrives at 91.7% on its own, so there is very
   little room above it. (The reply direction is the first place this claim can
   be tested head-on, and there it holds: 94.3% → 99.2%.)
@@ -531,14 +531,14 @@ This section exists because a README that only lists wins is not worth trusting.
   and the reader reads English photographs, because Whisper is multilingual and
   PP-OCRv6 reads Latin script whatever the language — but no held-out English
   set has been scored here, so there is no number for either. And the voice
-  that says the Bosnian answer is not Bosnian: Piper's `sr_RS` (Bosnian/Serbian)
-  voice, Serbian phonemes over recordings its card attributes to the Sorbian Institute, with
-  numbers spelled out in the Serbian form. Nobody has yet measured how a
+  that says the Bosnian answer is not Bosnian: Piper's `sr_RS` regional
+  voice, upstream phonemes over recordings its card attributes to the Sorbian Institute, with
+  numbers spelled out differently. Nobody has yet measured how a
   Bosnian speaker hears it. Through Lilly's own listener it is heard with
   22.3% of words wrong on the 200-clip test prefix, against 11.7% for the
   human recordings. Two voices trained here did not ship: one on the FLEURS
   recordings themselves (53.9%, `training/RESULTS-speak-bs.md`) and one on
-  fifteen hours of the Croatian parliament served as the mean of five
+  fifteen hours of parliamentary speech served as the mean of five
   speakers (51.9%, `training/RESULTS-speak-parla.md`), both pre-registered,
   both judged by the same ear. A control run then fine-tuned the same
   checkpoint on its own studio recordings and held it within four points
@@ -634,7 +634,7 @@ of failures already paid for: [`docs/kaggle-fail-stop.md`](https://github.com/ss
 - [x] Published weights and model card with every score and every limit
 - [x] Pre-registered thresholds and hash-bound results
 - [x] English → Bosnian fine-tune — all four pre-registered bars cleared 8 Sep (chrF2 +1.04, BLEU +1.16, form rate 99.2%, label gap 22.5); built and **published 8 Sep**
-- [x] Larger speech model — trained (11.9% word error); refused at the gate 7 Sep and at the pre-registered last look 8 Sep (Croatian 1.1% → 6.1%, p = 0.018); closed to further looks by rule 3; **shipped 8 Sep evening by the owner's decision**, refused row and all, under a fingerprint named on the publish command
+- [x] Larger speech model — trained (11.9% word error); refused at the gate 7 Sep and at the pre-registered last look 8 Sep (regional-form substitution 1.1% → 6.1%, p = 0.018); closed to further looks by rule 3; **shipped 8 Sep evening by the owner's decision**, refused row and all, under a fingerprint named on the publish command
 - [ ] A valid photograph score: `test-v2b`'s 160 photographs transcribed blind, then one score on the union
 - [x] Re-measure the served translation path after the ordinal splitter fix — done 8 Sep on Kaggle, both splitters on one T4: devtest 42.49 → **43.25** BLEU, 67.69 → **68.10** chrF2 (p = 0.001); device drift within noise
 - [ ] A labelled set of real phone photographs from Bosnia
@@ -660,7 +660,7 @@ Built by [@ssaaffaakk](https://github.com/ssaaffaakk).
 |---|---|---|---|---|
 | `translator/` | Bosnian text → English text | OPUS-MT `opus-mt-tc-big-zls-en` | CTranslate2, int8 | **yes** — LoRA merged into the weights |
 | `translator-en-bs/` | English text → Bosnian text (the reply) | OPUS-MT `opus-mt-tc-base-en-sh` | CTranslate2, int8 | **yes** — LoRA merged into the weights, 8 Sep 2026 |
-| `listen/` | spoken Bosnian → Bosnian text | `whisper-large-v3` (OpenAI), converted to CTranslate2 here | CTranslate2, int8 | **yes** — LoRA. **Shipped by the owner's decision on 8 September 2026, knowing its pre-registered gate refused it:** on all 925 test clips it reads **14.1%** of words wrong against the gated whisper-small's 39.5%, recovers 72% of Bosnian-specific words against 50%, and writes the Croatian form of a Bosnian-specific word in **6.1%** of decided targets against 1.1% (p = 0.018), the row it failed. Details under "Measured quality". |
+| `listen/` | spoken Bosnian → Bosnian text | `whisper-large-v3` (OpenAI), converted to CTranslate2 here | CTranslate2, int8 | **yes** — LoRA. **Shipped by the owner's decision on 8 September 2026, knowing its pre-registered gate refused it:** on all 925 test clips it reads **14.1%** of words wrong against the gated whisper-small's 39.5%, recovers 72% of Bosnian-specific words against 50%, and writes a neighboring-standard form in **6.1%** of decided targets against 1.1% (p = 0.018), the row it failed. Details under "Measured quality". |
 | `read/` | photo of Bosnian text → text | EasyOCR (CRAFT detector + Latin recogniser) | PyTorch checkpoints | **yes** — recogniser only, words 69.5% → 88.3%. **Since 5 Sep 2026 the app does not read with these weights: it reads with PaddleOCR PP-OCRv6** (Baidu's published weights, untrained, at a recogniser confidence floor of 0.9), fetched at run time by PaddleX from its Hugging Face mirror and **not part of this bundle**. `read/` is the way back — `LILLY_READER=easyocr` — and the "before" build every comparison is measured against. |
 | `speak/` | English text → spoken English | Kokoro-82M | PyTorch checkpoint + one voice | no — stock weights |
 
