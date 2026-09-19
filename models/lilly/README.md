@@ -25,7 +25,7 @@ base_model:
 
 <h1 align="center">Lilly</h1>
 
-<p align="center"><strong>A Bosnian translator you can type into, talk to, or point a camera at — running entirely on your own machine.</strong></p>
+<p align="center"><strong>An offline Bosnian–English translator you can type, talk, photograph, and hear back.</strong></p>
 
 <p align="center">
   <!-- Live demo: swap this URL for your own deployment (e.g. the Render URL) once it is up. -->
@@ -58,6 +58,25 @@ base_model:
   <a href="docs/WHITE-PAPER.md">Paper</a> ·
   <a href="#training">Training</a>
 </p>
+
+## At a glance
+
+Lilly is a public, offline artifact: a live demo, downloadable weights, a
+reproducible app path, and the failed experiments are all part of the release.
+These are the shipped paths, measured on held-out data unless marked otherwise.
+
+| Ability | Shipped result | Evidence |
+| --- | --- | --- |
+| **Translate** · Bosnian → English | **43.25 BLEU / 68.10 chrF2**, 0 leaked tags | 1,012 held-out FLORES-200 devtest sentences |
+| **Reply** · English → Bosnian | **32.22 BLEU / 61.55 chrF2**; **99.2%** Bosnian forms (244/246) | 2,009 held-out FLORES-200 pairs, served int8 path |
+| **Listen** · speech → text | **11.9% word error** | 200 held-out FLEURS clips; shipped by the owner's decision after failing its pre-registered variety gate |
+| **Read** · photograph → text | **67.0% found / 65 invented**; **57.8% / 450** on test-v2 | 40 Commons photographs; 132 held-out photographs with text |
+
+The numbers are not marketing estimates: the bars were written before the runs,
+the model files are fingerprint-bound, and the limitations stay beside the wins.
+The stock Bosnian reply voice is measured separately at **22.3% word error**
+through Lilly's listener; it is a Serbian-labelled Piper voice, not a native
+Bosnian voice.
 
 ---
 

@@ -15,8 +15,9 @@ Lilly is an offline Bosnian–English translator. A user can type, speak, or
 photograph a sign; the app returns text and speech. Nothing leaves the
 machine at inference time.
 
-Five models sit behind one FastAPI server. Speech and photographs become
-text, then go through the same translator.
+Five user-facing abilities sit behind one FastAPI server. Speech and photographs
+become text, then go through the same translator, so the typed, spoken, and
+photographed paths share the same translation layer.
 
 On the path a user actually meets, Bosnian → English on 1,012 FLORES-200
 devtest sentences is **43.25 BLEU / 68.10 chrF2**, with **0** leaked language
@@ -35,6 +36,26 @@ can still read. 82.5 does not replace 67.
 
 Thresholds were written before each run. Gains use a paired bootstrap.
 Failures stay in the repository.
+
+---
+
+## Results at a glance
+
+| Ability | Shipped result | Evaluation |
+|---|---|---|
+| Translate, bs → en | **43.25 BLEU / 68.10 chrF2**, 0 leaked tags | 1,012 held-out FLORES-200 devtest sentences |
+| Reply, en → bs | **32.22 BLEU / 61.55 chrF2**; **99.2%** Bosnian forms (244/246) | 2,009 held-out FLORES-200 pairs, served int8 path |
+| Listen | **11.9% word error** | 200 held-out FLEURS clips; shipped by owner decision after failing its pre-registered variety gate |
+| Read | **67.0% found / 65 invented**; **57.8% / 450** on test-v2 | 40 Commons photographs; 132 held-out photographs with text |
+
+The reader score is recognition accuracy, not translation quality. The speech
+voice is a separate stock `sr_RS` Piper checkpoint and records **22.3% word
+error** through Lilly's listener; it is not a native Bosnian voice.
+
+![Lilly system architecture](images/architecture.png)
+
+*Figure 1. One local service routes typed text, audio, and photographs through
+the same translation layer, with content-fingerprinted weights.*
 
 ---
 

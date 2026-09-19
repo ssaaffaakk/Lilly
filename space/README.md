@@ -15,6 +15,27 @@ models:
 
 Bosnian into English — typed, spoken, or photographed.
 
+[Try the app](https://huggingface.co/spaces/Safak11/Lilly-api) ·
+[Download the weights](https://huggingface.co/Safak11/lilly) ·
+[Read the paper](https://github.com/ssaaffaakk/Lilly/blob/main/docs/WHITE-PAPER.md)
+
+## Results
+
+Measured through the shipped path, on held-out data unless noted:
+
+| Ability | Result | Evaluation |
+|---|---|---|
+| Translate, bs → en | **43.25 BLEU / 68.10 chrF2**, 0 leaked tags | 1,012 FLORES-200 devtest sentences |
+| Reply, en → bs | **32.22 BLEU / 61.55 chrF2**; **99.2%** Bosnian forms | 2,009 FLORES-200 pairs, served int8 path |
+| Listen | **11.9% word error** | 200 held-out FLEURS clips |
+| Read | **67.0% found / 65 invented** | 40 Commons photographs |
+
+The listener was shipped by the owner's decision after failing a pre-registered
+Croatian-variety gate; the reader's larger held-out test-v2 score is **57.8% / 450**
+on 132 photographs with text. Full methods, intervals, and failed runs are in
+the [model card](https://huggingface.co/Safak11/lilly) and
+[white paper](https://github.com/ssaaffaakk/Lilly/blob/main/docs/WHITE-PAPER.md).
+
 Type a sentence and it translates. Record yourself and it listens first. Point a
 camera at a sign and it reads that. The English comes back written, and out loud
 if you want it. Swap the arrow and it runs the other way: say or photograph
