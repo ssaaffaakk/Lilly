@@ -237,7 +237,7 @@ Then the untuned base, scored the fair way. Last is today.
 | **Reply** | BLEU / chrF2 | adapter, whole rows (the bars) | — | 29.57 / 58.96 | same | **30.73 / 60.00** |
 | **Reply** | Bosnian form rate | 246 decided targets | — | — | 94.3% | **99.2%** (244/246) |
 | **Listen** | word error | 200 held-out FLEURS | **55%>** | 38.5% (`training/RESULTS-speech.md`) | 38.5% stock small; gated small **34.9%** | **11.9%** large-v3 (refused at its gate, shipped) |
-| **Listen** | words heard right | 925 clean FLEURS, product path | — | — | — | **16666 / 18836** (11.52% wrong) |
+| **Listen** | words heard right | 925 clean FLEURS, product path | **8476< / 18836** (same 55%> bound) | — | — | **16666 / 18836** (11.52% wrong) |
 | **Listen** | Croatian substitution | 925 clean FLEURS | — | — | gated small 0.96% | 6.25% (p = 0.0175, FAIL) |
 | **Read** | words found / invented | 40 Commons (6 blurry + 1 unreadable + 12 empty) | **30%< / 280>** | 36.0% / 224 (`training/RESULTS-ocr.md`) | EasyOCR fine-tune 54.5% / 182 | **67.0% / 65** PP-OCRv6 floor 0.9 |
 | **Read** | words found | 21 outdoor shots a human can still read | — | — | — | **82.5%** (273/331) |
