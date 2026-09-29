@@ -46,6 +46,11 @@ RUN python3 -c "from app.ocr import get_paddle_reader; get_paddle_reader()" \
 ENV LILLY_DB=/data/feedback.db
 VOLUME ["/data"]
 
+# Construct the translators and the reader before listening (warm_models in
+# app/server.py), as the Space does. Unwarmed, the first translation took 4.2 s,
+# nearly all of it importing torch and transformers; warm, 0.2 s (on a laptop).
+ENV LILLY_WARM=1
+
 # One worker on purpose — each one would load its own full 1.3 GB of weights.
 ENV PORT=8000
 EXPOSE 8000

@@ -36,6 +36,8 @@ services:
         value: 8000           # matches the Dockerfile's EXPOSE and HEALTHCHECK
       - key: LILLY_DB
         value: /data/feedback.db
+      - key: LILLY_WARM
+        value: "1"            # models load before the port opens; the Dockerfile says why
     disk:
       name: lilly-data        # corrections survive redeploys (the Dockerfile's VOLUME /data)
       mountPath: /data
