@@ -1,0 +1,42 @@
+[
+  {
+    "input": "Dobar dan",
+    "expected_output": "Good morning"
+  },
+  {
+    "input": "Kako ste?",
+    "expected_output": "How are you?"
+  },
+  {
+    "input": "Gdje je autobuska stanica?",
+    "expected_output": "Where is the bus station?"
+  },
+  {
+    "input": "Hvala na pomoći",
+    "expected_output": "Thank you for your help"
+  },
+  {
+    "input": "Ne razumijem",
+    "expected_output": "I don't understand"
+  },
+  {
+    "input": "Koliko je sati?",
+    "expected_output": "What time is it?"
+  },
+  {
+    "input": "Želim pozvati taksi",
+    "expected_output": "I want to call a taxi"
+  },
+  {
+    "input": "Najdite bolnicu",
+    "expected_output": "Find a hospital"
+  },
+  {
+    "input": "Koliko košta?",
+    "expected_output": "How much does it cost?"
+  },
+  {
+    "input": "Govorite li engleski?",
+    "expected_output": "Do you speak English?"
+  }
+]
