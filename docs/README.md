@@ -49,6 +49,7 @@ Cursor agents also load `.cursor/rules/kaggle-fail-stop.mdc` (always apply).
 | [`ROADMAP.md`](ROADMAP.md) | Early phase roadmap (historical; prefer V4-PLAN for now) |
 | [`REPORT-reverse-direction-2026-09-12.md`](REPORT-reverse-direction-2026-09-12.md) | The reply direction, scored through the path a user actually meets |
 | [`REPORT-what-would-raise-the-numbers-2026-09-13.md`](REPORT-what-would-raise-the-numbers-2026-09-13.md) | Ranked levers that would raise a measured number, and which need no GPU |
+| [`PROMPT-EVALUATION.md`](PROMPT-EVALUATION.md) | Comparing LLM prompt variants against Lilly's translator on one frozen set, paired bootstrap included |
 
 ## Agent teams
 

@@ -1,7 +1,7 @@
 [
   {
     "input": "Dobar dan",
-    "expected_output": "Good morning"
+    "expected_output": "Good day"
   },
   {
     "input": "Kako ste?",
@@ -28,7 +28,7 @@
     "expected_output": "I want to call a taxi"
   },
   {
-    "input": "Najdite bolnicu",
+    "input": "Nađite bolnicu",
     "expected_output": "Find a hospital"
   },
   {

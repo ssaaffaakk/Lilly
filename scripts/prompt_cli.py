@@ -21,7 +21,8 @@ from typing import Dict, List, Callable
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from scripts.prompt_benchmark import (
-    PromptBenchmark, GradingRubric, exact_match_rubric, token_overlap_rubric
+    PromptBenchmark, GradingRubric, chrf_rubric, claude_executor,
+    exact_match_rubric, lilly_executor, token_overlap_rubric,
 )
 
 
@@ -140,10 +141,11 @@ class InteractivePromptEvaluator:
         print("="*70)
         print("\nOptions:")
         print("  1. Exact match (strictest)")
-        print("  2. Token/word overlap (more lenient)")
-        print("  3. Custom function")
+        print("  2. Token/word overlap (recall only, a smoke check)")
+        print("  3. chrF2, sentence level (for translation; needs sacrebleu)")
+        print("  4. Custom function")
 
-        choice = input("\nChoose (1-3): ").strip()
+        choice = input("\nChoose (1-4): ").strip()
 
         if choice == "1":
             self.rubric = GradingRubric(exact_match_rubric)
@@ -154,6 +156,10 @@ class InteractivePromptEvaluator:
             print("Using token overlap rubric")
             return True
         elif choice == "3":
+            self.rubric = GradingRubric(chrf_rubric)
+            print("Using chrF2 rubric")
+            return True
+        elif choice == "4":
             return self._create_custom_rubric()
         else:
             print("Invalid choice")
@@ -200,8 +206,8 @@ class InteractivePromptEvaluator:
         print("="*70)
         print("\nOptions:")
         print("  1. Mock/test (returns dummy outputs)")
-        print("  2. Lilly translator (bs-en)")
-        print("  3. Claude API (claude-opus-5-5)")
+        print("  2. Lilly translator (bs-en; takes text, not instructions)")
+        print("  3. Claude API (claude-opus-5-5, credentials from the environment)")
         print("  4. Custom function")
 
         choice = input("\nChoose (1-4): ").strip()
@@ -225,53 +231,38 @@ class InteractivePromptEvaluator:
         return f"[Mock response to: {prompt[:50]}...]"
 
     def _setup_lilly_executor(self) -> bool:
-        """Setup Lilly translator."""
+        """Setup Lilly translator.
+
+        MarianMT translates the whole prompt, instructions included, so the only
+        template that measures Lilly is "{input}". Say so rather than guess the
+        Bosnian text out of a longer prompt.
+        """
+        wrapped = [n for n, t in self.variants.items() if t.strip() != "{input}"]
+        if wrapped:
+            print(f"Note: Lilly is a translation model, not an LLM. It will translate "
+                  f"the instructions in {', '.join(wrapped)} too; use the template "
+                  f"{{input}} to measure Lilly itself.")
         try:
             from app.translate import get_engine
-            engine = get_engine("bs-en")
-
-            def lilly_executor(prompt: str) -> str:
-                # Extract the Bosnian text from prompt
-                lines = prompt.split('\n')
-                bosnian_text = lines[-1].strip()
-
-                # Try to translate
-                output, diag = engine.translate(bosnian_text)
-                return output
-
-            self.executor = lilly_executor
-            print("Lilly translator loaded")
-            return True
+            get_engine("bs-en")  # load now, so a missing model fails here, not mid-run
         except Exception as e:
             print(f"Error loading Lilly: {e}")
             return False
+        self.executor = lilly_executor("bs-en")
+        print("Lilly translator loaded")
+        return True
 
     def _setup_claude_executor(self) -> bool:
-        """Setup Claude API."""
-        api_key = input("Enter your ANTHROPIC_API_KEY (or leave blank to use env): ").strip()
-
+        """Setup Claude API. Credentials come from the environment, never the keyboard."""
+        effort = input("Effort (low/medium/high, default medium): ").strip() or "medium"
         try:
-            from anthropic import Anthropic
-
-            if api_key:
-                client = Anthropic(api_key=api_key)
-            else:
-                client = Anthropic()  # Uses ANTHROPIC_API_KEY env var
-
-            def claude_executor(prompt: str) -> str:
-                response = client.messages.create(
-                    model="claude-opus-5-5",
-                    max_tokens=1000,
-                    messages=[{"role": "user", "content": prompt}]
-                )
-                return response.content[0].text
-
-            self.executor = claude_executor
-            print("Claude API configured")
-            return True
+            self.executor = claude_executor(effort=effort)
         except Exception as e:
             print(f"Error setting up Claude: {e}")
+            print("Set ANTHROPIC_API_KEY, or run `ant auth login`, then try again.")
             return False
+        print(f"Claude API configured (effort {effort}, server-side fallback on)")
+        return True
 
     def _setup_custom_executor(self) -> bool:
         """Setup custom executor function."""
@@ -326,13 +317,14 @@ class InteractivePromptEvaluator:
         print("This may take a while...\n")
 
         try:
-            results = benchmark.run(
-                executor=self.executor,
-                samples=samples,
-                cost_per_call_usd=0.0001,
-            )
+            benchmark.run(executor=self.executor, samples=samples)
 
             benchmark.print_comparison()
+            names = list(self.variants)
+            if len(names) > 1:
+                print(f"\nEach variant against the first ({names[0]}), paired over cases:")
+                for name in names[1:]:
+                    benchmark.compare(names[0], name)
             benchmark.pareto_frontier()
 
             # Export results

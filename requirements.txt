@@ -54,6 +54,11 @@ imageio-ffmpeg
 # Driving a training run on Kaggle GPUs without a browser
 kaggle
 
+# Comparing Claude prompt variants against Lilly's translator
+# (scripts/eval_translation_prompts.py --claude). Imported lazily; the app
+# never loads it, so the Space's own list leaves it out.
+anthropic
+
 # Training data preparation. duckdb reads the metadata columns of a remote
 # parquet dataset in one parallel pass (data/scripts/parlaspeech_speakers.py).
 pyarrow
