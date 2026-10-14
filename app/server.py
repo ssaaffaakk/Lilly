@@ -218,6 +218,16 @@ def index():
                         })
 
 
+@app.get("/sarajevo-2800.jpg")
+def backdrop():
+    # The page's backdrop, apart from the page: 900 KB inlined would hold back
+    # the first paint. The name carries the size, so a new photo gets a new
+    # name and this one can be kept for a year without asking.
+    return FileResponse(APP_DIR / "web" / "sarajevo-2800.jpg",
+                        media_type="image/jpeg",
+                        headers={"Cache-Control": "public, max-age=31536000, immutable"})
+
+
 @app.get("/health")
 def health():
     return {"ok": True}

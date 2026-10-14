@@ -21,6 +21,15 @@ def test_health(client):
     assert client.get("/health").json() == {"ok": True}
 
 
+def test_the_page_names_a_backdrop_the_server_serves(client):
+    page = client.get("/").text
+    assert 'url("sarajevo-2800.jpg")' in page
+    photo = client.get("/sarajevo-2800.jpg")
+    assert photo.status_code == 200
+    assert photo.headers["content-type"] == "image/jpeg"
+    assert photo.content[:3] == b"\xff\xd8\xff"
+
+
 @pytest.mark.parametrize("path", ["/api/translate", "/api/reply", "/api/speak"])
 def test_blank_text_is_a_422_not_a_500(client, path):
     assert client.post(path, json={"text": "   "}).status_code == 422
