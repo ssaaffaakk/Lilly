@@ -133,16 +133,29 @@ else:
     print(f"space created: {repo} ({sdk})")
 PYTHON
 
-cd "$STAGE"
-git init -q
-git config user.email "noreply@huggingface.co"
-git config user.name "Lilly"
-git add -A
-git commit -qm "Lilly: Bosnian to English, typed, spoken or photographed"
-if [ "$DRY" = "--dry-run" ]; then
-  echo "dry run: would push $(git rev-list --count HEAD) commit to spaces/${REPO}"
-  echo "dry run: nothing was sent"
-else
-  git push -q --force "https://user:${HF_TOKEN}@huggingface.co/spaces/${REPO}" main
-  echo "pushed — building at https://huggingface.co/spaces/${REPO}"
-fi
+# Sent through the Hub API, not a git push: app/web/sarajevo-2800.jpg is a
+# binary, and Hugging Face rejects a plain git push that carries one unless it
+# goes through LFS/Xet, which this machine's git does not have. upload_folder
+# stores it through Xet itself. delete_patterns="*" keeps what the force push
+# gave: the Space holds exactly the staged files, and anything no longer
+# staged is removed in the same commit.
+"$PY_BIN" - "$REPO" "$DRY" "$STAGE" <<'PYTHON'
+import os, sys
+from pathlib import Path
+from huggingface_hub import HfApi
+repo, dry, stage = sys.argv[1], sys.argv[2] == "--dry-run", sys.argv[3]
+files = sorted(str(p.relative_to(stage)) for p in Path(stage).rglob("*") if p.is_file())
+if dry:
+    import inspect
+    params = inspect.signature(HfApi.upload_folder).parameters
+    for needed in ("folder_path", "repo_id", "repo_type", "commit_message", "delete_patterns"):
+        assert needed in params, f"upload_folder has no {needed}"
+    print(f"dry run: would upload {len(files)} files to spaces/{repo}, deleting anything else there")
+    print("dry run: nothing was sent")
+    sys.exit(0)
+api = HfApi(token=os.environ["HF_TOKEN"])
+info = api.upload_folder(folder_path=stage, repo_id=repo, repo_type="space",
+                         commit_message="Lilly: Bosnian to English, typed, spoken or photographed",
+                         delete_patterns="*")
+print(f"pushed {len(files)} files ({info.oid[:7]}) — building at https://huggingface.co/spaces/{repo}")
+PYTHON
